@@ -123,13 +123,96 @@ jobs:
           only-new-issues: false # show only new issues if it's a pull request
           working-directory: checker
           args: -c ../.golangci.yml
-
       - name: Run linter (config)
         uses: golangci/golangci-lint-action@v2 # Action page: <https://github.com/golangci/golangci-lint-action>
         with:
           version: v1.33 # without patch version
           only-new-issues: false # show only new issues if it's a pull request
           working-directory: config
+          args: -c ../.golangci.yml
+      - name: Run linter (gzip)
+        uses: golangci/golangci-lint-action@v2 # Action page: <https://github.com/golangci/golangci-lint-action>
+        with:
+          version: v1.33 # without patch version
+          only-new-issues: false # show only new issues if it's a pull request
+          working-directory: gzip
+          args: -c ../.golangci.yml
+      - name: Run linter (headers)
+        uses: golangci/golangci-lint-action@v2 # Action page: <https://github.com/golangci/golangci-lint-action>
+        with:
+          version: v1.33 # without patch version
+          only-new-issues: false # show only new issues if it's a pull request
+          working-directory: headers
+          args: -c ../.golangci.yml
+      - name: Run linter (http)
+        uses: golangci/golangci-lint-action@v2 # Action page: <https://github.com/golangci/golangci-lint-action>
+        with:
+          version: v1.33 # without patch version
+          only-new-issues: false # show only new issues if it's a pull request
+          working-directory: http
+          args: -c ../.golangci.yml
+      - name: Run linter (informer)
+        uses: golangci/golangci-lint-action@v2 # Action page: <https://github.com/golangci/golangci-lint-action>
+        with:
+          version: v1.33 # without patch version
+          only-new-issues: false # show only new issues if it's a pull request
+          working-directory: informer
+          args: -c ../.golangci.yml
+      - name: Run linter (logger)
+        uses: golangci/golangci-lint-action@v2 # Action page: <https://github.com/golangci/golangci-lint-action>
+        with:
+          version: v1.33 # without patch version
+          only-new-issues: false # show only new issues if it's a pull request
+          working-directory: logger
+          args: -c ../.golangci.yml
+      - name: Run linter (metrics)
+        uses: golangci/golangci-lint-action@v2 # Action page: <https://github.com/golangci/golangci-lint-action>
+        with:
+          version: v1.33 # without patch version
+          only-new-issues: false # show only new issues if it's a pull request
+          working-directory: metrics
+          args: -c ../.golangci.yml
+      - name: Run linter (redis)
+        uses: golangci/golangci-lint-action@v2 # Action page: <https://github.com/golangci/golangci-lint-action>
+        with:
+          version: v1.33 # without patch version
+          only-new-issues: false # show only new issues if it's a pull request
+          working-directory: redis
+          args: -c ../.golangci.yml
+      - name: Run linter (reload)
+        uses: golangci/golangci-lint-action@v2 # Action page: <https://github.com/golangci/golangci-lint-action>
+        with:
+          version: v1.33 # without patch version
+          only-new-issues: false # show only new issues if it's a pull request
+          working-directory: reload
+          args: -c ../.golangci.yml
+      - name: Run linter (resetter)
+        uses: golangci/golangci-lint-action@v2 # Action page: <https://github.com/golangci/golangci-lint-action>
+        with:
+          version: v1.33 # without patch version
+          only-new-issues: false # show only new issues if it's a pull request
+          working-directory: resetter
+          args: -c ../.golangci.yml
+      - name: Run linter (rpc)
+        uses: golangci/golangci-lint-action@v2 # Action page: <https://github.com/golangci/golangci-lint-action>
+        with:
+          version: v1.33 # without patch version
+          only-new-issues: false # show only new issues if it's a pull request
+          working-directory: rpc
+          args: -c ../.golangci.yml
+      - name: Run linter (server)
+        uses: golangci/golangci-lint-action@v2 # Action page: <https://github.com/golangci/golangci-lint-action>
+        with:
+          version: v1.33 # without patch version
+          only-new-issues: false # show only new issues if it's a pull request
+          working-directory: server
+          args: -c ../.golangci.yml
+      - name: Run linter (static)
+        uses: golangci/golangci-lint-action@v2 # Action page: <https://github.com/golangci/golangci-lint-action>
+        with:
+          version: v1.33 # without patch version
+          only-new-issues: false # show only new issues if it's a pull request
+          working-directory: static
           args: -c ../.golangci.yml
 
 #   image:
