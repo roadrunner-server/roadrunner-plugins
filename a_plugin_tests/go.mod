@@ -5,6 +5,7 @@ go 1.15
 require (
 	github.com/golang/mock v1.4.4
 	github.com/json-iterator/go v1.1.10
+	github.com/prometheus/client_golang v1.9.0
 	github.com/spiral/endure v1.0.0-beta20
 	github.com/spiral/errors v1.0.6
 	github.com/spiral/goridge/v3 v3.0.0-beta8
@@ -14,7 +15,8 @@ require (
 	github.com/spiral/roadrunner-plugins/headers v0.0.2
 	github.com/spiral/roadrunner-plugins/http v0.0.3
 	github.com/spiral/roadrunner-plugins/informer v0.0.2
-	github.com/spiral/roadrunner-plugins/logger v0.0.2
+	github.com/spiral/roadrunner-plugins/logger v0.0.3
+	github.com/spiral/roadrunner-plugins/metrics v0.0.0-20201221123506-1937d78b676c
 	github.com/spiral/roadrunner-plugins/resetter v0.0.2
 	github.com/spiral/roadrunner-plugins/rpc v0.0.2
 	github.com/spiral/roadrunner-plugins/server v0.0.2
@@ -32,6 +34,7 @@ replace (
 	github.com/spiral/roadrunner-plugins/http => ../http
 	github.com/spiral/roadrunner-plugins/informer => ../informer
 	github.com/spiral/roadrunner-plugins/logger => ../logger
+	github.com/spiral/roadrunner-plugins/metrics => ../metrics
 	github.com/spiral/roadrunner-plugins/resetter => ../resetter
 	github.com/spiral/roadrunner-plugins/rpc => ../rpc
 	github.com/spiral/roadrunner-plugins/server => ../server

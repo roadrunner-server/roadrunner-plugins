@@ -1,4 +1,4 @@
-package tests
+package metrics
 
 import (
 	"io/ioutil"
