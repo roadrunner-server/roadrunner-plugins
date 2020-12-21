@@ -12,6 +12,7 @@ import (
 	"github.com/alicebob/miniredis/v2"
 	"github.com/golang/mock/gomock"
 	"github.com/spiral/endure"
+	"github.com/spiral/roadrunner-plugins/a_plugin_tests/mocks"
 	"github.com/spiral/roadrunner-plugins/config"
 	"github.com/spiral/roadrunner-plugins/redis"
 	"github.com/stretchr/testify/assert"
