@@ -11,7 +11,6 @@ import (
 	"github.com/spiral/roadrunner/v2/pkg/payload"
 	poolImpl "github.com/spiral/roadrunner/v2/pkg/pool"
 	"github.com/spiral/roadrunner/v2/pkg/worker"
-	plugin "github.com/spiral/roadrunner/v2/plugins/server"
 )
 
 const ConfigSection = "server"
@@ -54,7 +53,7 @@ func (f *Foo) Serve() chan error {
 
 	errCh := make(chan error, 1)
 
-	conf := &plugin.Config{}
+	conf := &server.Config{}
 	var err error
 	err = f.configProvider.UnmarshalKey(ConfigSection, conf)
 	if err != nil {

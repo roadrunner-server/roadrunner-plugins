@@ -66,7 +66,7 @@ func (server *Plugin) Stop() error {
 }
 
 // CmdFactory provides worker command factory assocated with given context.
-func (server *Plugin) CmdFactory(env server.Env) (func() *exec.Cmd, error) {
+func (server *Plugin) CmdFactory(env Env) (func() *exec.Cmd, error) {
 	const op = errors.Op("cmd factory")
 	var cmdArgs []string
 
@@ -98,7 +98,7 @@ func (server *Plugin) CmdFactory(env server.Env) (func() *exec.Cmd, error) {
 }
 
 // NewWorker issues new standalone worker.
-func (server *Plugin) NewWorker(ctx context.Context, env server.Env) (worker.BaseProcess, error) {
+func (server *Plugin) NewWorker(ctx context.Context, env Env) (worker.BaseProcess, error) {
 	const op = errors.Op("new worker")
 	spawnCmd, err := server.CmdFactory(env)
 	if err != nil {
@@ -116,7 +116,7 @@ func (server *Plugin) NewWorker(ctx context.Context, env server.Env) (worker.Bas
 }
 
 // NewWorkerPool issues new worker pool.
-func (server *Plugin) NewWorkerPool(ctx context.Context, opt poolImpl.Config, env server.Env) (pool.Pool, error) {
+func (server *Plugin) NewWorkerPool(ctx context.Context, opt poolImpl.Config, env Env) (pool.Pool, error) {
 	spawnCmd, err := server.CmdFactory(env)
 	if err != nil {
 		return nil, err
@@ -160,7 +160,7 @@ func (server *Plugin) initFactory() (worker.Factory, error) {
 	}
 }
 
-func (server *Plugin) setEnv(e server.Env) []string {
+func (server *Plugin) setEnv(e Env) []string {
 	env := append(os.Environ(), fmt.Sprintf("RR_RELAY=%s", server.cfg.Relay))
 	for k, v := range e {
 		env = append(env, fmt.Sprintf("%s=%s", strings.ToUpper(k), v))

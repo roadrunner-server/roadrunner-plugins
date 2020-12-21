@@ -16,7 +16,7 @@ type Config struct {
 	Group string
 
 	// Env represents application environment.
-	Env server.Env
+	Env Env
 
 	// Listen defines connection method and factory to be used to connect to workers:
 	// "pipes", "tcp://:6001", "unix://rr.sock"
