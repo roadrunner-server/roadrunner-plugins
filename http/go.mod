@@ -10,7 +10,7 @@ require (
 	github.com/spiral/errors v1.0.6
 	github.com/spiral/goridge/v3 v3.0.0-beta8
 	github.com/spiral/roadrunner-plugins/checker v0.0.0-20201221121632-4246b6980729
-	github.com/spiral/roadrunner-plugins/config v0.0.0-20201221121632-4246b6980729
+	github.com/spiral/roadrunner-plugins/config v0.0.2
 	github.com/spiral/roadrunner-plugins/informer v0.0.0-20201221121632-4246b6980729
 	github.com/spiral/roadrunner-plugins/logger v0.0.2
 	github.com/spiral/roadrunner-plugins/resetter v0.0.0-20201221121632-4246b6980729
