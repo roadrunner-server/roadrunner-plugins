@@ -11,11 +11,11 @@ import (
 
 	"github.com/spiral/endure"
 	goridgeRpc "github.com/spiral/goridge/v3/pkg/rpc"
-	"github.com/spiral/roadrunner/v2/plugins/config"
-	"github.com/spiral/roadrunner/v2/plugins/logger"
-	"github.com/spiral/roadrunner/v2/plugins/resetter"
-	rpcPlugin "github.com/spiral/roadrunner/v2/plugins/rpc"
-	"github.com/spiral/roadrunner/v2/plugins/server"
+	"github.com/spiral/roadrunner-plugins/config"
+	"github.com/spiral/roadrunner-plugins/logger"
+	"github.com/spiral/roadrunner-plugins/resetter"
+	rpcPlugin "github.com/spiral/roadrunner-plugins/rpc"
+	"github.com/spiral/roadrunner-plugins/server"
 	"github.com/stretchr/testify/assert"
 )
 
