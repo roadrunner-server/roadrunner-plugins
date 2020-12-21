@@ -20,6 +20,7 @@ require (
 	github.com/spiral/roadrunner-plugins/logger v0.0.3
 	github.com/spiral/roadrunner-plugins/metrics v0.0.3
 	github.com/spiral/roadrunner-plugins/redis v0.0.0-00010101000000-000000000000
+	github.com/spiral/roadrunner-plugins/reload v0.0.0-00010101000000-000000000000
 	github.com/spiral/roadrunner-plugins/resetter v0.0.2
 	github.com/spiral/roadrunner-plugins/rpc v0.0.2
 	github.com/spiral/roadrunner-plugins/server v0.0.2
@@ -39,6 +40,7 @@ replace (
 	github.com/spiral/roadrunner-plugins/logger => ../logger
 	github.com/spiral/roadrunner-plugins/metrics => ../metrics
 	github.com/spiral/roadrunner-plugins/redis => ../redis
+	github.com/spiral/roadrunner-plugins/reload => ../reload
 	github.com/spiral/roadrunner-plugins/resetter => ../resetter
 	github.com/spiral/roadrunner-plugins/rpc => ../rpc
 	github.com/spiral/roadrunner-plugins/server => ../server
