@@ -6,6 +6,7 @@ require (
 	github.com/golang/mock v1.4.4
 	github.com/json-iterator/go v1.1.10
 	github.com/spiral/endure v1.0.0-beta20
+	github.com/spiral/errors v1.0.6
 	github.com/spiral/goridge/v3 v3.0.0-beta8
 	github.com/spiral/roadrunner-plugins/checker v0.0.3
 	github.com/spiral/roadrunner-plugins/config v0.0.3
@@ -24,14 +25,14 @@ require (
 
 // ONLY FOR TESTS
 replace (
-		github.com/spiral/roadrunner-plugins/checker => ../checker
-    	github.com/spiral/roadrunner-plugins/config => ../config
-    	github.com/spiral/roadrunner-plugins/gzip => ../gzip
-    	github.com/spiral/roadrunner-plugins/headers => ../headers
-    	github.com/spiral/roadrunner-plugins/http => ../http
-    	github.com/spiral/roadrunner-plugins/informer => ../informer
-    	github.com/spiral/roadrunner-plugins/logger => ../logger
-    	github.com/spiral/roadrunner-plugins/resetter => ../resetter
-    	github.com/spiral/roadrunner-plugins/rpc => ../rpc
-    	github.com/spiral/roadrunner-plugins/server => ../server
+	github.com/spiral/roadrunner-plugins/checker => ../checker
+	github.com/spiral/roadrunner-plugins/config => ../config
+	github.com/spiral/roadrunner-plugins/gzip => ../gzip
+	github.com/spiral/roadrunner-plugins/headers => ../headers
+	github.com/spiral/roadrunner-plugins/http => ../http
+	github.com/spiral/roadrunner-plugins/informer => ../informer
+	github.com/spiral/roadrunner-plugins/logger => ../logger
+	github.com/spiral/roadrunner-plugins/resetter => ../resetter
+	github.com/spiral/roadrunner-plugins/rpc => ../rpc
+	github.com/spiral/roadrunner-plugins/server => ../server
 )
