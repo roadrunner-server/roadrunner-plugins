@@ -6,7 +6,7 @@
 use Spiral\Goridge;
 use Spiral\RoadRunner;
 
-require dirname(__DIR__) . "/../../tests/vendor/autoload.php";
+require dirname(__DIR__) . "/../tests/vendor/autoload.php";
 
 $relay = new Goridge\SocketRelay("localhost", 9999);
 $rr = new RoadRunner\Worker($relay);
