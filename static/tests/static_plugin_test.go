@@ -14,13 +14,13 @@ import (
 
 	"github.com/golang/mock/gomock"
 	"github.com/spiral/endure"
-	"github.com/spiral/roadrunner/v2/mocks"
 	"github.com/spiral/roadrunner-plugins/config"
 	"github.com/spiral/roadrunner-plugins/gzip"
 	httpPlugin "github.com/spiral/roadrunner-plugins/http"
 	"github.com/spiral/roadrunner-plugins/logger"
 	"github.com/spiral/roadrunner-plugins/server"
 	"github.com/spiral/roadrunner-plugins/static"
+	"github.com/spiral/roadrunner/v2/mocks"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -113,15 +113,15 @@ func staticHeaders(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	assert.Equal(t, all("../../../tests/client.php"), string(b))
-	assert.Equal(t, all("../../../tests/client.php"), string(b))
+	assert.Equal(t, all("../../tests/client.php"), string(b))
+	assert.Equal(t, all("../../tests/client.php"), string(b))
 }
 
 func staticNotForbid(t *testing.T) {
 	b, r, err := get("http://localhost:21603/client.php")
 	assert.NoError(t, err)
-	assert.Equal(t, all("../../../tests/client.php"), b)
-	assert.Equal(t, all("../../../tests/client.php"), b)
+	assert.Equal(t, all("../../tests/client.php"), b)
+	assert.Equal(t, all("../../tests/client.php"), b)
 	_ = r.Body.Close()
 }
 
