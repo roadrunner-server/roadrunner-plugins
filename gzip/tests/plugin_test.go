@@ -11,12 +11,12 @@ import (
 
 	"github.com/golang/mock/gomock"
 	"github.com/spiral/endure"
-	"github.com/spiral/roadrunner/v2/mocks"
 	"github.com/spiral/roadrunner-plugins/config"
 	"github.com/spiral/roadrunner-plugins/gzip"
 	httpPlugin "github.com/spiral/roadrunner-plugins/http"
 	"github.com/spiral/roadrunner-plugins/logger"
 	"github.com/spiral/roadrunner-plugins/server"
+	"github.com/spiral/roadrunner/v2/mocks"
 	"github.com/stretchr/testify/assert"
 )
 
