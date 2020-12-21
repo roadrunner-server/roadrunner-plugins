@@ -43,7 +43,6 @@ func (p2 *Plugin2) Serve() chan error {
 		}
 		// to stop exec
 		errCh <- errors.E(errors.Disabled)
-		return
 	}()
 
 	return errCh
