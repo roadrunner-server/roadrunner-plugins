@@ -13,7 +13,7 @@ require (
 	github.com/spiral/roadrunner-plugins/config v0.0.2
 	github.com/spiral/roadrunner-plugins/informer v0.0.0-20201221121632-4246b6980729
 	github.com/spiral/roadrunner-plugins/logger v0.0.2
-	github.com/spiral/roadrunner-plugins/resetter v0.0.0-20201221121632-4246b6980729
+	github.com/spiral/roadrunner-plugins/resetter v0.0.2
 	github.com/spiral/roadrunner-plugins/rpc v0.0.2
 	github.com/spiral/roadrunner-plugins/server v0.0.2
 	github.com/spiral/roadrunner/v2 v2.0.0-alpha26
