@@ -11,11 +11,11 @@ import (
 	"time"
 
 	"github.com/spiral/endure"
-	"github.com/spiral/roadrunner/v2/plugins/config"
-	"github.com/spiral/roadrunner/v2/plugins/headers"
-	httpPlugin "github.com/spiral/roadrunner/v2/plugins/http"
-	"github.com/spiral/roadrunner/v2/plugins/logger"
-	"github.com/spiral/roadrunner/v2/plugins/server"
+	"github.com/spiral/roadrunner-plugins/config"
+	"github.com/spiral/roadrunner-plugins/headers"
+	httpPlugin "github.com/spiral/roadrunner-plugins/http"
+	"github.com/spiral/roadrunner-plugins/logger"
+	"github.com/spiral/roadrunner-plugins/server"
 	"github.com/stretchr/testify/assert"
 )
 

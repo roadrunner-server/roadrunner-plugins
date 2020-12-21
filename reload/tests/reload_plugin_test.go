@@ -17,11 +17,11 @@ import (
 	"github.com/spiral/endure"
 	"github.com/spiral/errors"
 	"github.com/spiral/roadrunner/v2/mocks"
-	"github.com/spiral/roadrunner/v2/plugins/config"
-	httpPlugin "github.com/spiral/roadrunner/v2/plugins/http"
-	"github.com/spiral/roadrunner/v2/plugins/reload"
-	"github.com/spiral/roadrunner/v2/plugins/resetter"
-	"github.com/spiral/roadrunner/v2/plugins/server"
+	"github.com/spiral/roadrunner-plugins/config"
+	httpPlugin "github.com/spiral/roadrunner-plugins/http"
+	"github.com/spiral/roadrunner-plugins/reload"
+	"github.com/spiral/roadrunner-plugins/resetter"
+	"github.com/spiral/roadrunner-plugins/server"
 	"github.com/stretchr/testify/assert"
 )
 

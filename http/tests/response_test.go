@@ -7,7 +7,7 @@ import (
 	"testing"
 
 	"github.com/spiral/roadrunner/v2/pkg/payload"
-	http2 "github.com/spiral/roadrunner/v2/plugins/http"
+	http2 "github.com/spiral/roadrunner-plugins/http"
 	"github.com/stretchr/testify/assert"
 )
 

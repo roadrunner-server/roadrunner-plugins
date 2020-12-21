@@ -12,9 +12,9 @@ import (
 	"github.com/alicebob/miniredis/v2"
 	"github.com/golang/mock/gomock"
 	"github.com/spiral/endure"
+	"github.com/spiral/roadrunner-plugins/config"
+	"github.com/spiral/roadrunner-plugins/redis"
 	"github.com/spiral/roadrunner/v2/mocks"
-	"github.com/spiral/roadrunner/v2/plugins/config"
-	"github.com/spiral/roadrunner/v2/plugins/redis"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -54,10 +54,7 @@ func TestRedisInit(t *testing.T) {
 	}
 
 	s, err := miniredis.Run()
-	if err != nil {
-		panic(err)
-	}
-	defer s.Close()
+	assert.NoError(t, err)
 
 	c := redisConfig(s.Port())
 

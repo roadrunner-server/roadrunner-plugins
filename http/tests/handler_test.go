@@ -10,9 +10,9 @@ import (
 	"runtime"
 	"strings"
 
+	httpPlugin "github.com/spiral/roadrunner-/plugins/http"
 	"github.com/spiral/roadrunner/v2/pkg/pipe"
 	poolImpl "github.com/spiral/roadrunner/v2/pkg/pool"
-	httpPlugin "github.com/spiral/roadrunner/v2/plugins/http"
 	"github.com/stretchr/testify/assert"
 
 	"net/http"

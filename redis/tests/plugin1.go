@@ -39,5 +39,5 @@ func (p *Plugin1) Serve() chan error {
 }
 
 func (p *Plugin1) Stop() error {
-	return p.redisClient.Close()
+	return nil
 }
