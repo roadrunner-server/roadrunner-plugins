@@ -1,4 +1,4 @@
-package tests
+package gzip
 
 import (
 	"net/http"
