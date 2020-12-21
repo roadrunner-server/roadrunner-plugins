@@ -378,6 +378,8 @@ github.com/spiral/roadrunner-plugins/rpc v0.0.0-20201221114921-2c21f118f804 h1:K
 github.com/spiral/roadrunner-plugins/rpc v0.0.0-20201221114921-2c21f118f804/go.mod h1:d6KuPKcJonqCDha7O/PCGoeUDtCE5L2UQTFRpJCKfAg=
 github.com/spiral/roadrunner-plugins/server v0.0.0-20201221114921-2c21f118f804 h1:w4SF35A0MZz5Mu1mjKtP4xINYtANYEoTGscoNxL70uw=
 github.com/spiral/roadrunner-plugins/server v0.0.0-20201221114921-2c21f118f804/go.mod h1:7wApF/hbD2K6GMbs3VaXNIGaW4XrAYAIxJgQMUsKX+A=
+github.com/spiral/roadrunner-plugins/server v0.0.2 h1:N6ez7R1fzojlsKZjehJvldskOYB3+OYoIWIsv6dUX38=
+github.com/spiral/roadrunner-plugins/server v0.0.2/go.mod h1:+98wLY7N5N+LJagjXChLAhULnkwPzHqAB6qwmWZGmOw=
 github.com/spiral/roadrunner/v2 v2.0.0-alpha26 h1:YHXX6xLoRwoFGOozvi8EeTWWmfWzcFv4MmZFm5eNUcE=
 github.com/spiral/roadrunner/v2 v2.0.0-alpha26/go.mod h1:r7ojuHm9qCVbg4fKcqr4Aqk7VXqZ9YPefr1LOv7HNys=
 github.com/streadway/amqp v0.0.0-20190404075320-75d898a42a94/go.mod h1:AZpEONHx3DKn8O/DFsRAY58/XVQiIPMTMB1SddzLXVw=
