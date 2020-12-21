@@ -6,4 +6,3 @@ import "github.com/spiral/roadrunner/v2/interfaces/worker"
 type Informer interface {
 	Workers() []worker.BaseProcess
 }
-

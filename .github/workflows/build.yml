@@ -116,11 +116,21 @@ jobs:
       - name: Check out code
         uses: actions/checkout@v2
 
-      - name: Run linter
+      - name: Run linter (checker)
         uses: golangci/golangci-lint-action@v2 # Action page: <https://github.com/golangci/golangci-lint-action>
         with:
           version: v1.33 # without patch version
           only-new-issues: false # show only new issues if it's a pull request
+          working-directory: checker
+          args: -c ../.golangci.yml
+
+      - name: Run linter (config)
+        uses: golangci/golangci-lint-action@v2 # Action page: <https://github.com/golangci/golangci-lint-action>
+        with:
+          version: v1.33 # without patch version
+          only-new-issues: false # show only new issues if it's a pull request
+          working-directory: config
+          args: -c ../.golangci.yml
 
 #   image:
 #     name: Build docker image
