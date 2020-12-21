@@ -14,7 +14,7 @@ import (
 
 	"github.com/golang/mock/gomock"
 	"github.com/spiral/endure"
-	"github.com/spiral/roadrunner-plugins/a_plugin_tests/a_plugin_tests/mocks"
+	"github.com/spiral/roadrunner-plugins/a_plugin_tests/mocks"
 	"github.com/spiral/roadrunner-plugins/config"
 	"github.com/spiral/roadrunner-plugins/gzip"
 	httpPlugin "github.com/spiral/roadrunner-plugins/http"

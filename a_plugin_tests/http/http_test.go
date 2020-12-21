@@ -18,7 +18,7 @@ import (
 	"github.com/golang/mock/gomock"
 	"github.com/spiral/endure"
 	goridgeRpc "github.com/spiral/goridge/v3/pkg/rpc"
-	"github.com/spiral/roadrunner-plugins/a_plugin_tests/a_plugin_tests/mocks"
+	"github.com/spiral/roadrunner-plugins/a_plugin_tests/mocks"
 	"github.com/spiral/roadrunner-plugins/config"
 	httpPlugin "github.com/spiral/roadrunner-plugins/http"
 	"github.com/spiral/roadrunner-plugins/informer"
