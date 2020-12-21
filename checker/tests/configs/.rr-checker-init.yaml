@@ -3,7 +3,7 @@ rpc:
   disabled: false
 
 server:
-  command: "php ../../../tests/http/client.php echo pipes"
+  command: "php ../../tests/http/client.php echo pipes"
   user: ""
   group: ""
   env:

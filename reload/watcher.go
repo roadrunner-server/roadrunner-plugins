@@ -70,7 +70,7 @@ type Watcher struct {
 type Options func(*Watcher)
 
 // NewWatcher returns new instance of File Watcher
-func NewWatcher(configs []WatcherConfig, log log.Logger, options ...Options) (*Watcher, error) {
+func NewWatcher(configs []WatcherConfig, log logger.Logger, options ...Options) (*Watcher, error) {
 	w := &Watcher{
 		Event: make(chan Event),
 		mu:    &sync.Mutex{},
