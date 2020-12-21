@@ -1,4 +1,4 @@
-package tests
+package redis
 
 import (
 	"fmt"
@@ -48,7 +48,7 @@ redis:
 }
 
 func TestRedisInit(t *testing.T) {
-	cont, err := endure.NewContainer(nil, endure.SetLogLevel(endure.DebugLevel))
+	cont, err := endure.NewContainer(nil, endure.SetLogLevel(endure.ErrorLevel))
 	if err != nil {
 		t.Fatal(err)
 	}
