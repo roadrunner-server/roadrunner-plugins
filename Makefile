@@ -24,22 +24,20 @@ uninstall: ## Uninstall locally installed RR
 	rm -f /usr/local/bin/rr
 
 test: ## Run application tests
-	go test -v -race -cover -tags=debug -covermode=atomic ./checker/tests
-	go test -v -race -cover -tags=debug -covermode=atomic ./rpc
-	go test -v -race -cover -tags=debug -covermode=atomic ./rpc/tests
-	go test -v -race -cover -tags=debug -covermode=atomic ./config/tests
-	go test -v -race -cover -tags=debug -covermode=atomic ./logger/tests
-	go test -v -race -cover -tags=debug -covermode=atomic ./server/tests
-	go test -v -race -cover -tags=debug -covermode=atomic ./metrics/tests
-	go test -v -race -cover -tags=debug -covermode=atomic ./informer/tests
-	go test -v -race -cover -tags=debug -covermode=atomic ./resetter/tests
-	go test -v -race -cover -tags=debug -covermode=atomic ./http/attributes
-	go test -v -race -cover -tags=debug -covermode=atomic ./http/tests
-	go test -v -race -cover -tags=debug -covermode=atomic ./gzip/tests
-	go test -v -race -cover -tags=debug -covermode=atomic ./static/tests
-	go test -v -race -cover -tags=debug -covermode=atomic ./headers/tests
-	go test -v -race -cover -tags=debug -covermode=atomic ./redis/tests
-	go test -v -race -cover -tags=debug -covermode=atomic ./reload/tests
+	go test -v -race -cover -tags=debug -covermode=atomic ./a_plugin_tests/checker
+	go test -v -race -cover -tags=debug -covermode=atomic ./a_plugin_tests/config
+	go test -v -race -cover -tags=debug -covermode=atomic ./a_plugin_tests/gzip
+	go test -v -race -cover -tags=debug -covermode=atomic ./a_plugin_tests/headers
+	go test -v -race -cover -tags=debug -covermode=atomic ./a_plugin_tests/http
+	go test -v -race -cover -tags=debug -covermode=atomic ./a_plugin_tests/informer
+	go test -v -race -cover -tags=debug -covermode=atomic ./a_plugin_tests/logger
+	go test -v -race -cover -tags=debug -covermode=atomic ./a_plugin_tests/metrics
+	go test -v -race -cover -tags=debug -covermode=atomic ./a_plugin_tests/redis
+	go test -v -race -cover -tags=debug -covermode=atomic ./a_plugin_tests/reload
+	go test -v -race -cover -tags=debug -covermode=atomic ./a_plugin_tests/resetter
+	go test -v -race -cover -tags=debug -covermode=atomic ./a_plugin_tests/rpc
+	go test -v -race -cover -tags=debug -covermode=atomic ./a_plugin_tests/server
+	go test -v -race -cover -tags=debug -covermode=atomic ./a_plugin_tests/static
 
 lint: ## Run application linters
 	go fmt ./...
