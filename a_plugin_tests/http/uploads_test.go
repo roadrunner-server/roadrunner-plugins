@@ -1,4 +1,4 @@
-package tests
+package http
 
 import (
 	"bytes"
@@ -16,9 +16,9 @@ import (
 	"time"
 
 	j "github.com/json-iterator/go"
+	httpPlugin "github.com/spiral/roadrunner-plugins/http"
 	"github.com/spiral/roadrunner/v2/pkg/pipe"
 	poolImpl "github.com/spiral/roadrunner/v2/pkg/pool"
-	httpPlugin "github.com/spiral/roadrunner-plugins/http"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -28,7 +28,7 @@ const testFile = "uploads_test.go"
 
 func TestHandler_Upload_File(t *testing.T) {
 	pool, err := poolImpl.NewPool(context.Background(),
-		func() *exec.Cmd { return exec.Command("php", "../../../tests/http/client.php", "upload", "pipes") },
+		func() *exec.Cmd { return exec.Command("php", "../../tests/http/client.php", "upload", "pipes") },
 		pipe.NewPipeFactory(),
 		poolImpl.Config{
 			NumWorkers:      1,
@@ -111,7 +111,7 @@ func TestHandler_Upload_File(t *testing.T) {
 
 func TestHandler_Upload_NestedFile(t *testing.T) {
 	pool, err := poolImpl.NewPool(context.Background(),
-		func() *exec.Cmd { return exec.Command("php", "../../../tests/http/client.php", "upload", "pipes") },
+		func() *exec.Cmd { return exec.Command("php", "../../tests/http/client.php", "upload", "pipes") },
 		pipe.NewPipeFactory(),
 		poolImpl.Config{
 			NumWorkers:      1,
@@ -194,7 +194,7 @@ func TestHandler_Upload_NestedFile(t *testing.T) {
 
 func TestHandler_Upload_File_NoTmpDir(t *testing.T) {
 	pool, err := poolImpl.NewPool(context.Background(),
-		func() *exec.Cmd { return exec.Command("php", "../../../tests/http/client.php", "upload", "pipes") },
+		func() *exec.Cmd { return exec.Command("php", "../../tests/http/client.php", "upload", "pipes") },
 		pipe.NewPipeFactory(),
 		poolImpl.Config{
 			NumWorkers:      1,
@@ -277,7 +277,7 @@ func TestHandler_Upload_File_NoTmpDir(t *testing.T) {
 
 func TestHandler_Upload_File_Forbids(t *testing.T) {
 	pool, err := poolImpl.NewPool(context.Background(),
-		func() *exec.Cmd { return exec.Command("php", "../../../tests/http/client.php", "upload", "pipes") },
+		func() *exec.Cmd { return exec.Command("php", "../../tests/http/client.php", "upload", "pipes") },
 		pipe.NewPipeFactory(),
 		poolImpl.Config{
 			NumWorkers:      1,

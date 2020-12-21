@@ -1,4 +1,4 @@
-package tests
+package http
 
 import (
 	"bytes"
@@ -23,7 +23,7 @@ import (
 
 func TestHandler_Echo(t *testing.T) {
 	pool, err := poolImpl.NewPool(context.Background(),
-		func() *exec.Cmd { return exec.Command("php", "../../../tests/http/client.php", "echo", "pipes") },
+		func() *exec.Cmd { return exec.Command("php", "../../tests/http/client.php", "echo", "pipes") },
 		pipe.NewPipeFactory(),
 		poolImpl.Config{
 			NumWorkers:      1,
@@ -74,7 +74,7 @@ func Test_HandlerErrors(t *testing.T) {
 
 func TestHandler_Headers(t *testing.T) {
 	pool, err := poolImpl.NewPool(context.Background(),
-		func() *exec.Cmd { return exec.Command("php", "../../../tests/http/client.php", "header", "pipes") },
+		func() *exec.Cmd { return exec.Command("php", "../../tests/http/client.php", "header", "pipes") },
 		pipe.NewPipeFactory(),
 		poolImpl.Config{
 			NumWorkers:      1,
@@ -135,7 +135,7 @@ func TestHandler_Headers(t *testing.T) {
 
 func TestHandler_Empty_User_Agent(t *testing.T) {
 	pool, err := poolImpl.NewPool(context.Background(),
-		func() *exec.Cmd { return exec.Command("php", "../../../tests/http/client.php", "user-agent", "pipes") },
+		func() *exec.Cmd { return exec.Command("php", "../../tests/http/client.php", "user-agent", "pipes") },
 		pipe.NewPipeFactory(),
 		poolImpl.Config{
 			NumWorkers:      1,
@@ -195,7 +195,7 @@ func TestHandler_Empty_User_Agent(t *testing.T) {
 
 func TestHandler_User_Agent(t *testing.T) {
 	pool, err := poolImpl.NewPool(context.Background(),
-		func() *exec.Cmd { return exec.Command("php", "../../../tests/http/client.php", "user-agent", "pipes") },
+		func() *exec.Cmd { return exec.Command("php", "../../tests/http/client.php", "user-agent", "pipes") },
 		pipe.NewPipeFactory(),
 		poolImpl.Config{
 			NumWorkers:      1,
@@ -255,7 +255,7 @@ func TestHandler_User_Agent(t *testing.T) {
 
 func TestHandler_Cookies(t *testing.T) {
 	pool, err := poolImpl.NewPool(context.Background(),
-		func() *exec.Cmd { return exec.Command("php", "../../../tests/http/client.php", "cookie", "pipes") },
+		func() *exec.Cmd { return exec.Command("php", "../../tests/http/client.php", "cookie", "pipes") },
 		pipe.NewPipeFactory(),
 		poolImpl.Config{
 			NumWorkers:      1,
@@ -320,7 +320,7 @@ func TestHandler_Cookies(t *testing.T) {
 
 func TestHandler_JsonPayload_POST(t *testing.T) {
 	pool, err := poolImpl.NewPool(context.Background(),
-		func() *exec.Cmd { return exec.Command("php", "../../../tests/http/client.php", "payload", "pipes") },
+		func() *exec.Cmd { return exec.Command("php", "../../tests/http/client.php", "payload", "pipes") },
 		pipe.NewPipeFactory(),
 		poolImpl.Config{
 			NumWorkers:      1,
@@ -384,7 +384,7 @@ func TestHandler_JsonPayload_POST(t *testing.T) {
 
 func TestHandler_JsonPayload_PUT(t *testing.T) {
 	pool, err := poolImpl.NewPool(context.Background(),
-		func() *exec.Cmd { return exec.Command("php", "../../../tests/http/client.php", "payload", "pipes") },
+		func() *exec.Cmd { return exec.Command("php", "../../tests/http/client.php", "payload", "pipes") },
 		pipe.NewPipeFactory(),
 		poolImpl.Config{
 			NumWorkers:      1,
@@ -444,7 +444,7 @@ func TestHandler_JsonPayload_PUT(t *testing.T) {
 
 func TestHandler_JsonPayload_PATCH(t *testing.T) {
 	pool, err := poolImpl.NewPool(context.Background(),
-		func() *exec.Cmd { return exec.Command("php", "../../../tests/http/client.php", "payload", "pipes") },
+		func() *exec.Cmd { return exec.Command("php", "../../tests/http/client.php", "payload", "pipes") },
 		pipe.NewPipeFactory(),
 		poolImpl.Config{
 			NumWorkers:      1,
@@ -504,7 +504,7 @@ func TestHandler_JsonPayload_PATCH(t *testing.T) {
 
 func TestHandler_FormData_POST(t *testing.T) {
 	pool, err := poolImpl.NewPool(context.Background(),
-		func() *exec.Cmd { return exec.Command("php", "../../../tests/http/client.php", "data", "pipes") },
+		func() *exec.Cmd { return exec.Command("php", "../../tests/http/client.php", "data", "pipes") },
 		pipe.NewPipeFactory(),
 		poolImpl.Config{
 			NumWorkers:      1,
@@ -577,7 +577,7 @@ func TestHandler_FormData_POST(t *testing.T) {
 
 func TestHandler_FormData_POST_Overwrite(t *testing.T) {
 	pool, err := poolImpl.NewPool(context.Background(),
-		func() *exec.Cmd { return exec.Command("php", "../../../tests/http/client.php", "data", "pipes") },
+		func() *exec.Cmd { return exec.Command("php", "../../tests/http/client.php", "data", "pipes") },
 		pipe.NewPipeFactory(),
 		poolImpl.Config{
 			NumWorkers:      1,
@@ -650,7 +650,7 @@ func TestHandler_FormData_POST_Overwrite(t *testing.T) {
 
 func TestHandler_FormData_POST_Form_UrlEncoded_Charset(t *testing.T) {
 	pool, err := poolImpl.NewPool(context.Background(),
-		func() *exec.Cmd { return exec.Command("php", "../../../tests/http/client.php", "data", "pipes") },
+		func() *exec.Cmd { return exec.Command("php", "../../tests/http/client.php", "data", "pipes") },
 		pipe.NewPipeFactory(),
 		poolImpl.Config{
 			NumWorkers:      1,
@@ -722,7 +722,7 @@ func TestHandler_FormData_POST_Form_UrlEncoded_Charset(t *testing.T) {
 
 func TestHandler_FormData_PUT(t *testing.T) {
 	pool, err := poolImpl.NewPool(context.Background(),
-		func() *exec.Cmd { return exec.Command("php", "../../../tests/http/client.php", "data", "pipes") },
+		func() *exec.Cmd { return exec.Command("php", "../../tests/http/client.php", "data", "pipes") },
 		pipe.NewPipeFactory(),
 		poolImpl.Config{
 			NumWorkers:      1,
@@ -794,7 +794,7 @@ func TestHandler_FormData_PUT(t *testing.T) {
 
 func TestHandler_FormData_PATCH(t *testing.T) {
 	pool, err := poolImpl.NewPool(context.Background(),
-		func() *exec.Cmd { return exec.Command("php", "../../../tests/http/client.php", "data", "pipes") },
+		func() *exec.Cmd { return exec.Command("php", "../../tests/http/client.php", "data", "pipes") },
 		pipe.NewPipeFactory(),
 		poolImpl.Config{
 			NumWorkers:      1,
@@ -866,7 +866,7 @@ func TestHandler_FormData_PATCH(t *testing.T) {
 
 func TestHandler_Multipart_POST(t *testing.T) {
 	pool, err := poolImpl.NewPool(context.Background(),
-		func() *exec.Cmd { return exec.Command("php", "../../../tests/http/client.php", "data", "pipes") },
+		func() *exec.Cmd { return exec.Command("php", "../../tests/http/client.php", "data", "pipes") },
 		pipe.NewPipeFactory(),
 		poolImpl.Config{
 			NumWorkers:      1,
@@ -980,7 +980,7 @@ func TestHandler_Multipart_POST(t *testing.T) {
 
 func TestHandler_Multipart_PUT(t *testing.T) {
 	pool, err := poolImpl.NewPool(context.Background(),
-		func() *exec.Cmd { return exec.Command("php", "../../../tests/http/client.php", "data", "pipes") },
+		func() *exec.Cmd { return exec.Command("php", "../../tests/http/client.php", "data", "pipes") },
 		pipe.NewPipeFactory(),
 		poolImpl.Config{
 			NumWorkers:      1,
@@ -1094,7 +1094,7 @@ func TestHandler_Multipart_PUT(t *testing.T) {
 
 func TestHandler_Multipart_PATCH(t *testing.T) {
 	pool, err := poolImpl.NewPool(context.Background(),
-		func() *exec.Cmd { return exec.Command("php", "../../../tests/http/client.php", "data", "pipes") },
+		func() *exec.Cmd { return exec.Command("php", "../../tests/http/client.php", "data", "pipes") },
 		pipe.NewPipeFactory(),
 		poolImpl.Config{
 			NumWorkers:      1,
@@ -1210,7 +1210,7 @@ func TestHandler_Multipart_PATCH(t *testing.T) {
 
 func TestHandler_Error(t *testing.T) {
 	pool, err := poolImpl.NewPool(context.Background(),
-		func() *exec.Cmd { return exec.Command("php", "../../../tests/http/client.php", "error", "pipes") },
+		func() *exec.Cmd { return exec.Command("php", "../../tests/http/client.php", "error", "pipes") },
 		pipe.NewPipeFactory(),
 		poolImpl.Config{
 			NumWorkers:      1,
@@ -1256,7 +1256,7 @@ func TestHandler_Error(t *testing.T) {
 
 func TestHandler_Error2(t *testing.T) {
 	pool, err := poolImpl.NewPool(context.Background(),
-		func() *exec.Cmd { return exec.Command("php", "../../../tests/http/client.php", "error2", "pipes") },
+		func() *exec.Cmd { return exec.Command("php", "../../tests/http/client.php", "error2", "pipes") },
 		pipe.NewPipeFactory(),
 		poolImpl.Config{
 			NumWorkers:      1,
@@ -1302,7 +1302,7 @@ func TestHandler_Error2(t *testing.T) {
 
 func TestHandler_Error3(t *testing.T) {
 	pool, err := poolImpl.NewPool(context.Background(),
-		func() *exec.Cmd { return exec.Command("php", "../../../tests/http/client.php", "pid", "pipes") },
+		func() *exec.Cmd { return exec.Command("php", "../../tests/http/client.php", "pid", "pipes") },
 		pipe.NewPipeFactory(),
 		poolImpl.Config{
 			NumWorkers:      1,
@@ -1361,7 +1361,7 @@ func TestHandler_Error3(t *testing.T) {
 
 func TestHandler_ResponseDuration(t *testing.T) {
 	pool, err := poolImpl.NewPool(context.Background(),
-		func() *exec.Cmd { return exec.Command("php", "../../../tests/http/client.php", "echo", "pipes") },
+		func() *exec.Cmd { return exec.Command("php", "../../tests/http/client.php", "echo", "pipes") },
 		pipe.NewPipeFactory(),
 		poolImpl.Config{
 			NumWorkers:      1,
@@ -1422,7 +1422,7 @@ func TestHandler_ResponseDuration(t *testing.T) {
 
 func TestHandler_ResponseDurationDelayed(t *testing.T) {
 	pool, err := poolImpl.NewPool(context.Background(),
-		func() *exec.Cmd { return exec.Command("php", "../../../tests/http/client.php", "echoDelay", "pipes") },
+		func() *exec.Cmd { return exec.Command("php", "../../tests/http/client.php", "echoDelay", "pipes") },
 		pipe.NewPipeFactory(),
 		poolImpl.Config{
 			NumWorkers:      1,
@@ -1482,7 +1482,7 @@ func TestHandler_ResponseDurationDelayed(t *testing.T) {
 
 func TestHandler_ErrorDuration(t *testing.T) {
 	pool, err := poolImpl.NewPool(context.Background(),
-		func() *exec.Cmd { return exec.Command("php", "../../../tests/http/client.php", "error", "pipes") },
+		func() *exec.Cmd { return exec.Command("php", "../../tests/http/client.php", "error", "pipes") },
 		pipe.NewPipeFactory(),
 		poolImpl.Config{
 			NumWorkers:      1,
@@ -1556,7 +1556,7 @@ func TestHandler_IP(t *testing.T) {
 	assert.NotNil(t, cidrs)
 
 	pool, err := poolImpl.NewPool(context.Background(),
-		func() *exec.Cmd { return exec.Command("php", "../../../tests/http/client.php", "ip", "pipes") },
+		func() *exec.Cmd { return exec.Command("php", "../../tests/http/client.php", "ip", "pipes") },
 		pipe.NewPipeFactory(),
 		poolImpl.Config{
 			NumWorkers:      1,
@@ -1617,7 +1617,7 @@ func TestHandler_XRealIP(t *testing.T) {
 	assert.NotNil(t, cidrs)
 
 	pool, err := poolImpl.NewPool(context.Background(),
-		func() *exec.Cmd { return exec.Command("php", "../../../tests/http/client.php", "ip", "pipes") },
+		func() *exec.Cmd { return exec.Command("php", "../../tests/http/client.php", "ip", "pipes") },
 		pipe.NewPipeFactory(),
 		poolImpl.Config{
 			NumWorkers:      1,
@@ -1683,7 +1683,7 @@ func TestHandler_XForwardedFor(t *testing.T) {
 	assert.NotNil(t, cidrs)
 
 	pool, err := poolImpl.NewPool(context.Background(),
-		func() *exec.Cmd { return exec.Command("php", "../../../tests/http/client.php", "ip", "pipes") },
+		func() *exec.Cmd { return exec.Command("php", "../../tests/http/client.php", "ip", "pipes") },
 		pipe.NewPipeFactory(),
 		poolImpl.Config{
 			NumWorkers:      1,
@@ -1748,7 +1748,7 @@ func TestHandler_XForwardedFor_NotTrustedRemoteIp(t *testing.T) {
 	assert.NotNil(t, cidrs)
 
 	pool, err := poolImpl.NewPool(context.Background(),
-		func() *exec.Cmd { return exec.Command("php", "../../../tests/http/client.php", "ip", "pipes") },
+		func() *exec.Cmd { return exec.Command("php", "../../tests/http/client.php", "ip", "pipes") },
 		pipe.NewPipeFactory(),
 		poolImpl.Config{
 			NumWorkers:      1,
@@ -1796,7 +1796,7 @@ func TestHandler_XForwardedFor_NotTrustedRemoteIp(t *testing.T) {
 
 func BenchmarkHandler_Listen_Echo(b *testing.B) {
 	pool, err := poolImpl.NewPool(context.Background(),
-		func() *exec.Cmd { return exec.Command("php", "../../../tests/http/client.php", "echo", "pipes") },
+		func() *exec.Cmd { return exec.Command("php", "../../tests/http/client.php", "echo", "pipes") },
 		pipe.NewPipeFactory(),
 		poolImpl.Config{
 			NumWorkers:      int64(runtime.NumCPU()),

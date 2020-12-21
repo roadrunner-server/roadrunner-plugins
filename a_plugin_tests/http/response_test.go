@@ -1,4 +1,4 @@
-package tests
+package http
 
 import (
 	"bytes"
@@ -6,8 +6,8 @@ import (
 	"net/http"
 	"testing"
 
-	"github.com/spiral/roadrunner/v2/pkg/payload"
 	http2 "github.com/spiral/roadrunner-plugins/http"
+	"github.com/spiral/roadrunner/v2/pkg/payload"
 	"github.com/stretchr/testify/assert"
 )
 

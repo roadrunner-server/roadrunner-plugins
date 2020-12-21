@@ -1,5 +1,5 @@
 server:
-  command: "php ../../../tests/http/client.php echo pipes"
+  command: "php ../../tests/http/client.php push pipes"
   user: ""
   group: ""
   env:
@@ -9,7 +9,7 @@ server:
 
 http:
   debug: true
-  address: :8083
+  address: :8086
   maxRequestSize: 1024
   middleware: [ "" ]
   uploads:
@@ -20,10 +20,12 @@ http:
     maxJobs: 0
     allocateTimeout: 60s
     destroyTimeout: 60s
-  http2:
-    enabled: true
-    h2c: true
-    maxConcurrentStreams: 128
+
+  ssl:
+    port: 8894
+    redirect: true
+    cert: fixtures/server.crt
+    key: fixtures/server.key
 logs:
   mode: development
   level: error
