@@ -5,6 +5,7 @@ import (
 	"testing"
 
 	j "github.com/json-iterator/go"
+	"github.com/spiral/roadrunner-plugins/rpc"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -17,7 +18,7 @@ func (cfg *testCfg) Unmarshal(out interface{}) error {
 }
 
 func TestConfig_Listener(t *testing.T) {
-	cfg := &Config{Listen: "tcp://:18001"}
+	cfg := &rpc.Config{Listen: "tcp://:18001"}
 
 	ln, err := cfg.Listener()
 	assert.NoError(t, err)
@@ -38,7 +39,7 @@ func TestConfig_Listener(t *testing.T) {
 }
 
 func TestConfig_ListenerUnix(t *testing.T) {
-	cfg := &Config{Listen: "unix://file.sock"}
+	cfg := &rpc.Config{Listen: "unix://file.sock"}
 
 	ln, err := cfg.Listener()
 	assert.NoError(t, err)
@@ -55,7 +56,7 @@ func TestConfig_ListenerUnix(t *testing.T) {
 }
 
 func Test_Config_Error(t *testing.T) {
-	cfg := &Config{Listen: "uni:unix.sock"}
+	cfg := &rpc.Config{Listen: "uni:unix.sock"}
 	ln, err := cfg.Listener()
 	assert.Nil(t, ln)
 	assert.Error(t, err)
@@ -63,7 +64,7 @@ func Test_Config_Error(t *testing.T) {
 }
 
 func Test_Config_ErrorMethod(t *testing.T) {
-	cfg := &Config{Listen: "xinu://unix.sock"}
+	cfg := &rpc.Config{Listen: "xinu://unix.sock"}
 
 	ln, err := cfg.Listener()
 	assert.Nil(t, ln)
@@ -71,7 +72,7 @@ func Test_Config_ErrorMethod(t *testing.T) {
 }
 
 func TestConfig_Dialer(t *testing.T) {
-	cfg := &Config{Listen: "tcp://:18001"}
+	cfg := &rpc.Config{Listen: "tcp://:18001"}
 
 	ln, _ := cfg.Listener()
 	defer func() {
@@ -96,7 +97,7 @@ func TestConfig_Dialer(t *testing.T) {
 }
 
 func TestConfig_DialerUnix(t *testing.T) {
-	cfg := &Config{Listen: "unix://file.sock"}
+	cfg := &rpc.Config{Listen: "unix://file.sock"}
 
 	ln, _ := cfg.Listener()
 	defer func() {
@@ -121,7 +122,7 @@ func TestConfig_DialerUnix(t *testing.T) {
 }
 
 func Test_Config_DialerError(t *testing.T) {
-	cfg := &Config{Listen: "uni:unix.sock"}
+	cfg := &rpc.Config{Listen: "uni:unix.sock"}
 	ln, err := cfg.Dialer()
 	assert.Nil(t, ln)
 	assert.Error(t, err)
@@ -129,7 +130,7 @@ func Test_Config_DialerError(t *testing.T) {
 }
 
 func Test_Config_DialerErrorMethod(t *testing.T) {
-	cfg := &Config{Listen: "xinu://unix.sock"}
+	cfg := &rpc.Config{Listen: "xinu://unix.sock"}
 
 	ln, err := cfg.Dialer()
 	assert.Nil(t, ln)
@@ -137,7 +138,7 @@ func Test_Config_DialerErrorMethod(t *testing.T) {
 }
 
 func Test_Config_Defaults(t *testing.T) {
-	c := &Config{}
+	c := &rpc.Config{}
 	c.InitDefaults()
 	assert.Equal(t, "tcp://127.0.0.1:6001", c.Listen)
 }
