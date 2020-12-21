@@ -24,24 +24,24 @@ class InstalledVersions
 private static $installed = array (
   'root' => 
   array (
-    'pretty_version' => '2.0.x-dev',
-    'version' => '2.0.9999999.9999999-dev',
+    'pretty_version' => 'dev-main',
+    'version' => 'dev-main',
     'aliases' => 
     array (
     ),
-    'reference' => 'ee0cb478c74c393a35155c2bf51e1ef260e0e5e2',
+    'reference' => '2c21f118f804f9a1d2c06001981e15b4c5136d0f',
     'name' => '__root__',
   ),
   'versions' => 
   array (
     '__root__' => 
     array (
-      'pretty_version' => '2.0.x-dev',
-      'version' => '2.0.9999999.9999999-dev',
+      'pretty_version' => 'dev-main',
+      'version' => 'dev-main',
       'aliases' => 
       array (
       ),
-      'reference' => 'ee0cb478c74c393a35155c2bf51e1ef260e0e5e2',
+      'reference' => '2c21f118f804f9a1d2c06001981e15b4c5136d0f',
     ),
     'nyholm/psr7' => 
     array (

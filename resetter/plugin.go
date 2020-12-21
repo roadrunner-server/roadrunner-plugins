@@ -3,15 +3,14 @@ package resetter
 import (
 	"github.com/spiral/endure"
 	"github.com/spiral/errors"
-	"github.com/spiral/roadrunner/v2/interfaces/log"
-	"github.com/spiral/roadrunner/v2/interfaces/resetter"
+	"github.com/spiral/roadrunner-plugins/logger"
 )
 
 const PluginName = "resetter"
 
 type Plugin struct {
-	registry map[string]resetter.Resettable
-	log      log.Logger
+	registry map[string]Resettable
+	log      logger.Logger
 }
 
 func (p *Plugin) ResetAll() error {
@@ -41,8 +40,8 @@ func (p *Plugin) GetAll() []string {
 	return all
 }
 
-func (p *Plugin) Init(log log.Logger) error {
-	p.registry = make(map[string]resetter.Resettable)
+func (p *Plugin) Init(log logger.Logger) error {
+	p.registry = make(map[string]Resettable)
 	p.log = log
 	return nil
 }
@@ -58,7 +57,7 @@ func (p *Plugin) Reset(name string) error {
 }
 
 // RegisterTarget resettable service.
-func (p *Plugin) RegisterTarget(name endure.Named, r resetter.Resettable) error {
+func (p *Plugin) RegisterTarget(name endure.Named, r Resettable) error {
 	p.registry[name.Name()] = r
 	return nil
 }

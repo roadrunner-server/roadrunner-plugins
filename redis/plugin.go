@@ -3,8 +3,8 @@ package redis
 import (
 	"github.com/go-redis/redis/v8"
 	"github.com/spiral/errors"
-	"github.com/spiral/roadrunner/v2/interfaces/config"
-	"github.com/spiral/roadrunner/v2/interfaces/log"
+	"github.com/spiral/roadrunner-plugins/config"
+	"github.com/spiral/roadrunner-plugins/logger"
 )
 
 const PluginName = "redis"
@@ -13,7 +13,7 @@ type Plugin struct {
 	// config for RR integration
 	cfg *Config
 	// logger
-	log log.Logger
+	log logger.Logger
 	// redis universal client
 	universalClient redis.UniversalClient
 }
@@ -22,7 +22,7 @@ func (s *Plugin) GetClient() redis.UniversalClient {
 	return s.universalClient
 }
 
-func (s *Plugin) Init(cfg config.Configurer, log log.Logger) error {
+func (s *Plugin) Init(cfg config.Configurer, log logger.Logger) error {
 	const op = errors.Op("redis plugin init")
 	s.cfg = &Config{}
 	s.cfg.InitDefaults()

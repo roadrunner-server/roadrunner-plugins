@@ -11,9 +11,8 @@ import (
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/spiral/endure"
 	"github.com/spiral/errors"
-	"github.com/spiral/roadrunner/v2/interfaces/config"
-	"github.com/spiral/roadrunner/v2/interfaces/log"
-	"github.com/spiral/roadrunner/v2/interfaces/metrics"
+	"github.com/spiral/roadrunner-plugins/config"
+	"github.com/spiral/roadrunner-plugins/logger"
 	"golang.org/x/sys/cpu"
 )
 
@@ -32,7 +31,7 @@ type statsProvider struct {
 // Plugin to manage application metrics using Prometheus.
 type Plugin struct {
 	cfg        Config
-	log        log.Logger
+	log        logger.Logger
 	mu         sync.Mutex // all receivers are pointers
 	http       *http.Server
 	collectors sync.Map // all receivers are pointers
@@ -40,7 +39,7 @@ type Plugin struct {
 }
 
 // Init service.
-func (m *Plugin) Init(cfg config.Configurer, log log.Logger) error {
+func (m *Plugin) Init(cfg config.Configurer, log logger.Logger) error {
 	const op = errors.Op("Metrics Init")
 	err := cfg.UnmarshalKey(PluginName, &m.cfg)
 	if err != nil {
@@ -208,7 +207,7 @@ func (m *Plugin) Collects() []interface{} {
 }
 
 // Collector returns application specific collector by name or nil if collector not found.
-func (m *Plugin) AddStatProvider(name endure.Named, stat metrics.StatProvider) error {
+func (m *Plugin) AddStatProvider(name endure.Named, stat StatProvider) error {
 	m.collectors.Store(name.Name(), statsProvider{
 		collectors: stat.MetricsCollector(),
 		name:       name.Name(),

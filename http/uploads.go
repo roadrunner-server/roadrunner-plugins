@@ -1,7 +1,7 @@
 package http
 
 import (
-	"github.com/spiral/roadrunner/v2/interfaces/log"
+	"github.com/spiral/roadrunner-plugins/logger"
 
 	"io"
 	"io/ioutil"
@@ -46,7 +46,7 @@ func (u *Uploads) MarshalJSON() ([]byte, error) {
 
 // Open moves all uploaded files to temp directory, return error in case of issue with temp directory. File errors
 // will be handled individually.
-func (u *Uploads) Open(log log.Logger) {
+func (u *Uploads) Open(log logger.Logger) {
 	var wg sync.WaitGroup
 	for _, f := range u.list {
 		wg.Add(1)
@@ -63,7 +63,7 @@ func (u *Uploads) Open(log log.Logger) {
 }
 
 // Clear deletes all temporary files.
-func (u *Uploads) Clear(log log.Logger) {
+func (u *Uploads) Clear(log logger.Logger) {
 	for _, f := range u.list {
 		if f.TempFilename != "" && exists(f.TempFilename) {
 			err := os.Remove(f.TempFilename)

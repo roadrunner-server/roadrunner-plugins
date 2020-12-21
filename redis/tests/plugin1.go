@@ -6,7 +6,7 @@ import (
 
 	"github.com/go-redis/redis/v8"
 	"github.com/spiral/errors"
-	redisPlugin "github.com/spiral/roadrunner/v2/interfaces/redis"
+	redisPlugin "github.com/spiral/roadrunner-plugins/redis"
 )
 
 type Plugin1 struct {

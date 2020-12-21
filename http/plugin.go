@@ -15,12 +15,12 @@ import (
 	"github.com/hashicorp/go-multierror"
 	"github.com/spiral/endure"
 	"github.com/spiral/errors"
-	"github.com/spiral/roadrunner/v2/interfaces/config"
+	"github.com/spiral/roadrunner-plugins/checker"
+	"github.com/spiral/roadrunner-plugins/config"
+	"github.com/spiral/roadrunner-plugins/logger"
+	"github.com/spiral/roadrunner-plugins/server"
 	"github.com/spiral/roadrunner/v2/interfaces/events"
-	"github.com/spiral/roadrunner/v2/interfaces/log"
 	"github.com/spiral/roadrunner/v2/interfaces/pool"
-	"github.com/spiral/roadrunner/v2/interfaces/server"
-	"github.com/spiral/roadrunner/v2/interfaces/status"
 	"github.com/spiral/roadrunner/v2/interfaces/worker"
 	poolImpl "github.com/spiral/roadrunner/v2/pkg/pool"
 	"github.com/spiral/roadrunner/v2/plugins/http/attributes"
@@ -51,7 +51,7 @@ type Plugin struct {
 
 	configurer config.Configurer
 	server     server.Server
-	log        log.Logger
+	log        logger.Logger
 
 	cfg *Config
 	// middlewares to chain
@@ -80,7 +80,7 @@ func (s *Plugin) AddListener(listener events.EventListener) {
 
 // Init must return configure svc and return true if svc hasStatus enabled. Must return error in case of
 // misconfiguration. Services must not be used without proper configuration pushed first.
-func (s *Plugin) Init(cfg config.Configurer, log log.Logger, server server.Server) error {
+func (s *Plugin) Init(cfg config.Configurer, log logger.Logger, server server.Server) error {
 	const op = errors.Op("http Init")
 	err := cfg.UnmarshalKey(PluginName, &s.cfg)
 	if err != nil {
@@ -350,7 +350,7 @@ func (s *Plugin) AddMiddleware(name endure.Named, m Middleware) {
 }
 
 // Status return status of the particular plugin
-func (s *Plugin) Status() status.Status {
+func (s *Plugin) Status() checker.Status {
 	workers := s.Workers()
 	for i := 0; i < len(workers); i++ {
 		if workers[i].State().IsActive() {
@@ -537,7 +537,7 @@ func (s *Plugin) addMiddlewares() {
 	}
 }
 
-func applyMiddlewares(server *http.Server, middlewares map[string]Middleware, order []string, log log.Logger) {
+func applyMiddlewares(server *http.Server, middlewares map[string]Middleware, order []string, log logger.Logger) {
 	for i := 0; i < len(order); i++ {
 		if mdwr, ok := middlewares[order[i]]; ok {
 			server.Handler = mdwr.Middleware(server.Handler)

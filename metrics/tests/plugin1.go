@@ -2,7 +2,7 @@ package tests
 
 import (
 	"github.com/prometheus/client_golang/prometheus"
-	"github.com/spiral/roadrunner/v2/interfaces/config"
+	"github.com/spiral/roadrunner-plugins/config"
 )
 
 // Gauge //////////////

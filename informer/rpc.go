@@ -1,13 +1,13 @@
 package informer
 
 import (
+	"github.com/spiral/roadrunner-plugins/logger"
 	"github.com/spiral/roadrunner/v2"
-	"github.com/spiral/roadrunner/v2/interfaces/log"
 )
 
 type rpc struct {
 	srv *Plugin
-	log log.Logger
+	log logger.Logger
 }
 
 // WorkerList contains list of workers.

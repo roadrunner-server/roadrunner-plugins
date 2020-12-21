@@ -4,12 +4,11 @@ import (
 	"context"
 
 	"github.com/spiral/errors"
-	"github.com/spiral/roadrunner/v2/interfaces/config"
+	"github.com/spiral/roadrunner-plugins/config"
+	"github.com/spiral/roadrunner-plugins/server"
 	"github.com/spiral/roadrunner/v2/interfaces/pool"
-	"github.com/spiral/roadrunner/v2/interfaces/server"
 	"github.com/spiral/roadrunner/v2/pkg/payload"
 	"github.com/spiral/roadrunner/v2/pkg/worker"
-	plugin "github.com/spiral/roadrunner/v2/plugins/server"
 )
 
 type Foo2 struct {
@@ -28,7 +27,7 @@ func (f *Foo2) Serve() chan error {
 	const op = errors.Op("serve")
 	var err error
 	errCh := make(chan error, 1)
-	conf := &plugin.Config{}
+	conf := &server.Config{}
 
 	// test payload for echo
 	r := payload.Payload{

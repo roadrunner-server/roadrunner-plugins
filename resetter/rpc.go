@@ -1,10 +1,10 @@
 package resetter
 
-import "github.com/spiral/roadrunner/v2/interfaces/log"
+import "github.com/spiral/roadrunner-plugins/logger"
 
 type rpc struct {
 	srv *Plugin
-	log log.Logger
+	log logger.Logger
 }
 
 // List all resettable plugins.

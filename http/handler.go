@@ -10,8 +10,8 @@ import (
 
 	"github.com/hashicorp/go-multierror"
 	"github.com/spiral/errors"
+	"github.com/spiral/roadrunner-plugins/logger"
 	"github.com/spiral/roadrunner/v2/interfaces/events"
-	"github.com/spiral/roadrunner/v2/interfaces/log"
 	"github.com/spiral/roadrunner/v2/interfaces/pool"
 )
 
@@ -72,7 +72,7 @@ type handler struct {
 	maxRequestSize uint64
 	uploads        UploadsConfig
 	trusted        Cidrs
-	log            log.Logger
+	log            logger.Logger
 	pool           pool.Pool
 	mul            sync.Mutex
 	lsn            events.EventListener

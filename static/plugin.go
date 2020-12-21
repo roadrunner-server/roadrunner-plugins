@@ -6,6 +6,7 @@ import (
 
 	"github.com/spiral/errors"
 	"github.com/spiral/roadrunner-plugins/config"
+	"github.com/spiral/roadrunner-plugins/logger"
 )
 
 // ID contains default service name.
@@ -18,7 +19,7 @@ type Plugin struct {
 	// server configuration (location, forbidden files and etc)
 	cfg *Config
 
-	log log.Logger
+	log logger.Logger
 
 	// root is initiated http directory
 	root http.Dir
@@ -26,7 +27,7 @@ type Plugin struct {
 
 // Init must return configure service and return true if service hasStatus enabled. Must return error in case of
 // misconfiguration. Services must not be used without proper configuration pushed first.
-func (s *Plugin) Init(cfg config.Configurer, log log.Logger) error {
+func (s *Plugin) Init(cfg config.Configurer, log logger.Logger) error {
 	const op = errors.Op("static plugin init")
 	err := cfg.UnmarshalKey(RootPluginName, &s.cfg)
 	if err != nil {

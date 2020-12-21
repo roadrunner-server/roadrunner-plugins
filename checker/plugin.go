@@ -6,12 +6,11 @@ import (
 	"time"
 
 	"github.com/gofiber/fiber/v2"
-	"github.com/gofiber/fiber/v2/middleware/logger"
+	fiberLogger "github.com/gofiber/fiber/v2/middleware/logger"
 	"github.com/spiral/endure"
 	"github.com/spiral/errors"
-	"github.com/spiral/roadrunner/v2/interfaces/config"
-	"github.com/spiral/roadrunner/v2/interfaces/log"
-	"github.com/spiral/roadrunner/v2/interfaces/status"
+	"github.com/spiral/roadrunner-plugins/config"
+	"github.com/spiral/roadrunner-plugins/logger"
 )
 
 const (
@@ -20,13 +19,13 @@ const (
 )
 
 type Plugin struct {
-	registry map[string]status.Checker
+	registry map[string]Checker
 	server   *fiber.App
-	log      log.Logger
+	log      logger.Logger
 	cfg      *Config
 }
 
-func (c *Plugin) Init(log log.Logger, cfg config.Configurer) error {
+func (c *Plugin) Init(log logger.Logger, cfg config.Configurer) error {
 	const op = errors.Op("status plugin init")
 	err := cfg.UnmarshalKey(PluginName, &c.cfg)
 	if err != nil {
@@ -37,7 +36,7 @@ func (c *Plugin) Init(log log.Logger, cfg config.Configurer) error {
 		return errors.E(errors.Disabled)
 	}
 
-	c.registry = make(map[string]status.Checker)
+	c.registry = make(map[string]Checker)
 	c.log = log
 	return nil
 }
@@ -50,7 +49,7 @@ func (c *Plugin) Serve() chan error {
 		IdleTimeout:  time.Second * 5,
 	})
 	c.server.Group("/v1", c.healthHandler)
-	c.server.Use(logger.New())
+	c.server.Use(fiberLogger.New())
 	c.server.Use("/health", c.healthHandler)
 
 	go func() {
@@ -73,18 +72,18 @@ func (c *Plugin) Stop() error {
 }
 
 // Reset named service.
-func (c *Plugin) Status(name string) (status.Status, error) {
+func (c *Plugin) Status(name string) (Status, error) {
 	const op = errors.Op("get status")
 	svc, ok := c.registry[name]
 	if !ok {
-		return status.Status{}, errors.E(op, errors.Errorf("no such service: %s", name))
+		return Status{}, errors.E(op, errors.Errorf("no such service: %s", name))
 	}
 
 	return svc.Status(), nil
 }
 
 // CollectTarget collecting services which can provide Status.
-func (c *Plugin) CollectTarget(name endure.Named, r status.Checker) error {
+func (c *Plugin) CollectTarget(name endure.Named, r Checker) error {
 	c.registry[name.Name()] = r
 	return nil
 }

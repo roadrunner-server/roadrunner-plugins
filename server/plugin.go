@@ -8,11 +8,11 @@ import (
 	"strings"
 
 	"github.com/spiral/errors"
-	"github.com/spiral/roadrunner/v2/interfaces/config"
+	"github.com/spiral/roadrunner-plugins/config"
+	"github.com/spiral/roadrunner-plugins/logger"
+	// core imports
 	"github.com/spiral/roadrunner/v2/interfaces/events"
-	"github.com/spiral/roadrunner/v2/interfaces/log"
 	"github.com/spiral/roadrunner/v2/interfaces/pool"
-	"github.com/spiral/roadrunner/v2/interfaces/server"
 	"github.com/spiral/roadrunner/v2/interfaces/worker"
 	"github.com/spiral/roadrunner/v2/pkg/pipe"
 	poolImpl "github.com/spiral/roadrunner/v2/pkg/pool"
@@ -25,12 +25,12 @@ const PluginName = "server"
 // Plugin manages worker
 type Plugin struct {
 	cfg     Config
-	log     log.Logger
+	log     logger.Logger
 	factory worker.Factory
 }
 
 // Init application provider.
-func (server *Plugin) Init(cfg config.Configurer, log log.Logger) error {
+func (server *Plugin) Init(cfg config.Configurer, log logger.Logger) error {
 	const op = errors.Op("Init")
 	err := cfg.UnmarshalKey(PluginName, &server.cfg)
 	if err != nil {

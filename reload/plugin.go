@@ -6,9 +6,9 @@ import (
 	"time"
 
 	"github.com/spiral/errors"
-	"github.com/spiral/roadrunner/v2/interfaces/config"
-	"github.com/spiral/roadrunner/v2/interfaces/log"
-	"github.com/spiral/roadrunner/v2/interfaces/resetter"
+	"github.com/spiral/roadrunner-plugins/config"
+	"github.com/spiral/roadrunner-plugins/logger"
+	"github.com/spiral/roadrunner-plugins/resetter"
 )
 
 // PluginName contains default plugin name.
@@ -17,7 +17,7 @@ const thresholdChanBuffer uint = 1000
 
 type Plugin struct {
 	cfg      *Config
-	log      log.Logger
+	log      logger.Logger
 	watcher  *Watcher
 	services map[string]interface{}
 	res      resetter.Resetter
@@ -25,7 +25,7 @@ type Plugin struct {
 }
 
 // Init controller service
-func (s *Plugin) Init(cfg config.Configurer, log log.Logger, res resetter.Resetter) error {
+func (s *Plugin) Init(cfg config.Configurer, log logger.Logger, res resetter.Resetter) error {
 	const op = errors.Op("reload plugin init")
 	s.cfg = &Config{}
 	InitDefaults(s.cfg)

@@ -9,9 +9,9 @@ import (
 	"strings"
 
 	j "github.com/json-iterator/go"
-	"github.com/spiral/roadrunner/v2/interfaces/log"
+	"github.com/spiral/roadrunner-plugins/http/attributes"
+	"github.com/spiral/roadrunner-plugins/logger"
 	"github.com/spiral/roadrunner/v2/pkg/payload"
-	"github.com/spiral/roadrunner/v2/plugins/http/attributes"
 )
 
 var json = j.ConfigCompatibleWithStandardLibrary
@@ -117,7 +117,7 @@ func NewRequest(r *http.Request, cfg UploadsConfig) (*Request, error) {
 }
 
 // Open moves all uploaded files to temporary directory so it can be given to php later.
-func (r *Request) Open(log log.Logger) {
+func (r *Request) Open(log logger.Logger) {
 	if r.Uploads == nil {
 		return
 	}
@@ -126,7 +126,7 @@ func (r *Request) Open(log log.Logger) {
 }
 
 // Close clears all temp file uploads
-func (r *Request) Close(log log.Logger) {
+func (r *Request) Close(log logger.Logger) {
 	if r.Uploads == nil {
 		return
 	}

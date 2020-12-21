@@ -3,20 +3,19 @@ package informer
 import (
 	"github.com/spiral/endure"
 	"github.com/spiral/errors"
-	"github.com/spiral/roadrunner/v2/interfaces/informer"
-	"github.com/spiral/roadrunner/v2/interfaces/log"
+	"github.com/spiral/roadrunner-plugins/logger"
 	"github.com/spiral/roadrunner/v2/interfaces/worker"
 )
 
 const PluginName = "informer"
 
 type Plugin struct {
-	registry map[string]informer.Informer
-	log      log.Logger
+	registry map[string]Informer
+	log      logger.Logger
 }
 
-func (p *Plugin) Init(log log.Logger) error {
-	p.registry = make(map[string]informer.Informer)
+func (p *Plugin) Init(log logger.Logger) error {
+	p.registry = make(map[string]Informer)
 	p.log = log
 	return nil
 }
@@ -33,7 +32,7 @@ func (p *Plugin) Workers(name string) ([]worker.BaseProcess, error) {
 }
 
 // CollectTarget resettable service.
-func (p *Plugin) CollectTarget(name endure.Named, r informer.Informer) error {
+func (p *Plugin) CollectTarget(name endure.Named, r Informer) error {
 	p.registry[name.Name()] = r
 	return nil
 }

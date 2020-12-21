@@ -24,28 +24,22 @@ uninstall: ## Uninstall locally installed RR
 	rm -f /usr/local/bin/rr
 
 test: ## Run application tests
-	go test -v -race -cover -tags=debug -covermode=atomic ./util
-	go test -v -race -cover -tags=debug -covermode=atomic ./pkg/pipe
-	go test -v -race -cover -tags=debug -covermode=atomic ./pkg/pool
-	go test -v -race -cover -tags=debug -covermode=atomic ./pkg/socket
-	go test -v -race -cover -tags=debug -covermode=atomic ./pkg/worker
-	go test -v -race -cover -tags=debug -covermode=atomic ./pkg/worker_watcher
-	go test -v -race -cover -tags=debug -covermode=atomic ./plugins/rpc
-	go test -v -race -cover -tags=debug -covermode=atomic ./plugins/rpc/tests
-	go test -v -race -cover -tags=debug -covermode=atomic ./plugins/config/tests
-	go test -v -race -cover -tags=debug -covermode=atomic ./plugins/logger/tests
-	go test -v -race -cover -tags=debug -covermode=atomic ./plugins/server/tests
-	go test -v -race -cover -tags=debug -covermode=atomic ./plugins/metrics/tests
-	go test -v -race -cover -tags=debug -covermode=atomic ./plugins/informer/tests
-	go test -v -race -cover -tags=debug -covermode=atomic ./plugins/resetter/tests
-	go test -v -race -cover -tags=debug -covermode=atomic ./plugins/http/attributes
-	go test -v -race -cover -tags=debug -covermode=atomic ./plugins/http/tests
-	go test -v -race -cover -tags=debug -covermode=atomic ./plugins/gzip/tests
-	go test -v -race -cover -tags=debug -covermode=atomic ./plugins/static/tests
-	go test -v -race -cover -tags=debug -covermode=atomic ./plugins/headers/tests
-	go test -v -race -cover -tags=debug -covermode=atomic ./plugins/checker/tests
-	go test -v -race -cover -tags=debug -covermode=atomic ./plugins/redis/tests
-	go test -v -race -cover -tags=debug -covermode=atomic ./plugins/reload/tests
+	go test -v -race -cover -tags=debug -covermode=atomic ./checker/tests
+	go test -v -race -cover -tags=debug -covermode=atomic ./rpc
+	go test -v -race -cover -tags=debug -covermode=atomic ./rpc/tests
+	go test -v -race -cover -tags=debug -covermode=atomic ./config/tests
+	go test -v -race -cover -tags=debug -covermode=atomic ./logger/tests
+	go test -v -race -cover -tags=debug -covermode=atomic ./server/tests
+	go test -v -race -cover -tags=debug -covermode=atomic ./metrics/tests
+	go test -v -race -cover -tags=debug -covermode=atomic ./informer/tests
+	go test -v -race -cover -tags=debug -covermode=atomic ./resetter/tests
+	go test -v -race -cover -tags=debug -covermode=atomic ./http/attributes
+	go test -v -race -cover -tags=debug -covermode=atomic ./http/tests
+	go test -v -race -cover -tags=debug -covermode=atomic ./gzip/tests
+	go test -v -race -cover -tags=debug -covermode=atomic ./static/tests
+	go test -v -race -cover -tags=debug -covermode=atomic ./headers/tests
+	go test -v -race -cover -tags=debug -covermode=atomic ./redis/tests
+	go test -v -race -cover -tags=debug -covermode=atomic ./reload/tests
 
 lint: ## Run application linters
 	go fmt ./...

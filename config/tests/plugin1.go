@@ -4,7 +4,7 @@ import (
 	"errors"
 	"time"
 
-	"github.com/spiral/roadrunner/v2/interfaces/config"
+	"github.com/spiral/roadrunner-plugins/config"
 )
 
 // ReloadConfig is a Reload configuration point.

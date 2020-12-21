@@ -8,23 +8,22 @@ import (
 	"github.com/spiral/endure"
 	"github.com/spiral/errors"
 	goridgeRpc "github.com/spiral/goridge/v3/pkg/rpc"
-	"github.com/spiral/roadrunner/v2/interfaces/config"
-	"github.com/spiral/roadrunner/v2/interfaces/log"
-	rpc_ "github.com/spiral/roadrunner/v2/interfaces/rpc"
+	"github.com/spiral/roadrunner-plugins/config"
+	"github.com/spiral/roadrunner-plugins/logger"
 )
 
 // PluginName contains default plugin name.
 const PluginName = "RPC"
 
 type pluggable struct {
-	service rpc_.RPCer
+	service RPCer
 	name    string
 }
 
 // Plugin is RPC service.
 type Plugin struct {
 	cfg      Config
-	log      log.Logger
+	log      logger.Logger
 	rpc      *rpc.Server
 	services []pluggable
 	listener net.Listener
@@ -32,7 +31,7 @@ type Plugin struct {
 }
 
 // Init rpc service. Must return true if service is enabled.
-func (s *Plugin) Init(cfg config.Configurer, log log.Logger) error {
+func (s *Plugin) Init(cfg config.Configurer, log logger.Logger) error {
 	const op = errors.Op("RPC Init")
 	if !cfg.Has(PluginName) {
 		return errors.E(op, errors.Disabled)
@@ -131,7 +130,7 @@ func (s *Plugin) Collects() []interface{} {
 }
 
 // RegisterPlugin registers RPC service plugin.
-func (s *Plugin) RegisterPlugin(name endure.Named, p rpc_.RPCer) {
+func (s *Plugin) RegisterPlugin(name endure.Named, p RPCer) {
 	s.services = append(s.services, pluggable{
 		service: p,
 		name:    name.Name(),

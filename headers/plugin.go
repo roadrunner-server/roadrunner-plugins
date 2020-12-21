@@ -5,7 +5,7 @@ import (
 	"strconv"
 
 	"github.com/spiral/errors"
-	"github.com/spiral/roadrunner/v2/interfaces/config"
+	"github.com/spiral/roadrunner-plugins/config"
 )
 
 // ID contains default service name.

@@ -8,7 +8,7 @@ import (
 	"time"
 
 	"github.com/spiral/errors"
-	"github.com/spiral/roadrunner/v2/interfaces/log"
+	"github.com/spiral/roadrunner-plugins/logger"
 )
 
 // SimpleHook is used to filter by simple criteria, CONTAINS
@@ -63,7 +63,7 @@ type Watcher struct {
 	watcherConfigs map[string]WatcherConfig
 
 	// logger
-	log log.Logger
+	log logger.Logger
 }
 
 // Options is used to set Watcher Options

@@ -1,7 +1,7 @@
 package tests
 
 import (
-	"github.com/spiral/roadrunner/v2/interfaces/config"
+	"github.com/spiral/roadrunner-plugins/config"
 )
 
 type Plugin1 struct {

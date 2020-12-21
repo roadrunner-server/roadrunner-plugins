@@ -4,8 +4,8 @@ import (
 	"context"
 	"time"
 
-	"github.com/spiral/roadrunner/v2/interfaces/config"
-	"github.com/spiral/roadrunner/v2/interfaces/server"
+	"github.com/spiral/roadrunner-plugins/config"
+	"github.com/spiral/roadrunner-plugins/server"
 	poolImpl "github.com/spiral/roadrunner/v2/pkg/pool"
 )
 

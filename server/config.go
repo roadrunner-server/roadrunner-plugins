@@ -2,8 +2,6 @@ package server
 
 import (
 	"time"
-
-	"github.com/spiral/roadrunner/v2/interfaces/server"
 )
 
 // Config config combines factory, pool and cmd configurations.

@@ -3,12 +3,12 @@ package metrics
 import (
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/spiral/errors"
-	"github.com/spiral/roadrunner/v2/interfaces/log"
+	"github.com/spiral/roadrunner-plugins/logger"
 )
 
 type rpcServer struct {
 	svc *Plugin
-	log log.Logger
+	log logger.Logger
 }
 
 // Metric represent single metric produced by the application.

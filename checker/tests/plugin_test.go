@@ -14,13 +14,12 @@ import (
 
 	"github.com/spiral/endure"
 	goridgeRpc "github.com/spiral/goridge/v3/pkg/rpc"
-	"github.com/spiral/roadrunner/v2/interfaces/status"
-	"github.com/spiral/roadrunner/v2/plugins/checker"
-	"github.com/spiral/roadrunner/v2/plugins/config"
-	httpPlugin "github.com/spiral/roadrunner/v2/plugins/http"
-	"github.com/spiral/roadrunner/v2/plugins/logger"
-	rpcPlugin "github.com/spiral/roadrunner/v2/plugins/rpc"
-	"github.com/spiral/roadrunner/v2/plugins/server"
+	"github.com/spiral/roadrunner-plugins/checker"
+	"github.com/spiral/roadrunner-plugins/config"
+	httpPlugin "github.com/spiral/roadrunner-plugins/http"
+	"github.com/spiral/roadrunner-plugins/logger"
+	rpcPlugin "github.com/spiral/roadrunner-plugins/rpc"
+	"github.com/spiral/roadrunner-plugins/server"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -180,7 +179,7 @@ func checkRPCStatus(t *testing.T) {
 	assert.NoError(t, err)
 	client := rpc.NewClientWithCodec(goridgeRpc.NewClientCodec(conn))
 
-	st := &status.Status{}
+	st := &checker.Status{}
 
 	err = client.Call("status.Status", "http", &st)
 	assert.NoError(t, err)

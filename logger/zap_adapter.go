@@ -3,7 +3,6 @@ package logger
 import (
 	"fmt"
 
-	"github.com/spiral/roadrunner/v2/interfaces/log"
 	"go.uber.org/zap"
 )
 
