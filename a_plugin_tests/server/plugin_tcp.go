@@ -1,49 +1,33 @@
-package tests
+package server
 
 import (
 	"context"
-	"time"
 
 	"github.com/spiral/errors"
 	"github.com/spiral/roadrunner-plugins/config"
 	"github.com/spiral/roadrunner-plugins/server"
 	"github.com/spiral/roadrunner/v2/interfaces/pool"
 	"github.com/spiral/roadrunner/v2/pkg/payload"
-	poolImpl "github.com/spiral/roadrunner/v2/pkg/pool"
 	"github.com/spiral/roadrunner/v2/pkg/worker"
 )
 
-const ConfigSection = "server"
-const Response = "test"
-
-var testPoolConfig = poolImpl.Config{
-	NumWorkers:      10,
-	MaxJobs:         100,
-	AllocateTimeout: time.Second * 10,
-	DestroyTimeout:  time.Second * 10,
-	Supervisor: &poolImpl.SupervisorConfig{
-		WatchTick:       60,
-		TTL:             1000,
-		IdleTTL:         10,
-		ExecTTL:         10,
-		MaxWorkerMemory: 1000,
-	},
-}
-
-type Foo struct {
+type Foo3 struct {
 	configProvider config.Configurer
 	wf             server.Server
 	pool           pool.Pool
 }
 
-func (f *Foo) Init(p config.Configurer, workerFactory server.Server) error {
+func (f *Foo3) Init(p config.Configurer, workerFactory server.Server) error {
 	f.configProvider = p
 	f.wf = workerFactory
 	return nil
 }
 
-func (f *Foo) Serve() chan error {
+func (f *Foo3) Serve() chan error {
 	const op = errors.Op("serve")
+	var err error
+	errCh := make(chan error, 1)
+	conf := &server.Config{}
 
 	// test payload for echo
 	r := payload.Payload{
@@ -51,10 +35,6 @@ func (f *Foo) Serve() chan error {
 		Body:    []byte(Response),
 	}
 
-	errCh := make(chan error, 1)
-
-	conf := &server.Config{}
-	var err error
 	err = f.configProvider.UnmarshalKey(ConfigSection, conf)
 	if err != nil {
 		errCh <- err
@@ -127,7 +107,7 @@ func (f *Foo) Serve() chan error {
 	return errCh
 }
 
-func (f *Foo) Stop() error {
+func (f *Foo3) Stop() error {
 	f.pool.Destroy(context.Background())
 	return nil
 }
