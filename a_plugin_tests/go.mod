@@ -19,11 +19,12 @@ require (
 	github.com/spiral/roadrunner-plugins/informer v0.0.2
 	github.com/spiral/roadrunner-plugins/logger v0.0.3
 	github.com/spiral/roadrunner-plugins/metrics v0.0.3
-	github.com/spiral/roadrunner-plugins/redis v0.0.0-00010101000000-000000000000
-	github.com/spiral/roadrunner-plugins/reload v0.0.0-00010101000000-000000000000
+	github.com/spiral/roadrunner-plugins/redis v0.0.3
+	github.com/spiral/roadrunner-plugins/reload v0.0.3
 	github.com/spiral/roadrunner-plugins/resetter v0.0.2
 	github.com/spiral/roadrunner-plugins/rpc v0.0.2
 	github.com/spiral/roadrunner-plugins/server v0.0.2
+	github.com/spiral/roadrunner-plugins/static v0.0.0-00010101000000-000000000000
 	github.com/spiral/roadrunner/v2 v2.0.0-alpha26
 	github.com/stretchr/testify v1.6.1
 	github.com/yookoala/gofast v0.4.0
@@ -44,4 +45,5 @@ replace (
 	github.com/spiral/roadrunner-plugins/resetter => ../resetter
 	github.com/spiral/roadrunner-plugins/rpc => ../rpc
 	github.com/spiral/roadrunner-plugins/server => ../server
+	github.com/spiral/roadrunner-plugins/static => ../static
 )

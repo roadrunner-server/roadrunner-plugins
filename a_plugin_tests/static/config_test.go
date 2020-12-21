@@ -3,11 +3,12 @@ package static
 import (
 	"testing"
 
+	"github.com/spiral/roadrunner-plugins/static"
 	"github.com/stretchr/testify/assert"
 )
 
 func TestConfig_Forbids(t *testing.T) {
-	cfg := Config{Static: struct {
+	cfg := static.Config{Static: struct {
 		Dir      string
 		Forbid   []string
 		Always   []string
@@ -22,7 +23,7 @@ func TestConfig_Forbids(t *testing.T) {
 }
 
 func TestConfig_Valid(t *testing.T) {
-	assert.NoError(t, (&Config{Static: struct {
+	assert.NoError(t, (&static.Config{Static: struct {
 		Dir      string
 		Forbid   []string
 		Always   []string
@@ -30,7 +31,7 @@ func TestConfig_Valid(t *testing.T) {
 		Response map[string]string
 	}{Dir: "./"}}).Valid())
 
-	assert.Error(t, (&Config{Static: struct {
+	assert.Error(t, (&static.Config{Static: struct {
 		Dir      string
 		Forbid   []string
 		Always   []string
@@ -38,7 +39,7 @@ func TestConfig_Valid(t *testing.T) {
 		Response map[string]string
 	}{Dir: "./config.go"}}).Valid())
 
-	assert.Error(t, (&Config{Static: struct {
+	assert.Error(t, (&static.Config{Static: struct {
 		Dir      string
 		Forbid   []string
 		Always   []string
