@@ -51,6 +51,6 @@ func (log *ZapAdapter) Error(msg string, keyvals ...interface{}) {
 	log.zl.Error(msg, log.fields(keyvals)...)
 }
 
-func (log *ZapAdapter) With(keyvals ...interface{}) log.Logger {
+func (log *ZapAdapter) With(keyvals ...interface{}) Logger {
 	return NewZapAdapter(log.zl.With(log.fields(keyvals)...))
 }
