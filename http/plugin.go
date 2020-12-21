@@ -17,13 +17,13 @@ import (
 	"github.com/spiral/errors"
 	"github.com/spiral/roadrunner-plugins/checker"
 	"github.com/spiral/roadrunner-plugins/config"
+	"github.com/spiral/roadrunner-plugins/http/attributes"
 	"github.com/spiral/roadrunner-plugins/logger"
 	"github.com/spiral/roadrunner-plugins/server"
 	"github.com/spiral/roadrunner/v2/interfaces/events"
 	"github.com/spiral/roadrunner/v2/interfaces/pool"
 	"github.com/spiral/roadrunner/v2/interfaces/worker"
 	poolImpl "github.com/spiral/roadrunner/v2/pkg/pool"
-	"github.com/spiral/roadrunner/v2/plugins/http/attributes"
 	"github.com/spiral/roadrunner/v2/util"
 	"golang.org/x/net/http2"
 	"golang.org/x/net/http2/h2c"
@@ -354,13 +354,13 @@ func (s *Plugin) Status() checker.Status {
 	workers := s.Workers()
 	for i := 0; i < len(workers); i++ {
 		if workers[i].State().IsActive() {
-			return status.Status{
+			return checker.Status{
 				Code: http.StatusOK,
 			}
 		}
 	}
 	// if there are no workers, threat this as error
-	return status.Status{
+	return checker.Status{
 		Code: http.StatusInternalServerError,
 	}
 }
