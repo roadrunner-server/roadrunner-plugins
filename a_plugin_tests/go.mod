@@ -11,7 +11,7 @@ require (
 	github.com/spiral/roadrunner-plugins/config v0.0.3
 	github.com/spiral/roadrunner-plugins/gzip v0.0.3
 	github.com/spiral/roadrunner-plugins/headers v0.0.2
-	github.com/spiral/roadrunner-plugins/http v0.0.2
+	github.com/spiral/roadrunner-plugins/http v0.0.3
 	github.com/spiral/roadrunner-plugins/informer v0.0.2
 	github.com/spiral/roadrunner-plugins/logger v0.0.2
 	github.com/spiral/roadrunner-plugins/resetter v0.0.2
@@ -20,4 +20,18 @@ require (
 	github.com/spiral/roadrunner/v2 v2.0.0-alpha26
 	github.com/stretchr/testify v1.6.1
 	github.com/yookoala/gofast v0.4.0
+)
+
+// ONLY FOR TESTS
+replace (
+		github.com/spiral/roadrunner-plugins/checker => ../checker
+    	github.com/spiral/roadrunner-plugins/config => ../config
+    	github.com/spiral/roadrunner-plugins/gzip => ../gzip
+    	github.com/spiral/roadrunner-plugins/headers => ../headers
+    	github.com/spiral/roadrunner-plugins/http => ../http
+    	github.com/spiral/roadrunner-plugins/informer => ../informer
+    	github.com/spiral/roadrunner-plugins/logger => ../logger
+    	github.com/spiral/roadrunner-plugins/resetter => ../resetter
+    	github.com/spiral/roadrunner-plugins/rpc => ../rpc
+    	github.com/spiral/roadrunner-plugins/server => ../server
 )

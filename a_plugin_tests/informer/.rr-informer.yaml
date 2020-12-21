@@ -1,5 +1,5 @@
 server:
-  command: "php ../../../tests/client.php echo pipes"
+  command: "php ../../tests/client.php echo pipes"
   user: ""
   group: ""
   env:
