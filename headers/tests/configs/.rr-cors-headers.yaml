@@ -1,5 +1,5 @@
 server:
-  command: "php ../../../tests/http/client.php headers pipes"
+  command: "php ../../tests/http/client.php headers pipes"
   user: ""
   group: ""
   env:
