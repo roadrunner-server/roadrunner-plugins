@@ -65,6 +65,7 @@ jobs:
       - name: Run golang tests on Windows without codecov
         if: ${{ matrix.os == 'windows-latest' }}
         run: |
+          cd a_plugin_tests
           go test -v -race -cover -tags=debug ./a_plugin_tests/checker
           go test -v -race -cover -tags=debug ./a_plugin_tests/config
           go test -v -race -cover -tags=debug ./a_plugin_tests/gzip
@@ -83,6 +84,7 @@ jobs:
       - name: Run golang tests on Linux and MacOS
         if: ${{ matrix.os == 'ubuntu-20.04' || matrix.os == 'macos-latest' }}
         run: |
+          cd a_plugin_tests
           mkdir ./coverage-ci
           go test -v -race -cover -tags=debug -coverprofile=./coverage-ci/checker.txt -covermode=atomic ./a_plugin_tests/checker
           go test -v -race -cover -tags=debug -coverprofile=./coverage-ci/config.txt -covermode=atomic ./a_plugin_tests/config
@@ -104,7 +106,7 @@ jobs:
         if: ${{ matrix.os == 'ubuntu-20.04' || matrix.os == 'macos-latest' }}
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
-          file: ./coverage-ci/summary.txt
+          file: ./a_plugin_tests/coverage-ci/summary.txt
           fail_ci_if_error: false
 
   golangci-lint:

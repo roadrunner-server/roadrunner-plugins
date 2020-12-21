@@ -14,7 +14,6 @@ import (
 	"github.com/spiral/endure"
 	"github.com/spiral/roadrunner-plugins/config"
 	"github.com/spiral/roadrunner-plugins/redis"
-	"github.com/spiral/roadrunner/v2/mocks"
 	"github.com/stretchr/testify/assert"
 )
 

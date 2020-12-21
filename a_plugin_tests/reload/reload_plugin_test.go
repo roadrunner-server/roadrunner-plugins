@@ -21,7 +21,6 @@ import (
 	"github.com/spiral/roadrunner-plugins/reload"
 	"github.com/spiral/roadrunner-plugins/resetter"
 	"github.com/spiral/roadrunner-plugins/server"
-	"github.com/spiral/roadrunner/v2/mocks"
 	"github.com/stretchr/testify/assert"
 )
 
