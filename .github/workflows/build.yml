@@ -60,7 +60,7 @@ jobs:
           restore-keys: ${{ runner.os }}-go-
 
       - name: Install Go dependencies
-        run: go mod download
+        run: cd a_plugin_tests && go mod download
 
       - name: Run golang tests on Windows without codecov
         if: ${{ matrix.os == 'windows-latest' }}
