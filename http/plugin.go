@@ -71,12 +71,12 @@ type Plugin struct {
 	fcgi  *http.Server
 }
 
-// AddListener attaches server event controller.
-func (s *Plugin) AddListener(listener events.EventListener) {
-	// save listeners for Reset
-	s.listener = listener
-	s.pool.AddListener(listener)
-}
+//// AddListener attaches server event controller.
+//func (s *Plugin) AddListener(listener events.EventListener) {
+//	// save listeners for Reset
+//	s.listener = listener
+//	s.pool.AddListener(listener)
+//}
 
 // Init must return configure svc and return true if svc hasStatus enabled. Must return error in case of
 // misconfiguration. Services must not be used without proper configuration pushed first.
@@ -107,14 +107,13 @@ func (s *Plugin) Init(cfg config.Configurer, log logger.Logger, server server.Se
 		AllocateTimeout: s.cfg.Pool.AllocateTimeout,
 		DestroyTimeout:  s.cfg.Pool.DestroyTimeout,
 		Supervisor:      s.cfg.Pool.Supervisor,
-	}, s.cfg.Env)
+	}, s.cfg.Env, s.logCallback)
 	if err != nil {
 		return errors.E(op, err)
 	}
 
 	s.server = server
-
-	s.AddListener(s.logCallback)
+	s.listener = s.logCallback
 
 	return nil
 }
@@ -123,12 +122,6 @@ func (s *Plugin) logCallback(event interface{}) {
 	switch ev := event.(type) {
 	case ResponseEvent:
 		s.log.Debug("http handler response received", "elapsed", ev.Elapsed().String(), "remote address", ev.Request.RemoteAddr)
-	case ErrorEvent:
-		s.log.Error("error event received", "elapsed", ev.Elapsed().String(), "error", ev.Error)
-	case events.WorkerEvent:
-		s.log.Debug("worker event received", "event", ev.Event, "worker state", ev.Worker.(worker.BaseProcess).State())
-	default:
-		fmt.Println(event)
 	}
 }
 
@@ -315,10 +308,12 @@ func (s *Plugin) Reset() error {
 		AllocateTimeout: s.cfg.Pool.AllocateTimeout,
 		DestroyTimeout:  s.cfg.Pool.DestroyTimeout,
 		Supervisor:      s.cfg.Pool.Supervisor,
-	}, s.cfg.Env)
+	}, s.cfg.Env, s.listener)
 	if err != nil {
 		return errors.E(op, err)
 	}
+
+	s.log.Info("HTTP listeners successfully re-added")
 
 	s.log.Info("HTTP workers Pool successfully restarted")
 	s.handler, err = NewHandler(
@@ -330,10 +325,6 @@ func (s *Plugin) Reset() error {
 	if err != nil {
 		return errors.E(op, err)
 	}
-
-	// restore original listeners
-	s.pool.AddListener(s.listener)
-	s.log.Info("HTTP listeners successfully re-added")
 
 	s.log.Info("HTTP plugin successfully restarted")
 	return nil

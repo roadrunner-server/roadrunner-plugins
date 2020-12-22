@@ -191,9 +191,9 @@ func (h *handler) handleResponse(req *Request, resp *Response, start time.Time) 
 }
 
 // throw invokes event handler if any.
-func (h *handler) throw(ctx interface{}) {
+func (h *handler) throw(event interface{}) {
 	if h.lsn != nil {
-		h.lsn(ctx)
+		h.lsn(event)
 	}
 }
 
