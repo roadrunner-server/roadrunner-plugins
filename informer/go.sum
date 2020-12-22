@@ -367,8 +367,12 @@ github.com/spiral/roadrunner-plugins/config v0.0.0-20201221114921-2c21f118f804 h
 github.com/spiral/roadrunner-plugins/config v0.0.0-20201221114921-2c21f118f804/go.mod h1:JBNdSiAMLi/dvJ99Ntla8ApTZrzwk/aeFtrkeCGd6g8=
 github.com/spiral/roadrunner-plugins/config v0.0.3 h1:zL5BVqEB65kUArxZYW03cWzEMRmYHubRCMT+2uIudiU=
 github.com/spiral/roadrunner-plugins/config v0.0.3/go.mod h1:XcVJLFDUlYPvZ3kVzssmP4fJbEzUvVJf534+eZaotAo=
+github.com/spiral/roadrunner-plugins/config v1.0.0 h1:RPYB8Ha/UeuBGRwtcqNb0uU8R5qe4XpUXVmv/lGSUdQ=
+github.com/spiral/roadrunner-plugins/config v1.0.0/go.mod h1:XcVJLFDUlYPvZ3kVzssmP4fJbEzUvVJf534+eZaotAo=
 github.com/spiral/roadrunner-plugins/logger v0.0.2 h1:aVQPie5WYA7agpfTL/jYLSgpaZe+uGbU68zxQF3ZIKs=
 github.com/spiral/roadrunner-plugins/logger v0.0.2/go.mod h1:3MhBL0EweDXQrkYFKWiLFawqqKrEwWqjYcKZwLVCc+k=
+github.com/spiral/roadrunner-plugins/logger v1.0.1 h1:cc/pRE+8bUQgLiF05G7f948UpWtrZmJk/axTh1ywrks=
+github.com/spiral/roadrunner-plugins/logger v1.0.1/go.mod h1:/oX1P56+/joLaAPwZaiRqPVVzM36701kdYqOHu+U3EM=
 github.com/spiral/roadrunner/v2 v2.0.0-alpha26 h1:YHXX6xLoRwoFGOozvi8EeTWWmfWzcFv4MmZFm5eNUcE=
 github.com/spiral/roadrunner/v2 v2.0.0-alpha26/go.mod h1:r7ojuHm9qCVbg4fKcqr4Aqk7VXqZ9YPefr1LOv7HNys=
 github.com/streadway/amqp v0.0.0-20190404075320-75d898a42a94/go.mod h1:AZpEONHx3DKn8O/DFsRAY58/XVQiIPMTMB1SddzLXVw=
