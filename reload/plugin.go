@@ -37,7 +37,7 @@ func (s *Plugin) Init(cfg config.Configurer, log logger.Logger, res resetter.Res
 
 	s.log = log
 	s.res = res
-	s.stopc = make(chan struct{})
+	s.stopc = make(chan struct{}, 1)
 	s.services = make(map[string]interface{})
 
 	var configs []WatcherConfig
@@ -122,6 +122,7 @@ func (s *Plugin) Serve() chan error {
 					for name := range updated {
 						err := s.res.ResetByName(name)
 						if err != nil {
+							timer.Stop()
 							errCh <- errors.E(op, err)
 							return
 						}
