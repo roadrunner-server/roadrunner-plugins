@@ -12,7 +12,7 @@ Extensions:
 logger | [![Generic badge](https://img.shields.io/badge/logger-v1.0.1-<>.svg)](https://shields.io/)
 config | [![Generic badge](https://img.shields.io/badge/config-v1.0.0-<>.svg)](https://shields.io/)
 checker | [![Generic badge](https://img.shields.io/badge/checker-v1.0.1-<>.svg)](https://shields.io/)
-http | [![Generic badge](https://img.shields.io/badge/http-v1.0.1-<>.svg)](https://shields.io/)
+http | [![Generic badge](https://img.shields.io/badge/http-v1.0.2-<>.svg)](https://shields.io/)
 gzip | [![Generic badge](https://img.shields.io/badge/gzip-v1.0.0-<>.svg)](https://shields.io/)
 headers | [![Generic badge](https://img.shields.io/badge/headers-v1.0.0-<>.svg)](https://shields.io/)
 informer | [![Generic badge](https://img.shields.io/badge/informer-v1.0.4-<>.svg)](https://shields.io/)
