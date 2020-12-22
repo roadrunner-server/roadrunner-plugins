@@ -2,7 +2,7 @@ package informer
 
 import (
 	"github.com/spiral/roadrunner-plugins/logger"
-	"github.com/spiral/roadrunner/v2"
+	"github.com/spiral/roadrunner/v2/interfaces/worker"
 )
 
 type rpc struct {
@@ -13,7 +13,7 @@ type rpc struct {
 // WorkerList contains list of workers.
 type WorkerList struct {
 	// Workers is list of workers.
-	Workers []roadrunner.ProcessState `json:"workers"`
+	Workers []ProcessState `json:"workers"`
 }
 
 // List all resettable services.
@@ -38,9 +38,9 @@ func (rpc *rpc) Workers(service string, list *WorkerList) error {
 		return err
 	}
 
-	list.Workers = make([]roadrunner.ProcessState, 0)
+	list.Workers = make([]ProcessState, 0)
 	for _, w := range workers {
-		ps, err := roadrunner.WorkerProcessState(w)
+		ps, err := WorkerProcessState(w.(worker.BaseProcess))
 		if err != nil {
 			continue
 		}
