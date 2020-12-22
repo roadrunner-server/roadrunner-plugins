@@ -27,7 +27,7 @@ var json = j.ConfigCompatibleWithStandardLibrary
 const testFile = "uploads_test.go"
 
 func TestHandler_Upload_File(t *testing.T) {
-	pool, err := poolImpl.NewPool(context.Background(),
+	pool, err := poolImpl.Initialize(context.Background(),
 		func() *exec.Cmd { return exec.Command("php", "../../tests/http/client.php", "upload", "pipes") },
 		pipe.NewPipeFactory(),
 		poolImpl.Config{
@@ -110,7 +110,7 @@ func TestHandler_Upload_File(t *testing.T) {
 }
 
 func TestHandler_Upload_NestedFile(t *testing.T) {
-	pool, err := poolImpl.NewPool(context.Background(),
+	pool, err := poolImpl.Initialize(context.Background(),
 		func() *exec.Cmd { return exec.Command("php", "../../tests/http/client.php", "upload", "pipes") },
 		pipe.NewPipeFactory(),
 		poolImpl.Config{
@@ -193,7 +193,7 @@ func TestHandler_Upload_NestedFile(t *testing.T) {
 }
 
 func TestHandler_Upload_File_NoTmpDir(t *testing.T) {
-	pool, err := poolImpl.NewPool(context.Background(),
+	pool, err := poolImpl.Initialize(context.Background(),
 		func() *exec.Cmd { return exec.Command("php", "../../tests/http/client.php", "upload", "pipes") },
 		pipe.NewPipeFactory(),
 		poolImpl.Config{
@@ -276,7 +276,7 @@ func TestHandler_Upload_File_NoTmpDir(t *testing.T) {
 }
 
 func TestHandler_Upload_File_Forbids(t *testing.T) {
-	pool, err := poolImpl.NewPool(context.Background(),
+	pool, err := poolImpl.Initialize(context.Background(),
 		func() *exec.Cmd { return exec.Command("php", "../../tests/http/client.php", "upload", "pipes") },
 		pipe.NewPipeFactory(),
 		poolImpl.Config{

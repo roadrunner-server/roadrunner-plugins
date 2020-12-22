@@ -113,7 +113,8 @@ func TestMiddlewareNotExist(t *testing.T) {
 	controller := gomock.NewController(t)
 	mockLogger := mocks.NewMockLogger(controller)
 
-	mockLogger.EXPECT().Warn("requested middleware does not exist", "requested", "foo")
+	mockLogger.EXPECT().Warn("requested middleware does not exist", "requested", "foo").AnyTimes()
+	mockLogger.EXPECT().Info("worker constructed", "pid", gomock.Any()).AnyTimes()
 
 	err = cont.RegisterAll(
 		cfg,

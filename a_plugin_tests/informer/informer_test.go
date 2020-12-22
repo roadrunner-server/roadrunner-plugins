@@ -16,7 +16,6 @@ import (
 	"github.com/spiral/roadrunner-plugins/logger"
 	rpcPlugin "github.com/spiral/roadrunner-plugins/rpc"
 	"github.com/spiral/roadrunner-plugins/server"
-	"github.com/spiral/roadrunner/v2"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -88,7 +87,7 @@ func informerRPCTest(t *testing.T) {
 	// WorkerList contains list of workers.
 	list := struct {
 		// Workers is list of workers.
-		Workers []roadrunner.ProcessState `json:"workers"`
+		Workers []informer.ProcessState `json:"workers"`
 	}{}
 
 	err = client.Call("informer.Workers", "informer.plugin1", &list)

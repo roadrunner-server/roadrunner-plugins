@@ -113,6 +113,10 @@ func staticHeaders(t *testing.T) {
 		t.Fatal(err)
 	}
 
+	defer func() {
+		_ = resp.Body.Close()
+	}()
+
 	assert.Equal(t, all("../../tests/client.php"), string(b))
 	assert.Equal(t, all("../../tests/client.php"), string(b))
 }
@@ -200,7 +204,7 @@ func TestStaticDisabled(t *testing.T) {
 }
 
 func staticDisabled(t *testing.T) {
-	_, r, err := get("http://localhost:21234/sample.txt")
+	_, r, err := get("http://localhost:21234/sample.txt") //nolint:bodyclose
 	assert.Error(t, err)
 	assert.Nil(t, r)
 }
@@ -293,6 +297,7 @@ func TestStaticFilesForbid(t *testing.T) {
 	controller := gomock.NewController(t)
 	mockLogger := mocks.NewMockLogger(controller)
 
+	mockLogger.EXPECT().Info("worker constructed", "pid", gomock.Any()).AnyTimes()
 	mockLogger.EXPECT().Debug("http handler response received", "elapsed", gomock.Any(), "remote address", "127.0.0.1").AnyTimes()
 	mockLogger.EXPECT().Error("file open error", "error", gomock.Any()).AnyTimes()
 
@@ -365,7 +370,7 @@ func staticTestFilesDir(t *testing.T) {
 }
 
 func staticNotFound(t *testing.T) {
-	b, _, _ := get("http://localhost:34653/client.XXX?hello=world")
+	b, _, _ := get("http://localhost:34653/client.XXX?hello=world") //nolint:bodyclose
 	assert.Equal(t, "WORLD", b)
 }
 
@@ -387,7 +392,7 @@ func staticFilesForbid(t *testing.T) {
 
 // HELPERS
 func get(url string) (string, *http.Response, error) {
-	r, err := http.Get(url)
+	r, err := http.Get(url) //nolint:gosec
 	if err != nil {
 		return "", nil, err
 	}

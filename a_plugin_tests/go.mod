@@ -3,7 +3,9 @@ module github.com/spiral/roadrunner-plugins/a_plugin_tests
 go 1.15
 
 require (
+	github.com/StackExchange/wmi v0.0.0-20190523213315-cbe66965904d // indirect
 	github.com/alicebob/miniredis/v2 v2.14.1
+	github.com/go-ole/go-ole v1.2.4 // indirect
 	github.com/go-redis/redis/v8 v8.4.4
 	github.com/golang/mock v1.4.4
 	github.com/json-iterator/go v1.1.10
@@ -11,21 +13,21 @@ require (
 	github.com/spiral/endure v1.0.0-beta20
 	github.com/spiral/errors v1.0.6
 	github.com/spiral/goridge/v3 v3.0.0-beta8
-	github.com/spiral/roadrunner-plugins/checker v0.0.3
-	github.com/spiral/roadrunner-plugins/config v0.0.3
-	github.com/spiral/roadrunner-plugins/gzip v0.0.3
-	github.com/spiral/roadrunner-plugins/headers v0.0.3
-	github.com/spiral/roadrunner-plugins/http v0.0.3
-	github.com/spiral/roadrunner-plugins/informer v0.0.3
-	github.com/spiral/roadrunner-plugins/logger v0.0.3
-	github.com/spiral/roadrunner-plugins/metrics v0.0.3
-	github.com/spiral/roadrunner-plugins/redis v0.0.3
-	github.com/spiral/roadrunner-plugins/reload v0.0.3
-	github.com/spiral/roadrunner-plugins/resetter v0.0.3
-	github.com/spiral/roadrunner-plugins/rpc v0.0.3
-	github.com/spiral/roadrunner-plugins/server v0.0.3
-	github.com/spiral/roadrunner-plugins/static v0.0.4
-	github.com/spiral/roadrunner/v2 v2.0.0-alpha26
+	github.com/spiral/roadrunner-plugins/checker v1.0.1
+	github.com/spiral/roadrunner-plugins/config v1.0.0
+	github.com/spiral/roadrunner-plugins/gzip v1.0.0
+	github.com/spiral/roadrunner-plugins/headers v1.0.0
+	github.com/spiral/roadrunner-plugins/http v1.0.0
+	github.com/spiral/roadrunner-plugins/informer v1.0.3
+	github.com/spiral/roadrunner-plugins/logger v1.0.1
+	github.com/spiral/roadrunner-plugins/metrics v1.0.0
+	github.com/spiral/roadrunner-plugins/redis v1.0.0
+	github.com/spiral/roadrunner-plugins/reload v1.0.0
+	github.com/spiral/roadrunner-plugins/resetter v1.0.0
+	github.com/spiral/roadrunner-plugins/rpc v1.0.0
+	github.com/spiral/roadrunner-plugins/server v1.0.3
+	github.com/spiral/roadrunner-plugins/static v1.0.0
+	github.com/spiral/roadrunner/v2 v2.0.0-alpha28
 	github.com/stretchr/testify v1.6.1
 	github.com/yookoala/gofast v0.4.0
 )

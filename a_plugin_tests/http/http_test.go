@@ -24,7 +24,6 @@ import (
 	"github.com/spiral/roadrunner-plugins/informer"
 	"github.com/spiral/roadrunner-plugins/logger"
 	"github.com/spiral/roadrunner-plugins/resetter"
-	"github.com/spiral/roadrunner/v2"
 	"github.com/spiral/roadrunner/v2/interfaces/events"
 	"github.com/yookoala/gofast"
 
@@ -36,7 +35,7 @@ import (
 var sslClient = &http.Client{
 	Transport: &http.Transport{
 		TLSClientConfig: &tls.Config{
-			InsecureSkipVerify: true,
+			InsecureSkipVerify: true, //nolint:gosec
 		},
 	},
 }
@@ -217,7 +216,7 @@ func informerTest(t *testing.T) {
 	// WorkerList contains list of workers.
 	list := struct {
 		// Workers is list of workers.
-		Workers []roadrunner.ProcessState `json:"workers"`
+		Workers []informer.ProcessState `json:"workers"`
 	}{}
 
 	err = client.Call("informer.Workers", "http", &list)
@@ -346,10 +345,15 @@ func fcgiEcho(t *testing.T) {
 	req := httptest.NewRequest("GET", "http://site.local/?hello=world", nil)
 	fcgiHandler.ServeHTTP(w, req)
 
-	body, err := ioutil.ReadAll(w.Result().Body)
+	body, err := ioutil.ReadAll(w.Result().Body) //nolint:bodyclose
+
+	defer func() {
+		_ = w.Result().Body.Close()
+		w.Body.Reset()
+	}()
 
 	assert.NoError(t, err)
-	assert.Equal(t, 201, w.Result().StatusCode)
+	assert.Equal(t, 201, w.Result().StatusCode) //nolint:bodyclose
 	assert.Equal(t, "WORLD", string(body))
 }
 
@@ -605,9 +609,9 @@ func fcgiReqURI(t *testing.T) {
 	req := httptest.NewRequest("GET", "http://site.local/hello-world", nil)
 	fcgiHandler.ServeHTTP(w, req)
 
-	body, err := ioutil.ReadAll(w.Result().Body)
+	body, err := ioutil.ReadAll(w.Result().Body) //nolint:bodyclose
 	assert.NoError(t, err)
-	assert.Equal(t, 200, w.Result().StatusCode)
+	assert.Equal(t, 200, w.Result().StatusCode) //nolint:bodyclose
 	assert.Equal(t, "http://site.local/hello-world", string(body))
 }
 
@@ -899,6 +903,7 @@ func TestHttpEchoErr(t *testing.T) {
 	controller := gomock.NewController(t)
 	mockLogger := mocks.NewMockLogger(controller)
 
+	mockLogger.EXPECT().Info("worker constructed", "pid", gomock.Any()).AnyTimes()
 	mockLogger.EXPECT().Debug("http handler response received", "elapsed", gomock.Any(), "remote address", "127.0.0.1")
 	mockLogger.EXPECT().Debug("WORLD", "pid", gomock.Any())
 	mockLogger.EXPECT().Debug("worker event received", "event", events.EventWorkerLog, "worker state", gomock.Any())
@@ -1088,7 +1093,7 @@ func TestHttpBrokenPipes(t *testing.T) {
 }
 
 func get(url string) (string, *http.Response, error) {
-	r, err := http.Get(url)
+	r, err := http.Get(url) //nolint:gosec
 	if err != nil {
 		return "", nil, err
 	}
