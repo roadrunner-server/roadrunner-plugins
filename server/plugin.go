@@ -79,6 +79,11 @@ func (server *Plugin) CmdFactory(env Env) (func() *exec.Cmd, error) {
 	if cmdArgs[0] != "php" {
 		return nil, errors.E(op, errors.Str("first arg in command should be `php`"))
 	}
+
+	_, err := os.Stat(cmdArgs[1])
+	if err != nil {
+		return nil, errors.E(op, err)
+	}
 	return func() *exec.Cmd {
 		cmd := exec.Command(cmdArgs[0], cmdArgs[1:]...) //nolint:gosec
 		util.IsolateProcess(cmd)
@@ -99,36 +104,40 @@ func (server *Plugin) CmdFactory(env Env) (func() *exec.Cmd, error) {
 }
 
 // NewWorker issues new standalone worker.
-func (server *Plugin) NewWorker(ctx context.Context, env Env) (worker.BaseProcess, error) {
+func (server *Plugin) NewWorker(ctx context.Context, env Env, listeners ...events.EventListener) (worker.BaseProcess, error) {
 	const op = errors.Op("new worker")
+
+	list := make([]events.EventListener, 0, len(listeners))
+	list = append(list, server.collectPoolLogs)
+
 	spawnCmd, err := server.CmdFactory(env)
 	if err != nil {
 		return nil, errors.E(op, err)
 	}
 
-	w, err := server.factory.SpawnWorkerWithTimeout(ctx, spawnCmd())
+	w, err := server.factory.SpawnWorkerWithTimeout(ctx, spawnCmd(), list...)
 	if err != nil {
 		return nil, errors.E(op, err)
 	}
-
-	w.AddListener(server.collectLogs)
 
 	return w, nil
 }
 
 // NewWorkerPool issues new worker pool.
-func (server *Plugin) NewWorkerPool(ctx context.Context, opt poolImpl.Config, env Env) (pool.Pool, error) {
+func (server *Plugin) NewWorkerPool(ctx context.Context, opt poolImpl.Config, env Env, listeners ...events.EventListener) (pool.Pool, error) {
+	const op = errors.Op("server plugins new worker pool")
 	spawnCmd, err := server.CmdFactory(env)
 	if err != nil {
-		return nil, err
+		return nil, errors.E(op, err)
 	}
 
-	p, err := poolImpl.NewPool(ctx, spawnCmd, server.factory, opt)
+	list := make([]events.EventListener, 0, len(listeners))
+	list = append(list, server.collectPoolLogs)
+
+	p, err := poolImpl.Initialize(ctx, spawnCmd, server.factory, opt, poolImpl.AddListeners(list...))
 	if err != nil {
-		return nil, err
+		return nil, errors.E(op, err)
 	}
-
-	p.AddListener(server.collectLogs)
 
 	return p, nil
 }
@@ -170,13 +179,42 @@ func (server *Plugin) setEnv(e Env) []string {
 	return env
 }
 
-func (server *Plugin) collectLogs(event interface{}) {
+func (server *Plugin) collectPoolLogs(event interface{}) {
+	if we, ok := event.(events.PoolEvent); ok {
+		switch we.Event {
+		case events.EventMaxMemory:
+			server.log.Error("worker max memory reached", "pid", we.Payload.(worker.BaseProcess).Pid())
+		case events.EventNoFreeWorkers:
+			server.log.Error("no free workers in pool", "error", we.Payload.(error).Error())
+		case events.EventPoolError:
+			server.log.Error("pool error", "error", we.Payload.(error).Error())
+		case events.EventSupervisorError:
+			server.log.Error("pool supervizor error", "error", we.Payload.(error).Error())
+		case events.EventTTL:
+			server.log.Error("worker TTL reached", "pid", we.Payload.(worker.BaseProcess).Pid())
+		case events.EventWorkerConstruct:
+			if _, ok := we.Payload.(error); ok {
+				server.log.Error("worker construction error", "error", we.Payload.(error).Error())
+				return
+			}
+			server.log.Error("worker constructed", "pid", we.Payload.(worker.BaseProcess).Pid())
+		case events.EventWorkerDestruct:
+			server.log.Error("worker destructed", "pid", we.Payload.(worker.BaseProcess).Pid())
+		case events.EventExecTTL:
+			server.log.Error("EVENT EXEC TTL PLACEHOLDER")
+		case events.EventIdleTTL:
+			server.log.Error("worker IDLE timeout reached", "pid", we.Payload.(worker.BaseProcess).Pid())
+		}
+	}
+}
+
+func (server *Plugin) collectWorkerLogs(event interface{}) {
 	if we, ok := event.(events.WorkerEvent); ok {
 		switch we.Event {
 		case events.EventWorkerError:
 			server.log.Error(we.Payload.(error).Error(), "pid", we.Worker.(worker.BaseProcess).Pid())
 		case events.EventWorkerLog:
-			server.log.Debug(strings.TrimRight(string(we.Payload.([]byte)), " \n\t"), "pid", we.Worker.(worker.BaseProcess).Pid())
+			server.log.Error(strings.TrimRight(string(we.Payload.([]byte)), " \n\t"), "pid", we.Worker.(worker.BaseProcess).Pid())
 		}
 	}
 }
