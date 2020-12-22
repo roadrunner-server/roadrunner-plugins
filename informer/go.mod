@@ -8,7 +8,3 @@ require (
 	github.com/spiral/roadrunner-plugins/logger v1.0.1
 	github.com/spiral/roadrunner/v2 v2.0.0-alpha26
 )
-
-replace (
-	github.com/spiral/roadrunner/v2 v2.0.0-alpha26 => ../../roadrunner
-)
