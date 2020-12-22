@@ -90,7 +90,7 @@ func (s *Plugin) Serve() chan error {
 			if err != nil {
 				if atomic.LoadUint32(s.closed) == 1 {
 					// just log and continue, this is not a critical issue, we just called Stop
-					s.log.Error("listener accept error, connection closed", "error", err)
+					s.log.Warn("listener accept error, connection closed", "error", err)
 					return
 				}
 
