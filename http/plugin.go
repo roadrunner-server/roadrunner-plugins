@@ -71,13 +71,6 @@ type Plugin struct {
 	fcgi  *http.Server
 }
 
-//// AddListener attaches server event controller.
-//func (s *Plugin) AddListener(listener events.EventListener) {
-//	// save listeners for Reset
-//	s.listener = listener
-//	s.pool.AddListener(listener)
-//}
-
 // Init must return configure svc and return true if svc hasStatus enabled. Must return error in case of
 // misconfiguration. Services must not be used without proper configuration pushed first.
 func (s *Plugin) Init(cfg config.Configurer, log logger.Logger, server server.Server) error {
@@ -122,6 +115,8 @@ func (s *Plugin) logCallback(event interface{}) {
 	switch ev := event.(type) {
 	case ResponseEvent:
 		s.log.Debug("http handler response received", "elapsed", ev.Elapsed().String(), "remote address", ev.Request.RemoteAddr)
+	default:
+		s.log.Info("other event in default switch branch", "event", ev)
 	}
 }
 
