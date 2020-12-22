@@ -183,27 +183,27 @@ func (server *Plugin) collectPoolLogs(event interface{}) {
 	if we, ok := event.(events.PoolEvent); ok {
 		switch we.Event {
 		case events.EventMaxMemory:
-			server.log.Error("worker max memory reached", "pid", we.Payload.(worker.BaseProcess).Pid())
+			server.log.Info("worker max memory reached", "pid", we.Payload.(worker.BaseProcess).Pid())
 		case events.EventNoFreeWorkers:
-			server.log.Error("no free workers in pool", "error", we.Payload.(error).Error())
+			server.log.Info("no free workers in pool", "error", we.Payload.(error).Error())
 		case events.EventPoolError:
-			server.log.Error("pool error", "error", we.Payload.(error).Error())
+			server.log.Info("pool error", "error", we.Payload.(error).Error())
 		case events.EventSupervisorError:
-			server.log.Error("pool supervizor error", "error", we.Payload.(error).Error())
+			server.log.Info("pool supervizor error", "error", we.Payload.(error).Error())
 		case events.EventTTL:
-			server.log.Error("worker TTL reached", "pid", we.Payload.(worker.BaseProcess).Pid())
+			server.log.Info("worker TTL reached", "pid", we.Payload.(worker.BaseProcess).Pid())
 		case events.EventWorkerConstruct:
 			if _, ok := we.Payload.(error); ok {
 				server.log.Error("worker construction error", "error", we.Payload.(error).Error())
 				return
 			}
-			server.log.Error("worker constructed", "pid", we.Payload.(worker.BaseProcess).Pid())
+			server.log.Info("worker constructed", "pid", we.Payload.(worker.BaseProcess).Pid())
 		case events.EventWorkerDestruct:
-			server.log.Error("worker destructed", "pid", we.Payload.(worker.BaseProcess).Pid())
+			server.log.Info("worker destructed", "pid", we.Payload.(worker.BaseProcess).Pid())
 		case events.EventExecTTL:
-			server.log.Error("EVENT EXEC TTL PLACEHOLDER")
+			server.log.Info("EVENT EXEC TTL PLACEHOLDER")
 		case events.EventIdleTTL:
-			server.log.Error("worker IDLE timeout reached", "pid", we.Payload.(worker.BaseProcess).Pid())
+			server.log.Info("worker IDLE timeout reached", "pid", we.Payload.(worker.BaseProcess).Pid())
 		}
 	}
 }
@@ -214,7 +214,7 @@ func (server *Plugin) collectWorkerLogs(event interface{}) {
 		case events.EventWorkerError:
 			server.log.Error(we.Payload.(error).Error(), "pid", we.Worker.(worker.BaseProcess).Pid())
 		case events.EventWorkerLog:
-			server.log.Error(strings.TrimRight(string(we.Payload.([]byte)), " \n\t"), "pid", we.Worker.(worker.BaseProcess).Pid())
+			server.log.Info(strings.TrimRight(string(we.Payload.([]byte)), " \n\t"), "pid", we.Worker.(worker.BaseProcess).Pid())
 		}
 	}
 }
