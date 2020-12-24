@@ -12,12 +12,18 @@ type Viper struct {
 	viper     *viper.Viper
 	Path      string
 	Prefix    string
+	Type      string
 	ReadInCfg []byte
 }
 
 // Inits config provider.
 func (v *Viper) Init() error {
 	v.viper = viper.New()
+	// If user provided []byte data with config, read it and ignore Path and Prefix
+	if v.ReadInCfg != nil && v.Type != "" {
+		v.viper.SetConfigType("yaml")
+		return v.viper.ReadConfig(bytes.NewBuffer(v.ReadInCfg))
+	}
 
 	// read in environment variables that match
 	v.viper.AutomaticEnv()
@@ -33,9 +39,6 @@ func (v *Viper) Init() error {
 	v.viper.SetConfigFile(v.Path)
 	v.viper.SetEnvKeyReplacer(strings.NewReplacer(".", "_"))
 
-	if v.ReadInCfg != nil {
-		return v.viper.ReadConfig(bytes.NewBuffer(v.ReadInCfg))
-	}
 	return v.viper.ReadInConfig()
 }
 
