@@ -108,7 +108,7 @@ func (server *Plugin) NewWorker(ctx context.Context, env Env, listeners ...event
 	const op = errors.Op("new worker")
 
 	list := make([]events.EventListener, 0, len(listeners))
-	list = append(list, server.collectPoolLogs)
+	list = append(list, server.collectWorkerLogs)
 
 	spawnCmd, err := server.CmdFactory(env)
 	if err != nil {
@@ -204,6 +204,15 @@ func (server *Plugin) collectPoolLogs(event interface{}) {
 			server.log.Info("EVENT EXEC TTL PLACEHOLDER")
 		case events.EventIdleTTL:
 			server.log.Info("worker IDLE timeout reached", "pid", we.Payload.(worker.BaseProcess).Pid())
+		}
+	}
+
+	if we, ok := event.(events.WorkerEvent); ok {
+		switch we.Event {
+		case events.EventWorkerError:
+			server.log.Info(we.Payload.(error).Error(), "pid", we.Worker.(worker.BaseProcess).Pid())
+		case events.EventWorkerLog:
+			server.log.Info(strings.TrimRight(string(we.Payload.([]byte)), " \n\t"), "pid", we.Worker.(worker.BaseProcess).Pid())
 		}
 	}
 }
