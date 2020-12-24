@@ -20,7 +20,6 @@ import (
 	"github.com/spiral/roadrunner-plugins/http/attributes"
 	"github.com/spiral/roadrunner-plugins/logger"
 	"github.com/spiral/roadrunner-plugins/server"
-	"github.com/spiral/roadrunner/v2/interfaces/events"
 	"github.com/spiral/roadrunner/v2/interfaces/pool"
 	"github.com/spiral/roadrunner/v2/interfaces/worker"
 	poolImpl "github.com/spiral/roadrunner/v2/pkg/pool"
@@ -47,7 +46,7 @@ type middleware map[string]Middleware
 
 // Service manages pool, http servers.
 type Plugin struct {
-	sync.Mutex
+	sync.RWMutex
 
 	configurer config.Configurer
 	server     server.Server
@@ -56,8 +55,6 @@ type Plugin struct {
 	cfg *Config
 	// middlewares to chain
 	mdwr middleware
-	// WorkerEvent listener to stdout
-	listener events.EventListener
 
 	// Pool which attached to all servers
 	pool pool.Pool
@@ -106,17 +103,13 @@ func (s *Plugin) Init(cfg config.Configurer, log logger.Logger, server server.Se
 	}
 
 	s.server = server
-	s.listener = s.logCallback
 
 	return nil
 }
 
 func (s *Plugin) logCallback(event interface{}) {
-	switch ev := event.(type) {
-	case ResponseEvent:
+	if ev, ok := event.(ResponseEvent); ok {
 		s.log.Debug("http handler response received", "elapsed", ev.Elapsed().String(), "remote address", ev.Request.RemoteAddr)
-	default:
-		s.log.Info("other event in default switch branch", "event", ev)
 	}
 }
 
@@ -140,9 +133,7 @@ func (s *Plugin) Serve() chan error {
 		return errCh
 	}
 
-	if s.listener != nil {
-		s.handler.AddListener(s.listener)
-	}
+	s.handler.AddListener(s.logCallback)
 
 	if s.cfg.EnableHTTP() {
 		if s.cfg.EnableH2C() {
@@ -249,6 +240,8 @@ func (s *Plugin) Stop() error {
 		}
 	}
 
+	s.pool.Destroy(context.Background())
+
 	return err
 }
 
@@ -269,9 +262,9 @@ func (s *Plugin) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 	r = attributes.Init(r)
 	// protect the case, when user send Reset and we are replacing handler with pool
-	s.Lock()
+	s.RLock()
 	s.handler.ServeHTTP(w, r)
-	s.Unlock()
+	s.RUnlock()
 }
 
 // Server returns associated pool workers
@@ -289,6 +282,7 @@ func (s *Plugin) Reset() error {
 	const op = errors.Op("http reset")
 	s.log.Info("HTTP plugin got restart request. Restarting...")
 	s.pool.Destroy(context.Background())
+	s.pool = nil
 
 	// re-read the config
 	err := s.configurer.UnmarshalKey(PluginName, &s.cfg)
@@ -303,7 +297,7 @@ func (s *Plugin) Reset() error {
 		AllocateTimeout: s.cfg.Pool.AllocateTimeout,
 		DestroyTimeout:  s.cfg.Pool.DestroyTimeout,
 		Supervisor:      s.cfg.Pool.Supervisor,
-	}, s.cfg.Env, s.listener)
+	}, s.cfg.Env, s.logCallback)
 	if err != nil {
 		return errors.E(op, err)
 	}
