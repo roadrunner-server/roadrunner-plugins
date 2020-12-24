@@ -300,6 +300,7 @@ func TestStaticFilesForbid(t *testing.T) {
 	mockLogger.EXPECT().Info("worker constructed", "pid", gomock.Any()).AnyTimes()
 	mockLogger.EXPECT().Debug("http handler response received", "elapsed", gomock.Any(), "remote address", "127.0.0.1").AnyTimes()
 	mockLogger.EXPECT().Error("file open error", "error", gomock.Any()).AnyTimes()
+	mockLogger.EXPECT().Info(gomock.Any(), gomock.Any(), gomock.Any()).AnyTimes() // placeholder for the workerlogerror
 
 	err = cont.RegisterAll(
 		cfg,
