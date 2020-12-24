@@ -430,6 +430,10 @@ github.com/spiral/roadrunner/v2 v2.0.0-alpha26 h1:YHXX6xLoRwoFGOozvi8EeTWWmfWzcF
 github.com/spiral/roadrunner/v2 v2.0.0-alpha26/go.mod h1:r7ojuHm9qCVbg4fKcqr4Aqk7VXqZ9YPefr1LOv7HNys=
 github.com/spiral/roadrunner/v2 v2.0.0-alpha28 h1:sTAIN2VxYL1lqSr6D7IJ1UAZ1ibP4C6cEA1/XjRswuI=
 github.com/spiral/roadrunner/v2 v2.0.0-alpha28/go.mod h1:Uqtk/47S+qweVjSl4R9XVImEVZc3nMWku4yg3A+f18Q=
+github.com/spiral/roadrunner/v2 v2.0.0-alpha29 h1:qW5AzCvLle6kkIJR/vpwg0Sfs264HYbDIY5AjGA0VR8=
+github.com/spiral/roadrunner/v2 v2.0.0-alpha29/go.mod h1:UgZgbE7yDce5X6rhA+Wzr6gxndtnTFBmjjZRoHbt1Zs=
+github.com/spiral/roadrunner/v2 v2.0.0-alpha30 h1:SljLFeszsOAqLDOjvYsqJF1hGxc2O/7CvOkGar9qZ+c=
+github.com/spiral/roadrunner/v2 v2.0.0-alpha30/go.mod h1:fKmPelVQxWql3cpjt/hYsf/Y2zDKb+DbZXgxdwj2nTc=
 github.com/streadway/amqp v0.0.0-20190404075320-75d898a42a94/go.mod h1:AZpEONHx3DKn8O/DFsRAY58/XVQiIPMTMB1SddzLXVw=
 github.com/streadway/amqp v0.0.0-20190827072141-edfb9018d271/go.mod h1:AZpEONHx3DKn8O/DFsRAY58/XVQiIPMTMB1SddzLXVw=
 github.com/streadway/handy v0.0.0-20190108123426-d5acb3125c2a/go.mod h1:qNTQ5P5JnDBl6z3cMAg/SywNDC5ABu5ApDIw6lUbRmI=

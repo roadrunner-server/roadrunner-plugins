@@ -59,8 +59,7 @@ func TestRedisInit(t *testing.T) {
 	c := redisConfig(s.Port())
 
 	cfg := &config.Viper{}
-	cfg.Prefix = "rr"
-	cfg.Path = ".rr-redis.yaml"
+	cfg.Type = "yaml"
 	cfg.ReadInCfg = []byte(c)
 
 	controller := gomock.NewController(t)

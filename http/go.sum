@@ -386,8 +386,8 @@ github.com/spiral/goridge/v3 v3.0.0-beta8 h1:x8uXCdhY49U1LEvmehnTaD2El6J9ZHAefRd
 github.com/spiral/goridge/v3 v3.0.0-beta8/go.mod h1:XFQGc42KNzo/hPIXPki7mEkFTf9v/T7qFk/TYJjMtzE=
 github.com/spiral/roadrunner-plugins/checker v1.0.1 h1:UVMX9zUF0R3ScRFUQg89e5+CLn3I2e5uAKsD4A52iDU=
 github.com/spiral/roadrunner-plugins/checker v1.0.1/go.mod h1:/gnVybeKye5uq/8hgjI7YDoK/ntPd0ej6tWkxlYdiz8=
-github.com/spiral/roadrunner-plugins/checker v1.0.2 h1:NE8cvFPccHDa1hkgYlmQqpYkSPVhC3hNPj9UKPGR14I=
-github.com/spiral/roadrunner-plugins/checker v1.0.2/go.mod h1:4sd+rVhoy6wR4MFI9mSB6QWIWyB60mL+bh+Yfnvt48c=
+github.com/spiral/roadrunner-plugins/checker v1.0.3 h1:fnWX2PBXlNhYp8UERgFx/eMM1Qf4pDJCeUY4NoiWwbo=
+github.com/spiral/roadrunner-plugins/checker v1.0.3/go.mod h1:ZLMg9NJsqUuCG7akU2V6JAFd/9ZLjawzvoJRYZxr5b0=
 github.com/spiral/roadrunner-plugins/config v1.0.0 h1:RPYB8Ha/UeuBGRwtcqNb0uU8R5qe4XpUXVmv/lGSUdQ=
 github.com/spiral/roadrunner-plugins/config v1.0.0/go.mod h1:XcVJLFDUlYPvZ3kVzssmP4fJbEzUvVJf534+eZaotAo=
 github.com/spiral/roadrunner-plugins/config v1.0.1 h1:6n9mFqvy+Fk3LaOWfNSA7lb5o2vJOnGJivNFP7Fg8QA=

@@ -3,6 +3,7 @@ package http
 import (
 	"bytes"
 	"crypto/tls"
+	"fmt"
 	"io/ioutil"
 	"net"
 	"net/http"
@@ -44,9 +45,10 @@ func TestHTTPInit(t *testing.T) {
 	cont, err := endure.NewContainer(nil, endure.SetLogLevel(endure.ErrorLevel))
 	assert.NoError(t, err)
 
+	rIn := makeConfig("6001", "15395", "7921", "8892", "false", "false", "php ../../tests/http/client.php echo pipes")
 	cfg := &config.Viper{
-		Path:   "configs/.rr-init.yaml",
-		Prefix: "rr",
+		ReadInCfg: rIn,
+		Type:      "yaml",
 	}
 
 	err = cont.RegisterAll(
@@ -892,21 +894,57 @@ func middleware(t *testing.T) {
 }
 
 func TestHttpEchoErr(t *testing.T) {
-	cont, err := endure.NewContainer(nil, endure.SetLogLevel(endure.ErrorLevel))
+	cont, err := endure.NewContainer(nil, endure.SetLogLevel(endure.DebugLevel))
 	assert.NoError(t, err)
 
+	rIn := `
+rpc:
+  listen: tcp://127.0.0.1:6001
+  disabled: false
+
+server:
+  command: "php ../../tests/http/client.php echoerr pipes"
+  user: ""
+  group: ""
+  env:
+    "RR_HTTP": "true"
+  relay: "pipes"
+  relayTimeout: "20s"
+
+http:
+  debug: true
+  address: 127.0.0.1:34999
+  maxRequestSize: 1024
+  middleware: [ "pluginMiddleware", "pluginMiddleware2" ]
+  uploads:
+    forbid: [ "" ]
+  trustedSubnets: [ "10.0.0.0/8", "127.0.0.0/8", "172.16.0.0/12", "192.168.0.0/16", "::1/128", "fc00::/7", "fe80::/10" ]
+  pool:
+    numWorkers: 2
+    maxJobs: 0
+    allocateTimeout: 60s
+    destroyTimeout: 60s
+logs:
+  mode: development
+  level: error
+`
+
 	cfg := &config.Viper{
-		Path:   "configs/.rr-echoErr.yaml",
-		Prefix: "rr",
+		Path:      "",
+		Prefix:    "",
+		Type:      "yaml",
+		ReadInCfg: []byte(rIn),
 	}
 
 	controller := gomock.NewController(t)
 	mockLogger := mocks.NewMockLogger(controller)
 
-	mockLogger.EXPECT().Info("worker constructed", "pid", gomock.Any()).AnyTimes()
-	mockLogger.EXPECT().Debug("http handler response received", "elapsed", gomock.Any(), "remote address", "127.0.0.1")
-	mockLogger.EXPECT().Debug("WORLD", "pid", gomock.Any())
-	mockLogger.EXPECT().Debug("worker event received", "event", events.EventWorkerLog, "worker state", gomock.Any())
+	mockLogger.EXPECT().Info("worker destructed", "pid", gomock.Any()).MinTimes(1)
+	mockLogger.EXPECT().Info("worker constructed", "pid", gomock.Any()).MinTimes(1)
+	mockLogger.EXPECT().Debug("http handler response received", "elapsed", gomock.Any(), "remote address", "127.0.0.1").MinTimes(1)
+	mockLogger.EXPECT().Info("WORLD", "pid", gomock.Any()).MinTimes(1)
+	mockLogger.EXPECT().Debug("worker event received", "event", events.EventWorkerLog, "worker state", gomock.Any()).MinTimes(1)
+	mockLogger.EXPECT().Info(gomock.Any(), gomock.Any(), gomock.Any()).AnyTimes() // placeholder for the workerlogerror
 
 	err = cont.RegisterAll(
 		cfg,
@@ -967,7 +1005,7 @@ func TestHttpEchoErr(t *testing.T) {
 }
 
 func echoError(t *testing.T) {
-	req, err := http.NewRequest("GET", "http://localhost:8080?hello=world", nil)
+	req, err := http.NewRequest("GET", "http://localhost:34999?hello=world", nil)
 	assert.NoError(t, err)
 
 	r, err := http.DefaultClient.Do(req)
@@ -1073,6 +1111,7 @@ func TestHttpBrokenPipes(t *testing.T) {
 	cfg := &config.Viper{
 		Path:   "configs/.rr-broken-pipes.yaml",
 		Prefix: "rr",
+		Type:   "yaml",
 	}
 
 	err = cont.RegisterAll(
@@ -1133,4 +1172,50 @@ func getHeader(url string, h map[string]string) (string, *http.Response, error) 
 		return "", nil, err
 	}
 	return string(b), r, err
+}
+
+func makeConfig(rpcPort, httpPort, fcgiPort, sslPort, redirect, http2Enabled, command string) []byte {
+	return []byte(fmt.Sprintf(`
+rpc:
+  listen: tcp://127.0.0.1:%s
+  disabled: false
+
+server:
+  command: "%s"
+  user: ""
+  group: ""
+  env:
+    "RR_HTTP": "true"
+  relay: "pipes"
+  relayTimeout: "20s"
+
+http:
+  address: 127.0.0.1:%s
+  maxRequestSize: 1024
+  middleware: [ "" ]
+  uploads:
+    forbid: [ ".php", ".exe", ".bat" ]
+  trustedSubnets: [ "10.0.0.0/8", "127.0.0.0/8", "172.16.0.0/12", "192.168.0.0/16", "::1/128", "fc00::/7", "fe80::/10" ]
+  pool:
+    numWorkers: 2
+    maxJobs: 0
+    allocateTimeout: 60s
+    destroyTimeout: 60s
+
+  ssl:
+    port: %s
+    redirect: %s
+    cert: fixtures/server.crt
+    key: fixtures/server.key
+  #    rootCa: root.crt
+  fcgi:
+    address: tcp://0.0.0.0:%s
+  http2:
+    enabled: %s
+    h2c: false
+    maxConcurrentStreams: 128
+logs:
+  mode: development
+  level: error
+`, rpcPort, command, httpPort, sslPort, redirect, fcgiPort, http2Enabled))
 }

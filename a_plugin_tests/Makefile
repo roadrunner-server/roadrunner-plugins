@@ -19,3 +19,6 @@ test: ## Run application tests
 	go test -v -race -cover -tags=debug -covermode=atomic ./rpc
 	go test -v -race -cover -tags=debug -covermode=atomic ./server
 	go test -v -race -cover -tags=debug -covermode=atomic ./static
+
+test_http:
+	go test -v -race -cover -covermode=atomic ./http
