@@ -7,7 +7,7 @@ require (
 	github.com/json-iterator/go v1.1.10
 	github.com/spiral/endure v1.0.0-beta20
 	github.com/spiral/errors v1.0.6
-	github.com/spiral/roadrunner-plugins/checker v1.0.2
+	github.com/spiral/roadrunner-plugins/checker v1.0.3
 	github.com/spiral/roadrunner-plugins/config v1.0.1
 	github.com/spiral/roadrunner-plugins/logger v1.0.2
 	github.com/spiral/roadrunner-plugins/server v1.0.6

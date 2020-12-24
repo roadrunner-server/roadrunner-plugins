@@ -398,6 +398,8 @@ github.com/spiral/roadrunner-plugins/informer v1.0.3/go.mod h1:OPEJNADBbNQyx0/Ku
 github.com/spiral/roadrunner-plugins/informer v1.0.4/go.mod h1:4qvFbVw0ESwE5RJQRiP939QN3SJ8l6aDnrQhL09f5lQ=
 github.com/spiral/roadrunner-plugins/logger v1.0.1 h1:cc/pRE+8bUQgLiF05G7f948UpWtrZmJk/axTh1ywrks=
 github.com/spiral/roadrunner-plugins/logger v1.0.1/go.mod h1:/oX1P56+/joLaAPwZaiRqPVVzM36701kdYqOHu+U3EM=
+github.com/spiral/roadrunner-plugins/logger v1.0.2 h1:4dBDKMUYdwE3jQ6ld1cR7E+ApRE30cDFudHSwDpgmx8=
+github.com/spiral/roadrunner-plugins/logger v1.0.2/go.mod h1:TGafnqSIQak7e+7mkrdatl379VVlK0kZE874ZC5exPk=
 github.com/spiral/roadrunner-plugins/metrics v1.0.0/go.mod h1:zLd9TdARJSwo6tQjTb0auD7pxN2ODXnsy4evInCMp9o=
 github.com/spiral/roadrunner-plugins/redis v1.0.0/go.mod h1:VzXRQcNaNONaUxyCW9t9eC+p8UxkXx2kwGeVw3s7zR0=
 github.com/spiral/roadrunner-plugins/reload v1.0.0/go.mod h1:IEDqSrV0zbnvCNXigLtp0EoGVsHc34merlU2gokiuDs=
@@ -411,8 +413,8 @@ github.com/spiral/roadrunner-plugins/server v1.0.3 h1:Bhr5tK0eW+52/qeew6QMowowOp
 github.com/spiral/roadrunner-plugins/server v1.0.3/go.mod h1:XHfOZwvITuKyUwU79KaeMm8gU5AqzKQg0MCHJ7eBU5c=
 github.com/spiral/roadrunner-plugins/server v1.0.4 h1:i6QWbVM/gLnM3Tb/DDFSFpRnxccJd3mCpENW2rBuTeE=
 github.com/spiral/roadrunner-plugins/server v1.0.4/go.mod h1:XHfOZwvITuKyUwU79KaeMm8gU5AqzKQg0MCHJ7eBU5c=
-github.com/spiral/roadrunner-plugins/server v1.0.5 h1:nFPp8tlc7P9e0PE8JVvWoNJnDZi8vTiravcH5htcb2M=
-github.com/spiral/roadrunner-plugins/server v1.0.5/go.mod h1:s0g90q8QP3/R70g4uPVUl3jXP7JF978QoypWkVDAaiA=
+github.com/spiral/roadrunner-plugins/server v1.0.6 h1:JOrA/O/DJjuqKE1YTxLSyYh+/FLsJHY9biZkLwZk+LE=
+github.com/spiral/roadrunner-plugins/server v1.0.6/go.mod h1:FyUujaAfNNdXCJHDkWD5pcRolNQ4cOMb6N+KapIMVpk=
 github.com/spiral/roadrunner/v2 v2.0.0-alpha26 h1:YHXX6xLoRwoFGOozvi8EeTWWmfWzcFv4MmZFm5eNUcE=
 github.com/spiral/roadrunner/v2 v2.0.0-alpha26/go.mod h1:r7ojuHm9qCVbg4fKcqr4Aqk7VXqZ9YPefr1LOv7HNys=
 github.com/spiral/roadrunner/v2 v2.0.0-alpha28 h1:sTAIN2VxYL1lqSr6D7IJ1UAZ1ibP4C6cEA1/XjRswuI=
