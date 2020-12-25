@@ -2,6 +2,7 @@ package logger
 
 import (
 	"github.com/spiral/endure"
+	"github.com/spiral/errors"
 	"github.com/spiral/roadrunner-plugins/config"
 	"go.uber.org/zap"
 )
@@ -18,18 +19,22 @@ type ZapLogger struct {
 
 // Init logger service.
 func (z *ZapLogger) Init(cfg config.Configurer) error {
+	const op = errors.Op("zap logger init")
 	err := cfg.UnmarshalKey(PluginName, &z.cfg)
 	if err != nil {
-		return err
+		return errors.E(op, errors.Disabled, err)
 	}
 
 	err = cfg.UnmarshalKey(PluginName, &z.channels)
 	if err != nil {
-		return err
+		return errors.E(op, errors.Disabled, err)
 	}
 
 	z.base, err = z.cfg.BuildLogger()
-	return err
+	if err != nil {
+		return errors.E(op, errors.Disabled, err)
+	}
+	return nil
 }
 
 // DefaultLogger returns default logger.
