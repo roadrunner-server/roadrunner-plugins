@@ -2,10 +2,10 @@ package config
 
 import (
 	"bytes"
-	"errors"
 	"strings"
 
 	"github.com/spf13/viper"
+	"github.com/spiral/errors"
 )
 
 type Viper struct {
@@ -18,6 +18,7 @@ type Viper struct {
 
 // Inits config provider.
 func (v *Viper) Init() error {
+	const op = errors.Op("viper plugin init")
 	v.viper = viper.New()
 	// If user provided []byte data with config, read it and ignore Path and Prefix
 	if v.ReadInCfg != nil && v.Type != "" {
@@ -28,12 +29,12 @@ func (v *Viper) Init() error {
 	// read in environment variables that match
 	v.viper.AutomaticEnv()
 	if v.Prefix == "" {
-		return errors.New("prefix should be set")
+		return errors.E(op, errors.Str("prefix should be set"))
 	}
 
 	v.viper.SetEnvPrefix(v.Prefix)
 	if v.Path == "" {
-		return errors.New("path should be set")
+		return errors.E(op, errors.Str("path should be set"))
 	}
 
 	v.viper.SetConfigFile(v.Path)
@@ -55,9 +56,10 @@ func (v *Viper) Overwrite(values map[string]interface{}) error {
 
 // UnmarshalKey reads configuration section into configuration object.
 func (v *Viper) UnmarshalKey(name string, out interface{}) error {
+	const op = errors.Op("unmarshal key")
 	err := v.viper.UnmarshalKey(name, &out)
 	if err != nil {
-		return err
+		return errors.E(op, err)
 	}
 	return nil
 }
