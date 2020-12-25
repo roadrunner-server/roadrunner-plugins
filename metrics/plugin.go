@@ -40,10 +40,10 @@ type Plugin struct {
 
 // Init service.
 func (m *Plugin) Init(cfg config.Configurer, log logger.Logger) error {
-	const op = errors.Op("Metrics Init")
+	const op = errors.Op("metrics init")
 	err := cfg.UnmarshalKey(PluginName, &m.cfg)
 	if err != nil {
-		return err
+		return errors.E(op, errors.Disabled, err)
 	}
 
 	// TODO figure out what is Init
