@@ -18,7 +18,7 @@ metrics  | [![Generic badge](https://img.shields.io/badge/metrics-v1.0.1-<>.svg)
 redis    | [![Generic badge](https://img.shields.io/badge/redis-v1.0.1-<>.svg)](https://shields.io/)
 resetter | [![Generic badge](https://img.shields.io/badge/resetter-v1.0.1-<>.svg)](https://shields.io/)
 reload | [![Generic badge](https://img.shields.io/badge/reload-v1.0.2-<>.svg)](https://shields.io/)
-rpc | [![Generic badge](https://img.shields.io/badge/rpc-v1.0.2-<>.svg)](https://shields.io/)
+rpc | [![Generic badge](https://img.shields.io/badge/rpc-v1.0.3-<>.svg)](https://shields.io/)
 static | [![Generic badge](https://img.shields.io/badge/static-v1.0.1-<>.svg)](https://shields.io/)
 
 
