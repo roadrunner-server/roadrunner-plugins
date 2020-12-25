@@ -70,15 +70,12 @@ jobs:
           go test -v -race -cover -tags=debug ./config
           go test -v -race -cover -tags=debug ./gzip
           go test -v -race -cover -tags=debug ./headers
-          go test -v -race -cover -tags=debug ./http
-          go test -v -race -cover -tags=debug ./informer
           go test -v -race -cover -tags=debug ./logger
           go test -v -race -cover -tags=debug ./metrics
           go test -v -race -cover -tags=debug ./redis
           go test -v -race -cover -tags=debug ./reload
           go test -v -race -cover -tags=debug ./resetter
           go test -v -race -cover -tags=debug ./rpc
-          go test -v -race -cover -tags=debug ./server
           go test -v -race -cover -tags=debug ./static
 
       - name: Run golang tests on Linux and MacOS
@@ -90,15 +87,12 @@ jobs:
           go test -v -race -cover -tags=debug -coverprofile=./coverage-ci/config.txt -covermode=atomic ./config
           go test -v -race -cover -tags=debug -coverprofile=./coverage-ci/gzip.txt -covermode=atomic ./gzip
           go test -v -race -cover -tags=debug -coverprofile=./coverage-ci/headers.txt -covermode=atomic ./headers
-          go test -v -race -cover -tags=debug -coverprofile=./coverage-ci/http.txt -covermode=atomic ./http
-          go test -v -race -cover -tags=debug -coverprofile=./coverage-ci/informer.txt -covermode=atomic ./informer
           go test -v -race -cover -tags=debug -coverprofile=./coverage-ci/logger.txt -covermode=atomic ./logger
           go test -v -race -cover -tags=debug -coverprofile=./coverage-ci/metrics.txt -covermode=atomic ./metrics
           go test -v -race -cover -tags=debug -coverprofile=./coverage-ci/redis.txt -covermode=atomic ./redis
           go test -v -race -cover -tags=debug -coverprofile=./coverage-ci/reload.txt -covermode=atomic ./reload
           go test -v -race -cover -tags=debug -coverprofile=./coverage-ci/resetter.txt -covermode=atomic ./resetter
           go test -v -race -cover -tags=debug -coverprofile=./coverage-ci/rpc.txt -covermode=atomic ./rpc
-          go test -v -race -cover -tags=debug -coverprofile=./coverage-ci/server.txt -covermode=atomic ./server
           go test -v -race -cover -tags=debug -coverprofile=./coverage-ci/static.txt -covermode=atomic ./static
           cat ./coverage-ci/*.txt > ./coverage-ci/summary.txt
 
