@@ -102,10 +102,11 @@ func NewWatcher(configs []WatcherConfig, log logger.Logger, options ...Options) 
 
 // initFs makes initial map with files
 func (w *Watcher) initFs() error {
+	const op = errors.Op("init fs")
 	for srvName, config := range w.watcherConfigs {
 		fileList, err := w.retrieveFileList(srvName, config)
 		if err != nil {
-			return err
+			return errors.E(op, err)
 		}
 		// workaround. in golang you can't assign to map in struct field
 		tmp := w.watcherConfigs[srvName]
@@ -274,8 +275,9 @@ func (w *Watcher) retrieveFilesRecursive(serviceName, root string) (map[string]o
 	fileList := make(map[string]os.FileInfo)
 
 	return fileList, filepath.Walk(root, func(path string, info os.FileInfo, err error) error {
+		const op = errors.Op("retrieve files recursive")
 		if err != nil {
-			return err
+			return errors.E(op, err)
 		}
 
 		// If path is ignored and it's a directory, skip the directory. If it's
