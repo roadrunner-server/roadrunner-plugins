@@ -9,16 +9,12 @@ test: ## Run application tests
 	go test -v -race -cover -tags=debug -covermode=atomic ./config
 	go test -v -race -cover -tags=debug -covermode=atomic ./gzip
 	go test -v -race -cover -tags=debug -covermode=atomic ./headers
-	go test -v -race -cover -tags=debug -covermode=atomic ./http
-	go test -v -race -cover -tags=debug -covermode=atomic ./informer
 	go test -v -race -cover -tags=debug -covermode=atomic ./logger
 	go test -v -race -cover -tags=debug -covermode=atomic ./metrics
 	go test -v -race -cover -tags=debug -covermode=atomic ./redis
 	go test -v -race -cover -tags=debug -covermode=atomic ./reload
 	go test -v -race -cover -tags=debug -covermode=atomic ./resetter
 	go test -v -race -cover -tags=debug -covermode=atomic ./rpc
-	go test -v -race -cover -tags=debug -covermode=atomic ./server
 	go test -v -race -cover -tags=debug -covermode=atomic ./static
-
-test_http:
-	go test -v -race -cover -covermode=atomic ./http
+test_rpc:
+	go test -v -race -cover -tags=debug -covermode=atomic ./rpc
