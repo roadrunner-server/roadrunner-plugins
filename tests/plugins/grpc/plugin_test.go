@@ -11,7 +11,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func init() {
+func init() { //nolint:gochecknoinits
 	err := build()
 	if err != nil {
 		panic(err)
