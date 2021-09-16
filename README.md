@@ -51,8 +51,6 @@ func (s *Plugin) Init() error {
 }
 ```
 
-You can register your plugin by creating a custom version of `main.go` file and [building it](/beep-beep/build.md).
-
 ### Dependencies
 
 You can access other RoadRunner plugins by requesting dependencies in your `Init` method:
