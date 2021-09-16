@@ -2,6 +2,11 @@
 	"cSpell.words": [
 		"AMQP",
 		"amqpjobs",
-		"mdwr"
-	]
+		"mdwr",
+		"unmarshal"
+	],
+
+	"files.associations": {
+		"Dockerfile-*.yaml": "dockerfile"
+	}
 }

@@ -15,9 +15,13 @@ test_coverage:
 	go test -v -race -cover -tags=debug -coverpkg=./... -coverprofile=./coverage-ci/pipeline_jobs.out -covermode=atomic ./jobs/pipeline
 	go test -v -race -cover -tags=debug -coverpkg=./... -coverprofile=./coverage-ci/jobs_core.out -covermode=atomic ./tests/plugins/jobs
 	go test -v -race -cover -tags=debug -coverpkg=./... -coverprofile=./coverage-ci/kv_plugin.out -covermode=atomic ./tests/plugins/kv
+	go test -v -race -cover -tags=debug -coverpkg=./... -coverprofile=./coverage-ci/grpc_codec.out -covermode=atomic ./grpc/codec
+	go test -v -race -cover -tags=debug -coverpkg=./... -coverprofile=./coverage-ci/grpc_parser.out -covermode=atomic ./grpc/parser
+	go test -v -race -cover -tags=debug -coverpkg=./... -coverprofile=./coverage-ci/grpc_proxy.out -covermode=atomic ./grpc/proxy
 	go test -v -race -cover -tags=debug -coverpkg=./... -coverprofile=./coverage-ci/broadcast_plugin.out -covermode=atomic ./tests/plugins/broadcast
 	go test -v -race -cover -tags=debug -coverpkg=./... -coverprofile=./coverage-ci/websockets.out -covermode=atomic ./tests/plugins/websockets
 	go test -v -race -cover -tags=debug -coverpkg=./... -coverprofile=./coverage-ci/http.out -covermode=atomic ./tests/plugins/http
+	go test -v -race -cover -tags=debug -coverpkg=./... -coverprofile=./coverage-ci/grpc_plugin.out -covermode=atomic ./tests/plugins/grpc
 	go test -v -race -cover -tags=debug -coverpkg=./... -coverprofile=./coverage-ci/informer.out -covermode=atomic ./tests/plugins/informer
 	go test -v -race -cover -tags=debug -coverpkg=./... -coverprofile=./coverage-ci/reload.out -covermode=atomic ./tests/plugins/reload
 	go test -v -race -cover -tags=debug -coverpkg=./... -coverprofile=./coverage-ci/server.out -covermode=atomic ./tests/plugins/server
@@ -41,6 +45,9 @@ test: ## Run application tests
 	go test -v -race -tags=debug ./server
 	go test -v -race -tags=debug ./jobs/job
 	go test -v -race -tags=debug ./websockets
+	go test -v -race -tags=debug ./grpc/codec
+	go test -v -race -tags=debug ./grpc/parser
+	go test -v -race -tags=debug ./grpc/proxy
 	go test -v -race -tags=debug ./tests/plugins/jobs
 	go test -v -race -tags=debug ./tests/plugins/kv
 	go test -v -race -tags=debug ./tests/plugins/broadcast
@@ -48,6 +55,8 @@ test: ## Run application tests
 	go test -v -race -tags=debug ./tests/plugins/http
 	go test -v -race -tags=debug ./tests/plugins/informer
 	go test -v -race -tags=debug ./tests/plugins/reload
+	go test -v -race -tags=debug ./tests/plugins/websockets
+	go test -v -race -tags=debug ./tests/plugins/grpc
 	go test -v -race -tags=debug ./tests/plugins/server
 	go test -v -race -tags=debug ./tests/plugins/service
 	go test -v -race -tags=debug ./tests/plugins/status
@@ -59,3 +68,8 @@ test: ## Run application tests
 	go test -v -race -tags=debug ./tests/plugins/resetter
 	go test -v -race -tags=debug ./tests/plugins/rpc
 	docker-compose -f tests/env/docker-compose.yaml down
+
+generate-proto:
+	protoc --proto_path=./proto/jobs/v1beta --go_out=./proto/jobs/v1beta jobs.proto
+	protoc --proto_path=./proto/kv/v1beta --go_out=./proto/kv/v1beta kv.proto
+	protoc --proto_path=./proto/websockets/v1beta --go_out=./proto/websockets/v1beta websockets.proto

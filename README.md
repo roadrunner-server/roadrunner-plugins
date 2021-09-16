@@ -31,98 +31,266 @@ with much greater performance and flexibility.
     <a href="https://github.com/orgs/spiral/projects/2"><b>Release schedule</b></a>
 </p>
 
-## Features:
+# Writing Plugins
 
-- Production-ready
-- PCI DSS compliant
-- PSR-7 HTTP server (file uploads, error handling, static files, hot reload, middlewares, event listeners)
-- HTTPS and HTTP/2 support (including HTTP/2 Push, H2C)
-- A Fully customizable server, FastCGI support
-- Flexible environment configuration
-- No external PHP dependencies (64bit version required), drop-in (based on [Goridge](https://github.com/spiral/goridge))
-- Load balancer, process manager and task pipeline
-- Integrated metrics (Prometheus)
-- [Workflow engine](https://github.com/temporalio/sdk-php) by [Temporal.io](https://temporal.io)
-- Works over TCP, UNIX sockets and standard pipes
-- Automatic worker replacement and safe PHP process destruction
-- Worker create/allocate/destroy timeouts
-- Max jobs per worker
-- Worker lifecycle management (controller)
-  - maxMemory (graceful stop)
-  - TTL (graceful stop)
-  - idleTTL (graceful stop)
-  - execTTL (brute, max_execution_time)
-- Payload context and body
-- Protocol, worker and job level error management (including PHP errors)
-- Development Mode
-- Integrations with Symfony, [Laravel](https://github.com/spiral/roadrunner-laravel), Slim, CakePHP, Zend Expressive
-- Application server for [Spiral](https://github.com/spiral/framework)
-- Included in Laravel Octane
-- Automatic reloading on file changes
-- Works on Windows (Unix sockets (AF_UNIX) supported on Windows 10)
+RoadRunner uses Endure container to manage dependencies. This approach is similar to the PHP Container implementation
+with automatic method injection. You can create your own plugins, event listeners, middlewares, etc.
 
-## Installation:
+To define your plugin, create a struct with public `Init` method with error return value (you can use `spiral/errors` as
+the `error` package):
 
-```bash
-$ composer require spiral/roadrunner:v2.0 nyholm/psr7
-$ ./vendor/bin/rr get-binary
+```go
+package custom
+
+const PluginName = "custom"
+
+type Plugin struct{}
+
+func (s *Plugin) Init() error {
+     return nil
+}
 ```
 
-> For getting roadrunner binary file you can use our docker image: `spiralscout/roadrunner:X.X.X` (more information about
-> image and tags can be found [here](https://hub.docker.com/r/spiralscout/roadrunner/))
+You can register your plugin by creating a custom version of `main.go` file and [building it](/beep-beep/build.md).
 
-Configuration can be located in `.rr.yaml`
-file ([full sample](https://github.com/spiral/roadrunner/blob/master/.rr.yaml)):
+### Dependencies
+
+You can access other RoadRunner plugins by requesting dependencies in your `Init` method:
+
+```go
+package custom
+
+import (
+     "github.com/spiral/roadrunner-plugins/v2/http"
+     "github.com/spiral/roadrunner-plugins/v2/rpc"
+)
+
+type Service struct {}
+
+func (s *Service) Init(r *rpc.Plugin, rr *http.Plugin) error {
+     return nil
+}
+```
+
+Or collect all plugins implementing particular interface via the `Collects` interface implementation, like this:
+
+```go
+
+package custom
+
+import (
+     "github.com/spiral/roadrunner-plugins/v2/http"
+     "github.com/spiral/roadrunner-plugins/v2/rpc"
+)
+
+type Middleware interface {
+	Middleware(f http.Handler) http.Handler
+}
+
+type middleware map[string]Middleware
+
+type Service struct {
+  	mdwr middleware
+}
+
+// Init will be called BEFORE Collects
+func (s *Service) Init(r *rpc.Plugin, rr *http.Plugin) error {
+  	 p.mdwr = make(map[string]Middleware)
+     return nil
+}
+
+// Collects is a special endure interface. Endure analyze all args in the returning methods and searches for the plugins implementing them.
+func (p *Plugin) Collects() []interface{} {
+	return []interface{}{
+		p.AddMiddleware,
+	}
+}
+
+// Here is we are searching for the plugins implementing `endure.Named` AND `Middleware` interfaces.
+func (p *Plugin) AddMiddleware(name endure.Named, m Middleware) {
+	p.mdwr[name.Name()] = m
+}
+```
+
+> Make sure to request dependency is a pointer.
+
+### Configuration
+
+In most of the cases, your services would require a set of configuration values. RoadRunner can automatically populate
+and validate your configuration structure using `config` plugin (should be imported only config.Configurer interface):
+
+Config sample:
 
 ```yaml
-rpc:
-  listen: tcp://127.0.0.1:6001
-
-server:
-  command: "php worker.php"
-
-http:
-  address: "0.0.0.0:8080"
-
-logs:
-  level: error
+custom:
+  address: tcp://localhost:8888
 ```
 
-> Read more in [Documentation](https://roadrunner.dev/docs).
+Plugin:
 
-## Example Worker:
+```go
+package custom
 
-```php
-<?php
+import (
+     "github.com/spiral/roadrunner-plugins/v2/config"
+     "github.com/spiral/roadrunner-plugins/v2/http"
+     "github.com/spiral/roadrunner-plugins/v2/rpc"
 
-use Spiral\RoadRunner;
-use Nyholm\Psr7;
+     "github.com/spiral/errors"
+)
 
-include "vendor/autoload.php";
+// Your custom plugin name
+const PluginName = "custom"
 
-$worker = RoadRunner\Worker::create();
-$psrFactory = new Psr7\Factory\Psr17Factory();
+type Config struct{
+     Address string `mapstructure:"address"`
+}
 
-$worker = new RoadRunner\Http\PSR7Worker($worker, $psrFactory, $psrFactory, $psrFactory);
+type Plugin struct {
+     cfg *Config
+}
 
-while ($req = $worker->waitRequest()) {
-    try {
-        $rsp = new Psr7\Response();
-        $rsp->getBody()->write('Hello world!');
+// You can also initialize some defaults values for config keys
+func (cfg *Config) InitDefaults() {
+     if cfg.Address == "" {
+      cfg.Address = "tcp://localhost:8088"
+    }
+}
 
-        $worker->respond($rsp);
-    } catch (\Throwable $e) {
-        $worker->getWorker()->error((string)$e);
+func (s *Plugin) Init(r *rpc.Plugin, h *http.Plugin, cfg config.Configurer) error {
+ const op = errors.Op("custom_plugin_init") // error operation name
+ // Check if the `custom` section exists in the configuration.
+ if !cfg.Has(PluginName) {
+  return errors.E(op, errors.Disabled)
+ }
+
+ // unmarshal
+ err := cfg.UnmarshalKey(PluginName, &s.cfg)
+ if err != nil {
+  // Error will stop execution
+  return errors.E(op, err)
+ }
+
+ return nil
+}
+
+```
+
+`errors.Disabled` is the special kind of error which indicated Endure to disable this plugin and all dependencies of
+this root. The RR2 will continue to work after this error type if at least plugin stay alive.
+
+### Serving
+
+Create `Serve` and `Stop` method in your structure to let RoadRunner start and stop your service.
+
+```golang
+type Plugin struct {}
+
+func (s *Plugin) Serve() chan error {
+ const op = errors.Op("custom_plugin_serve")
+    errCh := make(chan error, 1)
+
+    err := s.DoSomeWork()
+    err != nil {
+     errCh <- errors.E(op, err)
+     return errCh
+    }
+
+    return nil
+}
+
+func (s *Plugin) Stop() error {
+    return s.stopServing()
+}
+
+func (s *Plugin) DoSomeWork() error {
+ return nil
+}
+```
+
+`Serve` method is thread-safe. It runs in the separate goroutine which managed by the `Endure` container. The one note, is that you should unblock it when call `Stop` on the container. Otherwise, service will be killed after timeout (can be set in Endure).
+
+### Collecting dependencies in runtime
+
+RR2 provide a way to collect dependencies in runtime via `Collects` interface. This is very useful for the middlewares or extending plugins with additional functionality w/o changing it.
+Let's create an HTTP middleware:
+
+Steps (sample based on the actual `http` plugin and `Middleware` interface):
+
+1. Declare a required interface
+
+```go
+// Middleware interface
+type Middleware interface {
+ Middleware(f http.Handler) http.HandlerFunc
+}
+```
+
+2. Implement method, which should have as an arguments name (`endure.Named` interface) and `Middleware` (step 1).
+
+```go
+// Collects collecting http middlewares
+func (s *Plugin) AddMiddleware(name endure.Named, m Middleware) {
+    s.mdwr[name.Name()] = m
+}
+```
+
+3. Implement `Collects` endure interface for the required structure and return implemented on the step 2 method.
+
+```golang
+// Collects collecting http middlewares
+func (s *Plugin) Collects() []interface{} {
+    return []interface{}{
+        s.AddMiddleware,
     }
 }
 ```
 
-## Run:
+Endure will automatically check that registered structure implement all the arguments for the `AddMiddleware` method (or will find a structure if argument is structure). In our case, a structure should implement `endure.Named` interface (which returns user friendly name for the plugin) and `Middleware` interface.
 
-To run application server:
+### RPC Methods
 
+You can expose a set of RPC methods for your PHP workers also by using Endure `Collects` interface. Endure will automatically get the structure and expose RPC method under the `PluginName` name.
+
+To extend your plugin with RPC methods, plugin will not be changed at all. Only 1 thing to do is to create a file with RPC methods (let's call it `rpc.go`) and expose here all RPC methods for the plugin w/o changing plugin itself:
+
+I assume we created a file `rpc.go`. The next step is to create a structure:
+
+1. Create a structure: (logger is optional)
+
+```go
+package custom
+
+type rpc struct {
+ srv *Plugin
+ log logger.Logger
+}
 ```
-$ ./rr serve
+
+2. Create a method, which you want to expose (or multiply methods):
+
+```go
+func (s *rpc) Hello(input string, output *string) error {
+ *output = input
+ return nil
+}
+```
+
+3. Create a method in your plugin (typically `plugin.go`) with the following method signature:
+
+```go
+// RPCService returns associated rpc service.
+func (p *Plugin) RPC() interface{} {
+ return &rpc{srv: p, log: p.log}
+}
+```
+
+4. RPC plugin Collects all plugins which implement `RPC` interface and `endure.Named` automatically (if exists). RPC interface accepts no arguments, but returns interface (plugin).
+
+To use it within PHP using `RPC` [instance](/beep-beep/rpc.md):
+
+```php
+var_dump($rpc->call('custom.Hello', 'world'));
 ```
 
 ## License:
