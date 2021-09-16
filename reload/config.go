@@ -36,14 +36,18 @@ type ServiceConfig struct {
 }
 
 // InitDefaults sets missing values to their default values.
-func InitDefaults(c *Config) {
-	c.Interval = time.Second
-	c.Patterns = []string{".php"}
+func (c *Config) InitDefaults() {
+	if c.Interval == 0 {
+		c.Interval = time.Second
+	}
+	if c.Patterns == nil {
+		c.Patterns = []string{".php"}
+	}
 }
 
 // Valid validates the configuration.
 func (c *Config) Valid() error {
-	const op = errors.Op("config validation [reload plugin]")
+	const op = errors.Op("reload_plugin_valid")
 	if c.Interval < time.Second {
 		return errors.E(op, errors.Str("too short interval"))
 	}

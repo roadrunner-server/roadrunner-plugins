@@ -1,0 +1,28 @@
+coverage:
+  status:
+    project:
+      default:
+        target: auto
+        threshold: 50%
+        informational: true
+    patch:
+      default:
+        target: auto
+        threshold: 50%
+        informational: true
+
+# do not include tests folders
+ignore:
+  - "common"
+  - "internal"
+  - "proto"
+  - "tests"
+  - "systemd"
+  - "utils/to_ptr.go"
+  - "metrics/config_test.go"
+  - "websockets/storage/storage_test.go"
+  - "websockets/config.go"
+  - "amqp/amqpjobs/config.go"
+  - "beanstalk/config.go"
+  - "redis/config.go"
+  - "redis/kv/config.go"

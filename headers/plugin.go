@@ -5,14 +5,14 @@ import (
 	"strconv"
 
 	"github.com/spiral/errors"
-	"github.com/spiral/roadrunner-plugins/config"
+	"github.com/spiral/roadrunner-plugins/v2/config"
 )
 
-// ID contains default service name.
+// PluginName contains default service name.
 const PluginName = "headers"
 const RootPluginName = "http"
 
-// Service serves headers files. Potentially convert into middleware?
+// Plugin serves headers files. Potentially convert into middleware?
 type Plugin struct {
 	// server configuration (location, forbidden files and etc)
 	cfg *Config
@@ -21,19 +21,26 @@ type Plugin struct {
 // Init must return configure service and return true if service hasStatus enabled. Must return error in case of
 // misconfiguration. Services must not be used without proper configuration pushed first.
 func (s *Plugin) Init(cfg config.Configurer) error {
-	const op = errors.Op("headers plugin init")
+	const op = errors.Op("headers_plugin_init")
+	if !cfg.Has(RootPluginName) {
+		return errors.E(op, errors.Disabled)
+	}
 	err := cfg.UnmarshalKey(RootPluginName, &s.cfg)
 	if err != nil {
 		return errors.E(op, errors.Disabled, err)
 	}
 
+	if s.cfg.Headers == nil {
+		return errors.E(op, errors.Disabled)
+	}
+
 	return nil
 }
 
-// middleware must return true if request/response pair is handled within the middleware.
-func (s *Plugin) Middleware(next http.Handler) http.HandlerFunc {
+// Middleware is HTTP plugin middleware to serve headers
+func (s *Plugin) Middleware(next http.Handler) http.Handler {
 	// Define the http.HandlerFunc
-	return func(w http.ResponseWriter, r *http.Request) {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if s.cfg.Headers.Request != nil {
 			for k, v := range s.cfg.Headers.Request {
 				r.Header.Add(k, v)
@@ -55,12 +62,15 @@ func (s *Plugin) Middleware(next http.Handler) http.HandlerFunc {
 		}
 
 		next.ServeHTTP(w, r)
-	}
+	})
 }
 
 func (s *Plugin) Name() string {
 	return PluginName
 }
+
+// Available interface implementation
+func (s *Plugin) Available() {}
 
 // configure OPTIONS response
 func (s *Plugin) preflightRequest(w http.ResponseWriter) {

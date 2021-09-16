@@ -1,75 +1,77 @@
 package redis
 
 import (
+	"sync"
+
 	"github.com/go-redis/redis/v8"
 	"github.com/spiral/errors"
-	"github.com/spiral/roadrunner-plugins/config"
-	"github.com/spiral/roadrunner-plugins/logger"
+	"github.com/spiral/roadrunner-plugins/v2/common/kv"
+	"github.com/spiral/roadrunner-plugins/v2/common/pubsub"
+	"github.com/spiral/roadrunner-plugins/v2/config"
+	"github.com/spiral/roadrunner-plugins/v2/logger"
+	redis_kv "github.com/spiral/roadrunner-plugins/v2/redis/kv"
+	redis_pubsub "github.com/spiral/roadrunner-plugins/v2/redis/pubsub"
 )
 
 const PluginName = "redis"
 
 type Plugin struct {
+	sync.RWMutex
 	// config for RR integration
-	cfg *Config
+	cfgPlugin config.Configurer
 	// logger
 	log logger.Logger
 	// redis universal client
 	universalClient redis.UniversalClient
+
+	// fanIn implementation used to deliver messages from all channels to the single websocket point
+	stopCh chan struct{}
 }
 
-func (s *Plugin) GetClient() redis.UniversalClient {
-	return s.universalClient
-}
-
-func (s *Plugin) Init(cfg config.Configurer, log logger.Logger) error {
-	const op = errors.Op("redis plugin init")
-	s.cfg = &Config{}
-	s.cfg.InitDefaults()
-
-	err := cfg.UnmarshalKey(PluginName, &s.cfg)
-	if err != nil {
-		return errors.E(op, errors.Disabled, err)
-	}
-
-	s.log = log
-
-	s.universalClient = redis.NewUniversalClient(&redis.UniversalOptions{
-		Addrs:              s.cfg.Addrs,
-		DB:                 s.cfg.DB,
-		Username:           s.cfg.Username,
-		Password:           s.cfg.Password,
-		SentinelPassword:   s.cfg.SentinelPassword,
-		MaxRetries:         s.cfg.MaxRetries,
-		MinRetryBackoff:    s.cfg.MaxRetryBackoff,
-		MaxRetryBackoff:    s.cfg.MaxRetryBackoff,
-		DialTimeout:        s.cfg.DialTimeout,
-		ReadTimeout:        s.cfg.ReadTimeout,
-		WriteTimeout:       s.cfg.WriteTimeout,
-		PoolSize:           s.cfg.PoolSize,
-		MinIdleConns:       s.cfg.MinIdleConns,
-		MaxConnAge:         s.cfg.MaxConnAge,
-		PoolTimeout:        s.cfg.PoolTimeout,
-		IdleTimeout:        s.cfg.IdleTimeout,
-		IdleCheckFrequency: s.cfg.IdleCheckFreq,
-		ReadOnly:           s.cfg.ReadOnly,
-		RouteByLatency:     s.cfg.RouteByLatency,
-		RouteRandomly:      s.cfg.RouteRandomly,
-		MasterName:         s.cfg.MasterName,
-	})
+func (p *Plugin) Init(cfg config.Configurer, log logger.Logger) error {
+	p.log = log
+	p.cfgPlugin = cfg
+	p.stopCh = make(chan struct{}, 1)
 
 	return nil
 }
 
-func (s *Plugin) Serve() chan error {
-	errCh := make(chan error, 1)
-	return errCh
+func (p *Plugin) Serve() chan error {
+	return make(chan error)
 }
 
-func (s Plugin) Stop() error {
-	return s.universalClient.Close()
+func (p *Plugin) Stop() error {
+	const op = errors.Op("redis_plugin_stop")
+	p.stopCh <- struct{}{}
+
+	if p.universalClient != nil {
+		err := p.universalClient.Close()
+		if err != nil {
+			return errors.E(op, err)
+		}
+	}
+
+	return nil
 }
 
-func (s *Plugin) Name() string {
+func (p *Plugin) Name() string {
 	return PluginName
+}
+
+// Available interface implementation
+func (p *Plugin) Available() {}
+
+// KVConstruct provides KV storage implementation over the redis plugin
+func (p *Plugin) KVConstruct(key string) (kv.Storage, error) {
+	const op = errors.Op("redis_plugin_provide")
+	st, err := redis_kv.NewRedisDriver(p.log, key, p.cfgPlugin)
+	if err != nil {
+		return nil, errors.E(op, err)
+	}
+
+	return st, nil
+}
+
+func (p *Plugin) PSConstruct(key string) (pubsub.PubSub, error) {
+	return redis_pubsub.NewPubSubDriver(p.log, key, p.cfgPlugin, p.stopCh)
 }

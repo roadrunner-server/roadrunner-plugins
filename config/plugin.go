@@ -2,11 +2,15 @@ package config
 
 import (
 	"bytes"
+	"fmt"
+	"os"
 	"strings"
 
 	"github.com/spf13/viper"
 	"github.com/spiral/errors"
 )
+
+const PluginName string = "config"
 
 type Viper struct {
 	viper     *viper.Viper
@@ -14,11 +18,16 @@ type Viper struct {
 	Prefix    string
 	Type      string
 	ReadInCfg []byte
+	// user defined Flags in the form of <option>.<key> = <value>
+	// which overwrites initial config key
+	Flags []string
+
+	CommonConfig *General
 }
 
-// Inits config provider.
+// Init config provider.
 func (v *Viper) Init() error {
-	const op = errors.Op("viper plugin init")
+	const op = errors.Op("config_plugin_init")
 	v.viper = viper.New()
 	// If user provided []byte data with config, read it and ignore Path and Prefix
 	if v.ReadInCfg != nil && v.Type != "" {
@@ -40,7 +49,30 @@ func (v *Viper) Init() error {
 	v.viper.SetConfigFile(v.Path)
 	v.viper.SetEnvKeyReplacer(strings.NewReplacer(".", "_"))
 
-	return v.viper.ReadInConfig()
+	err := v.viper.ReadInConfig()
+	if err != nil {
+		return errors.E(op, err)
+	}
+
+	// automatically inject ENV variables using ${ENV} pattern
+	for _, key := range v.viper.AllKeys() {
+		val := v.viper.Get(key)
+		v.viper.Set(key, parseEnv(val))
+	}
+
+	// override config Flags
+	if len(v.Flags) > 0 {
+		for _, f := range v.Flags {
+			key, val, err := parseFlag(f)
+			if err != nil {
+				return errors.E(op, err)
+			}
+
+			v.viper.Set(key, val)
+		}
+	}
+
+	return nil
 }
 
 // Overwrite overwrites existing config with provided values
@@ -56,8 +88,17 @@ func (v *Viper) Overwrite(values map[string]interface{}) error {
 
 // UnmarshalKey reads configuration section into configuration object.
 func (v *Viper) UnmarshalKey(name string, out interface{}) error {
-	const op = errors.Op("unmarshal key")
+	const op = errors.Op("config_plugin_unmarshal_key")
 	err := v.viper.UnmarshalKey(name, &out)
+	if err != nil {
+		return errors.E(op, err)
+	}
+	return nil
+}
+
+func (v *Viper) Unmarshal(out interface{}) error {
+	const op = errors.Op("config_plugin_unmarshal")
+	err := v.viper.Unmarshal(&out)
 	if err != nil {
 		return errors.E(op, err)
 	}
@@ -72,4 +113,62 @@ func (v *Viper) Get(name string) interface{} {
 // Has checks if config section exists.
 func (v *Viper) Has(name string) bool {
 	return v.viper.IsSet(name)
+}
+
+// GetCommonConfig Returns common config parameters
+func (v *Viper) GetCommonConfig() *General {
+	return v.CommonConfig
+}
+
+func (v *Viper) Serve() chan error {
+	return make(chan error, 1)
+}
+
+func (v *Viper) Stop() error {
+	return nil
+}
+
+// Name returns user-friendly plugin name
+func (v *Viper) Name() string {
+	return PluginName
+}
+
+// Available interface implementation
+func (v *Viper) Available() {}
+
+func parseFlag(flag string) (string, string, error) {
+	const op = errors.Op("parse_flag")
+	if !strings.Contains(flag, "=") {
+		return "", "", errors.E(op, errors.Errorf("invalid flag `%s`", flag))
+	}
+
+	parts := strings.SplitN(strings.TrimLeft(flag, " \"'`"), "=", 2)
+
+	return strings.Trim(parts[0], " \n\t"), parseValue(strings.Trim(parts[1], " \n\t")), nil
+}
+
+func parseValue(value string) string {
+	escape := []rune(value)[0]
+
+	if escape == '"' || escape == '\'' || escape == '`' {
+		value = strings.Trim(value, string(escape))
+		value = strings.ReplaceAll(value, fmt.Sprintf("\\%s", string(escape)), string(escape))
+	}
+
+	return value
+}
+
+func parseEnv(value interface{}) interface{} {
+	str, ok := value.(string)
+	if !ok || len(str) <= 3 {
+		return value
+	}
+
+	if str[0:2] == "${" && str[len(str)-1:] == "}" {
+		if v, ok := os.LookupEnv(str[2 : len(str)-1]); ok {
+			return v
+		}
+	}
+
+	return str
 }

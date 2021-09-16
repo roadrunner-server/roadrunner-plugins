@@ -1,9 +1,9 @@
 package logger
 
 import (
-	"github.com/spiral/endure"
+	endure "github.com/spiral/endure/pkg/container"
 	"github.com/spiral/errors"
-	"github.com/spiral/roadrunner-plugins/config"
+	"github.com/spiral/roadrunner-plugins/v2/config"
 	"go.uber.org/zap"
 )
 
@@ -13,14 +13,28 @@ const PluginName = "logs"
 // ZapLogger manages zap logger.
 type ZapLogger struct {
 	base     *zap.Logger
-	cfg      Config
+	cfg      *Config
 	channels ChannelConfig
 }
 
 // Init logger service.
 func (z *ZapLogger) Init(cfg config.Configurer) error {
-	const op = errors.Op("zap logger init")
-	err := cfg.UnmarshalKey(PluginName, &z.cfg)
+	const op = errors.Op("config_plugin_init")
+	var err error
+	// if not configured, configure with default params
+	if !cfg.Has(PluginName) {
+		z.cfg = &Config{}
+		z.cfg.InitDefault()
+
+		z.base, err = z.cfg.BuildLogger()
+		if err != nil {
+			return errors.E(op, errors.Disabled, err)
+		}
+
+		return nil
+	}
+
+	err = cfg.UnmarshalKey(PluginName, &z.cfg)
 	if err != nil {
 		return errors.E(op, errors.Disabled, err)
 	}
@@ -37,11 +51,6 @@ func (z *ZapLogger) Init(cfg config.Configurer) error {
 	return nil
 }
 
-// DefaultLogger returns default logger.
-func (z *ZapLogger) DefaultLogger() (Logger, error) {
-	return NewZapAdapter(z.base), nil
-}
-
 // NamedLogger returns logger dedicated to the specific channel. Similar to Named() but also reads the core params.
 func (z *ZapLogger) NamedLogger(name string) (Logger, error) {
 	if cfg, ok := z.channels.Channels[name]; ok {
@@ -49,13 +58,13 @@ func (z *ZapLogger) NamedLogger(name string) (Logger, error) {
 		if err != nil {
 			return nil, err
 		}
-		return NewZapAdapter(l), nil
+		return NewZapAdapter(l.Named(name)), nil
 	}
 
 	return NewZapAdapter(z.base.Named(name)), nil
 }
 
-// NamedLogger returns logger dedicated to the specific channel. Similar to Named() but also reads the core params.
+// ServiceLogger returns logger dedicated to the specific channel. Similar to Named() but also reads the core params.
 func (z *ZapLogger) ServiceLogger(n endure.Named) (Logger, error) {
 	return z.NamedLogger(n.Name())
 }
@@ -64,6 +73,14 @@ func (z *ZapLogger) ServiceLogger(n endure.Named) (Logger, error) {
 func (z *ZapLogger) Provides() []interface{} {
 	return []interface{}{
 		z.ServiceLogger,
-		z.DefaultLogger,
 	}
+}
+
+// Name returns user-friendly plugin name
+func (z *ZapLogger) Name() string {
+	return PluginName
+}
+
+// Available interface implementation
+func (z *ZapLogger) Available() {
 }
