@@ -8,11 +8,11 @@ import (
 	"time"
 
 	"github.com/prometheus/client_golang/prometheus"
+	"github.com/prometheus/client_golang/prometheus/collectors"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
-	"github.com/spiral/endure"
 	"github.com/spiral/errors"
-	"github.com/spiral/roadrunner-plugins/config"
-	"github.com/spiral/roadrunner-plugins/logger"
+	"github.com/spiral/roadrunner-plugins/v2/config"
+	"github.com/spiral/roadrunner-plugins/v2/logger"
 	"golang.org/x/sys/cpu"
 )
 
@@ -23,79 +23,91 @@ const (
 	maxHeaderSize = 1024 * 1024 * 100 // 104MB
 )
 
-type statsProvider struct {
-	collectors []prometheus.Collector
-	name       string
-}
-
 // Plugin to manage application metrics using Prometheus.
 type Plugin struct {
-	cfg        Config
+	cfg        *Config
 	log        logger.Logger
 	mu         sync.Mutex // all receivers are pointers
 	http       *http.Server
 	collectors sync.Map // all receivers are pointers
 	registry   *prometheus.Registry
+
+	// prometheus Collectors
+	statProviders []StatProvider
 }
 
 // Init service.
-func (m *Plugin) Init(cfg config.Configurer, log logger.Logger) error {
-	const op = errors.Op("metrics init")
-	err := cfg.UnmarshalKey(PluginName, &m.cfg)
+func (p *Plugin) Init(cfg config.Configurer, log logger.Logger) error {
+	const op = errors.Op("metrics_plugin_init")
+	if !cfg.Has(PluginName) {
+		return errors.E(op, errors.Disabled)
+	}
+
+	err := cfg.UnmarshalKey(PluginName, &p.cfg)
 	if err != nil {
 		return errors.E(op, errors.Disabled, err)
 	}
 
-	// TODO figure out what is Init
-	m.cfg.InitDefaults()
+	p.cfg.InitDefaults()
 
-	m.log = log
-	m.registry = prometheus.NewRegistry()
+	p.log = log
+	p.registry = prometheus.NewRegistry()
 
 	// Default
-	err = m.registry.Register(prometheus.NewProcessCollector(prometheus.ProcessCollectorOpts{}))
+	err = p.registry.Register(collectors.NewProcessCollector(collectors.ProcessCollectorOpts{}))
 	if err != nil {
 		return errors.E(op, err)
 	}
 
 	// Default
-	err = m.registry.Register(prometheus.NewGoCollector())
+	err = p.registry.Register(collectors.NewGoCollector())
 	if err != nil {
 		return errors.E(op, err)
 	}
 
-	collectors, err := m.cfg.getCollectors()
+	cl, err := p.cfg.getCollectors()
 	if err != nil {
 		return errors.E(op, err)
 	}
 
 	// Register invocation will be later in the Serve method
-	for k, v := range collectors {
-		m.collectors.Store(k, statsProvider{
-			collectors: []prometheus.Collector{v},
-			name:       k,
-		})
+	for k, v := range cl {
+		p.collectors.Store(k, v)
 	}
+
+	p.statProviders = make([]StatProvider, 0, 2)
+
 	return nil
 }
 
 // Register new prometheus collector.
-func (m *Plugin) Register(c prometheus.Collector) error {
-	return m.registry.Register(c)
+func (p *Plugin) Register(c prometheus.Collector) error {
+	return p.registry.Register(c)
 }
 
 // Serve prometheus metrics service.
-func (m *Plugin) Serve() chan error {
+func (p *Plugin) Serve() chan error {
 	errCh := make(chan error, 1)
-	m.collectors.Range(func(key, value interface{}) bool {
-		// key - name
-		// value - statsProvider struct
-		c := value.(statsProvider)
-		for _, v := range c.collectors {
-			if err := m.registry.Register(v); err != nil {
+
+	// register Collected stat providers
+	for i := 0; i < len(p.statProviders); i++ {
+		sp := p.statProviders[i]
+		for _, c := range sp.MetricsCollector() {
+			err := p.registry.Register(c)
+			if err != nil {
 				errCh <- err
-				return false
+				return errCh
 			}
+		}
+	}
+
+	p.collectors.Range(func(key, value interface{}) bool {
+		// key - name
+		// value - prometheus.Collector
+		c := value.(prometheus.Collector)
+		if err := p.registry.Register(c); err != nil {
+			errCh <- err
+			return false
 		}
 
 		return true
@@ -112,7 +124,7 @@ func (m *Plugin) Serve() chan error {
 	hasGCMAsm := hasGCMAsmAMD64 || hasGCMAsmARM64 || hasGCMAsmS390X
 
 	if hasGCMAsm {
-		// If AES-GCM hardware is provided then prioritise AES-GCM
+		// If AES-GCM hardware is provided then prioritize AES-GCM
 		// cipher suites.
 		topCipherSuites = []uint16{
 			tls.TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256,
@@ -149,9 +161,9 @@ func (m *Plugin) Serve() chan error {
 	DefaultCipherSuites = append(DefaultCipherSuites, topCipherSuites...)
 	DefaultCipherSuites = append(DefaultCipherSuites, defaultCipherSuitesTLS13...)
 
-	m.http = &http.Server{
-		Addr:              m.cfg.Address,
-		Handler:           promhttp.HandlerFor(m.registry, promhttp.HandlerOpts{}),
+	p.http = &http.Server{
+		Addr:              p.cfg.Address,
+		Handler:           promhttp.HandlerFor(p.registry, promhttp.HandlerOpts{}),
 		IdleTimeout:       time.Hour * 24,
 		ReadTimeout:       time.Minute * 60,
 		MaxHeaderBytes:    maxHeaderSize,
@@ -171,7 +183,7 @@ func (m *Plugin) Serve() chan error {
 	}
 
 	go func() {
-		err := m.http.ListenAndServe()
+		err := p.http.ListenAndServe()
 		if err != nil && err != http.ErrServerClosed {
 			errCh <- err
 			return
@@ -182,48 +194,49 @@ func (m *Plugin) Serve() chan error {
 }
 
 // Stop prometheus metrics service.
-func (m *Plugin) Stop() error {
-	m.mu.Lock()
-	defer m.mu.Unlock()
+func (p *Plugin) Stop() error {
+	p.mu.Lock()
+	defer p.mu.Unlock()
 
-	if m.http != nil {
+	if p.http != nil {
 		// timeout is 10 seconds
 		ctx, cancel := context.WithTimeout(context.Background(), time.Second*10)
 		defer cancel()
-		err := m.http.Shutdown(ctx)
+		err := p.http.Shutdown(ctx)
 		if err != nil {
 			// Function should be Stop() error
-			m.log.Error("stop error", "error", errors.Errorf("error shutting down the metrics server: error %v", err))
+			p.log.Error("stop error", "error", errors.Errorf("error shutting down the metrics server: error %v", err))
 		}
 	}
 	return nil
 }
 
 // Collects used to collect all plugins which implement metrics.StatProvider interface (and Named)
-func (m *Plugin) Collects() []interface{} {
+func (p *Plugin) Collects() []interface{} {
 	return []interface{}{
-		m.AddStatProvider,
+		p.AddStatProvider,
 	}
 }
 
-// Collector returns application specific collector by name or nil if collector not found.
-func (m *Plugin) AddStatProvider(name endure.Named, stat StatProvider) error {
-	m.collectors.Store(name.Name(), statsProvider{
-		collectors: stat.MetricsCollector(),
-		name:       name.Name(),
-	})
+// AddStatProvider adds a metrics provider
+func (p *Plugin) AddStatProvider(stat StatProvider) error {
+	p.statProviders = append(p.statProviders, stat)
+
 	return nil
 }
 
-// RPC interface satisfaction
-func (m *Plugin) Name() string {
+// Name returns user friendly plugin name
+func (p *Plugin) Name() string {
 	return PluginName
 }
 
 // RPC interface satisfaction
-func (m *Plugin) RPC() interface{} {
+func (p *Plugin) RPC() interface{} {
 	return &rpcServer{
-		svc: m,
-		log: m.log,
+		svc: p,
+		log: p.log,
 	}
 }
+
+// Available interface implementation
+func (p *Plugin) Available() {}

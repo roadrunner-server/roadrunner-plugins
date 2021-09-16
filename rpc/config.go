@@ -4,15 +4,14 @@ import (
 	"errors"
 	"net"
 	"strings"
+
+	"github.com/spiral/roadrunner/v2/utils"
 )
 
 // Config defines RPC service config.
 type Config struct {
 	// Listen string
 	Listen string
-
-	// Disabled disables RPC service.
-	Disabled bool
 }
 
 // InitDefaults allows to init blank config with pre-defined set of default values.
@@ -33,7 +32,7 @@ func (c *Config) Valid() error {
 
 // Listener creates new rpc socket Listener.
 func (c *Config) Listener() (net.Listener, error) {
-	return CreateListener(c.Listen)
+	return utils.CreateListener(c.Listen)
 }
 
 // Dialer creates rpc socket Dialer.

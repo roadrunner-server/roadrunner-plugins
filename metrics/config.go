@@ -134,5 +134,7 @@ func (c *Config) getCollectors() (map[string]prometheus.Collector, error) {
 }
 
 func (c *Config) InitDefaults() {
-
+	if c.Address == "" {
+		c.Address = "127.0.0.1:2112"
+	}
 }

@@ -1,7 +1,7 @@
 package config
 
 type Configurer interface {
-	// UnmarshalKey reads configuration section into configuration object.
+	// UnmarshalKey takes a single key and unmarshals it into a Struct.
 	//
 	// func (h *HttpService) Init(cp config.Configurer) error {
 	//     h.config := &HttpConfig{}
@@ -11,6 +11,10 @@ type Configurer interface {
 	// }
 	UnmarshalKey(name string, out interface{}) error
 
+	// Unmarshal unmarshal the config into a Struct. Make sure that the tags
+	// on the fields of the structure are properly set.
+	Unmarshal(out interface{}) error
+
 	// Get used to get config section
 	Get(name string) interface{}
 
@@ -19,4 +23,7 @@ type Configurer interface {
 
 	// Has checks if config section exists.
 	Has(name string) bool
+
+	// GetCommonConfig returns General section. Read-only
+	GetCommonConfig() *General
 }

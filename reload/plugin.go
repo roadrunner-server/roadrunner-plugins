@@ -6,9 +6,9 @@ import (
 	"time"
 
 	"github.com/spiral/errors"
-	"github.com/spiral/roadrunner-plugins/config"
-	"github.com/spiral/roadrunner-plugins/logger"
-	"github.com/spiral/roadrunner-plugins/resetter"
+	"github.com/spiral/roadrunner-plugins/v2/config"
+	"github.com/spiral/roadrunner-plugins/v2/logger"
+	"github.com/spiral/roadrunner-plugins/v2/resetter"
 )
 
 // PluginName contains default plugin name.
@@ -20,31 +20,35 @@ type Plugin struct {
 	log      logger.Logger
 	watcher  *Watcher
 	services map[string]interface{}
-	res      resetter.Resetter
+	res      *resetter.Plugin
 	stopc    chan struct{}
 }
 
 // Init controller service
-func (s *Plugin) Init(cfg config.Configurer, log logger.Logger, res resetter.Resetter) error {
-	const op = errors.Op("reload plugin init")
-	s.cfg = &Config{}
-	InitDefaults(s.cfg)
+func (s *Plugin) Init(cfg config.Configurer, log logger.Logger, res *resetter.Plugin) error {
+	const op = errors.Op("reload_plugin_init")
+	if !cfg.Has(PluginName) {
+		return errors.E(op, errors.Disabled)
+	}
+
 	err := cfg.UnmarshalKey(PluginName, &s.cfg)
 	if err != nil {
 		// disable plugin in case of error
 		return errors.E(op, errors.Disabled, err)
 	}
 
+	s.cfg.InitDefaults()
+
 	s.log = log
 	s.res = res
 	s.stopc = make(chan struct{}, 1)
 	s.services = make(map[string]interface{})
 
-	var configs []WatcherConfig
+	configs := make([]WatcherConfig, 0, len(s.cfg.Services))
 
 	for serviceName, serviceConfig := range s.cfg.Services {
-		ignored, err := ConvertIgnored(serviceConfig.Ignore)
-		if err != nil {
+		ignored, errIgn := ConvertIgnored(serviceConfig.Ignore)
+		if errIgn != nil {
 			return errors.E(op, err)
 		}
 		configs = append(configs, WatcherConfig{
@@ -57,7 +61,7 @@ func (s *Plugin) Init(cfg config.Configurer, log logger.Logger, res resetter.Res
 						return nil
 					}
 				}
-				return errors.E(op, errors.Skip)
+				return errors.E(op, errors.SkipFile)
 			},
 			Files:        make(map[string]os.FileInfo),
 			Ignored:      ignored,
@@ -74,7 +78,7 @@ func (s *Plugin) Init(cfg config.Configurer, log logger.Logger, res resetter.Res
 }
 
 func (s *Plugin) Serve() chan error {
-	const op = errors.Op("reload plugin serve")
+	const op = errors.Op("reload_plugin_serve")
 	errCh := make(chan error, 1)
 	if s.cfg.Interval < time.Second {
 		errCh <- errors.E(op, errors.Str("reload interval is too fast"))
@@ -82,9 +86,9 @@ func (s *Plugin) Serve() chan error {
 	}
 
 	// make a map with unique services
-	// so, if we would have a 100 events from http service
-	// in map we would see only 1 key and it's config
-	treshholdc := make(chan struct {
+	// so, if we would have 100 events from http service
+	// in map we would see only 1 key, and it's config
+	thCh := make(chan struct {
 		serviceConfig ServiceConfig
 		service       string
 	}, thresholdChanBuffer)
@@ -94,33 +98,33 @@ func (s *Plugin) Serve() chan error {
 
 	go func() {
 		for e := range s.watcher.Event {
-			treshholdc <- struct {
+			thCh <- struct {
 				serviceConfig ServiceConfig
 				service       string
 			}{serviceConfig: s.cfg.Services[e.service], service: e.service}
 		}
 	}()
 
-	// map with configs by services
+	// map with config by services
 	updated := make(map[string]ServiceConfig, len(s.cfg.Services))
 
 	go func() {
 		for {
 			select {
-			case cfg := <-treshholdc:
+			case cfg := <-thCh:
 				// logic is following:
 				// restart
 				timer.Stop()
 				// replace previous value in map by more recent without adding new one
 				updated[cfg.service] = cfg.serviceConfig
-				// if we getting a lot of events, we shouldn't restart particular service on each of it (user doing batch move or very fast typing)
+				// if we are getting a lot of events, we shouldn't restart particular service on each of it (user doing batch move or very fast typing)
 				// instead, we are resetting the timer and wait for s.cfg.Interval time
 				// If there is no more events, we restart service only once
 				timer.Reset(s.cfg.Interval)
 			case <-timer.C:
 				if len(updated) > 0 {
 					for name := range updated {
-						err := s.res.ResetByName(name)
+						err := s.res.Reset(name)
 						if err != nil {
 							timer.Stop()
 							errCh <- errors.E(op, err)
@@ -156,4 +160,8 @@ func (s *Plugin) Stop() error {
 
 func (s *Plugin) Name() string {
 	return PluginName
+}
+
+// Available interface implementation
+func (s *Plugin) Available() {
 }

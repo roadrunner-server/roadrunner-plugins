@@ -8,7 +8,7 @@ import (
 	"time"
 
 	"github.com/spiral/errors"
-	"github.com/spiral/roadrunner-plugins/logger"
+	"github.com/spiral/roadrunner-plugins/v2/logger"
 )
 
 // SimpleHook is used to filter by simple criteria, CONTAINS
@@ -102,7 +102,7 @@ func NewWatcher(configs []WatcherConfig, log logger.Logger, options ...Options) 
 
 // initFs makes initial map with files
 func (w *Watcher) initFs() error {
-	const op = errors.Op("init fs")
+	const op = errors.Op("watcher_init_fs")
 	for srvName, config := range w.watcherConfigs {
 		fileList, err := w.retrieveFileList(srvName, config)
 		if err != nil {
@@ -148,7 +148,6 @@ func ConvertIgnored(ignored []string) (map[string]struct{}, error) {
 
 // pass map from outside
 func (w *Watcher) retrieveFilesSingle(serviceName, path string) (map[string]os.FileInfo, error) {
-	const op = errors.Op("retrieve")
 	stat, err := os.Stat(path)
 	if err != nil {
 		return nil, err
@@ -179,7 +178,7 @@ outer:
 		// if filename does not contain pattern --> ignore that file
 		if w.watcherConfigs[serviceName].FilePatterns != nil && w.watcherConfigs[serviceName].FilterHooks != nil {
 			err = w.watcherConfigs[serviceName].FilterHooks(fileInfoList[i].Name(), w.watcherConfigs[serviceName].FilePatterns)
-			if errors.Is(errors.Skip, err) {
+			if errors.Is(errors.SkipFile, err) {
 				continue outer
 			}
 		}
@@ -192,7 +191,7 @@ outer:
 
 func (w *Watcher) StartPolling(duration time.Duration) error {
 	w.mu.Lock()
-	const op = errors.Op("start polling")
+	const op = errors.Op("watcher_start_polling")
 	if w.started {
 		w.mu.Unlock()
 		return errors.E(op, errors.Str("already started"))
@@ -217,9 +216,8 @@ func (w *Watcher) waitEvent(d time.Duration) error {
 		case <-ticker.C:
 			// this is not very effective way
 			// because we have to wait on Lock
-			// better is to listen files in parallel, but, since that would be used in debug... TODO
+			// better is to listen files in parallel, but, since that would be used in debug...
 			for serviceName := range w.watcherConfigs {
-				// TODO sync approach
 				fileList, _ := w.retrieveFileList(serviceName, w.watcherConfigs[serviceName])
 				w.pollEvents(w.watcherConfigs[serviceName].ServiceName, fileList)
 			}
@@ -293,7 +291,7 @@ func (w *Watcher) retrieveFilesRecursive(serviceName, root string) (map[string]o
 
 		// if filename does not contain pattern --> ignore that file
 		err = w.watcherConfigs[serviceName].FilterHooks(info.Name(), w.watcherConfigs[serviceName].FilePatterns)
-		if errors.Is(errors.Skip, err) {
+		if errors.Is(errors.SkipFile, err) {
 			return nil
 		}
 
@@ -307,7 +305,7 @@ func (w *Watcher) pollEvents(serviceName string, files map[string]os.FileInfo) {
 	w.mu.Lock()
 	defer w.mu.Unlock()
 
-	// Store create and remove events for use to check for rename events.
+	// InsertMany create and remove events for use to check for rename events.
 	creates := make(map[string]os.FileInfo)
 	removes := make(map[string]os.FileInfo)
 

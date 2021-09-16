@@ -5,92 +5,91 @@ import (
 	"net/rpc"
 	"sync/atomic"
 
-	"github.com/spiral/endure"
+	endure "github.com/spiral/endure/pkg/container"
 	"github.com/spiral/errors"
 	goridgeRpc "github.com/spiral/goridge/v3/pkg/rpc"
-	"github.com/spiral/roadrunner-plugins/config"
-	"github.com/spiral/roadrunner-plugins/logger"
+	"github.com/spiral/roadrunner-plugins/v2/config"
+	"github.com/spiral/roadrunner-plugins/v2/logger"
 )
 
 // PluginName contains default plugin name.
-const PluginName = "RPC"
-
-type pluggable struct {
-	service RPCer
-	name    string
-}
+const PluginName = "rpc"
 
 // Plugin is RPC service.
 type Plugin struct {
-	cfg      Config
-	log      logger.Logger
-	rpc      *rpc.Server
-	services []pluggable
+	cfg Config
+	log logger.Logger
+	rpc *rpc.Server
+	// set of the plugins, which are implement RPCer interface and can be plugged into the RR via RPC
+	plugins  map[string]RPCer
 	listener net.Listener
-	closed   *uint32
+	closed   uint32
 }
 
 // Init rpc service. Must return true if service is enabled.
 func (s *Plugin) Init(cfg config.Configurer, log logger.Logger) error {
-	const op = errors.Op("RPC Init")
+	const op = errors.Op("rpc_plugin_init")
 	if !cfg.Has(PluginName) {
 		return errors.E(op, errors.Disabled)
 	}
 
 	err := cfg.UnmarshalKey(PluginName, &s.cfg)
 	if err != nil {
-		return err
+		return errors.E(op, errors.Disabled, err)
 	}
+	// Init defaults
 	s.cfg.InitDefaults()
-
-	if s.cfg.Disabled {
-		return errors.E(op, errors.Disabled)
-	}
-
+	// Init pluggable plugins map
+	s.plugins = make(map[string]RPCer, 5)
+	// init logs
 	s.log = log
-	state := uint32(0)
-	s.closed = &state
-	atomic.StoreUint32(s.closed, 0)
 
-	return s.cfg.Valid()
+	// set up state
+	atomic.StoreUint32(&s.closed, 0)
+
+	// validate config
+	err = s.cfg.Valid()
+	if err != nil {
+		return errors.E(op, err)
+	}
+	return nil
 }
 
 // Serve serves the service.
 func (s *Plugin) Serve() chan error {
-	const op = errors.Op("register service")
+	const op = errors.Op("rpc_plugin_serve")
 	errCh := make(chan error, 1)
 
 	s.rpc = rpc.NewServer()
 
-	services := make([]string, 0, len(s.services))
+	plugins := make([]string, 0, len(s.plugins))
 
 	// Attach all services
-	for i := 0; i < len(s.services); i++ {
-		err := s.Register(s.services[i].name, s.services[i].service.RPC())
+	for name := range s.plugins {
+		err := s.Register(name, s.plugins[name].RPC())
 		if err != nil {
 			errCh <- errors.E(op, err)
 			return errCh
 		}
 
-		services = append(services, s.services[i].name)
+		plugins = append(plugins, name)
 	}
 
 	var err error
 	s.listener, err = s.cfg.Listener()
 	if err != nil {
-		errCh <- err
+		errCh <- errors.E(op, err)
 		return errCh
 	}
 
-	s.log.Debug("Started RPC service", "address", s.cfg.Listen, "services", services)
+	s.log.Debug("Started RPC service", "address", s.cfg.Listen, "plugins", plugins)
 
 	go func() {
 		for {
 			conn, err := s.listener.Accept()
 			if err != nil {
-				if atomic.LoadUint32(s.closed) == 1 {
-					// just log and continue, this is not a critical issue, we just called Stop
-					s.log.Warn("listener accept error, connection closed", "error", err)
+				if atomic.LoadUint32(&s.closed) == 1 {
+					// just continue, this is not a critical issue, we just called Stop
 					return
 				}
 
@@ -108,11 +107,12 @@ func (s *Plugin) Serve() chan error {
 
 // Stop stops the service.
 func (s *Plugin) Stop() error {
+	const op = errors.Op("rpc_plugin_stop")
 	// store closed state
-	atomic.StoreUint32(s.closed, 1)
+	atomic.StoreUint32(&s.closed, 1)
 	err := s.listener.Close()
 	if err != nil {
-		return errors.E(errors.Op("stop RPC socket"), err)
+		return errors.E(op, err)
 	}
 	return nil
 }
@@ -122,7 +122,11 @@ func (s *Plugin) Name() string {
 	return PluginName
 }
 
-// Depends declares services to collect for RPC.
+// Available interface implementation
+func (s *Plugin) Available() {
+}
+
+// Collects all plugins which implement Name + RPCer interfaces
 func (s *Plugin) Collects() []interface{} {
 	return []interface{}{
 		s.RegisterPlugin,
@@ -131,10 +135,7 @@ func (s *Plugin) Collects() []interface{} {
 
 // RegisterPlugin registers RPC service plugin.
 func (s *Plugin) RegisterPlugin(name endure.Named, p RPCer) {
-	s.services = append(s.services, pluggable{
-		service: p,
-		name:    name.Name(),
-	})
+	s.plugins[name.Name()] = p
 }
 
 // Register publishes in the server the set of methods of the
@@ -151,14 +152,4 @@ func (s *Plugin) Register(name string, svc interface{}) error {
 	}
 
 	return s.rpc.RegisterName(name, svc)
-}
-
-// Client creates new RPC client.
-func (s *Plugin) Client() (*rpc.Client, error) {
-	conn, err := s.cfg.Dialer()
-	if err != nil {
-		return nil, err
-	}
-
-	return rpc.NewClientWithCodec(goridgeRpc.NewClientCodec(conn)), nil
 }
