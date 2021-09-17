@@ -1,2 +1,0 @@
-# RoadRunner GRPC Plugin
-
