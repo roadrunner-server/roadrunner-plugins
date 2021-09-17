@@ -70,6 +70,6 @@ test: ## Run application tests
 	docker-compose -f tests/env/docker-compose.yaml down
 
 generate-proto:
-	protoc --proto_path=./proto/jobs/v1beta --go_out=./proto/jobs/v1beta jobs.proto
-	protoc --proto_path=./proto/kv/v1beta --go_out=./proto/kv/v1beta kv.proto
-	protoc --proto_path=./proto/websockets/v1beta --go_out=./proto/websockets/v1beta websockets.proto
+	protoc --proto_path=./internal/proto/jobs/v1beta --go_out=./internal/proto/jobs/v1beta jobs.proto
+	protoc --proto_path=./internal/proto/kv/v1beta --go_out=./internal/proto/kv/v1beta kv.proto
+	protoc --proto_path=./internal/proto/websockets/v1beta --go_out=./internal/proto/websockets/v1beta websockets.proto

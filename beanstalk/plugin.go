@@ -1,8 +1,8 @@
 package beanstalk
 
 import (
-	"github.com/spiral/roadrunner-plugins/v2/common/jobs"
 	"github.com/spiral/roadrunner-plugins/v2/config"
+	"github.com/spiral/roadrunner-plugins/v2/internal/common/jobs"
 	"github.com/spiral/roadrunner-plugins/v2/jobs/pipeline"
 	"github.com/spiral/roadrunner-plugins/v2/logger"
 	"github.com/spiral/roadrunner/v2/events"

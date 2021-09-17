@@ -2,9 +2,9 @@ package broadcast
 
 import (
 	"github.com/spiral/errors"
-	"github.com/spiral/roadrunner-plugins/v2/common/pubsub"
+	"github.com/spiral/roadrunner-plugins/v2/internal/common/pubsub"
+	websocketsv1 "github.com/spiral/roadrunner-plugins/v2/internal/proto/websockets/v1beta"
 	"github.com/spiral/roadrunner-plugins/v2/logger"
-	websocketsv1 "github.com/spiral/roadrunner-plugins/v2/proto/websockets/v1beta"
 )
 
 // rpc collectors struct

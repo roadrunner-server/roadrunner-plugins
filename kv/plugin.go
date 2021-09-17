@@ -5,8 +5,8 @@ import (
 
 	endure "github.com/spiral/endure/pkg/container"
 	"github.com/spiral/errors"
-	"github.com/spiral/roadrunner-plugins/v2/common/kv"
 	"github.com/spiral/roadrunner-plugins/v2/config"
+	"github.com/spiral/roadrunner-plugins/v2/internal/common/kv"
 	"github.com/spiral/roadrunner-plugins/v2/logger"
 )
 

@@ -8,7 +8,7 @@ import (
 	"testing"
 
 	goridgeRpc "github.com/spiral/goridge/v3/pkg/rpc"
-	jobsv1beta "github.com/spiral/roadrunner-plugins/v2/proto/jobs/v1beta"
+	jobsv1beta "github.com/spiral/roadrunner-plugins/v2/internal/proto/jobs/v1beta"
 	jobState "github.com/spiral/roadrunner/v2/state/job"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"

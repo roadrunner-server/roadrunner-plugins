@@ -8,8 +8,8 @@ import (
 
 	endure "github.com/spiral/endure/pkg/container"
 	"github.com/spiral/errors"
-	"github.com/spiral/roadrunner-plugins/v2/common/jobs"
 	"github.com/spiral/roadrunner-plugins/v2/config"
+	"github.com/spiral/roadrunner-plugins/v2/internal/common/jobs"
 	"github.com/spiral/roadrunner-plugins/v2/jobs/job"
 	"github.com/spiral/roadrunner-plugins/v2/jobs/pipeline"
 	"github.com/spiral/roadrunner-plugins/v2/logger"

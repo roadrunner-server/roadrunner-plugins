@@ -2,10 +2,10 @@ package memory
 
 import (
 	"github.com/spiral/errors"
-	"github.com/spiral/roadrunner-plugins/v2/common/jobs"
-	"github.com/spiral/roadrunner-plugins/v2/common/kv"
-	"github.com/spiral/roadrunner-plugins/v2/common/pubsub"
 	"github.com/spiral/roadrunner-plugins/v2/config"
+	"github.com/spiral/roadrunner-plugins/v2/internal/common/jobs"
+	"github.com/spiral/roadrunner-plugins/v2/internal/common/kv"
+	"github.com/spiral/roadrunner-plugins/v2/internal/common/pubsub"
 	"github.com/spiral/roadrunner-plugins/v2/jobs/pipeline"
 	"github.com/spiral/roadrunner-plugins/v2/logger"
 	"github.com/spiral/roadrunner-plugins/v2/memory/memoryjobs"

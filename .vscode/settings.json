@@ -2,7 +2,12 @@
 	"cSpell.words": [
 		"AMQP",
 		"amqpjobs",
+		"extendee",
+		"Idxs",
 		"mdwr",
+		"protobuf",
+		"protoc",
+		"protoimpl",
 		"unmarshal"
 	],
 

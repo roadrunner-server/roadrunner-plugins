@@ -6,7 +6,7 @@ import (
 
 	"github.com/spiral/errors"
 	"github.com/spiral/roadrunner-plugins/v2/broadcast"
-	"github.com/spiral/roadrunner-plugins/v2/common/pubsub"
+	"github.com/spiral/roadrunner-plugins/v2/internal/common/pubsub"
 	"github.com/spiral/roadrunner-plugins/v2/logger"
 )
 

@@ -7,9 +7,9 @@ import (
 
 	json "github.com/json-iterator/go"
 	"github.com/spiral/errors"
-	"github.com/spiral/roadrunner-plugins/v2/common/pubsub"
+	"github.com/spiral/roadrunner-plugins/v2/internal/common/pubsub"
+	websocketsv1 "github.com/spiral/roadrunner-plugins/v2/internal/proto/websockets/v1beta"
 	"github.com/spiral/roadrunner-plugins/v2/logger"
-	websocketsv1 "github.com/spiral/roadrunner-plugins/v2/proto/websockets/v1beta"
 	"github.com/spiral/roadrunner-plugins/v2/websockets/commands"
 	"github.com/spiral/roadrunner-plugins/v2/websockets/connection"
 	"github.com/spiral/roadrunner-plugins/v2/websockets/validator"
