@@ -524,7 +524,7 @@ func TestHandler_FormData_POST(t *testing.T) {
 	}, nil, p)
 	assert.NoError(t, err)
 
-	hs := &http.Server{Addr: ":8084", Handler: h}
+	hs := &http.Server{Addr: ":10084", Handler: h}
 	defer func() {
 		errS := hs.Shutdown(context.Background())
 		if errS != nil {

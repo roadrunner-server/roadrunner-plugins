@@ -1192,12 +1192,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/spiral/roadrunner-grpc.git",
-                "reference": "85c2c58eb59fb569ae7e329376185ebc6449592f"
+                "reference": "4d33c46403c89b6e2afc1ef230f9bc1e96ba720f"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/spiral/roadrunner-grpc/zipball/85c2c58eb59fb569ae7e329376185ebc6449592f",
-                "reference": "85c2c58eb59fb569ae7e329376185ebc6449592f",
+                "url": "https://api.github.com/repos/spiral/roadrunner-grpc/zipball/4d33c46403c89b6e2afc1ef230f9bc1e96ba720f",
+                "reference": "4d33c46403c89b6e2afc1ef230f9bc1e96ba720f",
                 "shasum": ""
             },
             "require": {
@@ -1244,7 +1244,7 @@
                 "issues": "https://github.com/spiral/roadrunner-grpc/issues",
                 "source": "https://github.com/spiral/roadrunner-grpc/tree/master"
             },
-            "time": "2021-09-17T09:30:18+00:00"
+            "time": "2021-09-17T10:20:54+00:00"
         },
         {
             "name": "spiral/roadrunner-http",
