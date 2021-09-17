@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "8dba17f0d9ac06401cc9cfafe82693ab",
+    "content-hash": "9d876301b27435f3a2c0d37103fee31d",
     "packages": [
         {
             "name": "composer/semver",
@@ -132,16 +132,16 @@
         },
         {
             "name": "google/protobuf",
-            "version": "v3.17.3",
+            "version": "v3.18.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/protocolbuffers/protobuf-php.git",
-                "reference": "ae9282cf11dd2933b7e71a611f9590f07d53d3f3"
+                "reference": "24fed401306c943be38a1371ca2f3db2cd8137fb"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/protocolbuffers/protobuf-php/zipball/ae9282cf11dd2933b7e71a611f9590f07d53d3f3",
-                "reference": "ae9282cf11dd2933b7e71a611f9590f07d53d3f3",
+                "url": "https://api.github.com/repos/protocolbuffers/protobuf-php/zipball/24fed401306c943be38a1371ca2f3db2cd8137fb",
+                "reference": "24fed401306c943be38a1371ca2f3db2cd8137fb",
                 "shasum": ""
             },
             "require": {
@@ -171,9 +171,9 @@
             ],
             "support": {
                 "issues": "https://github.com/protocolbuffers/protobuf-php/issues",
-                "source": "https://github.com/protocolbuffers/protobuf-php/tree/v3.17.3"
+                "source": "https://github.com/protocolbuffers/protobuf-php/tree/v3.18.0"
             },
-            "time": "2021-06-08T14:59:41+00:00"
+            "time": "2021-09-15T17:41:56+00:00"
         },
         {
             "name": "grpc/grpc",
@@ -858,7 +858,7 @@
         },
         {
             "name": "spiral/attributes",
-            "version": "v2.8.10",
+            "version": "v2.8.12",
             "source": {
                 "type": "git",
                 "url": "https://github.com/spiral/attributes.git",
@@ -919,7 +919,7 @@
         },
         {
             "name": "spiral/core",
-            "version": "v2.8.10",
+            "version": "v2.8.12",
             "source": {
                 "type": "git",
                 "url": "https://github.com/spiral/core.git",
@@ -1032,7 +1032,7 @@
         },
         {
             "name": "spiral/logger",
-            "version": "v2.8.10",
+            "version": "v2.8.12",
             "source": {
                 "type": "git",
                 "url": "https://github.com/spiral/logger.git",
@@ -1125,16 +1125,16 @@
         },
         {
             "name": "spiral/roadrunner-cli",
-            "version": "v2.0.7",
+            "version": "v2.0.8",
             "source": {
                 "type": "git",
                 "url": "https://github.com/spiral/roadrunner-cli.git",
-                "reference": "8504eade9dd2c820c96fbf1f94c7afdad13b4063"
+                "reference": "2bba5435b70ff9d443f1cda41cc581df1d4b5f09"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/spiral/roadrunner-cli/zipball/8504eade9dd2c820c96fbf1f94c7afdad13b4063",
-                "reference": "8504eade9dd2c820c96fbf1f94c7afdad13b4063",
+                "url": "https://api.github.com/repos/spiral/roadrunner-cli/zipball/2bba5435b70ff9d443f1cda41cc581df1d4b5f09",
+                "reference": "2bba5435b70ff9d443f1cda41cc581df1d4b5f09",
                 "shasum": ""
             },
             "require": {
@@ -1182,9 +1182,69 @@
             "description": "RoadRunner: Command Line Interface",
             "support": {
                 "issues": "https://github.com/spiral/roadrunner-cli/issues",
-                "source": "https://github.com/spiral/roadrunner-cli/tree/v2.0.7"
+                "source": "https://github.com/spiral/roadrunner-cli/tree/v2.0.8"
             },
-            "time": "2021-06-29T09:19:57+00:00"
+            "time": "2021-09-16T15:52:59+00:00"
+        },
+        {
+            "name": "spiral/roadrunner-grpc",
+            "version": "dev-master",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/spiral/roadrunner-grpc.git",
+                "reference": "85c2c58eb59fb569ae7e329376185ebc6449592f"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/spiral/roadrunner-grpc/zipball/85c2c58eb59fb569ae7e329376185ebc6449592f",
+                "reference": "85c2c58eb59fb569ae7e329376185ebc6449592f",
+                "shasum": ""
+            },
+            "require": {
+                "ext-json": "*",
+                "google/protobuf": "^3.7",
+                "php": ">=7.4",
+                "spiral/roadrunner": "^2.0",
+                "symfony/polyfill-php80": "^1.22"
+            },
+            "require-dev": {
+                "jetbrains/phpstorm-attributes": "^1.0",
+                "phpunit/phpunit": "^9.5",
+                "spiral/code-style": "^1.0",
+                "symfony/var-dumper": ">=4.4",
+                "vimeo/psalm": "^4.6"
+            },
+            "default-branch": true,
+            "type": "library",
+            "extra": {
+                "branch-alias": {
+                    "dev-master": "2.0.x-dev"
+                }
+            },
+            "autoload": {
+                "files": [
+                    "src/polyfill.php"
+                ],
+                "psr-4": {
+                    "Spiral\\RoadRunner\\GRPC\\": "src"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Anton Titov / Wolfy-J",
+                    "email": "wolfy.jd@gmail.com"
+                }
+            ],
+            "description": "High-Performance GRPC server for PHP applications",
+            "support": {
+                "issues": "https://github.com/spiral/roadrunner-grpc/issues",
+                "source": "https://github.com/spiral/roadrunner-grpc/tree/master"
+            },
+            "time": "2021-09-17T09:30:18+00:00"
         },
         {
             "name": "spiral/roadrunner-http",
@@ -1373,7 +1433,7 @@
         },
         {
             "name": "spiral/tokenizer",
-            "version": "v2.8.10",
+            "version": "v2.8.12",
             "source": {
                 "type": "git",
                 "url": "https://github.com/spiral/tokenizer.git",
@@ -2721,7 +2781,7 @@
     ],
     "packages-dev": [],
     "aliases": [],
-    "minimum-stability": "beta",
+    "minimum-stability": "dev",
     "stability-flags": [],
     "prefer-stable": true,
     "prefer-lowest": false,

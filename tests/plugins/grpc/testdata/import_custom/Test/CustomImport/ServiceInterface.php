@@ -4,7 +4,7 @@
 
 namespace Test\CustomImport;
 
-use Spiral\GRPC;
+use Spiral\RoadRunner\GRPC;
 use Test\CustomImport\Message;
 
 interface ServiceInterface extends GRPC\ServiceInterface

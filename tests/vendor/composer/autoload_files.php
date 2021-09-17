@@ -17,4 +17,5 @@ return array(
     'a1105708a18b76903365ca1c4aa61b02' => $vendorDir . '/symfony/translation/Resources/functions.php',
     'ad155f8f1cf0d418fe49e248db8c661b' => $vendorDir . '/react/promise/src/functions_include.php',
     'ee3f63fba4aee765c47ba535aa9e0804' => $vendorDir . '/spiral/attributes/src/polyfill.php',
+    '47c8e63cb5fd89b57a93f4d1a2985225' => $vendorDir . '/spiral/roadrunner-grpc/src/polyfill.php',
 );

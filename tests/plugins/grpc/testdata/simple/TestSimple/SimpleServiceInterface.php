@@ -4,7 +4,7 @@
 
 namespace TestSimple;
 
-use Spiral\GRPC;
+use Spiral\RoadRunner\GRPC;
 
 interface SimpleServiceInterface extends GRPC\ServiceInterface
 {

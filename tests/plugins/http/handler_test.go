@@ -15,6 +15,7 @@ import (
 	"github.com/spiral/roadrunner/v2/pool"
 	"github.com/spiral/roadrunner/v2/transport/pipe"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 
 	"net/http"
 	"os"
@@ -31,9 +32,7 @@ func TestHandler_Echo(t *testing.T) {
 			AllocateTimeout: time.Second * 1000,
 			DestroyTimeout:  time.Second * 1000,
 		})
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
 
 	h, err := handler.NewHandler(1024, 500, config.Uploads{
 		Dir:    os.TempDir(),
@@ -41,7 +40,7 @@ func TestHandler_Echo(t *testing.T) {
 	}, nil, p)
 	assert.NoError(t, err)
 
-	hs := &http.Server{Addr: ":8177", Handler: h}
+	hs := &http.Server{Addr: ":9177", Handler: h}
 	defer func() {
 		errS := hs.Shutdown(context.Background())
 		if errS != nil {
@@ -56,7 +55,7 @@ func TestHandler_Echo(t *testing.T) {
 	}(hs)
 	time.Sleep(time.Millisecond * 10)
 
-	body, r, err := get("http://127.0.0.1:8177/?hello=world")
+	body, r, err := get("http://127.0.0.1:9177/?hello=world")
 	assert.NoError(t, err)
 	defer func() {
 		_ = r.Body.Close()
@@ -525,7 +524,7 @@ func TestHandler_FormData_POST(t *testing.T) {
 	}, nil, p)
 	assert.NoError(t, err)
 
-	hs := &http.Server{Addr: ":8083", Handler: h}
+	hs := &http.Server{Addr: ":8084", Handler: h}
 	defer func() {
 		errS := hs.Shutdown(context.Background())
 		if errS != nil {
@@ -671,7 +670,7 @@ func TestHandler_FormData_POST_Form_UrlEncoded_Charset(t *testing.T) {
 	}, nil, p)
 	assert.NoError(t, err)
 
-	hs := &http.Server{Addr: ":8083", Handler: h}
+	hs := &http.Server{Addr: ":8085", Handler: h}
 	defer func() {
 		errS := hs.Shutdown(context.Background())
 		if errS != nil {
@@ -815,7 +814,7 @@ func TestHandler_FormData_PATCH(t *testing.T) {
 	}, nil, p)
 	assert.NoError(t, err)
 
-	hs := &http.Server{Addr: ":8085", Handler: h}
+	hs := &http.Server{Addr: ":8086", Handler: h}
 	defer func() {
 		errS := hs.Shutdown(context.Background())
 		if errS != nil {
@@ -1277,7 +1276,7 @@ func TestHandler_Error2(t *testing.T) {
 	}, nil, p)
 	assert.NoError(t, err)
 
-	hs := &http.Server{Addr: ":8177", Handler: h}
+	hs := &http.Server{Addr: ":8178", Handler: h}
 	defer func() {
 		errS := hs.Shutdown(context.Background())
 		if errS != nil {
@@ -1293,7 +1292,7 @@ func TestHandler_Error2(t *testing.T) {
 	}()
 	time.Sleep(time.Millisecond * 10)
 
-	_, r, err := get("http://127.0.0.1:8177/?hello=world")
+	_, r, err := get("http://127.0.0.1:8178/?hello=world")
 	assert.NoError(t, err)
 	defer func() {
 		_ = r.Body.Close()
@@ -1323,7 +1322,7 @@ func TestHandler_Error3(t *testing.T) {
 	}, nil, p)
 	assert.NoError(t, err)
 
-	hs := &http.Server{Addr: ":8177", Handler: h}
+	hs := &http.Server{Addr: ":8179", Handler: h}
 	defer func() {
 		errS := hs.Shutdown(context.Background())
 		if errS != nil {
@@ -1382,7 +1381,7 @@ func TestHandler_ResponseDuration(t *testing.T) {
 	}, nil, p)
 	assert.NoError(t, err)
 
-	hs := &http.Server{Addr: ":8177", Handler: h}
+	hs := &http.Server{Addr: ":8180", Handler: h}
 	defer func() {
 		errS := hs.Shutdown(context.Background())
 		if errS != nil {
@@ -1409,7 +1408,7 @@ func TestHandler_ResponseDuration(t *testing.T) {
 		}
 	})
 
-	body, r, err := get("http://127.0.0.1:8177/?hello=world")
+	body, r, err := get("http://127.0.0.1:8180/?hello=world")
 	assert.NoError(t, err)
 	defer func() {
 		_ = r.Body.Close()
@@ -1443,7 +1442,7 @@ func TestHandler_ResponseDurationDelayed(t *testing.T) {
 	}, nil, p)
 	assert.NoError(t, err)
 
-	hs := &http.Server{Addr: ":8177", Handler: h}
+	hs := &http.Server{Addr: ":8181", Handler: h}
 	defer func() {
 		errS := hs.Shutdown(context.Background())
 		if errS != nil {
@@ -1470,7 +1469,7 @@ func TestHandler_ResponseDurationDelayed(t *testing.T) {
 		}
 	})
 
-	body, r, err := get("http://127.0.0.1:8177/?hello=world")
+	body, r, err := get("http://127.0.0.1:8181/?hello=world")
 	assert.NoError(t, err)
 	defer func() {
 		_ = r.Body.Close()
@@ -1503,7 +1502,7 @@ func TestHandler_ErrorDuration(t *testing.T) {
 	}, nil, p)
 	assert.NoError(t, err)
 
-	hs := &http.Server{Addr: ":8177", Handler: h}
+	hs := &http.Server{Addr: ":8182", Handler: h}
 	defer func() {
 		errS := hs.Shutdown(context.Background())
 		if errS != nil {
@@ -1530,7 +1529,7 @@ func TestHandler_ErrorDuration(t *testing.T) {
 		}
 	})
 
-	_, r, err := get("http://127.0.0.1:8177/?hello=world")
+	_, r, err := get("http://127.0.0.1:8182/?hello=world")
 	assert.NoError(t, err)
 	defer func() {
 		_ = r.Body.Close()
@@ -1578,7 +1577,7 @@ func TestHandler_IP(t *testing.T) {
 	}, cidrs, p)
 	assert.NoError(t, err)
 
-	hs := &http.Server{Addr: "127.0.0.1:8177", Handler: h}
+	hs := &http.Server{Addr: "127.0.0.1:8183", Handler: h}
 	defer func() {
 		errS := hs.Shutdown(context.Background())
 		if errS != nil {
@@ -1594,7 +1593,7 @@ func TestHandler_IP(t *testing.T) {
 	}()
 	time.Sleep(time.Millisecond * 10)
 
-	body, r, err := get("http://127.0.0.1:8177/")
+	body, r, err := get("http://127.0.0.1:8183/")
 	assert.NoError(t, err)
 	defer func() {
 		_ = r.Body.Close()
@@ -1639,7 +1638,7 @@ func TestHandler_XRealIP(t *testing.T) {
 	}, cidrs, p)
 	assert.NoError(t, err)
 
-	hs := &http.Server{Addr: "127.0.0.1:8179", Handler: h}
+	hs := &http.Server{Addr: "127.0.0.1:8184", Handler: h}
 	defer func() {
 		errS := hs.Shutdown(context.Background())
 		if errS != nil {
@@ -1655,7 +1654,7 @@ func TestHandler_XRealIP(t *testing.T) {
 	}()
 	time.Sleep(time.Millisecond * 10)
 
-	body, r, err := getHeader("http://127.0.0.1:8179/", map[string]string{
+	body, r, err := getHeader("http://127.0.0.1:8184/", map[string]string{
 		"X-Real-Ip": "200.0.0.1",
 	})
 
@@ -1705,7 +1704,7 @@ func TestHandler_XForwardedFor(t *testing.T) {
 	}, cidrs, p)
 	assert.NoError(t, err)
 
-	hs := &http.Server{Addr: "127.0.0.1:8177", Handler: h}
+	hs := &http.Server{Addr: "127.0.0.1:8185", Handler: h}
 	defer func() {
 		errS := hs.Shutdown(context.Background())
 		if errS != nil {
@@ -1721,7 +1720,7 @@ func TestHandler_XForwardedFor(t *testing.T) {
 	}()
 	time.Sleep(time.Millisecond * 10)
 
-	body, r, err := getHeader("http://127.0.0.1:8177/", map[string]string{
+	body, r, err := getHeader("http://127.0.0.1:8185/", map[string]string{
 		"X-Forwarded-For": "100.0.0.1, 200.0.0.1, invalid, 101.0.0.1",
 	})
 
@@ -1730,7 +1729,7 @@ func TestHandler_XForwardedFor(t *testing.T) {
 	assert.Equal(t, "101.0.0.1", body)
 	_ = r.Body.Close()
 
-	body, r, err = getHeader("http://127.0.0.1:8177/", map[string]string{
+	body, r, err = getHeader("http://127.0.0.1:8185/", map[string]string{
 		"X-Forwarded-For": "100.0.0.1, 200.0.0.1, 101.0.0.1, invalid",
 	})
 
@@ -1770,7 +1769,7 @@ func TestHandler_XForwardedFor_NotTrustedRemoteIp(t *testing.T) {
 	}, cidrs, p)
 	assert.NoError(t, err)
 
-	hs := &http.Server{Addr: "127.0.0.1:8177", Handler: h}
+	hs := &http.Server{Addr: "127.0.0.1:8186", Handler: h}
 	defer func() {
 		errS := hs.Shutdown(context.Background())
 		if errS != nil {
@@ -1786,7 +1785,7 @@ func TestHandler_XForwardedFor_NotTrustedRemoteIp(t *testing.T) {
 	}()
 	time.Sleep(time.Millisecond * 10)
 
-	body, r, err := getHeader("http://127.0.0.1:8177/", map[string]string{
+	body, r, err := getHeader("http://127.0.0.1:8186/", map[string]string{
 		"X-Forwarded-For": "100.0.0.1, 200.0.0.1, invalid, 101.0.0.1",
 	})
 
@@ -1818,7 +1817,7 @@ func BenchmarkHandler_Listen_Echo(b *testing.B) {
 	}, nil, p)
 	assert.NoError(b, err)
 
-	hs := &http.Server{Addr: ":8177", Handler: h}
+	hs := &http.Server{Addr: ":8188", Handler: h}
 	defer func() {
 		errS := hs.Shutdown(context.Background())
 		if errS != nil {
@@ -1838,7 +1837,7 @@ func BenchmarkHandler_Listen_Echo(b *testing.B) {
 	b.ReportAllocs()
 	bb := "WORLD"
 	for n := 0; n < b.N; n++ {
-		r, err := http.Get("http://127.0.0.1:8177/?hello=world")
+		r, err := http.Get("http://127.0.0.1:8188/?hello=world")
 		if err != nil {
 			b.Fail()
 		}

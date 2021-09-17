@@ -18,12 +18,12 @@ class ComposerStaticInit4c5f84525c0a29bd31d96a6240bc321a
         'a1105708a18b76903365ca1c4aa61b02' => __DIR__ . '/..' . '/symfony/translation/Resources/functions.php',
         'ad155f8f1cf0d418fe49e248db8c661b' => __DIR__ . '/..' . '/react/promise/src/functions_include.php',
         'ee3f63fba4aee765c47ba535aa9e0804' => __DIR__ . '/..' . '/spiral/attributes/src/polyfill.php',
+        '47c8e63cb5fd89b57a93f4d1a2985225' => __DIR__ . '/..' . '/spiral/roadrunner-grpc/src/polyfill.php',
     );
 
     public static $prefixLengthsPsr4 = array (
         'T' => 
         array (
-            'Temporal\\Tests\\' => 15,
             'Temporal\\Roadrunner\\' => 20,
             'Temporal\\Api\\' => 13,
             'Temporal\\' => 9,
@@ -47,6 +47,7 @@ class ComposerStaticInit4c5f84525c0a29bd31d96a6240bc321a
             'Spiral\\Tokenizer\\' => 17,
             'Spiral\\RoadRunner\\Metrics\\' => 26,
             'Spiral\\RoadRunner\\Http\\' => 23,
+            'Spiral\\RoadRunner\\GRPC\\' => 23,
             'Spiral\\RoadRunner\\Console\\' => 26,
             'Spiral\\RoadRunner\\' => 18,
             'Spiral\\Logger\\' => 14,
@@ -92,10 +93,6 @@ class ComposerStaticInit4c5f84525c0a29bd31d96a6240bc321a
     );
 
     public static $prefixDirsPsr4 = array (
-        'Temporal\\Tests\\' => 
-        array (
-            0 => __DIR__ . '/../..' . '/src',
-        ),
         'Temporal\\Roadrunner\\' => 
         array (
             0 => __DIR__ . '/..' . '/temporal/sdk/api/Temporal/Roadrunner',
@@ -175,6 +172,10 @@ class ComposerStaticInit4c5f84525c0a29bd31d96a6240bc321a
         'Spiral\\RoadRunner\\Http\\' => 
         array (
             0 => __DIR__ . '/..' . '/spiral/roadrunner-http/src',
+        ),
+        'Spiral\\RoadRunner\\GRPC\\' => 
+        array (
+            0 => __DIR__ . '/..' . '/spiral/roadrunner-grpc/src',
         ),
         'Spiral\\RoadRunner\\Console\\' => 
         array (
@@ -271,6 +272,10 @@ class ComposerStaticInit4c5f84525c0a29bd31d96a6240bc321a
         ),
     );
 
+    public static $fallbackDirsPsr4 = array (
+        0 => __DIR__ . '/../..' . '/src',
+    );
+
     public static $classMap = array (
         'Attribute' => __DIR__ . '/..' . '/symfony/polyfill-php80/Resources/stubs/Attribute.php',
         'Composer\\InstalledVersions' => __DIR__ . '/..' . '/composer/InstalledVersions.php',
@@ -286,6 +291,7 @@ class ComposerStaticInit4c5f84525c0a29bd31d96a6240bc321a
         return \Closure::bind(function () use ($loader) {
             $loader->prefixLengthsPsr4 = ComposerStaticInit4c5f84525c0a29bd31d96a6240bc321a::$prefixLengthsPsr4;
             $loader->prefixDirsPsr4 = ComposerStaticInit4c5f84525c0a29bd31d96a6240bc321a::$prefixDirsPsr4;
+            $loader->fallbackDirsPsr4 = ComposerStaticInit4c5f84525c0a29bd31d96a6240bc321a::$fallbackDirsPsr4;
             $loader->classMap = ComposerStaticInit4c5f84525c0a29bd31d96a6240bc321a::$classMap;
 
         }, null, ClassLoader::class);

@@ -148,7 +148,5 @@ func (p *Plugin) serverOptions() ([]grpc.ServerOption, error) {
 	return append(
 		opts,
 		grpc.UnaryInterceptor(p.interceptor),
-		// TODO(rustatian): check deprecation
-		// grpc.CustomCodec(&codec{encoding.GetCodec(encCodec)}),
 	), nil
 }

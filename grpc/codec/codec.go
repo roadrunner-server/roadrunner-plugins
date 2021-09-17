@@ -6,14 +6,16 @@ type RawMessage []byte
 
 // By default, gRPC registers and uses the "proto" codec, so it is not necessary to do this in your own code to send and receive proto messages.
 // https://github.com/grpc/grpc-go/blob/master/Documentation/encoding.md#using-a-codec
-const cName string = "proto"
+const Name string = "proto"
 const rm string = "rawMessage"
 
 func (r RawMessage) Reset()       {}
 func (RawMessage) ProtoMessage()  {}
 func (RawMessage) String() string { return rm }
 
-type Codec struct{ base encoding.Codec }
+type Codec struct {
+	Base encoding.Codec
+}
 
 // Marshal returns the wire format of v. rawMessages would be returned without encoding.
 func (c *Codec) Marshal(v interface{}) ([]byte, error) {
@@ -21,7 +23,7 @@ func (c *Codec) Marshal(v interface{}) ([]byte, error) {
 		return raw, nil
 	}
 
-	return c.base.Marshal(v)
+	return c.Base.Marshal(v)
 }
 
 // Unmarshal parses the wire format into v. rawMessages would not be unmarshalled.
@@ -31,14 +33,14 @@ func (c *Codec) Unmarshal(data []byte, v interface{}) error {
 		return nil
 	}
 
-	return c.base.Unmarshal(data, v)
+	return c.Base.Unmarshal(data, v)
 }
 
 func (c *Codec) Name() string {
-	return cName
+	return Name
 }
 
 // String return codec name.
 func (c *Codec) String() string {
-	return "raw:" + c.base.Name()
+	return "raw:" + c.Base.Name()
 }

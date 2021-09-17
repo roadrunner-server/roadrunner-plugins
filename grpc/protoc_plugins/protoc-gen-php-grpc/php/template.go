@@ -39,7 +39,7 @@ const phpBody = `<?php
 {{if $ns.Namespace}}
 namespace {{ $ns.Namespace }};
 {{end}}
-use Spiral\GRPC;
+use Spiral\RoadRunner\GRPC;
 {{- range $n := $ns.Import}}
 use {{ $n }};
 {{- end}}

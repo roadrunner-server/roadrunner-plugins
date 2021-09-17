@@ -6,7 +6,6 @@ $vendorDir = dirname(dirname(__FILE__));
 $baseDir = dirname($vendorDir);
 
 return array(
-    'Temporal\\Tests\\' => array($baseDir . '/src'),
     'Temporal\\Roadrunner\\' => array($vendorDir . '/temporal/sdk/api/Temporal/Roadrunner'),
     'Temporal\\Api\\' => array($vendorDir . '/temporal/sdk/api/Temporal/Api'),
     'Temporal\\' => array($vendorDir . '/temporal/sdk/src'),
@@ -27,6 +26,7 @@ return array(
     'Spiral\\Tokenizer\\' => array($vendorDir . '/spiral/tokenizer/src'),
     'Spiral\\RoadRunner\\Metrics\\' => array($vendorDir . '/spiral/roadrunner-metrics/src'),
     'Spiral\\RoadRunner\\Http\\' => array($vendorDir . '/spiral/roadrunner-http/src'),
+    'Spiral\\RoadRunner\\GRPC\\' => array($vendorDir . '/spiral/roadrunner-grpc/src'),
     'Spiral\\RoadRunner\\Console\\' => array($vendorDir . '/spiral/roadrunner-cli/src'),
     'Spiral\\RoadRunner\\' => array($vendorDir . '/spiral/roadrunner-worker/src'),
     'Spiral\\Logger\\' => array($vendorDir . '/spiral/logger/src'),
@@ -50,4 +50,5 @@ return array(
     'GPBMetadata\\' => array($vendorDir . '/temporal/sdk/api/GPBMetadata'),
     'Composer\\Semver\\' => array($vendorDir . '/composer/semver/src'),
     'Carbon\\' => array($vendorDir . '/nesbot/carbon/src/Carbon'),
+    '' => array($baseDir . '/src'),
 );

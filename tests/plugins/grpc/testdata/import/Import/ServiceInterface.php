@@ -4,7 +4,7 @@
 
 namespace Import;
 
-use Spiral\GRPC;
+use Spiral\RoadRunner\GRPC;
 use Import\Sub;
 
 interface ServiceInterface extends GRPC\ServiceInterface

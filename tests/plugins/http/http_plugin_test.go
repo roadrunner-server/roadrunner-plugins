@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"crypto/rand"
 	"crypto/tls"
-	"fmt"
 	"io"
 	"io/ioutil"
 	"net"
@@ -51,10 +50,9 @@ func TestHTTPInit(t *testing.T) {
 	cont, err := endure.NewContainer(nil, endure.SetLogLevel(endure.ErrorLevel))
 	assert.NoError(t, err)
 
-	rIn := makeConfig("6001", "15395", "7921", ":8892", "false", "false", "php ../../http/client.php echo pipes")
 	cfg := &config.Viper{
-		ReadInCfg: rIn,
-		Type:      "yaml",
+		Path:   "configs/.rr-http-init.yaml",
+		Prefix: "rr",
 	}
 
 	err = cont.RegisterAll(
@@ -240,9 +238,9 @@ func TestHTTPInformerReset(t *testing.T) {
 	}()
 
 	time.Sleep(time.Second * 1)
-	t.Run("HTTPInformerTest", informerTest)
+	t.Run("HTTPInformerTest", informerTest("127.0.0.1:6008"))
 	t.Run("HTTPEchoTestBefore", echoHTTP)
-	t.Run("HTTPResetTest", resetTest)
+	t.Run("HTTPResetTest", resetTest("127.0.0.1:6008"))
 	t.Run("HTTPEchoTestAfter", echoHTTP)
 
 	stopCh <- struct{}{}
@@ -1031,7 +1029,7 @@ func TestHttpEchoErr(t *testing.T) {
 
 	rIn := `
 rpc:
-  listen: tcp://127.0.0.1:6001
+  listen: tcp://127.0.0.1:6003
   disabled: false
 
 server:
@@ -1459,50 +1457,6 @@ func getHeader(url string, h map[string]string) (string, *http.Response, error) 
 		return "", nil, err
 	}
 	return string(b), r, err
-}
-
-func makeConfig(rpcPort, httpPort, fcgiPort, sslAddress, redirect, http2Enabled, command string) []byte {
-	return []byte(fmt.Sprintf(`
-rpc:
-  listen: tcp://127.0.0.1:%s
-  disabled: false
-
-server:
-  command: "%s"
-  user: ""
-  group: ""
-  relay: "pipes"
-  relay_timeout: "20s"
-
-http:
-  address: 127.0.0.1:%s
-  max_request_size: 1024
-  middleware: [ "" ]
-  uploads:
-    forbid: [ ".php", ".exe", ".bat" ]
-  trusted_subnets: [ "10.0.0.0/8", "127.0.0.0/8", "172.16.0.0/12", "192.168.0.0/16", "::1/128", "fc00::/7", "fe80::/10" ]
-  pool:
-    num_workers: 2
-    max_jobs: 0
-    allocate_timeout: 60s
-    destroy_timeout: 60s
-
-  ssl:
-    address: %s
-    redirect: %s
-    cert: fixtures/server.crt
-    key: fixtures/server.key
-  #    rootCa: root.crt
-  fcgi:
-    address: tcp://0.0.0.0:%s
-  http2:
-    enabled: %s
-    h2c: false
-    max_concurrent_streams: 128
-logs:
-  mode: development
-  level: error
-`, rpcPort, command, httpPort, sslAddress, redirect, fcgiPort, http2Enabled))
 }
 
 func TestHTTPBigRequestSize(t *testing.T) {
@@ -2244,7 +2198,7 @@ func TestHTTPIPv6Long(t *testing.T) {
 	mockLogger := mocks.NewMockLogger(controller)
 	mockLogger.EXPECT().Debug("worker destructed", "pid", gomock.Any()).AnyTimes()
 	mockLogger.EXPECT().Debug("worker constructed", "pid", gomock.Any()).AnyTimes()
-	mockLogger.EXPECT().Debug("Started RPC service", "address", "tcp://[0:0:0:0:0:0:0:1]:6001", "plugins", gomock.Any()).Times(1)
+	mockLogger.EXPECT().Debug("Started RPC service", "address", "tcp://[0:0:0:0:0:0:0:1]:6005", "plugins", gomock.Any()).Times(1)
 	mockLogger.EXPECT().Debug("201 GET http://[0:0:0:0:0:0:0:1]:10684/?hello=world", "remote", "::1", "elapsed", gomock.Any()).Times(1)
 
 	err = cont.RegisterAll(
@@ -2320,7 +2274,7 @@ func TestHTTPIPv6Short(t *testing.T) {
 	mockLogger := mocks.NewMockLogger(controller)
 	mockLogger.EXPECT().Debug("worker destructed", "pid", gomock.Any()).AnyTimes()
 	mockLogger.EXPECT().Debug("worker constructed", "pid", gomock.Any()).AnyTimes()
-	mockLogger.EXPECT().Debug("Started RPC service", "address", "tcp://[::1]:6001", "plugins", gomock.Any()).Times(1)
+	mockLogger.EXPECT().Debug("Started RPC service", "address", "tcp://[::1]:6003", "plugins", gomock.Any()).Times(1)
 	mockLogger.EXPECT().Debug("201 GET http://[::1]:10784/?hello=world", "remote", "::1", "elapsed", gomock.Any()).Times(1)
 
 	err = cont.RegisterAll(
@@ -2443,39 +2397,43 @@ func echoHTTPIPv6Short(t *testing.T) {
 	assert.NoError(t, err)
 }
 
-func resetTest(t *testing.T) {
-	conn, err := net.Dial("tcp", "127.0.0.1:6001")
-	assert.NoError(t, err)
-	client := rpc.NewClientWithCodec(goridgeRpc.NewClientCodec(conn))
-	// WorkerList contains list of workers.
+func resetTest(address string) func(t *testing.T) {
+	return func(t *testing.T) {
+		conn, err := net.Dial("tcp", address)
+		assert.NoError(t, err)
+		client := rpc.NewClientWithCodec(goridgeRpc.NewClientCodec(conn))
+		// WorkerList contains list of workers.
 
-	var ret bool
-	err = client.Call("resetter.Reset", "http", &ret)
-	assert.NoError(t, err)
-	assert.True(t, ret)
-	ret = false
+		var ret bool
+		err = client.Call("resetter.Reset", "http", &ret)
+		assert.NoError(t, err)
+		assert.True(t, ret)
+		ret = false
 
-	var services []string
-	err = client.Call("resetter.List", nil, &services)
-	assert.NoError(t, err)
-	if services[0] != "http" {
-		t.Fatal("no enough services")
+		var services []string
+		err = client.Call("resetter.List", nil, &services)
+		assert.NoError(t, err)
+		if services[0] != "http" {
+			t.Fatal("no enough services")
+		}
 	}
 }
 
-func informerTest(t *testing.T) {
-	conn, err := net.Dial("tcp", "127.0.0.1:6001")
-	assert.NoError(t, err)
-	client := rpc.NewClientWithCodec(goridgeRpc.NewClientCodec(conn))
-	// WorkerList contains list of workers.
-	list := struct {
-		// Workers is list of workers.
-		Workers []process.State `json:"workers"`
-	}{}
+func informerTest(address string) func(t *testing.T) {
+	return func(t *testing.T) {
+		conn, err := net.Dial("tcp", address)
+		assert.NoError(t, err)
+		client := rpc.NewClientWithCodec(goridgeRpc.NewClientCodec(conn))
+		// WorkerList contains list of workers.
+		list := struct {
+			// Workers is list of workers.
+			Workers []process.State `json:"workers"`
+		}{}
 
-	err = client.Call("informer.Workers", "http", &list)
-	assert.NoError(t, err)
-	assert.Len(t, list.Workers, 2)
+		err = client.Call("informer.Workers", "http", &list)
+		assert.NoError(t, err)
+		assert.Len(t, list.Workers, 2)
+	}
 }
 
 // HELPERS

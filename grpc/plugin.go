@@ -43,7 +43,9 @@ func (p *Plugin) Init(cfg config.Configurer, log logger.Logger, server server.Se
 		return errors.E(errors.Disabled)
 	}
 	// register the codec
-	encoding.RegisterCodec(&codec.Codec{})
+	encoding.RegisterCodec(&codec.Codec{
+		Base: encoding.GetCodec(codec.Name),
+	})
 
 	err := cfg.UnmarshalKey(name, &p.config)
 	if err != nil {
