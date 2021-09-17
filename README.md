@@ -145,7 +145,8 @@ func (p *Plugin) AddMiddleware(name endure.Named, m Middleware) {
 }
 ```
 
-> Make sure to request dependency is a pointer.
+
+**Make sure to request dependency via pointer.**
 
 ### Configuration
 
@@ -194,41 +195,41 @@ func (s *Plugin) Init(r *rpc.Plugin, h *http.Plugin, cfg config.Configurer) erro
  const op = errors.Op("custom_plugin_init") // error operation name
  // Check if the `custom` section exists in the configuration.
  if !cfg.Has(PluginName) {
-  return errors.E(op, errors.Disabled)
+     return errors.E(op, errors.Disabled)
  }
 
- // unmarshal
+ // Populate the configuration structure
  err := cfg.UnmarshalKey(PluginName, &s.cfg)
  if err != nil {
-  // Error will stop execution
-  return errors.E(op, err)
+      // Error will stop execution
+      return errors.E(op, err)
  }
 
- return nil
+    return nil
 }
 
 ```
 
-`errors.Disabled` is the special kind of error which indicated Endure to disable this plugin and all dependencies of
-this root. The RR2 will continue to work after this error type if at least plugin stay alive.
+`errors.Disabled` is the special kind of error that tells Endure to disable this plugin and all dependencies of
+this root. The RR2 will continue to work after this error type if at least one plugin stay alive.
 
 ### Serving
 
 Create `Serve` and `Stop` method in your structure to let RoadRunner start and stop your service.
 
-```golang
+```go
 type Plugin struct {}
 
 func (s *Plugin) Serve() chan error {
- const op = errors.Op("custom_plugin_serve")
+    const op = errors.Op("custom_plugin_serve")
     errCh := make(chan error, 1)
 
     err := s.DoSomeWork()
-    err != nil {
-     errCh <- errors.E(op, err)
-     return errCh
+    if err != nil {
+        // notify endure, that the error occured
+        errCh <- errors.E(op, err)
+        return errCh
     }
-
     return nil
 }
 
@@ -236,8 +237,9 @@ func (s *Plugin) Stop() error {
     return s.stopServing()
 }
 
+// You may start some listener here
 func (s *Plugin) DoSomeWork() error {
- return nil
+    return nil
 }
 ```
 
@@ -255,7 +257,7 @@ Steps (sample based on the actual `http` plugin and `Middleware` interface):
 ```go
 // Middleware interface
 type Middleware interface {
- Middleware(f http.Handler) http.HandlerFunc
+    Middleware(f http.Handler) http.HandlerFunc
 }
 ```
 
@@ -263,8 +265,8 @@ type Middleware interface {
 
 ```go
 // Collects collecting http middlewares
-func (s *Plugin) AddMiddleware(name endure.Named, m Middleware) {
-    s.mdwr[name.Name()] = m
+func (p *Plugin) AddMiddleware(name endure.Named, m Middleware) {
+    p.mdwr[name.Name()] = m
 }
 ```
 
@@ -272,20 +274,26 @@ func (s *Plugin) AddMiddleware(name endure.Named, m Middleware) {
 
 ```golang
 // Collects collecting http middlewares
-func (s *Plugin) Collects() []interface{} {
+func (p *Plugin) Collects() []interface{} {
     return []interface{}{
-        s.AddMiddleware,
+        // Endure will analyze the arguments of this function.
+        p.AddMiddleware,
     }
 }
 ```
 
-Endure will automatically check that registered structure implement all the arguments for the `AddMiddleware` method (or will find a structure if argument is structure). In our case, a structure should implement `endure.Named` interface (which returns user friendly name for the plugin) and `Middleware` interface.
+Endure will automatically check that the registered structure implements all the arguments for the `AddMiddleware` method (or will find a structure if the argument is structure). In our case, a structure should implement `endure.Named` interface (which returns user friendly name for the plugin) and `Middleware` interface.
 
 ### RPC Methods
 
-You can expose a set of RPC methods for your PHP workers also by using Endure `Collects` interface. Endure will automatically get the structure and expose RPC method under the `PluginName` name.
+You can expose a set of RPC methods for your PHP workers also by using Endure `Collects` interface. Endure will automatically get the structure and expose RPC method under the `PluginName` name.   
+```go
+func (p *Plugin) Name() string {
+    return PluginName
+}
+```
 
-To extend your plugin with RPC methods, plugin will not be changed at all. Only 1 thing to do is to create a file with RPC methods (let's call it `rpc.go`) and expose here all RPC methods for the plugin w/o changing plugin itself:
+To extend your plugin with RPC methods, the plugin itself will not be changed at all. The only 1 thing to do is to create a file with RPC methods (let's call it `rpc.go`) and expose here all RPC methods for the plugin:
 
 I assume we created a file `rpc.go`. The next step is to create a structure:
 
@@ -295,17 +303,17 @@ I assume we created a file `rpc.go`. The next step is to create a structure:
 package custom
 
 type rpc struct {
- srv *Plugin
- log logger.Logger
+    srv *Plugin
+     log logger.Logger
 }
 ```
 
-2. Create a method, which you want to expose (or multiply methods):
+2. Create a method, which you want to expose (or multiply methods). BTW, you can use protobuf in the RPC methods:
 
 ```go
 func (s *rpc) Hello(input string, output *string) error {
- *output = input
- return nil
+     *output = input
+      return nil
 }
 ```
 
@@ -314,7 +322,7 @@ func (s *rpc) Hello(input string, output *string) error {
 ```go
 // RPCService returns associated rpc service.
 func (p *Plugin) RPC() interface{} {
- return &rpc{srv: p, log: p.log}
+    return &rpc{srv: p, log: p.log}
 }
 ```
 
