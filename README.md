@@ -58,7 +58,7 @@ with much greater performance and flexibility.
 |   ![](https://img.shields.io/badge/-Server-green)  | Provides support for the command. Prepare PHP processes        |
 |   ![](https://img.shields.io/badge/-Service-green)  | Provides support for the external scripts, binaries which might be started like a service (behaves similar to the systemd services)        |
 |  ![](https://img.shields.io/badge/-SQS-blue)   | SQS driver for the jobs       |
-|   ![](https://img.shields.io/badge/-Static-green)  | HTTP middleware to serve static files        |
+|   ![](https://img.shields.io/badge/-Static-blue)  | HTTP middleware to serve static files        |
 |  ![](https://img.shields.io/badge/-Status-green)   | Provides support for the health and readiness checks        |
 |   ![](https://img.shields.io/badge/-Websockets-green)  | Provides support for the broadcasting events via websockets         |
 
