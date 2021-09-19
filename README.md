@@ -33,37 +33,37 @@ with much greater performance and flexibility.
 
 # Available Plugins
 
-| Plugin     |   Description |
-| ----------- | ----------- |
-| ![](https://img.shields.io/badge/-HTTP-green)      | Provides HTTP, HTTPS, FCGI transports  |
-| ![](https://img.shields.io/badge/-AMQP-blue)   | Provides AMQP (0-9-1) protocol support via RabbitMQ        |
-|  ![](https://img.shields.io/badge/-Beanstalk-blue)   | Provides [beanstalkd](https://github.com/beanstalkd/beanstalkd) queue support        |
-|   ![](https://img.shields.io/badge/-Boltdb-blue)  | Provides support for the [BoltDB](https://github.com/etcd-io/bbolt) key/value store. Used in the `Jobs` and `KV`  |
-|   ![](https://img.shields.io/badge/-Broadcast-green)  | Provides broadcasting capabilities to the RR2 via different drivers        |
-|  ![](https://img.shields.io/badge/-Config-green)   | Provides configuration parsing support to the all plugins    |
-|  ![](https://img.shields.io/badge/-GRPC-blue)   | Provides GRPC support    |
-|  ![](https://img.shields.io/badge/-GZIP-blue)   | Gzip middleware plugin for the HTTP plugin       |
-|   ![](https://img.shields.io/badge/-Headers-blue)  | Headers middleware plugin for the HTTP plugin        |
-|  ![](https://img.shields.io/badge/-Informer-green)   | Provides statistic grabbing capabilities (workers,jobs stat)        |
-|   ![](https://img.shields.io/badge/-Jobs-green)  | Provides queues support for the RR2 via different drivers      |
-|   ![](https://img.shields.io/badge/-KV-green)  | Provides key-value support for the RR2 via different drivers        |
-|   ![](https://img.shields.io/badge/-Logger-green)  | Central logger plugin. Implemented via Uber.zap logger, but supports other loggers.        |
-|   ![](https://img.shields.io/badge/-Memcached-blue)  | Memcached driver for the kv       |
-|   ![](https://img.shields.io/badge/-Memory-blue)  | Memory driver for the jobs, kv, broadcast        |
-|  ![](https://img.shields.io/badge/-Metrics-green)   | Provides support for the metrics via [Prometheus](https://prometheus.io/)       |
-|   ![](https://img.shields.io/badge/-Redis-blue)  | Redis driver for the kv, broadcast       |
-|   ![](https://img.shields.io/badge/-Reload-green)  | Reloads workers on the file changes. Use only for the development        |
-|  ![](https://img.shields.io/badge/-Resetter-green)   | Provides support for the `./rr reset` command. Reloads workers pools        |
-|  ![](https://img.shields.io/badge/-RPC-green)   | Provides support for the RPC across all plugins. Collects `RPC() interface{}` methods and exposes them via RPC       |
-|   ![](https://img.shields.io/badge/-Server-green)  | Provides support for the command. Prepare PHP processes        |
-|   ![](https://img.shields.io/badge/-Service-green)  | Provides support for the external scripts, binaries which might be started like a service (behaves similar to the systemd services)        |
-|  ![](https://img.shields.io/badge/-SQS-blue)   | SQS driver for the jobs       |
-|   ![](https://img.shields.io/badge/-Static-blue)  | HTTP middleware to serve static files        |
-|  ![](https://img.shields.io/badge/-Status-green)   | Provides support for the health and readiness checks        |
-|   ![](https://img.shields.io/badge/-Websockets-green)  | Provides support for the broadcasting events via websockets         |
+| Plugin                                              | Description                                                                                                                         | Docs                      |
+| --------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------- | ------------------------- |
+| ![](https://img.shields.io/badge/-HTTP-green)       | Provides HTTP, HTTPS, FCGI transports                                                                                               |
+| ![](https://img.shields.io/badge/-AMQP-blue)        | Provides AMQP (0-9-1) protocol support via RabbitMQ                                                                                 |
+| ![](https://img.shields.io/badge/-Beanstalk-blue)   | Provides [beanstalkd](https://github.com/beanstalkd/beanstalkd) queue support                                                       |
+| ![](https://img.shields.io/badge/-Boltdb-blue)      | Provides support for the [BoltDB](https://github.com/etcd-io/bbolt) key/value store. Used in the `Jobs` and `KV`                    |
+| ![](https://img.shields.io/badge/-Broadcast-green)  | Provides broadcasting capabilities to the RR2 via different drivers                                                                 |
+| ![](https://img.shields.io/badge/-Config-green)     | Provides configuration parsing support to the all plugins                                                                           |
+| ![](https://img.shields.io/badge/-GRPC-green)       | Provides GRPC support                                                                                                               | [Docs](grpc/docs/grpc.md) |
+| ![](https://img.shields.io/badge/-GZIP-blue)        | Gzip middleware plugin for the HTTP plugin                                                                                          |
+| ![](https://img.shields.io/badge/-Headers-blue)     | Headers middleware plugin for the HTTP plugin                                                                                       |
+| ![](https://img.shields.io/badge/-Informer-green)   | Provides statistic grabbing capabilities (workers,jobs stat)                                                                        |
+| ![](https://img.shields.io/badge/-Jobs-green)       | Provides queues support for the RR2 via different drivers                                                                           |
+| ![](https://img.shields.io/badge/-KV-green)         | Provides key-value support for the RR2 via different drivers                                                                        |
+| ![](https://img.shields.io/badge/-Logger-green)     | Central logger plugin. Implemented via Uber.zap logger, but supports other loggers.                                                 |
+| ![](https://img.shields.io/badge/-Memcached-blue)   | Memcached driver for the kv                                                                                                         |
+| ![](https://img.shields.io/badge/-Memory-blue)      | Memory driver for the jobs, kv, broadcast                                                                                           |
+| ![](https://img.shields.io/badge/-Metrics-green)    | Provides support for the metrics via [Prometheus](https://prometheus.io/)                                                           |
+| ![](https://img.shields.io/badge/-Redis-blue)       | Redis driver for the kv, broadcast                                                                                                  |
+| ![](https://img.shields.io/badge/-Reload-green)     | Reloads workers on the file changes. Use only for the development                                                                   |
+| ![](https://img.shields.io/badge/-Resetter-green)   | Provides support for the `./rr reset` command. Reloads workers pools                                                                |
+| ![](https://img.shields.io/badge/-RPC-green)        | Provides support for the RPC across all plugins. Collects `RPC() interface{}` methods and exposes them via RPC                      |
+| ![](https://img.shields.io/badge/-Server-green)     | Provides support for the command. Prepare PHP processes                                                                             |
+| ![](https://img.shields.io/badge/-Service-green)    | Provides support for the external scripts, binaries which might be started like a service (behaves similar to the systemd services) |
+| ![](https://img.shields.io/badge/-SQS-blue)         | SQS driver for the jobs                                                                                                             |
+| ![](https://img.shields.io/badge/-Static-blue)      | HTTP middleware to serve static files                                                                                               |
+| ![](https://img.shields.io/badge/-Status-green)     | Provides support for the health and readiness checks                                                                                |
+| ![](https://img.shields.io/badge/-Websockets-green) | Provides support for the broadcasting events via websockets                                                                         |
 
 Legend:  
-Green - is a regular RR2 plugins.   
+Green - is a regular RR2 plugins.  
 Blue - is a driver for the RR2 plugin.
 
 # Writing Plugins
@@ -144,7 +144,6 @@ func (p *Plugin) AddMiddleware(name endure.Named, m Middleware) {
 	p.mdwr[name.Name()] = m
 }
 ```
-
 
 **Make sure to request dependency via pointer.**
 
@@ -286,7 +285,8 @@ Endure will automatically check that the registered structure implements all the
 
 ### RPC Methods
 
-You can expose a set of RPC methods for your PHP workers also by using Endure `Collects` interface. Endure will automatically get the structure and expose RPC method under the `PluginName` name.   
+You can expose a set of RPC methods for your PHP workers also by using Endure `Collects` interface. Endure will automatically get the structure and expose RPC method under the `PluginName` name.
+
 ```go
 func (p *Plugin) Name() string {
     return PluginName
