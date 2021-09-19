@@ -15,4 +15,4 @@
 # vendor/
 .idea
 coverage-ci
-tests/vendor
+**/vendor

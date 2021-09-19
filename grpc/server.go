@@ -114,7 +114,7 @@ func (p *Plugin) serverOptions() ([]grpc.ServerOption, error) {
 
 			tcreds = credentials.NewTLS(&tls.Config{
 				MinVersion:   tls.VersionTLS12,
-				ClientAuth:   tls.RequireAndVerifyClientCert,
+				ClientAuth:   p.config.TLS.auth,
 				Certificates: []tls.Certificate{cert},
 				ClientCAs:    certPool,
 			})

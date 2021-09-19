@@ -1,19 +1,26 @@
-## Configuration
+rpc:
+  listen: "tcp://127.0.0.1:6001"
 
-```yaml
+server:
+  command: "php ../../worker-grpc.php"
+  relay: "pipes"
+  relay_timeout: "20s"
+
+logs:
+  mode: development
+  level: error
+
 # GRPC service configuration
 grpc:
   # socket to listen
-  listen: "tcp://localhost:9001"
-
-  # proto root file
-  proto: "proto/test/test.proto"
+  listen: "tcp://localhost:9002"
 
   tls:
-    key: ""
-    cert: ""
-    root_ca: ""
-    client_auth_type: ""
+    key: "configs/test-certs/test.key"
+    cert: "configs/test-certs/test.pem"
+
+  # proto root file
+  proto: "proto/service/service.proto"
 
   # max send limit (MB)
   max_send_msg_size: 50
@@ -57,9 +64,3 @@ grpc:
     max_jobs: 0
     allocate_timeout: 60s
     destroy_timeout: 60
-```
-
-## Minimal dependencies:
-
-1. RPC plugin
-2. Server plugin

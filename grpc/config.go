@@ -1,6 +1,7 @@
 package grpc
 
 import (
+	"crypto/tls"
 	"math"
 	"os"
 	"strings"
@@ -10,11 +11,21 @@ import (
 	"github.com/spiral/roadrunner/v2/pool"
 )
 
+type ClientAuthType string
+
+const (
+	NoClientAuth               string = "no_client_auth"
+	RequestClientCert          string = "request_client_cert"
+	RequireAnyClientCert       string = "require_any_client_cert"
+	VerifyClientCertIfGiven    string = "verify_client_cert_if_given"
+	RequireAndVerifyClientCert string = "require_and_verify_client_cert"
+)
+
 type Config struct {
 	Listen string `mapstructure:"listen"`
 	Proto  string `mapstructure:"proto"`
 
-	TLS *TLS
+	TLS *TLS `mapstructure:"tls"`
 
 	// Env is environment variables passed to the http pool
 	Env map[string]string `mapstructure:"env"`
@@ -31,9 +42,12 @@ type Config struct {
 }
 
 type TLS struct {
-	Key    string
-	Cert   string
-	RootCA string
+	Key      string `mapstructure:"key"`
+	Cert     string `mapstructure:"cert"`
+	RootCA   string `mapstructure:"root_ca"`
+	AuthType string `mapstructure:"client_auth_type"`
+	// auth type
+	auth tls.ClientAuthType
 }
 
 func (c *Config) InitDefaults() error { //nolint:gocognit
@@ -67,6 +81,21 @@ func (c *Config) InitDefaults() error { //nolint:gocognit
 
 		// RootCA is optional, but if provided - check it
 		if c.TLS.RootCA != "" {
+			// auth type used only for the CA
+			switch c.TLS.AuthType {
+			case NoClientAuth:
+				c.TLS.auth = tls.NoClientCert
+			case RequestClientCert:
+				c.TLS.auth = tls.RequestClientCert
+			case RequireAnyClientCert:
+				c.TLS.auth = tls.RequireAnyClientCert
+			case VerifyClientCertIfGiven:
+				c.TLS.auth = tls.VerifyClientCertIfGiven
+			case RequireAndVerifyClientCert:
+				c.TLS.auth = tls.RequireAndVerifyClientCert
+			default:
+				c.TLS.auth = tls.NoClientCert
+			}
 			if _, err := os.Stat(c.TLS.RootCA); err != nil {
 				if os.IsNotExist(err) {
 					return errors.E(op, errors.Errorf("root ca path provided, but key file '%s' does not exists", c.TLS.RootCA))
