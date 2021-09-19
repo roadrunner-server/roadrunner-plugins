@@ -98,4 +98,69 @@ grpc:
 
 1. `Server` plugin for the workers pool.
 
+## GRPC worker sample:
+
+```php
+<?php
+
+/**
+ * Sample GRPC PHP server.
+ */
+
+use Service\EchoInterface;
+use Spiral\RoadRunner\GRPC\Server;
+use Spiral\RoadRunner\Worker;
+
+require __DIR__ . '/vendor/autoload.php';
+
+$server = new Server(null, [
+    'debug' => false, // optional (default: false)
+]);
+
+$server->registerService(EchoInterface::class, new EchoService());
+
+$server->serve(Worker::create());
+
+```
+
+#### Proto file sample:
+
+```protobuf
+syntax = "proto3";
+
+package service;
+option go_package = "./;test";
+
+service Test {
+    rpc Echo (Message) returns (Message) {
+    }
+
+    rpc Throw (Message) returns (Message) {
+    }
+
+    rpc Die (Message) returns (Message) {
+    }
+
+    rpc Info (Message) returns (Message) {
+    }
+
+    rpc Ping (EmptyMessage) returns (EmptyMessage) {
+    }
+}
+
+message Message {
+    string msg = 1;
+}
+
+message EmptyMessage {
+}
+
+message DetailsMessageForException {
+    uint64 code = 1;
+    string message = 2;
+}
+```
+
+Test certificates (including `root ca`) located [here](../../tests/plugins/grpc/configs/test-certs).
+
 ## Common issues:
