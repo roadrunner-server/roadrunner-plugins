@@ -59,7 +59,17 @@ func (c *Config) InitDefaults() error { //nolint:gocognit
 	c.GrpcPool.InitDefaults()
 
 	if !strings.Contains(c.Listen, ":") {
-		return errors.E(op, errors.Errorf("mailformed grpc grpc address, provided: %s", c.Listen))
+		return errors.E(op, errors.Errorf("mailformed grpc address, provided: %s", c.Listen))
+	}
+
+	if c.Proto != "" {
+		if _, err := os.Stat(c.Proto); err != nil {
+			if os.IsNotExist(err) {
+				return errors.E(op, errors.Errorf("proto file '%s' does not exists", c.Proto))
+			}
+
+			return errors.E(op, err)
+		}
 	}
 
 	if c.EnableTLS() {

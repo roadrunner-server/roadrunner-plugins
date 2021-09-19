@@ -1,12 +1,15 @@
 ## Configuration
 
 ```yaml
-# GRPC service configuration
 grpc:
-  # socket to listen
+  # GRPC address to listen
+  #
+  # This option is required
   listen: "tcp://localhost:9001"
 
-  # proto root file
+  # Proto file to use
+  #
+  # This option
   proto: "proto/test/test.proto"
 
   tls:
