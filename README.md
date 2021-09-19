@@ -63,8 +63,8 @@ with much greater performance and flexibility.
 | ![](https://img.shields.io/badge/-Websockets-green) | Provides support for the broadcasting events via websockets                                                                         |
 
 Legend:  
-Green - is a regular RR2 plugins.  
-Blue - is a driver for the RR2 plugin.
+`Green` - is a regular RR2 plugins.  
+`Blue` - is a driver for the RR2 plugin.
 
 # Writing Plugins
 
@@ -145,6 +145,10 @@ func (p *Plugin) AddMiddleware(name endure.Named, m Middleware) {
 }
 ```
 
+<<<<<<< HEAD
+=======
+
+>>>>>>> origin
 **Make sure to request dependency via pointer.**
 
 ### Configuration
@@ -285,14 +289,22 @@ Endure will automatically check that the registered structure implements all the
 
 ### RPC Methods
 
-You can expose a set of RPC methods for your PHP workers also by using Endure `Collects` interface. Endure will automatically get the structure and expose RPC method under the `PluginName` name.
-
+You can expose a set of RPC methods for your PHP workers also by using Endure `Collects` interface. Endure will automatically get the structure and expose RPC method under the `PluginName` name.   
 ```go
 func (p *Plugin) Name() string {
     return PluginName
 }
 ```
 
+<<<<<<< HEAD
+```go
+func (p *Plugin) Name() string {
+    return PluginName
+}
+```
+
+=======
+>>>>>>> origin
 To extend your plugin with RPC methods, the plugin itself will not be changed at all. The only 1 thing to do is to create a file with RPC methods (let's call it `rpc.go`) and expose here all RPC methods for the plugin:
 
 I assume we created a file `rpc.go`. The next step is to create a structure:
