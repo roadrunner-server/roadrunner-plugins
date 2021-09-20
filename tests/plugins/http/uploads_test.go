@@ -46,7 +46,7 @@ func TestHandler_Upload_File(t *testing.T) {
 	}, nil, pool)
 	assert.NoError(t, err)
 
-	hs := &http.Server{Addr: ":8021", Handler: h}
+	hs := &http.Server{Addr: ":9021", Handler: h}
 	defer func() {
 		errS := hs.Shutdown(context.Background())
 		if errS != nil {
@@ -129,7 +129,7 @@ func TestHandler_Upload_NestedFile(t *testing.T) {
 	}, nil, pool)
 	assert.NoError(t, err)
 
-	hs := &http.Server{Addr: ":8021", Handler: h}
+	hs := &http.Server{Addr: ":9022", Handler: h}
 	defer func() {
 		errS := hs.Shutdown(context.Background())
 		if errS != nil {
@@ -212,7 +212,7 @@ func TestHandler_Upload_File_NoTmpDir(t *testing.T) {
 	}, nil, pool)
 	assert.NoError(t, err)
 
-	hs := &http.Server{Addr: ":8021", Handler: h}
+	hs := &http.Server{Addr: ":9023", Handler: h}
 	defer func() {
 		errS := hs.Shutdown(context.Background())
 		if errS != nil {
@@ -295,7 +295,7 @@ func TestHandler_Upload_File_Forbids(t *testing.T) {
 	}, nil, pool)
 	assert.NoError(t, err)
 
-	hs := &http.Server{Addr: ":8021", Handler: h}
+	hs := &http.Server{Addr: ":9024", Handler: h}
 	defer func() {
 		errS := hs.Shutdown(context.Background())
 		if errS != nil {

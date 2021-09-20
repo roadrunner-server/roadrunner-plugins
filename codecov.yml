@@ -13,12 +13,8 @@ coverage:
 
 # do not include tests folders
 ignore:
-  - "common"
   - "internal"
-  - "proto"
   - "tests"
-  - "systemd"
-  - "utils/to_ptr.go"
   - "metrics/config_test.go"
   - "websockets/storage/storage_test.go"
   - "websockets/config.go"

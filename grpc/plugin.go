@@ -43,7 +43,9 @@ func (p *Plugin) Init(cfg config.Configurer, log logger.Logger, server server.Se
 		return errors.E(errors.Disabled)
 	}
 	// register the codec
-	encoding.RegisterCodec(&codec.Codec{})
+	encoding.RegisterCodec(&codec.Codec{
+		Base: encoding.GetCodec(codec.Name),
+	})
 
 	err := cfg.UnmarshalKey(name, &p.config)
 	if err != nil {
@@ -91,24 +93,19 @@ func (p *Plugin) Serve() chan error {
 		return errCh
 	}
 
+	p.server, err = p.createGRPCserver()
+	if err != nil {
+		errCh <- errors.E(op, err)
+		return errCh
+	}
+
+	l, err := utils.CreateListener(p.config.Listen)
+	if err != nil {
+		errCh <- errors.E(op, err)
+		return errCh
+	}
+
 	go func() {
-		var err error
-		p.mu.Lock()
-		p.server, err = p.createGRPCserver()
-		if err != nil {
-			p.log.Error("create grpc server", "error", err)
-			errCh <- errors.E(op, err)
-			return
-		}
-
-		l, err := utils.CreateListener(p.config.Listen)
-		if err != nil {
-			p.log.Error("create grpc listener", "error", err)
-			errCh <- errors.E(op, err)
-		}
-
-		// protect serve
-		p.mu.Unlock()
 		err = p.server.Serve(l)
 		if err != nil {
 			// skip errors when stopping the server

@@ -4,7 +4,7 @@
 
 namespace Test;
 
-use Spiral\GRPC;
+use Spiral\RoadRunner\GRPC;
 use Google\Protobuf;
 
 interface ServiceInterface extends GRPC\ServiceInterface

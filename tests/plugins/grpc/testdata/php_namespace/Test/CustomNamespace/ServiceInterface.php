@@ -4,7 +4,7 @@
 
 namespace Test\CustomNamespace;
 
-use Spiral\GRPC;
+use Spiral\RoadRunner\GRPC;
 
 interface ServiceInterface extends GRPC\ServiceInterface
 {

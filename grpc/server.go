@@ -114,7 +114,7 @@ func (p *Plugin) serverOptions() ([]grpc.ServerOption, error) {
 
 			tcreds = credentials.NewTLS(&tls.Config{
 				MinVersion:   tls.VersionTLS12,
-				ClientAuth:   tls.RequireAndVerifyClientCert,
+				ClientAuth:   p.config.TLS.auth,
 				Certificates: []tls.Certificate{cert},
 				ClientCAs:    certPool,
 			})
@@ -148,7 +148,5 @@ func (p *Plugin) serverOptions() ([]grpc.ServerOption, error) {
 	return append(
 		opts,
 		grpc.UnaryInterceptor(p.interceptor),
-		// TODO(rustatian): check deprecation
-		// grpc.CustomCodec(&codec{encoding.GetCodec(encCodec)}),
 	), nil
 }

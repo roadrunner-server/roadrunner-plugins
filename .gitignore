@@ -15,3 +15,5 @@
 # vendor/
 .idea
 coverage-ci
+**/vendor
+tests/composer.lock

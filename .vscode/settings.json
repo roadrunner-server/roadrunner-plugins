@@ -1,14 +1,29 @@
 {
 	"cSpell.words": [
+		"addrs",
 		"AMQP",
 		"amqpjobs",
+		"autoload",
+		"Configurer",
+		"etag",
 		"extendee",
+		"fcgi",
+		"gofast",
+		"goridge",
 		"Idxs",
+		"Itestdata",
+		"jobsv",
+		"keepalive",
 		"mdwr",
+		"proto",
 		"protobuf",
 		"protoc",
 		"protoimpl",
-		"unmarshal"
+		"stretchr",
+		"tcreds",
+		"tmpdir",
+		"unmarshal",
+		"Upgrader"
 	],
 
 	"files.associations": {
