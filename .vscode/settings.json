@@ -3,6 +3,8 @@
 		"addrs",
 		"AMQP",
 		"amqpjobs",
+		"autoload",
+		"Configurer",
 		"etag",
 		"extendee",
 		"fcgi",
