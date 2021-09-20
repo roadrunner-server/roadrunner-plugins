@@ -36,7 +36,7 @@ grpc:
 
     # Client auth type
     #
-    # This option is optional. Default value: no_client_certs. Possible values: request_client_cert, require_any_client_cert, verify_client_cert_if_given, require_and_verify_client_cert, no_client_auth
+    # This option is optional. Default value: no_client_certs. Possible values: request_client_cert, require_any_client_cert, verify_client_cert_if_given, require_and_verify_client_cert, no_client_certs
     client_auth_type: ""
 
   # Maximum send message size

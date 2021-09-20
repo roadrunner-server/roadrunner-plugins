@@ -14,7 +14,7 @@ import (
 type ClientAuthType string
 
 const (
-	NoClientAuth               string = "no_client_auth"
+	NoClientCert               string = "no_client_cert"
 	RequestClientCert          string = "request_client_cert"
 	RequireAnyClientCert       string = "require_any_client_cert"
 	VerifyClientCertIfGiven    string = "verify_client_cert_if_given"
@@ -93,7 +93,7 @@ func (c *Config) InitDefaults() error { //nolint:gocognit
 		if c.TLS.RootCA != "" {
 			// auth type used only for the CA
 			switch c.TLS.AuthType {
-			case NoClientAuth:
+			case NoClientCert:
 				c.TLS.auth = tls.NoClientCert
 			case RequestClientCert:
 				c.TLS.auth = tls.RequestClientCert
