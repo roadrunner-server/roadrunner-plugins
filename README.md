@@ -145,10 +145,7 @@ func (p *Plugin) AddMiddleware(name endure.Named, m Middleware) {
 }
 ```
 
-# <<<<<<< HEAD
-
-> > > > > > > origin
-> > > > > > > **Make sure to request dependency via pointer.**
+**Make sure to request dependency via pointer.**
 
 ### Configuration
 
@@ -296,18 +293,7 @@ func (p *Plugin) Name() string {
 }
 ```
 
-<<<<<<< HEAD
-
-```go
-func (p *Plugin) Name() string {
-    return PluginName
-}
-```
-
-=======
-
-> > > > > > > origin
-> > > > > > > To extend your plugin with RPC methods, the plugin itself will not be changed at all. The only 1 thing to do is to create a file with RPC methods (let's call it `rpc.go`) and expose here all RPC methods for the plugin:
+To extend your plugin with RPC methods, the plugin itself will not be changed at all. The only 1 thing to do is to create a file with RPC methods (let's call it `rpc.go`) and expose here all RPC methods for the plugin:
 
 I assume we created a file `rpc.go`. The next step is to create a structure:
 
