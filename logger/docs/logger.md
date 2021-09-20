@@ -62,7 +62,7 @@ logs:
 
 ## Minimal dependencies:
 
-1. `Configurer` plugin to read and populate plugin's configuration.
+1. `Config` plugin to read and populate plugin's configuration.
 
 ## Worker sample:
 

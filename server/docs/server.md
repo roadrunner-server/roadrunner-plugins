@@ -43,7 +43,7 @@ server:
 ## Minimal dependencies:
 
 1. `Logger` plugin to show log messages.
-2. `Configurer` plugin to read and populate plugin's configuration.
+2. `Config` plugin to read and populate plugin's configuration.
 
 ## Worker sample:
 

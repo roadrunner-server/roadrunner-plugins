@@ -102,7 +102,7 @@ grpc:
 
 1. `Server` plugin for the workers pool.
 2. `Logger` plugin to show log messages.
-3. `Configurer` plugin to read and populate plugin's configuration.
+3. `Config` plugin to read and populate plugin's configuration.
 
 ## GRPC worker sample:
 
