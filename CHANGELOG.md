@@ -4,11 +4,11 @@
 
 ## 💔 BC:
 
-- 🔨 Some drivers now uses new `config` key to handle local configuration. Involved plugins and drivers:
+- 🔨 Some drivers now use a new `config` key to handle local configuration. Involved plugins and drivers:
 - `plugins`: broadcast, kv
 - `drivers`: memory, redis, memcached, boltdb.
 
-## ATTENTION!!!, this is configuration BC release, please, update your configuration:
+## ATTENTION!!!, this is the configuration BC release, please, update your configuration:
 
 ### Old style:
 
@@ -53,7 +53,7 @@ broadcast:
 ## 👀 New:
 
 - ✏️ [BETA] GRPC plugin update to v2.
-- ✏️ [Roadrunner-plugins](https://github.com/spiral/roadrunner-plugins) repository. This is new home for the roadrunner plugins with documentation, configuration samples and common problems.
+- ✏️ [Roadrunner-plugins](https://github.com/spiral/roadrunner-plugins) repository. This is the new home for the roadrunner plugins with documentation, configuration samples, and common problems.
 
 ## 🩹 Fixes:
 
@@ -64,12 +64,6 @@ broadcast:
 - 📦 Roadrunner `v2.5.0`
 - 📦 Roadrunner-plugins `v2.5.0`
 - 📦 Roadrunner-temporal `v1.0.10`
-
-## 📈 Summary:
-
-- RR Milestone [2.5.0](https://github.com/spiral/roadrunner/milestone/28?closed=1)
-- RR-plugins milestone [2.5.0](https://github.com/spiral/roadrunner-plugins/milestone/1?closed=1)
-- RR-Binary Milestone [2.5.0]()
 
 ## v2.4.1 (13.09.2021)
 
