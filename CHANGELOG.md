@@ -41,11 +41,19 @@ kv:
         config: <--------------- NEW
             addr:
                 - "127.0.0.1:11211"
+
+broadcast:
+  default:
+    driver: redis
+    config: <------------------ NEW
+      addrs:
+        - "127.0.0.1:6379"
 ```
 
 ## 👀 New:
 
-- ✏️
+- ✏️ [BETA] GRPC plugin update to v2.
+- ✏️ [Roadrunner-plugins](https://github.com/spiral/roadrunner-plugins) repository. This is new home for the roadrunner plugins with documentation, configuration samples and common problems.
 
 ## 🩹 Fixes:
 
@@ -53,11 +61,14 @@ kv:
 
 ## 📦 Packages:
 
-- 📦
+- 📦 Roadrunner `v2.5.0`
+- 📦 Roadrunner-plugins `v2.5.0`
+- 📦 Roadrunner-temporal `v1.0.10`
 
 ## 📈 Summary:
 
-- RR Milestone [2.5.0]()
+- RR Milestone [2.5.0](https://github.com/spiral/roadrunner/milestone/28?closed=1)
+- RR-plugins milestone [2.5.0](https://github.com/spiral/roadrunner-plugins/milestone/1?closed=1)
 - RR-Binary Milestone [2.5.0]()
 
 ## v2.4.1 (13.09.2021)
