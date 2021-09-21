@@ -1,8 +1,8 @@
 package websockets
 
 import (
+	"context"
 	"net"
-	"net/http"
 	"net/rpc"
 	"net/url"
 	"os"
@@ -12,7 +12,10 @@ import (
 	"testing"
 	"time"
 
-	"github.com/fasthttp/websocket"
+	"github.com/gobwas/ws"
+	"github.com/gobwas/ws/wsutil"
+	"github.com/stretchr/testify/require"
+
 	json "github.com/json-iterator/go"
 	endure "github.com/spiral/endure/pkg/container"
 	goridgeRpc "github.com/spiral/goridge/v3/pkg/rpc"
@@ -438,21 +441,12 @@ func TestWSStop(t *testing.T) {
 
 func RPCWsMemoryStop(port string) func(t *testing.T) {
 	return func(t *testing.T) {
-		da := websocket.Dialer{
-			Proxy:            http.ProxyFromEnvironment,
-			HandshakeTimeout: time.Second * 20,
-		}
-
 		connURL := url.URL{Scheme: "ws", Host: "127.0.0.1:" + port, Path: "/ws"}
 
-		c, resp, err := da.Dial(connURL.String(), nil)
-		assert.NotNil(t, resp)
-		assert.Error(t, err)
-		assert.Nil(t, c)
-		assert.Equal(t, http.StatusUnauthorized, resp.StatusCode)    //nolint:staticcheck
-		assert.Equal(t, resp.Header.Get("Stop"), "we-dont-like-you") //nolint:staticcheck
-		if resp != nil && resp.Body != nil {                         //nolint:staticcheck
-			_ = resp.Body.Close()
+		_, _, _, err := ws.Dial(context.Background(), connURL.String())
+		require.Error(t, err)
+		if nErr, ok := err.(ws.StatusError); ok {
+			require.Equal(t, "unexpected HTTP response status: 401", nErr.Error())
 		}
 	}
 }
@@ -608,56 +602,37 @@ func TestWSAllow2(t *testing.T) {
 }
 
 func wsInit(t *testing.T) {
-	da := websocket.Dialer{
-		Proxy:            http.ProxyFromEnvironment,
-		HandshakeTimeout: time.Second * 20,
+	connURL := url.URL{Scheme: "ws", Host: "127.0.0.1:11111", Path: "/ws"}
+	dialer := ws.Dialer{
+		Header: ws.HandshakeHeaderHTTP{"Origin": []string{"127.0.0.1"}},
 	}
 
-	connURL := url.URL{Scheme: "ws", Host: "127.0.0.1:11111", Path: "/ws"}
-
-	c, resp, err := da.Dial(connURL.String(), nil)
-	assert.NoError(t, err)
-
-	defer func() {
-		_ = resp.Body.Close()
-	}()
+	conn, _, _, err := dialer.Dial(context.Background(), connURL.String())
+	require.NoError(t, err)
 
 	d, err := json.Marshal(messageWS("join", []byte("hello websockets"), "foo", "foo2"))
-	if err != nil {
-		panic(err)
-	}
+	require.NoError(t, err)
 
-	err = c.WriteMessage(websocket.BinaryMessage, d)
+	err = wsutil.WriteClientBinary(conn, d)
 	assert.NoError(t, err)
 
-	_, msg, err := c.ReadMessage()
+	msg, err := wsutil.ReadServerBinary(conn)
+	require.NoError(t, err)
+	_ = msg
 	retMsg := utils.AsString(msg)
-	assert.NoError(t, err)
 
 	// subscription done
 	assert.Equal(t, `{"topic":"@join","payload":["foo","foo2"]}`, retMsg)
 
-	err = c.WriteControl(websocket.CloseMessage, nil, time.Time{})
-	assert.NoError(t, err)
+	err = conn.Close()
+	require.NoError(t, err)
 }
 
 func RPCWsPubAsync(port string) func(t *testing.T) {
 	return func(t *testing.T) {
-		da := websocket.Dialer{
-			Proxy:            http.ProxyFromEnvironment,
-			HandshakeTimeout: time.Second * 20,
-		}
-
 		connURL := url.URL{Scheme: "ws", Host: "127.0.0.1:" + port, Path: "/ws"}
-
-		c, resp, err := da.Dial(connURL.String(), nil)
-		assert.NoError(t, err)
-
-		defer func() {
-			if resp != nil && resp.Body != nil {
-				_ = resp.Body.Close()
-			}
-		}()
+		conn, _, _, err := ws.Dial(context.Background(), connURL.String())
+		require.NoError(t, err)
 
 		go func() {
 			messagesToVerify := make([]string, 0, 10)
@@ -667,7 +642,7 @@ func RPCWsPubAsync(port string) func(t *testing.T) {
 			messagesToVerify = append(messagesToVerify, `{"topic":"foo2","payload":"hello, PHP2"}`)
 			i := 0
 			for {
-				_, msg, err2 := c.ReadMessage()
+				msg, err2 := wsutil.ReadServerBinary(conn)
 				retMsg := utils.AsString(msg)
 				assert.NoError(t, err2)
 				assert.Equal(t, messagesToVerify[i], retMsg)
@@ -681,12 +656,10 @@ func RPCWsPubAsync(port string) func(t *testing.T) {
 		time.Sleep(time.Second)
 
 		d, err := json.Marshal(messageWS("join", []byte("hello websockets"), "foo", "foo2"))
-		if err != nil {
-			panic(err)
-		}
+		require.NoError(t, err)
 
-		err = c.WriteMessage(websocket.BinaryMessage, d)
-		assert.NoError(t, err)
+		err = wsutil.WriteClientBinary(conn, d)
+		require.NoError(t, err)
 
 		time.Sleep(time.Second)
 
@@ -700,8 +673,8 @@ func RPCWsPubAsync(port string) func(t *testing.T) {
 			panic(err)
 		}
 
-		err = c.WriteMessage(websocket.BinaryMessage, d)
-		assert.NoError(t, err)
+		err = wsutil.WriteClientBinary(conn, d)
+		require.NoError(t, err)
 
 		time.Sleep(time.Second)
 
@@ -713,28 +686,17 @@ func RPCWsPubAsync(port string) func(t *testing.T) {
 			publishAsync(t, "foo2")
 		}()
 
-		err = c.WriteControl(websocket.CloseMessage, nil, time.Time{})
+		err = conn.Close()
 		assert.NoError(t, err)
 	}
 }
 
 func RPCWsPub(port string) func(t *testing.T) {
 	return func(t *testing.T) {
-		da := websocket.Dialer{
-			Proxy:            http.ProxyFromEnvironment,
-			HandshakeTimeout: time.Second * 20,
-		}
-
 		connURL := url.URL{Scheme: "ws", Host: "127.0.0.1:" + port, Path: "/ws"}
 
-		c, resp, err := da.Dial(connURL.String(), nil)
-		assert.NoError(t, err)
-
-		defer func() {
-			if resp != nil && resp.Body != nil {
-				_ = resp.Body.Close()
-			}
-		}()
+		conn, _, _, err := ws.Dial(context.Background(), connURL.String())
+		require.NoError(t, err)
 
 		go func() {
 			messagesToVerify := make([]string, 0, 10)
@@ -744,7 +706,7 @@ func RPCWsPub(port string) func(t *testing.T) {
 			messagesToVerify = append(messagesToVerify, `{"topic":"foo2","payload":"hello, PHP2"}`)
 			i := 0
 			for {
-				_, msg, err2 := c.ReadMessage()
+				msg, err2 := wsutil.ReadServerBinary(conn)
 				retMsg := utils.AsString(msg)
 				assert.NoError(t, err2)
 				assert.Equal(t, messagesToVerify[i], retMsg)
@@ -762,7 +724,7 @@ func RPCWsPub(port string) func(t *testing.T) {
 			panic(err)
 		}
 
-		err = c.WriteMessage(websocket.BinaryMessage, d)
+		err = wsutil.WriteClientBinary(conn, d)
 		assert.NoError(t, err)
 
 		time.Sleep(time.Second)
@@ -777,7 +739,7 @@ func RPCWsPub(port string) func(t *testing.T) {
 			panic(err)
 		}
 
-		err = c.WriteMessage(websocket.BinaryMessage, d)
+		err = wsutil.WriteClientBinary(conn, d)
 		assert.NoError(t, err)
 
 		time.Sleep(time.Second)
@@ -790,42 +752,28 @@ func RPCWsPub(port string) func(t *testing.T) {
 			publish2(t, "", "foo2")
 		}()
 
-		err = c.WriteControl(websocket.CloseMessage, nil, time.Time{})
+		err = conn.Close()
 		assert.NoError(t, err)
 	}
 }
 
 func RPCWsDeny(port string) func(t *testing.T) {
 	return func(t *testing.T) {
-		da := websocket.Dialer{
-			Proxy:            http.ProxyFromEnvironment,
-			HandshakeTimeout: time.Second * 20,
-		}
-
 		connURL := url.URL{Scheme: "ws", Host: "127.0.0.1:" + port, Path: "/ws"}
-
-		c, resp, err := da.Dial(connURL.String(), nil)
-		assert.NoError(t, err)
-		assert.NotNil(t, c)
-		assert.Equal(t, http.StatusSwitchingProtocols, resp.StatusCode)
-
-		defer func() {
-			if resp != nil && resp.Body != nil {
-				_ = resp.Body.Close()
-			}
-		}()
+		conn, _, _, err := ws.Dial(context.Background(), connURL.String())
+		require.NoError(t, err)
 
 		d, err := json.Marshal(messageWS("join", []byte("hello websockets"), "foo", "foo2"))
 		if err != nil {
 			panic(err)
 		}
 
-		err = c.WriteMessage(websocket.BinaryMessage, d)
+		err = wsutil.WriteClientBinary(conn, d)
 		assert.NoError(t, err)
 
-		_, msg, err := c.ReadMessage()
+		msg, err := wsutil.ReadServerBinary(conn)
+		require.NoError(t, err)
 		retMsg := utils.AsString(msg)
-		assert.NoError(t, err)
 
 		// subscription done
 		assert.Equal(t, `{"topic":"#join","payload":["foo","foo2"]}`, retMsg)
@@ -836,17 +784,17 @@ func RPCWsDeny(port string) func(t *testing.T) {
 			panic(err)
 		}
 
-		err = c.WriteMessage(websocket.BinaryMessage, d)
+		err = wsutil.WriteClientBinary(conn, d)
 		assert.NoError(t, err)
 
-		_, msg, err = c.ReadMessage()
+		msg, err = wsutil.ReadServerBinary(conn)
+		require.NoError(t, err)
 		retMsg = utils.AsString(msg)
-		assert.NoError(t, err)
 
 		// subscription done
 		assert.Equal(t, `{"topic":"@leave","payload":["foo"]}`, retMsg)
 
-		err = c.WriteControl(websocket.CloseMessage, nil, time.Time{})
+		err = conn.Close()
 		assert.NoError(t, err)
 	}
 }

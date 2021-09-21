@@ -4,9 +4,8 @@ import (
 	"context"
 	"net/http"
 	"sync"
-	"time"
 
-	"github.com/fasthttp/websocket"
+	"github.com/gobwas/ws"
 	"github.com/google/uuid"
 	json "github.com/json-iterator/go"
 	"github.com/spiral/errors"
@@ -31,6 +30,7 @@ const (
 
 	RrMode          string = "RR_MODE"
 	RrBroadcastPath string = "RR_BROADCAST_PATH"
+	OriginHeaderKey string = "Origin"
 )
 
 type Plugin struct {
@@ -50,7 +50,6 @@ type Plugin struct {
 	// GO workers pool
 	workersPool *pool.WorkersPool
 
-	wsUpgrade *websocket.Upgrader
 	serveExit chan struct{}
 
 	// workers pool
@@ -82,14 +81,6 @@ func (p *Plugin) Init(cfg config.Configurer, log logger.Logger, server server.Se
 		return errors.E(op, err)
 	}
 
-	p.wsUpgrade = &websocket.Upgrader{
-		HandshakeTimeout: time.Second * 60,
-		ReadBufferSize:   1024,
-		WriteBufferSize:  1024,
-		CheckOrigin: func(r *http.Request) bool {
-			return isOriginAllowed(r.Header.Get("Origin"), p.cfg)
-		},
-	}
 	p.serveExit = make(chan struct{})
 	p.server = server
 	p.log = log
@@ -186,12 +177,17 @@ func (p *Plugin) Middleware(next http.Handler) http.Handler {
 
 		// we need to lock here, because accessValidator might not be set in the Serve func at the moment
 		p.RLock()
+		// check origin
+		if !isOriginAllowed(r.Header.Get(OriginHeaderKey), p.cfg) {
+			w.WriteHeader(http.StatusMethodNotAllowed)
+			return
+		}
+
 		// before we hijacked connection, we still can write to the response headers
 		val, err := p.accessValidator(r)
 		p.RUnlock()
 		if err != nil {
-			p.log.Error("access validation")
-			w.WriteHeader(400)
+			w.WriteHeader(http.StatusBadRequest)
 			return
 		}
 
@@ -206,10 +202,8 @@ func (p *Plugin) Middleware(next http.Handler) http.Handler {
 			return
 		}
 
-		// upgrade connection to websocket connection
-		_conn, err := p.wsUpgrade.Upgrade(w, r, nil)
+		_conn, _, _, err := ws.UpgradeHTTP(r, w)
 		if err != nil {
-			// connection hijacked, do not use response.writer or request
 			p.log.Error("upgrade connection", "error", err)
 			return
 		}

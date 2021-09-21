@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"sync"
 
+	"github.com/gobwas/ws"
 	json "github.com/json-iterator/go"
 	"github.com/spiral/errors"
 	"github.com/spiral/roadrunner-plugins/v2/internal/common/pubsub"
@@ -13,6 +14,12 @@ import (
 	"github.com/spiral/roadrunner-plugins/v2/websockets/commands"
 	"github.com/spiral/roadrunner-plugins/v2/websockets/connection"
 	"github.com/spiral/roadrunner-plugins/v2/websockets/validator"
+)
+
+const (
+	joinRq string = "@join"
+	joinRs string = "#join"
+	leave  string = "@leave"
 )
 
 type Response struct {
@@ -54,14 +61,14 @@ func NewExecutor(conn *connection.Connection, log logger.Logger,
 func (e *Executor) StartCommandLoop() error { //nolint:gocognit
 	const op = errors.Op("executor_command_loop")
 	for {
-		mt, data, err := e.conn.Read()
+		data, opCode, err := e.conn.Read()
 		if err != nil {
-			if mt == -1 {
-				e.log.Info("socket was closed", "reason", err, "message type", mt)
-				return nil
-			}
-
 			return errors.E(op, err)
+		}
+
+		if opCode == ws.OpClose {
+			e.log.Info("socket was closed", "reason", err)
+			return nil
 		}
 
 		msg := &websocketsv1.Message{}
@@ -90,7 +97,7 @@ func (e *Executor) StartCommandLoop() error { //nolint:gocognit
 				}
 
 				resp := &Response{
-					Topic:   "#join",
+					Topic:   joinRs,
 					Payload: msg.Topics,
 				}
 
@@ -110,7 +117,7 @@ func (e *Executor) StartCommandLoop() error { //nolint:gocognit
 			}
 
 			resp := &Response{
-				Topic:   "@join",
+				Topic:   joinRq,
 				Payload: msg.Topics,
 			}
 
@@ -138,7 +145,7 @@ func (e *Executor) StartCommandLoop() error { //nolint:gocognit
 
 			// prepare response
 			resp := &Response{
-				Topic:   "@leave",
+				Topic:   leave,
 				Payload: msg.Topics,
 			}
 

@@ -1,21 +1,25 @@
 package connection
 
 import (
+	"io"
+	"net"
 	"sync"
 
-	"github.com/fasthttp/websocket"
+	"github.com/gobwas/ws"
 	"github.com/spiral/errors"
 	"github.com/spiral/roadrunner-plugins/v2/logger"
 )
+
+const EOF string = "EOF"
 
 // Connection represents wrapped and safe to use from the different threads websocket connection
 type Connection struct {
 	sync.RWMutex
 	log  logger.Logger
-	conn *websocket.Conn
+	conn net.Conn
 }
 
-func NewConnection(wsConn *websocket.Conn, log logger.Logger) *Connection {
+func NewConnection(wsConn net.Conn, log logger.Logger) *Connection {
 	return &Connection{
 		conn: wsConn,
 		log:  log,
@@ -34,7 +38,18 @@ func (c *Connection) Write(data []byte) error {
 		}
 	}()
 
-	err := c.conn.WriteMessage(websocket.TextMessage, data)
+	header := ws.Header{
+		Fin:    true,
+		OpCode: ws.OpBinary,
+		Masked: false,
+		Length: int64(len(data)),
+	}
+
+	err := ws.WriteHeader(c.conn, header)
+	if err != nil {
+		return errors.E(op, err)
+	}
+	_, err = c.conn.Write(data)
 	if err != nil {
 		return errors.E(op, err)
 	}
@@ -42,15 +57,33 @@ func (c *Connection) Write(data []byte) error {
 	return nil
 }
 
-func (c *Connection) Read() (int, []byte, error) {
+func (c *Connection) Read() ([]byte, ws.OpCode, error) {
 	const op = errors.Op("websocket_read")
 
-	mt, data, err := c.conn.ReadMessage()
+	header, err := ws.ReadHeader(c.conn)
 	if err != nil {
-		return -1, nil, errors.E(op, err)
+		if err.Error() == EOF {
+			return nil, ws.OpClose, nil
+		}
+
+		return nil, ws.OpContinuation, errors.E(op, err)
 	}
 
-	return mt, data, nil
+	if header.OpCode == ws.OpClose {
+		return nil, ws.OpClose, nil
+	}
+
+	payload := make([]byte, header.Length)
+	_, err = io.ReadFull(c.conn, payload)
+	if err != nil {
+		return nil, ws.OpContinuation, errors.E(op, err)
+	}
+
+	if header.Masked {
+		ws.Cipher(payload, header.Mask, 0)
+	}
+
+	return payload, header.OpCode, nil
 }
 
 func (c *Connection) Close() error {
