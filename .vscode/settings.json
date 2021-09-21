@@ -23,7 +23,9 @@
 		"tcreds",
 		"tmpdir",
 		"unmarshal",
-		"Upgrader"
+		"Upgrader",
+		"websocketsv",
+		"wsutil"
 	],
 
 	"files.associations": {
