@@ -24,6 +24,7 @@
 		"tmpdir",
 		"unmarshal",
 		"Upgrader",
+		"websockets",
 		"websocketsv",
 		"wsutil"
 	],

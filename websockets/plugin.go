@@ -208,7 +208,6 @@ func (p *Plugin) Middleware(next http.Handler) http.Handler {
 			return
 		}
 
-
 		// construct safe connection protected by mutexes
 		safeConn := connection.NewConnection(_conn, p.log)
 		// generate UUID from the connection

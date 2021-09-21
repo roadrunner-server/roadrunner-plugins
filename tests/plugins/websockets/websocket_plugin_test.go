@@ -604,9 +604,7 @@ func TestWSAllow2(t *testing.T) {
 func wsInit(t *testing.T) {
 	connURL := url.URL{Scheme: "ws", Host: "127.0.0.1:11111", Path: "/ws"}
 	dialer := ws.Dialer{
-		Header: ws.HandshakeHeaderHTTP{"Origin":[]string{"127.0.0.1"},
-			//http.Header{"Origin" : []string{"127.0.0.1"}}
-		},
+		Header: ws.HandshakeHeaderHTTP{"Origin": []string{"127.0.0.1"}},
 	}
 
 	conn, _, _, err := dialer.Dial(context.Background(), connURL.String())
