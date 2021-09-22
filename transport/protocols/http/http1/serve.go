@@ -1,4 +1,4 @@
-package http
+package http1
 
 import (
 	"crypto/tls"
@@ -131,10 +131,10 @@ func (p *Plugin) appendRootCa() error {
 	if !ok {
 		return errors.E(op, errors.Str("could not append Certs from PEM"))
 	}
-	// disable "G402 (CWE-295): TLS MinVersion too low. (Confidence: HIGH, Severity: HIGH)"
-	// #nosec G402
+
 	cfg := &tls.Config{
 		InsecureSkipVerify: false,
+		MinVersion:         tls.VersionTLS12,
 		RootCAs:            rootCAs,
 	}
 	p.http.TLSConfig = cfg

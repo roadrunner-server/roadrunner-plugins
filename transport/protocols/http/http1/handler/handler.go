@@ -10,7 +10,7 @@ import (
 
 	"github.com/spiral/errors"
 	"github.com/spiral/roadrunner-plugins/v2/logger"
-	"github.com/spiral/roadrunner-plugins/v2/transport/http/config"
+	"github.com/spiral/roadrunner-plugins/v2/transport/protocols/http/http1/config"
 	"github.com/spiral/roadrunner/v2/events"
 	"github.com/spiral/roadrunner/v2/pool"
 )

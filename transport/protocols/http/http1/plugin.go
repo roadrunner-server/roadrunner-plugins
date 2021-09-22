@@ -1,4 +1,4 @@
-package http
+package http1
 
 import (
 	"context"
@@ -10,12 +10,13 @@ import (
 	endure "github.com/spiral/endure/pkg/container"
 	"github.com/spiral/errors"
 	"github.com/spiral/roadrunner-plugins/v2/config"
+	common "github.com/spiral/roadrunner-plugins/v2/internal/common/http"
 	"github.com/spiral/roadrunner-plugins/v2/logger"
 	"github.com/spiral/roadrunner-plugins/v2/server"
 	"github.com/spiral/roadrunner-plugins/v2/status"
-	"github.com/spiral/roadrunner-plugins/v2/transport/protocols/http/attributes"
-	httpConfig "github.com/spiral/roadrunner-plugins/v2/transport/protocols/http/config"
-	"github.com/spiral/roadrunner-plugins/v2/transport/protocols/http/handler"
+	"github.com/spiral/roadrunner-plugins/v2/transport/protocols/http/http1/attributes"
+	httpConfig "github.com/spiral/roadrunner-plugins/v2/transport/protocols/http/http1/config"
+	"github.com/spiral/roadrunner-plugins/v2/transport/protocols/http/http1/handler"
 	"github.com/spiral/roadrunner/v2/pool"
 	"github.com/spiral/roadrunner/v2/state/process"
 	"github.com/spiral/roadrunner/v2/worker"
@@ -32,12 +33,8 @@ const (
 	Scheme = "https"
 )
 
-// Middleware interface
-type Middleware interface {
-	Middleware(f http.Handler) http.Handler
-}
 
-type middleware map[string]Middleware
+type middleware map[string]common.Middleware
 
 // Plugin manages pool, http servers. The main http plugin structure
 type Plugin struct {
@@ -94,7 +91,7 @@ func (p *Plugin) Init(cfg config.Configurer, rrLogger logger.Logger, server serv
 	// use time and date in UTC format
 	p.stdLog = log.New(logger.NewStdAdapter(p.log), "http_plugin: ", log.Ldate|log.Ltime|log.LUTC)
 
-	p.mdwr = make(map[string]Middleware)
+	p.mdwr = make(map[string]common.Middleware)
 
 	if !p.cfg.EnableHTTP() && !p.cfg.EnableTLS() && !p.cfg.EnableFCGI() {
 		return errors.E(op, errors.Disabled)
@@ -363,7 +360,7 @@ func (p *Plugin) Collects() []interface{} {
 }
 
 // AddMiddleware is base requirement for the middleware (name and Middleware)
-func (p *Plugin) AddMiddleware(name endure.Named, m Middleware) {
+func (p *Plugin) AddMiddleware(name endure.Named, m common.Middleware) {
 	p.mdwr[name.Name()] = m
 }
 
