@@ -130,7 +130,13 @@ func (p *Plugin) Stop() error {
 	// stop all attached storages
 	for k := range p.storages {
 		p.storages[k].Stop()
+		delete(p.storages, k)
 	}
+
+	for k := range p.constructors {
+		delete(p.constructors, k)
+	}
+
 	return nil
 }
 

@@ -31,5 +31,5 @@
 
 	"files.associations": {
 		"Dockerfile-*.yaml": "dockerfile"
-	}
+	},
 }
