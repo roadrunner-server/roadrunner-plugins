@@ -17,18 +17,23 @@ type Plugin struct {
 	cfg    config.Configurer
 	server server.Server
 
-	httpMiddleware map[string]commonHttp.Middleware
+	httpMiddleware              map[string]commonHttp.Middleware
+	protocolDrivers             string
+	protocolDriversConstructors string
 }
 
 func (p *Plugin) Init(cfg config.Configurer, log logger.ZapLogger, server server.Server) error {
 	p.log = log
 	p.cfg = cfg
 	p.server = server
+	p.httpMiddleware = make(map[string]commonHttp.Middleware)
 	return nil
 }
 
 func (p *Plugin) Serve() chan error {
 	errCh := make(chan error, 1)
+
+	//
 
 	return errCh
 }
