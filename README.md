@@ -39,7 +39,7 @@ with much greater performance and flexibility.
 | ![](https://img.shields.io/badge/-AMQP-blue)        | Provides AMQP (0-9-1) protocol support via RabbitMQ                                                                                 |
 | ![](https://img.shields.io/badge/-Beanstalk-blue)   | Provides [beanstalkd](https://github.com/beanstalkd/beanstalkd) queue support                                                       |
 | ![](https://img.shields.io/badge/-Boltdb-blue)      | Provides support for the [BoltDB](https://github.com/etcd-io/bbolt) key/value store. Used in the `Jobs` and `KV`                    |
-| ![](https://img.shields.io/badge/-Broadcast-green)  | Provides broadcasting capabilities to the RR2 via different drivers                                                                 |
+| ![](https://img.shields.io/badge/-Broadcast-red)  | Provides broadcasting capabilities to the RR2 via different drivers                                                                 |
 | ![](https://img.shields.io/badge/-Config-green)     | Provides configuration parsing support to the all plugins                                                                           | [Docs](config/docs/config.md) |
 | ![](https://img.shields.io/badge/-GRPC-green)       | Provides GRPC support                                                                                                               | [Docs](grpc/docs/grpc.md)     |
 | ![](https://img.shields.io/badge/-GZIP-blue)        | Gzip middleware plugin for the HTTP plugin                                                                                          |
@@ -60,11 +60,12 @@ with much greater performance and flexibility.
 | ![](https://img.shields.io/badge/-SQS-blue)         | SQS driver for the jobs                                                                                                             |
 | ![](https://img.shields.io/badge/-Static-blue)      | HTTP middleware to serve static files                                                                                               |
 | ![](https://img.shields.io/badge/-Status-green)     | Provides support for the health and readiness checks                                                                                |
-| ![](https://img.shields.io/badge/-Websockets-green) | Provides support for the broadcasting events via websockets                                                                         |
+| ![](https://img.shields.io/badge/-Websockets-red) | Provides support for the broadcasting events via websockets                                                                         |
 
 Legend:  
 `Green` - is a regular RR2 plugins.  
-`Blue` - is a driver for the RR2 plugin.
+`Blue` - is a driver for the RR2 plugin.  
+`Red` - plugin is available in the `roadrunner-plugins` but turned off in the `roadrunner-binary`.
 
 # Writing Plugins
 
@@ -82,7 +83,7 @@ const PluginName = "custom"
 type Plugin struct{}
 
 func (s *Plugin) Init() error {
-     return nil
+	return nil
 }
 ```
 
@@ -94,14 +95,14 @@ You can access other RoadRunner plugins by requesting dependencies in your `Init
 package custom
 
 import (
-     "github.com/spiral/roadrunner-plugins/v2/http"
-     "github.com/spiral/roadrunner-plugins/v2/rpc"
+	"github.com/spiral/roadrunner-plugins/v2/http"
+	"github.com/spiral/roadrunner-plugins/v2/rpc"
 )
 
-type Service struct {}
+type Service struct{}
 
 func (s *Service) Init(r *rpc.Plugin, rr *http.Plugin) error {
-     return nil
+	return nil
 }
 ```
 
@@ -112,8 +113,8 @@ Or collect all plugins implementing particular interface via the `Collects` inte
 package custom
 
 import (
-     "github.com/spiral/roadrunner-plugins/v2/http"
-     "github.com/spiral/roadrunner-plugins/v2/rpc"
+	"github.com/spiral/roadrunner-plugins/v2/http"
+	"github.com/spiral/roadrunner-plugins/v2/rpc"
 )
 
 type Middleware interface {
@@ -123,13 +124,13 @@ type Middleware interface {
 type middleware map[string]Middleware
 
 type Service struct {
-  	mdwr middleware
+	mdwr middleware
 }
 
 // Init will be called BEFORE Collects
-func (s *Service) Init(r *rpc.Plugin, rr *http.Plugin) error {
-  	 p.mdwr = make(map[string]Middleware)
-     return nil
+func (p *Service) Init(r *rpc.Plugin, rr *http.Plugin) error {
+	p.mdwr = make(map[string]Middleware)
+	return nil
 }
 
 // Collects is a special endure interface. Endure analyze all args in the returning methods and searches for the plugins implementing them.
@@ -165,52 +166,52 @@ Plugin:
 package custom
 
 import (
-     "github.com/spiral/roadrunner-plugins/v2/config"
-     "github.com/spiral/roadrunner-plugins/v2/http"
-     "github.com/spiral/roadrunner-plugins/v2/rpc"
+	"github.com/spiral/roadrunner-plugins/v2/config"
+	"github.com/spiral/roadrunner-plugins/v2/http"
+	"github.com/spiral/roadrunner-plugins/v2/rpc"
 
-     "github.com/spiral/errors"
+	"github.com/spiral/errors"
 )
 
 // Your custom plugin name
 const PluginName = "custom"
 
-type Config struct{
-     Address string `mapstructure:"address"`
+type Config struct {
+	Address string `mapstructure:"address"`
 }
 
 type Plugin struct {
-     cfg *Config
+	cfg *Config
 }
 
 // You can also initialize some defaults values for config keys
 func (cfg *Config) InitDefaults() {
-     if cfg.Address == "" {
-      cfg.Address = "tcp://localhost:8088"
-    }
+	if cfg.Address == "" {
+		cfg.Address = "tcp://localhost:8088"
+	}
 }
 
 func (s *Plugin) Init(r *rpc.Plugin, h *http.Plugin, cfg config.Configurer) error {
- const op = errors.Op("custom_plugin_init") // error operation name
- // Check if the `custom` section exists in the configuration.
- if !cfg.Has(PluginName) {
-     return errors.E(op, errors.Disabled)
- }
+	const op = errors.Op("custom_plugin_init") // error operation name
+	// Check if the `custom` section exists in the configuration.
+	if !cfg.Has(PluginName) {
+		return errors.E(op, errors.Disabled)
+	}
 
- // Populate the configuration structure
- err := cfg.UnmarshalKey(PluginName, &s.cfg)
- if err != nil {
-      // Error will stop execution
-      return errors.E(op, err)
- }
+	// Populate the configuration structure
+	err := cfg.UnmarshalKey(PluginName, &s.cfg)
+	if err != nil {
+		// Error will stop execution
+		return errors.E(op, err)
+	}
 
-    return nil
+	return nil
 }
 
 ```
 
-`errors.Disabled` is the special kind of error that tells Endure to disable this plugin and all dependencies of
-this root. The RR2 will continue to work after this error type if at least one plugin stay alive.
+`errors.Disabled` is the special kind of error that tells Endure to disable this plugin and all dependencies of this
+root. The RR2 will continue to work after this error type if at least one plugin stay alive.
 
 ### Serving
 
@@ -220,34 +221,36 @@ Create `Serve` and `Stop` method in your structure to let RoadRunner start and s
 type Plugin struct {}
 
 func (s *Plugin) Serve() chan error {
-    const op = errors.Op("custom_plugin_serve")
-    errCh := make(chan error, 1)
+const op = errors.Op("custom_plugin_serve")
+errCh := make(chan error, 1)
 
-    err := s.DoSomeWork()
-    if err != nil {
-        // notify endure, that the error occured
-        errCh <- errors.E(op, err)
-        return errCh
-    }
-    return nil
+err := s.DoSomeWork()
+if err != nil {
+// notify endure, that the error occured
+errCh <- errors.E(op, err)
+return errCh
+}
+return nil
 }
 
 func (s *Plugin) Stop() error {
-    return s.stopServing()
+return s.stopServing()
 }
 
 // You may start some listener here
 func (s *Plugin) DoSomeWork() error {
-    return nil
+return nil
 }
 ```
 
-`Serve` method is thread-safe. It runs in the separate goroutine which managed by the `Endure` container. The one note, is that you should unblock it when call `Stop` on the container. Otherwise, service will be killed after timeout (can be set in Endure).
+`Serve` method is thread-safe. It runs in the separate goroutine which managed by the `Endure` container. The one note,
+is that you should unblock it when call `Stop` on the container. Otherwise, service will be killed after timeout (can be
+set in Endure).
 
 ### Collecting dependencies in runtime
 
-RR2 provide a way to collect dependencies in runtime via `Collects` interface. This is very useful for the middlewares or extending plugins with additional functionality w/o changing it.
-Let's create an HTTP middleware:
+RR2 provide a way to collect dependencies in runtime via `Collects` interface. This is very useful for the middlewares
+or extending plugins with additional functionality w/o changing it. Let's create an HTTP middleware:
 
 Steps (sample based on the actual `http` plugin and `Middleware` interface):
 
@@ -256,7 +259,7 @@ Steps (sample based on the actual `http` plugin and `Middleware` interface):
 ```go
 // Middleware interface
 type Middleware interface {
-    Middleware(f http.Handler) http.HandlerFunc
+Middleware(f http.Handler) http.HandlerFunc
 }
 ```
 
@@ -265,7 +268,7 @@ type Middleware interface {
 ```go
 // Collects collecting http middlewares
 func (p *Plugin) AddMiddleware(name endure.Named, m Middleware) {
-    p.mdwr[name.Name()] = m
+p.mdwr[name.Name()] = m
 }
 ```
 
@@ -274,26 +277,30 @@ func (p *Plugin) AddMiddleware(name endure.Named, m Middleware) {
 ```golang
 // Collects collecting http middlewares
 func (p *Plugin) Collects() []interface{} {
-    return []interface{}{
-        // Endure will analyze the arguments of this function.
-        p.AddMiddleware,
-    }
+return []interface{}{
+// Endure will analyze the arguments of this function.
+p.AddMiddleware,
+}
 }
 ```
 
-Endure will automatically check that the registered structure implements all the arguments for the `AddMiddleware` method (or will find a structure if the argument is structure). In our case, a structure should implement `endure.Named` interface (which returns user friendly name for the plugin) and `Middleware` interface.
+Endure will automatically check that the registered structure implements all the arguments for the `AddMiddleware`
+method (or will find a structure if the argument is structure). In our case, a structure should implement `endure.Named`
+interface (which returns user friendly name for the plugin) and `Middleware` interface.
 
 ### RPC Methods
 
-You can expose a set of RPC methods for your PHP workers also by using Endure `Collects` interface. Endure will automatically get the structure and expose RPC method under the `PluginName` name.
+You can expose a set of RPC methods for your PHP workers also by using Endure `Collects` interface. Endure will
+automatically get the structure and expose RPC method under the `PluginName` name.
 
 ```go
 func (p *Plugin) Name() string {
-    return PluginName
+return PluginName
 }
 ```
 
-To extend your plugin with RPC methods, the plugin itself will not be changed at all. The only 1 thing to do is to create a file with RPC methods (let's call it `rpc.go`) and expose here all RPC methods for the plugin:
+To extend your plugin with RPC methods, the plugin itself will not be changed at all. The only 1 thing to do is to
+create a file with RPC methods (let's call it `rpc.go`) and expose here all RPC methods for the plugin:
 
 I assume we created a file `rpc.go`. The next step is to create a structure:
 
@@ -303,8 +310,8 @@ I assume we created a file `rpc.go`. The next step is to create a structure:
 package custom
 
 type rpc struct {
-    srv *Plugin
-     log logger.Logger
+	srv *Plugin
+	log logger.Logger
 }
 ```
 
@@ -312,8 +319,8 @@ type rpc struct {
 
 ```go
 func (s *rpc) Hello(input string, output *string) error {
-     *output = input
-      return nil
+*output = input
+return nil
 }
 ```
 
@@ -322,11 +329,12 @@ func (s *rpc) Hello(input string, output *string) error {
 ```go
 // RPCService returns associated rpc service.
 func (p *Plugin) RPC() interface{} {
-    return &rpc{srv: p, log: p.log}
+return &rpc{srv: p, log: p.log}
 }
 ```
 
-4. RPC plugin Collects all plugins which implement `RPC` interface and `endure.Named` automatically (if exists). RPC interface accepts no arguments, but returns interface (plugin).
+4. RPC plugin Collects all plugins which implement `RPC` interface and `endure.Named` automatically (if exists). RPC
+   interface accepts no arguments, but returns interface (plugin).
 
 To use it within PHP using `RPC` [instance](/beep-beep/rpc.md):
 
