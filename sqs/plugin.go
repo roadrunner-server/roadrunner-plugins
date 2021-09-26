@@ -30,10 +30,10 @@ func (p *Plugin) Name() string {
 	return pluginName
 }
 
-func (p *Plugin) JobsConstruct(configKey string, e events.Handler, pq priorityqueue.Queue) (jobs.Consumer, error) {
+func (p *Plugin) ConsumerFromConfig(configKey string, e events.Handler, pq priorityqueue.Queue) (jobs.Consumer, error) {
 	return NewSQSConsumer(configKey, p.log, p.cfg, e, pq)
 }
 
-func (p *Plugin) FromPipeline(pipe *pipeline.Pipeline, e events.Handler, pq priorityqueue.Queue) (jobs.Consumer, error) {
+func (p *Plugin) ConsumerFromPipeline(pipe *pipeline.Pipeline, e events.Handler, pq priorityqueue.Queue) (jobs.Consumer, error) {
 	return FromPipeline(pipe, p.log, p.cfg, e, pq)
 }

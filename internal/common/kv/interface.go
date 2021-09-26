@@ -37,6 +37,6 @@ type Storage interface {
 
 // Constructor provides storage based on the config
 type Constructor interface {
-	// KVConstruct provides Storage based on the config key
-	KVConstruct(key string) (Storage, error)
+	// KvFromConfig provides Storage based on the config key
+	KvFromConfig(key string) (Storage, error)
 }

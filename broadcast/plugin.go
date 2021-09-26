@@ -148,7 +148,7 @@ func (p *Plugin) GetDriver(key string) (pubsub.SubReader, error) {
 			// try local config first
 			case p.cfgPlugin.Has(configKey):
 				// we found a local configuration
-				ps, err := p.constructors[drStr].PSConstruct(configKey)
+				ps, err := p.constructors[drStr].PubSubFromConfig(configKey)
 				if err != nil {
 					return nil, errors.E(op, err)
 				}
@@ -160,7 +160,7 @@ func (p *Plugin) GetDriver(key string) (pubsub.SubReader, error) {
 				return ps, nil
 			case p.cfgPlugin.Has(key):
 				// try global driver section after local
-				ps, err := p.constructors[drStr].PSConstruct(key)
+				ps, err := p.constructors[drStr].PubSubFromConfig(key)
 				if err != nil {
 					return nil, errors.E(op, err)
 				}

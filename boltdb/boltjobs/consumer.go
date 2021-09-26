@@ -340,7 +340,7 @@ func (c *consumer) Stop(_ context.Context) error {
 		Start:    start,
 		Elapsed:  time.Since(start),
 	})
-	return nil
+	return c.db.Close()
 }
 
 func (c *consumer) Pause(_ context.Context, p string) {

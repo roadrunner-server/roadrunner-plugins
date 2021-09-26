@@ -38,7 +38,7 @@ type Config struct {
 }
 
 func (c *Config) InitDefault() {
-	// all options should be in sync with the pipeline defaults in the FromPipeline method
+	// all options should be in sync with the pipeline defaults in the ConsumerFromPipeline method
 	if c.ExchangeType == "" {
 		c.ExchangeType = "direct"
 	}

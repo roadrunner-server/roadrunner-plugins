@@ -134,7 +134,7 @@ func (p *Plugin) Serve() chan error { //nolint:gocognit
 			configKey := fmt.Sprintf("%s.%s.%s", PluginName, pipelines, name)
 
 			// init the driver
-			initializedDriver, err := p.jobConstructors[dr].JobsConstruct(configKey, p.events, p.queue)
+			initializedDriver, err := p.jobConstructors[dr].ConsumerFromConfig(configKey, p.events, p.queue)
 			if err != nil {
 				errCh <- errors.E(op, err)
 				return false
@@ -330,6 +330,16 @@ func (p *Plugin) Serve() chan error { //nolint:gocognit
 }
 
 func (p *Plugin) Stop() error {
+	// this function can block forever, but we don't care, because we might have a chance to exit from the pollers,
+	// but if not, this is not a problem at all.
+	// The main target is to stop the drivers
+	go func() {
+		for i := uint8(0); i < p.cfg.NumPollers; i++ {
+			// stop jobs plugin pollers
+			p.stopCh <- struct{}{}
+		}
+	}()
+
 	// range over all consumers and call stop
 	p.consumers.Range(func(key, value interface{}) bool {
 		consumer := value.(jobs.Consumer)
@@ -343,19 +353,6 @@ func (p *Plugin) Stop() error {
 		cancel()
 		return true
 	})
-
-	// this function can block forever, but we don't care, because we might have a chance to exit from the pollers,
-	// but if not, this is not a problem at all.
-	// The main target is to stop the drivers
-	go func() {
-		for i := uint8(0); i < p.cfg.NumPollers; i++ {
-			// stop jobs plugin pollers
-			p.stopCh <- struct{}{}
-		}
-	}()
-
-	// just wait pollers for 5 seconds before exit
-	time.Sleep(time.Second * 5)
 
 	p.Lock()
 	p.workersPool.Destroy(context.Background())
@@ -597,7 +594,7 @@ func (p *Plugin) Declare(pipeline *pipeline.Pipeline) error {
 	// we need here to initialize these drivers for the pipelines
 	if _, ok := p.jobConstructors[dr]; ok {
 		// init the driver from pipeline
-		initializedDriver, err := p.jobConstructors[dr].FromPipeline(pipeline, p.events, p.queue)
+		initializedDriver, err := p.jobConstructors[dr].ConsumerFromPipeline(pipeline, p.events, p.queue)
 		if err != nil {
 			return errors.E(op, err)
 		}

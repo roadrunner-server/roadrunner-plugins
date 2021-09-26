@@ -52,5 +52,5 @@ type Reader interface {
 
 // Constructor is a special pub-sub interface made to return a constructed PubSub type
 type Constructor interface {
-	PSConstruct(key string) (PubSub, error)
+	PubSubFromConfig(key string) (PubSub, error)
 }
