@@ -13,6 +13,8 @@ coverage:
 
 # do not include tests folders
 ignore:
+  - "broadcast"
+  - "transport/protocols/websockets"
   - "internal"
   - "tests"
   - "metrics/config_test.go"
