@@ -39,7 +39,7 @@ with much greater performance and flexibility.
 | ![](https://img.shields.io/badge/-AMQP-blue)        | Provides AMQP (0-9-1) protocol support via RabbitMQ                                                                                 |
 | ![](https://img.shields.io/badge/-Beanstalk-blue)   | Provides [beanstalkd](https://github.com/beanstalkd/beanstalkd) queue support                                                       |
 | ![](https://img.shields.io/badge/-Boltdb-blue)      | Provides support for the [BoltDB](https://github.com/etcd-io/bbolt) key/value store. Used in the `Jobs` and `KV`                    |
-| ![](https://img.shields.io/badge/-Broadcast-red)  | Provides broadcasting capabilities to the RR2 via different drivers                                                                 |
+| ![](https://img.shields.io/badge/-Broadcast-green)  | Provides broadcasting capabilities to the RR2 via different drivers                                                                 |
 | ![](https://img.shields.io/badge/-Config-green)     | Provides configuration parsing support to the all plugins                                                                           | [Docs](config/docs/config.md) |
 | ![](https://img.shields.io/badge/-GRPC-green)       | Provides GRPC support                                                                                                               | [Docs](grpc/docs/grpc.md)     |
 | ![](https://img.shields.io/badge/-GZIP-blue)        | Gzip middleware plugin for the HTTP plugin                                                                                          |
@@ -60,12 +60,11 @@ with much greater performance and flexibility.
 | ![](https://img.shields.io/badge/-SQS-blue)         | SQS driver for the jobs                                                                                                             |
 | ![](https://img.shields.io/badge/-Static-blue)      | HTTP middleware to serve static files                                                                                               |
 | ![](https://img.shields.io/badge/-Status-green)     | Provides support for the health and readiness checks                                                                                |
-| ![](https://img.shields.io/badge/-Websockets-red) | Provides support for the broadcasting events via websockets                                                                         |
+| ![](https://img.shields.io/badge/-Websockets-green) | Provides support for the broadcasting events via websockets                                                                         |
 
 Legend:  
 `Green` - is a regular RR2 plugins.  
 `Blue` - is a driver for the RR2 plugin.  
-`Red` - plugin is available in the `roadrunner-plugins` but turned off in the `roadrunner-binary`.
 
 # Writing Plugins
 
