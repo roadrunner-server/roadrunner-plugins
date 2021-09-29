@@ -14,6 +14,7 @@ require (
 	github.com/cenkalti/backoff/v4 v4.1.1
 	github.com/emicklei/proto v1.9.1
 	github.com/fatih/color v1.13.0
+	github.com/fatih/color v1.13.0
 	github.com/go-acme/lego/v4 v4.4.0
 	github.com/go-redis/redis/v8 v8.11.3
 	github.com/gobwas/ws v1.1.0
