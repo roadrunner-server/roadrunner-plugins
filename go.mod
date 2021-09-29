@@ -14,7 +14,6 @@ require (
 	github.com/cenkalti/backoff/v4 v4.1.1
 	github.com/emicklei/proto v1.9.1
 	github.com/fatih/color v1.13.0
-	github.com/fatih/color v1.13.0
 	github.com/go-acme/lego/v4 v4.4.0
 	github.com/go-redis/redis/v8 v8.11.3
 	github.com/gobwas/ws v1.1.0
@@ -34,7 +33,7 @@ require (
 	github.com/yookoala/gofast v0.6.0
 	go.etcd.io/bbolt v1.3.6
 	go.uber.org/zap v1.19.1
-	golang.org/x/net v0.0.0-20210929161516-d455829e376d
+	golang.org/x/net v0.0.0-20210929193557-e81a3d93ecf6
 	golang.org/x/sys v0.0.0-20210927094055-39ccf1dd6fa6
 	google.golang.org/grpc v1.41.0
 	google.golang.org/protobuf v1.27.1
