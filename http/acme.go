@@ -11,6 +11,7 @@ import (
 	"github.com/go-acme/lego/v4/certcrypto"
 	"github.com/go-acme/lego/v4/certificate"
 	"github.com/go-acme/lego/v4/challenge/http01"
+	"github.com/go-acme/lego/v4/challenge/tlsalpn01"
 	"github.com/go-acme/lego/v4/lego"
 	"github.com/go-acme/lego/v4/registration"
 	"github.com/spiral/errors"
@@ -76,7 +77,7 @@ func ObtainCertificates(cacheDir, keyName, certName, email, challengeType, chall
 			return errors.E(op, err)
 		}
 	case TLSAlpn01:
-		err = client.Challenge.SetTLSALPN01Provider(http01.NewProviderServer(challengeIface, challengePort))
+		err = client.Challenge.SetTLSALPN01Provider(tlsalpn01.NewProviderServer(challengeIface, challengePort))
 		if err != nil {
 			return errors.E(op, err)
 		}
