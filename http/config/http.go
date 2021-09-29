@@ -27,17 +27,20 @@ type HTTP struct {
 	// HTTP2Config configuration
 	HTTP2Config *HTTP2 `mapstructure:"http2"`
 
-	// MaxRequestSize specified max size for payload body in megabytes, set 0 to unlimited.
-	MaxRequestSize uint64 `mapstructure:"max_request_size"`
-
-	// TrustedSubnets declare IP subnets which are allowed to set ip using X-Real-Ip and X-Forwarded-For
-	TrustedSubnets []string `mapstructure:"trusted_subnets"`
-
 	// Uploads configures uploads configuration.
 	Uploads *Uploads `mapstructure:"uploads"`
 
 	// Pool configures worker pool.
 	Pool *pool.Config `mapstructure:"pool"`
+
+	// ACME configuration
+	Acme *AcmeConfig `mapstructure:"acme"`
+
+	// MaxRequestSize specified max size for payload body in megabytes, set 0 to unlimited.
+	MaxRequestSize uint64 `mapstructure:"max_request_size"`
+
+	// TrustedSubnets declare IP subnets which are allowed to set ip using X-Real-Ip and X-Forwarded-For
+	TrustedSubnets []string `mapstructure:"trusted_subnets"`
 
 	// Env is environment variables passed to the  http pool
 	Env map[string]string
@@ -69,6 +72,10 @@ func (c *HTTP) EnableFCGI() bool {
 	return c.FCGIConfig.Address != ""
 }
 
+func (c *HTTP) EnableACME() bool {
+	return c.Acme != nil
+}
+
 // InitDefaults must populate HTTP values using given HTTP source. Must return error if HTTP is not valid.
 func (c *HTTP) InitDefaults() error {
 	if c.Pool == nil {
@@ -81,6 +88,11 @@ func (c *HTTP) InitDefaults() error {
 			DestroyTimeout:  time.Second * 60,
 			Supervisor:      nil,
 		}
+	}
+
+	// init acme defaults if provided
+	if c.Acme != nil {
+		c.Acme.InitDefaults()
 	}
 
 	if c.InternalErrorCode == 0 {

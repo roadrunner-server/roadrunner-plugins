@@ -170,10 +170,49 @@ func (p *Plugin) serve(errCh chan error) {
 
 	p.handler.AddListener(p.logCallback, p.metricsCallback)
 
+	/*
+		cases:
+		1. User don't use http at all, then, to pass the LE challenge we have to ini
+	*/
+
+	if p.cfg.EnableACME() {
+		// for the first time - generate the certs
+		if p.cfg.Acme.FirstTime {
+			err = ObtainCertificates(
+				p.cfg.Acme.CacheDir,
+				p.cfg.Acme.PrivateKeyName,
+				p.cfg.Acme.CertificateName,
+				p.cfg.Acme.Email,
+				p.cfg.Acme.ChallengeType,
+				p.cfg.Acme.ChallengePort,
+				p.cfg.Acme.ChallengeIface,
+				p.cfg.Acme.Domains,
+				p.cfg.Acme.UseProductionEndpoint,
+			)
+
+			if err != nil {
+				errCh <- err
+				return
+			}
+
+			return
+		}
+	}
+
 	if p.cfg.EnableHTTP() {
 		if p.cfg.EnableH2C() {
 			p.http = &http.Server{
-				Handler:  h2c.NewHandler(p, &http2.Server{}),
+				Handler: h2c.NewHandler(p, &http2.Server{
+					MaxHandlers:                  0,
+					MaxConcurrentStreams:         0,
+					MaxReadFrameSize:             0,
+					PermitProhibitedCipherSuites: false,
+					IdleTimeout:                  0,
+					MaxUploadBufferPerConnection: 0,
+					MaxUploadBufferPerStream:     0,
+					NewWriteScheduler:            nil,
+					CountError:                   nil,
+				}),
 				ErrorLog: p.stdLog,
 			}
 		} else {

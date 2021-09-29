@@ -57,13 +57,15 @@ broadcast:
 
 ## 🩹 Fixes:
 
-- 🐛 Fix: local and global configuration parsing
+- 🐛 Fix: local and global configuration parsing.
+- 🐛 Fix: bug with the `boltdb-jobs` connection left open after RPC close command.
 
 ## 📦 Packages:
 
-- 📦 Roadrunner `v2.5.0`
-- 📦 Roadrunner-plugins `v2.5.0`
-- 📦 Roadrunner-temporal `v1.0.10`
+- 📦 roadrunner `v2.5.0`
+- 📦 roadrunner-plugins `v2.5.0`  
+- 📦 roadrunner-temporal `v1.0.10`
+- 📦 goridge `v3.2.2`
 
 ## v2.4.1 (13.09.2021)
 
