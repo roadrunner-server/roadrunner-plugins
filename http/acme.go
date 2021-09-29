@@ -43,7 +43,7 @@ func (u *RRSslUser) GetPrivateKey() crypto.PrivateKey {
 func ObtainCertificates(cacheDir, keyName, certName, email, challengeType, challengePort, challengeIface string, domains []string, useProduction bool) error {
 	const op = errors.Op("letsencrypt_obtain_certificates")
 	// Create a user. New accounts need an email and private key to start.
-	privateKey, err := ecdsa.GenerateKey(elliptic.P521(), rand.Reader)
+	privateKey, err := ecdsa.GenerateKey(elliptic.P256(), rand.Reader)
 	if err != nil {
 		return errors.E(op, err)
 	}
@@ -76,7 +76,7 @@ func ObtainCertificates(cacheDir, keyName, certName, email, challengeType, chall
 			return errors.E(op, err)
 		}
 	case TLSAlpn01:
-		err = client.Challenge.SetHTTP01Provider(http01.NewProviderServer(challengeIface, challengePort))
+		err = client.Challenge.SetTLSALPN01Provider(http01.NewProviderServer(challengeIface, challengePort))
 		if err != nil {
 			return errors.E(op, err)
 		}
