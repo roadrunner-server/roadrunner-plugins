@@ -30,7 +30,7 @@ type AcmeConfig struct {
 	Domains []string `mapstructure:"domains"`
 
 	// if true - RR will obtain the certificates and put them into the certs_dir
-	FirstTime bool
+	FirstTime bool `mapstructure:"first_time"`
 }
 
 func (ac *AcmeConfig) InitDefaults() {
