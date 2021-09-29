@@ -16,6 +16,7 @@ func (p *Plugin) serveHTTPS(errCh chan error) {
 	if len(p.mdwr) > 0 {
 		applyMiddlewares(p.https, p.mdwr, p.cfg.Middleware, p.log)
 	}
+
 	l, err := utils.CreateListener(p.cfg.SSLConfig.Address)
 	if err != nil {
 		errCh <- errors.E(op, err)

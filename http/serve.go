@@ -83,13 +83,8 @@ func (p *Plugin) appendRootCa() error {
 	if !ok {
 		return errors.E(op, errors.Str("could not append Certs from PEM"))
 	}
-	// disable "G402 (CWE-295): TLS MinVersion too low. (Confidence: HIGH, Severity: HIGH)"
-	// #nosec G402
-	cfg := &tls.Config{
-		InsecureSkipVerify: false,
-		RootCAs:            rootCAs,
-	}
-	p.http.TLSConfig = cfg
+
+	p.http.TLSConfig.RootCAs = rootCAs
 
 	return nil
 }

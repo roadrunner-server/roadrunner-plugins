@@ -59,6 +59,9 @@ func (c *HTTP) EnableHTTP() bool {
 
 // EnableTLS returns true if pool must listen TLS connections.
 func (c *HTTP) EnableTLS() bool {
+	if c.Acme != nil {
+		return true
+	}
 	return c.SSLConfig.Key != "" || c.SSLConfig.Cert != ""
 }
 
