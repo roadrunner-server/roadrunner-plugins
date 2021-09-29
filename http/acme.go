@@ -49,6 +49,16 @@ func ObtainCertificates(cacheDir, keyName, certName, email, challengeType, chall
 		return errors.E(op, err)
 	}
 
+	_, err = os.Stat(cacheDir)
+	if err != nil {
+		if os.IsNotExist(err) {
+			errMk := os.MkdirAll(cacheDir, 0600)
+			if errMk != nil {
+				return errors.E(op, errMk)
+			}
+		}
+	}
+
 	rrUser := &RRSslUser{
 		Email: email,
 		key:   privateKey,
