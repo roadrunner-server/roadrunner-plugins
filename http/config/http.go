@@ -56,6 +56,9 @@ func (c *HTTP) EnableHTTP() bool {
 
 // EnableTLS returns true if pool must listen TLS connections.
 func (c *HTTP) EnableTLS() bool {
+	if c.SSLConfig == nil {
+		return false
+	}
 	if c.SSLConfig.Acme != nil {
 		return true
 	}
@@ -79,6 +82,9 @@ func (c *HTTP) EnableFCGI() bool {
 }
 
 func (c *HTTP) EnableACME() bool {
+	if c.SSLConfig == nil {
+		return false
+	}
 	return c.SSLConfig.Acme != nil
 }
 
