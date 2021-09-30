@@ -91,7 +91,7 @@ func (p *Plugin) Serve() chan error {
 					continue
 				}
 
-				storage, err := p.constructors[drStr].KVConstruct(configKey)
+				storage, err := p.constructors[drStr].KvFromConfig(configKey)
 				if err != nil {
 					errCh <- errors.E(op, err)
 					return errCh
@@ -107,7 +107,7 @@ func (p *Plugin) Serve() chan error {
 				}
 
 				// use only key for the driver registration, for example rr-boltdb should be globally available
-				storage, err := p.constructors[drStr].KVConstruct(k)
+				storage, err := p.constructors[drStr].KvFromConfig(k)
 				if err != nil {
 					errCh <- errors.E(op, err)
 					return errCh
@@ -130,7 +130,13 @@ func (p *Plugin) Stop() error {
 	// stop all attached storages
 	for k := range p.storages {
 		p.storages[k].Stop()
+		delete(p.storages, k)
 	}
+
+	for k := range p.constructors {
+		delete(p.constructors, k)
+	}
+
 	return nil
 }
 

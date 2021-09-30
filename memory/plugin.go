@@ -44,11 +44,11 @@ func (p *Plugin) Available() {}
 
 // Drivers implementation
 
-func (p *Plugin) PSConstruct(key string) (pubsub.PubSub, error) {
+func (p *Plugin) PubSubFromConfig(key string) (pubsub.PubSub, error) {
 	return memorypubsub.NewPubSubDriver(p.log, key)
 }
 
-func (p *Plugin) KVConstruct(key string) (kv.Storage, error) {
+func (p *Plugin) KvFromConfig(key string) (kv.Storage, error) {
 	const op = errors.Op("memory_plugin_construct")
 	st, err := memorykv.NewInMemoryDriver(key, p.log, p.cfg)
 	if err != nil {
@@ -58,11 +58,11 @@ func (p *Plugin) KVConstruct(key string) (kv.Storage, error) {
 }
 
 // JobsConstruct creates new ephemeral consumer from the configuration
-func (p *Plugin) JobsConstruct(configKey string, e events.Handler, pq priorityqueue.Queue) (jobs.Consumer, error) {
+func (p *Plugin) ConsumerFromConfig(configKey string, e events.Handler, pq priorityqueue.Queue) (jobs.Consumer, error) {
 	return memoryjobs.NewJobBroker(configKey, p.log, p.cfg, e, pq)
 }
 
 // FromPipeline creates new ephemeral consumer from the provided pipeline
-func (p *Plugin) FromPipeline(pipeline *pipeline.Pipeline, e events.Handler, pq priorityqueue.Queue) (jobs.Consumer, error) {
+func (p *Plugin) ConsumerFromPipeline(pipeline *pipeline.Pipeline, e events.Handler, pq priorityqueue.Queue) (jobs.Consumer, error) {
 	return memoryjobs.FromPipeline(pipeline, p.log, e, pq)
 }

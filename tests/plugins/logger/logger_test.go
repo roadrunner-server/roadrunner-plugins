@@ -93,8 +93,9 @@ func TestLoggerRawErr(t *testing.T) {
 	mockLogger := mocks.NewMockLogger(controller)
 
 	mockLogger.EXPECT().Debug("worker destructed", "pid", gomock.Any()).AnyTimes()
-	mockLogger.EXPECT().Info("{\"field\": \"value\"}").MinTimes(1)
+	mockLogger.EXPECT().Info("{\"field\": \"value\"}\n").MinTimes(1)
 	mockLogger.EXPECT().Debug("worker constructed", "pid", gomock.Any()).MinTimes(1)
+	mockLogger.EXPECT().Debug("http server running", "port", gomock.Any()).AnyTimes()
 
 	err = cont.RegisterAll(
 		cfg,

@@ -72,7 +72,7 @@ func FetchIP(pair string) string {
 }
 
 // NewRequest creates new PSR7 compatible request using net/http request.
-func NewRequest(r *http.Request, cfg config.Uploads) (*Request, error) {
+func NewRequest(r *http.Request, cfg *config.Uploads) (*Request, error) {
 	req := &Request{
 		RemoteAddr: FetchIP(r.RemoteAddr),
 		Protocol:   r.Proto,

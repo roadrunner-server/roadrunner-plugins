@@ -26,6 +26,6 @@ type Consumer interface {
 
 // Constructor constructs Consumer interface. Endure abstraction.
 type Constructor interface {
-	JobsConstruct(configKey string, e events.Handler, queue priorityqueue.Queue) (Consumer, error)
-	FromPipeline(pipe *pipeline.Pipeline, e events.Handler, queue priorityqueue.Queue) (Consumer, error)
+	ConsumerFromConfig(configKey string, e events.Handler, queue priorityqueue.Queue) (Consumer, error)
+	ConsumerFromPipeline(pipe *pipeline.Pipeline, e events.Handler, queue priorityqueue.Queue) (Consumer, error)
 }

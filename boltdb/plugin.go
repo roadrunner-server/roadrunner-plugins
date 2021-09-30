@@ -47,7 +47,7 @@ func (p *Plugin) Name() string {
 // Available interface implementation
 func (p *Plugin) Available() {}
 
-func (p *Plugin) KVConstruct(key string) (kv.Storage, error) {
+func (p *Plugin) KvFromConfig(key string) (kv.Storage, error) {
 	const op = errors.Op("boltdb_plugin_provide")
 	st, err := boltkv.NewBoltDBDriver(p.log, key, p.cfg)
 	if err != nil {
@@ -59,10 +59,10 @@ func (p *Plugin) KVConstruct(key string) (kv.Storage, error) {
 
 // JOBS bbolt implementation
 
-func (p *Plugin) JobsConstruct(configKey string, e events.Handler, queue priorityqueue.Queue) (jobs.Consumer, error) {
+func (p *Plugin) ConsumerFromConfig(configKey string, e events.Handler, queue priorityqueue.Queue) (jobs.Consumer, error) {
 	return boltjobs.NewBoltDBJobs(configKey, p.log, p.cfg, e, queue)
 }
 
-func (p *Plugin) FromPipeline(pipe *pipeline.Pipeline, e events.Handler, queue priorityqueue.Queue) (jobs.Consumer, error) {
+func (p *Plugin) ConsumerFromPipeline(pipe *pipeline.Pipeline, e events.Handler, queue priorityqueue.Queue) (jobs.Consumer, error) {
 	return boltjobs.FromPipeline(pipe, p.log, p.cfg, e, queue)
 }

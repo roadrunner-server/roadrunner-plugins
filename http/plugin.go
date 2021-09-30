@@ -30,7 +30,7 @@ const (
 	// RrMode RR_HTTP env variable key (internal) if the HTTP presents
 	RrMode = "RR_MODE"
 
-	HTTPSScheme = "https"
+	Scheme = "https"
 )
 
 // Middleware interface
@@ -105,13 +105,13 @@ func (p *Plugin) Init(cfg config.Configurer, rrLogger logger.Logger, server serv
 	if p.cfg.Env == nil {
 		p.cfg.Env = make(map[string]string)
 	}
+	p.cfg.Env[RrMode] = "http"
 
 	// initialize workersExporter
 	p.workersExporter = newWorkersExporter()
 	// initialize requests exporter
 	p.requestsExporter = newRequestsExporter()
 
-	p.cfg.Env[RrMode] = "http"
 	p.server = server
 
 	return nil
@@ -159,7 +159,7 @@ func (p *Plugin) serve(errCh chan error) {
 	p.handler, err = handler.NewHandler(
 		p.cfg.MaxRequestSize,
 		p.cfg.InternalErrorCode,
-		*p.cfg.Uploads,
+		p.cfg.Uploads,
 		p.cfg.Cidrs,
 		p.pool,
 	)
@@ -170,10 +170,48 @@ func (p *Plugin) serve(errCh chan error) {
 
 	p.handler.AddListener(p.logCallback, p.metricsCallback)
 
+	/*
+		cases:
+		1. User don't use http at all, then, to pass the LE challenge we have to ini
+	*/
+
+	if p.cfg.EnableACME() {
+		// for the first time - generate the certs
+		if p.cfg.SSLConfig.Acme.ObtainCertificates {
+			err = ObtainCertificates(
+				p.log,
+				p.cfg.SSLConfig.Acme.CacheDir,
+				p.cfg.SSLConfig.Acme.PrivateKeyName,
+				p.cfg.SSLConfig.Acme.CertificateName,
+				p.cfg.SSLConfig.Acme.Email,
+				p.cfg.SSLConfig.Acme.ChallengeType,
+				p.cfg.SSLConfig.Acme.ChallengePort,
+				p.cfg.SSLConfig.Acme.ChallengeIface,
+				p.cfg.SSLConfig.Acme.Domains,
+				p.cfg.SSLConfig.Acme.UseProductionEndpoint,
+			)
+
+			if err != nil {
+				errCh <- err
+				return
+			}
+		}
+	}
+
 	if p.cfg.EnableHTTP() {
 		if p.cfg.EnableH2C() {
 			p.http = &http.Server{
-				Handler:  h2c.NewHandler(p, &http2.Server{}),
+				Handler: h2c.NewHandler(p, &http2.Server{
+					MaxHandlers:                  0,
+					MaxConcurrentStreams:         0,
+					MaxReadFrameSize:             0,
+					PermitProhibitedCipherSuites: false,
+					IdleTimeout:                  0,
+					MaxUploadBufferPerConnection: 0,
+					MaxUploadBufferPerStream:     0,
+					NewWriteScheduler:            nil,
+					CountError:                   nil,
+				}),
 				ErrorLog: p.stdLog,
 			}
 		} else {
@@ -278,7 +316,7 @@ func (p *Plugin) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 
 	r = attributes.Init(r)
-	// protect the case, when user sendEvent Reset and we are replacing handler with pool
+	// protect the case, when user sendEvent Reset, and we are replacing handler with pool
 	p.RLock()
 	p.handler.ServeHTTP(w, r)
 	p.RUnlock()
@@ -340,7 +378,7 @@ func (p *Plugin) Reset() error {
 	p.handler, err = handler.NewHandler(
 		p.cfg.MaxRequestSize,
 		p.cfg.InternalErrorCode,
-		*p.cfg.Uploads,
+		p.cfg.Uploads,
 		p.cfg.Cidrs,
 		p.pool,
 	)

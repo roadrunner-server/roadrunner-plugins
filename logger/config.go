@@ -131,6 +131,7 @@ func (cfg *Config) BuildLogger() (*zap.Logger, error) {
 			Encoding: "console",
 			EncoderConfig: zapcore.EncoderConfig{
 				MessageKey: "message",
+				LineEnding: zapcore.DefaultLineEnding,
 			},
 			OutputPaths:      []string{"stderr"},
 			ErrorOutputPaths: []string{"stderr"},
@@ -147,6 +148,7 @@ func (cfg *Config) BuildLogger() (*zap.Logger, error) {
 				EncodeName:   ColoredHashedNameEncoder,
 				EncodeLevel:  ColoredLevelEncoder,
 				EncodeTime:   UTCTimeEncoder,
+				LineEnding:   zapcore.DefaultLineEnding,
 				EncodeCaller: zapcore.ShortCallerEncoder,
 			},
 			OutputPaths:      []string{"stderr"},

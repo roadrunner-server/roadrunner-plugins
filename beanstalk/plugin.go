@@ -38,10 +38,10 @@ func (p *Plugin) Name() string {
 
 func (p *Plugin) Available() {}
 
-func (p *Plugin) JobsConstruct(configKey string, eh events.Handler, pq priorityqueue.Queue) (jobs.Consumer, error) {
+func (p *Plugin) ConsumerFromConfig(configKey string, eh events.Handler, pq priorityqueue.Queue) (jobs.Consumer, error) {
 	return NewBeanstalkConsumer(configKey, p.log, p.cfg, eh, pq)
 }
 
-func (p *Plugin) FromPipeline(pipe *pipeline.Pipeline, eh events.Handler, pq priorityqueue.Queue) (jobs.Consumer, error) {
+func (p *Plugin) ConsumerFromPipeline(pipe *pipeline.Pipeline, eh events.Handler, pq priorityqueue.Queue) (jobs.Consumer, error) {
 	return FromPipeline(pipe, p.log, p.cfg, eh, pq)
 }

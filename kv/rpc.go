@@ -17,7 +17,7 @@ type rpc struct {
 	log logger.Logger
 }
 
-// Has accept []*kvv1.Payload proto payload with Storage and Item
+// Has accepts []*kvv1.Payload proto payload with Storage and Item
 func (r *rpc) Has(in *kvv1.Request, out *kvv1.Response) error {
 	const op = errors.Op("rpc_has")
 

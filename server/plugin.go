@@ -258,20 +258,20 @@ func (server *Plugin) collectWorkerEvents(event interface{}) {
 			case error:
 				if errors.Is(errors.SoftJob, e) {
 					// get source error for the softjob error
-					server.log.Error(strings.TrimRight(e.(*errors.Error).Err.Error(), " \n\t"))
+					server.log.Error(e.(*errors.Error).Err.Error())
 					return
 				}
 
 				// print full error for the other types of errors
-				server.log.Error(strings.TrimRight(e.Error(), " \n\t"))
+				server.log.Error(e.Error())
 				return
 			}
-			server.log.Error(strings.TrimRight(we.Payload.(error).Error(), " \n\t"))
+			server.log.Error(we.Payload.(error).Error())
 		case events.EventWorkerLog:
-			server.log.Debug(strings.TrimRight(utils.AsString(we.Payload.([]byte)), " \n\t"))
+			server.log.Debug(utils.AsString(we.Payload.([]byte)))
 			// stderr event is INFO level
 		case events.EventWorkerStderr:
-			server.log.Info(strings.TrimRight(utils.AsString(we.Payload.([]byte)), " \n\t"))
+			server.log.Info(utils.AsString(we.Payload.([]byte)))
 		}
 	}
 }

@@ -17,54 +17,6 @@ import (
 	"golang.org/x/sys/cpu"
 )
 
-func (p *Plugin) serveHTTP(errCh chan error) {
-	if p.http == nil {
-		return
-	}
-	const op = errors.Op("serveHTTP")
-
-	if len(p.mdwr) > 0 {
-		applyMiddlewares(p.http, p.mdwr, p.cfg.Middleware, p.log)
-	}
-	l, err := utils.CreateListener(p.cfg.Address)
-	if err != nil {
-		errCh <- errors.E(op, err)
-		return
-	}
-
-	err = p.http.Serve(l)
-	if err != nil && err != http.ErrServerClosed {
-		errCh <- errors.E(op, err)
-		return
-	}
-}
-
-func (p *Plugin) serveHTTPS(errCh chan error) {
-	if p.https == nil {
-		return
-	}
-	const op = errors.Op("serveHTTPS")
-	if len(p.mdwr) > 0 {
-		applyMiddlewares(p.https, p.mdwr, p.cfg.Middleware, p.log)
-	}
-	l, err := utils.CreateListener(p.cfg.SSLConfig.Address)
-	if err != nil {
-		errCh <- errors.E(op, err)
-		return
-	}
-
-	err = p.https.ServeTLS(
-		l,
-		p.cfg.SSLConfig.Cert,
-		p.cfg.SSLConfig.Key,
-	)
-
-	if err != nil && err != http.ErrServerClosed {
-		errCh <- errors.E(op, err)
-		return
-	}
-}
-
 // serveFCGI starts FastCGI server.
 func (p *Plugin) serveFCGI(errCh chan error) {
 	if p.fcgi == nil {
@@ -91,7 +43,7 @@ func (p *Plugin) serveFCGI(errCh chan error) {
 
 func (p *Plugin) redirect(w http.ResponseWriter, r *http.Request) {
 	target := &url.URL{
-		Scheme: HTTPSScheme,
+		Scheme: Scheme,
 		// host or host:port
 		Host:     p.tlsAddr(r.Host, false),
 		Path:     r.URL.Path,
@@ -131,13 +83,8 @@ func (p *Plugin) appendRootCa() error {
 	if !ok {
 		return errors.E(op, errors.Str("could not append Certs from PEM"))
 	}
-	// disable "G402 (CWE-295): TLS MinVersion too low. (Confidence: HIGH, Severity: HIGH)"
-	// #nosec G402
-	cfg := &tls.Config{
-		InsecureSkipVerify: false,
-		RootCAs:            rootCAs,
-	}
-	p.http.TLSConfig = cfg
+
+	p.http.TLSConfig.RootCAs = rootCAs
 
 	return nil
 }
@@ -203,9 +150,8 @@ func (p *Plugin) initSSL() *http.Server {
 				tls.CurveP521,
 				tls.X25519,
 			},
-			CipherSuites:             DefaultCipherSuites,
-			MinVersion:               tls.VersionTLS12,
-			PreferServerCipherSuites: true,
+			CipherSuites: DefaultCipherSuites,
+			MinVersion:   tls.VersionTLS12,
 		},
 	}
 

@@ -152,6 +152,7 @@ func TestBroadcastNoConfig(t *testing.T) {
 	mockLogger.EXPECT().Debug("worker destructed", "pid", gomock.Any()).AnyTimes()
 	mockLogger.EXPECT().Debug("worker constructed", "pid", gomock.Any()).AnyTimes()
 	mockLogger.EXPECT().Debug("Started RPC service", "address", "tcp://127.0.0.1:6001", "plugins", []string{}).MinTimes(1)
+	mockLogger.EXPECT().Debug("http server running", "port", gomock.Any()).AnyTimes()
 
 	err = cont.RegisterAll(
 		cfg,
@@ -196,6 +197,7 @@ func TestBroadcastSameSubscriber(t *testing.T) {
 	mockLogger.EXPECT().Debug("worker constructed", "pid", gomock.Any()).AnyTimes()
 	mockLogger.EXPECT().Debug("Started RPC service", "address", "tcp://127.0.0.1:6002", "plugins", []string{"broadcast"}).AnyTimes()
 	mockLogger.EXPECT().Debug("message published", "msg", gomock.Any()).AnyTimes()
+	mockLogger.EXPECT().Debug("http server running", "port", gomock.Any()).AnyTimes()
 
 	mockLogger.EXPECT().Info(`plugin1: {foo hello}`).Times(3)
 	mockLogger.EXPECT().Info(`plugin1: {foo2 hello}`).Times(2)
@@ -317,6 +319,7 @@ func TestBroadcastSameSubscriberGlobal(t *testing.T) {
 	mockLogger.EXPECT().Debug("worker constructed", "pid", gomock.Any()).AnyTimes()
 	mockLogger.EXPECT().Debug("Started RPC service", "address", "tcp://127.0.0.1:6003", "plugins", []string{"broadcast"}).AnyTimes()
 	mockLogger.EXPECT().Debug("message published", "msg", gomock.Any()).AnyTimes()
+	mockLogger.EXPECT().Debug("http server running", "port", gomock.Any()).AnyTimes()
 
 	mockLogger.EXPECT().Info(`plugin1: {foo hello}`).Times(3)
 	mockLogger.EXPECT().Info(`plugin1: {foo2 hello}`).Times(2)
