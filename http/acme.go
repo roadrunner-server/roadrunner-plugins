@@ -94,7 +94,7 @@ func ObtainCertificates(cacheDir, email, challengeType string, domains []string,
 		return nil, err
 	}
 
-	err = cfg.ManageSync(domains)
+	err = cfg.ManageSync(context.Background(), domains)
 	if err != nil {
 		return nil, err
 	}
