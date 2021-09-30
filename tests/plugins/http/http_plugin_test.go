@@ -749,6 +749,7 @@ func TestH2CUpgrade(t *testing.T) {
 
 	mockLogger.EXPECT().Error("server internal error", "message", gomock.Any()).MinTimes(1)
 	mockLogger.EXPECT().Debug("worker constructed", "pid", gomock.Any()).MinTimes(1)
+	mockLogger.EXPECT().Debug("http server running", "port", gomock.Any()).AnyTimes()
 
 	err = cont.RegisterAll(
 		cfg,
@@ -1069,8 +1070,9 @@ logs:
 	mockLogger.EXPECT().Debug(gomock.Any()).AnyTimes()
 	mockLogger.EXPECT().Debug("worker constructed", "pid", gomock.Any()).MinTimes(1)
 	mockLogger.EXPECT().Debug("201 GET http://127.0.0.1:34999/?hello=world", "remote", "127.0.0.1", "elapsed", gomock.Any()).MinTimes(1)
-	mockLogger.EXPECT().Info("WORLD").MinTimes(1)
+	mockLogger.EXPECT().Info("WORLD\n").MinTimes(1)
 	mockLogger.EXPECT().Error(gomock.Any(), gomock.Any(), gomock.Any()).AnyTimes() // placeholder for the workerlogerror
+	mockLogger.EXPECT().Debug("http server running", "port", gomock.Any()).AnyTimes()
 
 	err = cont.RegisterAll(
 		cfg,
@@ -2032,6 +2034,7 @@ func TestStaticFilesForbid(t *testing.T) {
 	mockLogger.EXPECT().Debug("possible path to dir provided").AnyTimes()
 	mockLogger.EXPECT().Debug("file extension is forbidden", gomock.Any(), gomock.Any()).AnyTimes()
 	mockLogger.EXPECT().Error(gomock.Any(), gomock.Any(), gomock.Any()).AnyTimes() // placeholder for the workerlogerror
+	mockLogger.EXPECT().Debug("http server running", "port", gomock.Any()).AnyTimes()
 
 	err = cont.RegisterAll(
 		cfg,
@@ -2200,6 +2203,7 @@ func TestHTTPIPv6Long(t *testing.T) {
 	mockLogger.EXPECT().Debug("worker constructed", "pid", gomock.Any()).AnyTimes()
 	mockLogger.EXPECT().Debug("Started RPC service", "address", "tcp://[0:0:0:0:0:0:0:1]:6005", "plugins", gomock.Any()).Times(1)
 	mockLogger.EXPECT().Debug("201 GET http://[0:0:0:0:0:0:0:1]:10684/?hello=world", "remote", "::1", "elapsed", gomock.Any()).Times(1)
+	mockLogger.EXPECT().Debug("http server running", "port", gomock.Any()).AnyTimes()
 
 	err = cont.RegisterAll(
 		cfg,
@@ -2276,6 +2280,7 @@ func TestHTTPIPv6Short(t *testing.T) {
 	mockLogger.EXPECT().Debug("worker constructed", "pid", gomock.Any()).AnyTimes()
 	mockLogger.EXPECT().Debug("Started RPC service", "address", "tcp://[::1]:6003", "plugins", gomock.Any()).Times(1)
 	mockLogger.EXPECT().Debug("201 GET http://[::1]:10784/?hello=world", "remote", "::1", "elapsed", gomock.Any()).Times(1)
+	mockLogger.EXPECT().Debug("http server running", "port", gomock.Any()).AnyTimes()
 
 	err = cont.RegisterAll(
 		cfg,

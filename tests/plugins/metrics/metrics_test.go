@@ -117,6 +117,7 @@ func TestMetricsIssue571(t *testing.T) {
 	mockLogger.EXPECT().Info("metric successfully added", "name", "test", "labels", []string{}, "value", gomock.Any()).MinTimes(1)
 	mockLogger.EXPECT().Info("adding metric", "name", "test", "value", gomock.Any(), "labels", []string{}).MinTimes(1)
 	mockLogger.EXPECT().Error("metric with provided name already exist", "name", "test", "type", gomock.Any(), "namespace", gomock.Any()).MinTimes(3)
+	mockLogger.EXPECT().Debug("http server running", "port", gomock.Any()).AnyTimes()
 	mockLogger.EXPECT().Info("scan command", gomock.Any()).AnyTimes()
 
 	err = cont.RegisterAll(
@@ -313,6 +314,7 @@ func TestMetricsDifferentRPCCalls(t *testing.T) {
 	mockLogger.EXPECT().Debug("worker destructed", "pid", gomock.Any()).AnyTimes()
 	mockLogger.EXPECT().Debug("worker constructed", "pid", gomock.Any()).AnyTimes()
 	mockLogger.EXPECT().Debug("Started RPC service", "address", "tcp://127.0.0.1:6001", "plugins", []string{"metrics"}).MinTimes(1)
+	mockLogger.EXPECT().Debug("http server running", "port", gomock.Any()).AnyTimes()
 
 	mockLogger.EXPECT().Info("adding metric", "name", "counter_CounterMetric", "value", gomock.Any(), "labels", []string{"type2", "section2"}).MinTimes(1)
 	mockLogger.EXPECT().Info("adding metric", "name", "histogram_registerHistogram", "value", gomock.Any(), "labels", gomock.Any()).MinTimes(1)
@@ -971,6 +973,7 @@ func TestHTTPMetrics(t *testing.T) {
 	mockLogger.EXPECT().Debug("worker destructed", "pid", gomock.Any()).AnyTimes()
 	mockLogger.EXPECT().Debug("worker constructed", "pid", gomock.Any()).AnyTimes()
 	mockLogger.EXPECT().Debug("200 GET http://127.0.0.1:13223/", "remote", gomock.Any(), "elapsed", gomock.Any()).MinTimes(1)
+	mockLogger.EXPECT().Debug("http server running", "port", gomock.Any()).AnyTimes()
 
 	err = cont.RegisterAll(
 		cfg,

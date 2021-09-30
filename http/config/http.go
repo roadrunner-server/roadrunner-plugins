@@ -15,6 +15,9 @@ type HTTP struct {
 	// Host and port to handle as http server.
 	Address string
 
+	// Pool configures worker pool.
+	Pool *pool.Config `mapstructure:"pool"`
+
 	// InternalErrorCode used to override default 500 (InternalServerError) http code
 	InternalErrorCode uint64 `mapstructure:"internal_error_code"`
 
@@ -29,9 +32,6 @@ type HTTP struct {
 
 	// Uploads configures uploads configuration.
 	Uploads *Uploads `mapstructure:"uploads"`
-
-	// Pool configures worker pool.
-	Pool *pool.Config `mapstructure:"pool"`
 
 	// MaxRequestSize specified max size for payload body in megabytes, set 0 to unlimited.
 	MaxRequestSize uint64 `mapstructure:"max_request_size"`

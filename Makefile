@@ -5,7 +5,7 @@
 SHELL = /bin/sh
 
 test_coverage:
-	docker-compose -f tests/env/docker-compose.yaml up -d --remove-orphans
+	docker compose -f tests/env/docker-compose.yaml up -d --remove-orphans
 	rm -rf coverage-ci
 	mkdir ./coverage-ci
 	go test -v -race -cover -tags=debug -coverpkg=./... -coverprofile=./coverage-ci/ws_origin.out -covermode=atomic ./websockets
@@ -36,10 +36,10 @@ test_coverage:
 	go test -v -race -cover -tags=debug -coverpkg=./... -coverprofile=./coverage-ci/rpc.out -covermode=atomic ./tests/plugins/rpc
 	echo 'mode: atomic' > ./coverage-ci/summary.txt
 	tail -q -n +2 ./coverage-ci/*.out >> ./coverage-ci/summary.txt
-	docker-compose -f tests/env/docker-compose.yaml down
+	docker compose -f tests/env/docker-compose.yaml down
 
 test: ## Run application tests
-	docker-compose -f tests/env/docker-compose.yaml up -d --remove-orphans
+	docker compose -f tests/env/docker-compose.yaml up -d --remove-orphans
 	sleep 10
 	go test -v -race -tags=debug ./jobs/pipeline
 	go test -v -race -tags=debug ./http/config
@@ -68,7 +68,7 @@ test: ## Run application tests
 	go test -v -race -tags=debug ./tests/plugins/metrics
 	go test -v -race -tags=debug ./tests/plugins/resetter
 	go test -v -race -tags=debug ./tests/plugins/rpc
-	docker-compose -f tests/env/docker-compose.yaml down
+	docker compose -f tests/env/docker-compose.yaml down
 
 generate-proto:
 	protoc --proto_path=./internal/proto/jobs/v1beta --go_out=./internal/proto/jobs/v1beta jobs.proto

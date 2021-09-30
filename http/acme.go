@@ -16,6 +16,7 @@ import (
 	"github.com/go-acme/lego/v4/registration"
 	"github.com/spiral/errors"
 	"github.com/spiral/roadrunner-plugins/v2/logger"
+	"github.com/spiral/roadrunner/v2/utils"
 )
 
 type challenge string
@@ -112,7 +113,6 @@ func ObtainCertificates(log logger.Logger, cacheDir, keyName, certName, email, c
 		Bundle:     true,
 		MustStaple: false,
 	}
-
 	certificates, err := client.Certificate.Obtain(request)
 	if err != nil {
 		return errors.E(op, err)
@@ -124,11 +124,17 @@ func ObtainCertificates(log logger.Logger, cacheDir, keyName, certName, email, c
 	}
 	log.Debug("private key saved", "dir", path.Join(cacheDir, keyName))
 
-	err = os.WriteFile(path.Join(cacheDir, certName), certificates.Certificate, 0600)
+	err = os.WriteFile(path.Join(cacheDir, certName), certificates.Certificate, 0644) //nolint:gosec
 	if err != nil {
 		return errors.E(op, err)
 	}
 	log.Debug("certificate saved", "dir", path.Join(cacheDir, certName))
+
+	err = os.WriteFile(path.Join(cacheDir, "cert_url.txt"), utils.AsBytes(certificates.CertURL), 0644) //nolint:gosec
+	if err != nil {
+		return errors.E(op, err)
+	}
+	log.Debug("certificate url saved", "dir", path.Join(cacheDir, "cert_url.txt"))
 
 	return nil
 }
