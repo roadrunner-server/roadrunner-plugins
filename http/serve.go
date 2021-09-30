@@ -145,13 +145,14 @@ func (p *Plugin) initSSL() *http.Server {
 		ErrorLog: p.stdLog,
 		TLSConfig: &tls.Config{
 			CurvePreferences: []tls.CurveID{
+				tls.X25519,
 				tls.CurveP256,
 				tls.CurveP384,
 				tls.CurveP521,
-				tls.X25519,
 			},
-			CipherSuites: DefaultCipherSuites,
-			MinVersion:   tls.VersionTLS12,
+			CipherSuites:             DefaultCipherSuites,
+			MinVersion:               tls.VersionTLS12,
+			PreferServerCipherSuites: true,
 		},
 	}
 
