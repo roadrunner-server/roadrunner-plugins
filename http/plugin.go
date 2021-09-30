@@ -195,8 +195,6 @@ func (p *Plugin) serve(errCh chan error) {
 				errCh <- err
 				return
 			}
-
-			return
 		}
 	}
 
