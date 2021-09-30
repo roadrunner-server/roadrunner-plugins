@@ -57,6 +57,7 @@ func ObtainCertificates(cacheDir, email, challengeType string, domains []string,
 		MustStaple:         false,
 		OCSP:               certmagic.OCSPConfig{},
 		Storage:            &certmagic.FileStorage{Path: cacheDir},
+		Logger:             z,
 	})
 
 	myAcme := certmagic.NewACMEManager(cfg, certmagic.ACMEManager{
@@ -71,6 +72,7 @@ func ObtainCertificates(cacheDir, email, challengeType string, domains []string,
 		AltTLSALPNPort:          altTLSAlpnPort,
 		CertObtainTimeout:       time.Second * 240,
 		PreferredChains:         certmagic.ChainPreference{},
+		Logger:                  z,
 	})
 
 	if !useProduction {
