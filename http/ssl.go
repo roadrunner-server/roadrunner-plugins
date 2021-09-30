@@ -27,6 +27,7 @@ func (p *Plugin) serveHTTPS(errCh chan error) {
 		ACME powered server
 	*/
 	if p.cfg.EnableACME() {
+		p.log.Debug("https(acme) server running", "port", p.cfg.SSLConfig.Address)
 		err = p.https.ServeTLS(
 			l,
 			path.Join(p.cfg.Acme.CacheDir, p.cfg.Acme.CertificateName),
@@ -39,6 +40,7 @@ func (p *Plugin) serveHTTPS(errCh chan error) {
 		return
 	}
 
+	p.log.Debug("https server running", "port", p.cfg.SSLConfig.Address)
 	err = p.https.ServeTLS(
 		l,
 		p.cfg.SSLConfig.Cert,

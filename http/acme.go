@@ -15,6 +15,7 @@ import (
 	"github.com/go-acme/lego/v4/lego"
 	"github.com/go-acme/lego/v4/registration"
 	"github.com/spiral/errors"
+	"github.com/spiral/roadrunner-plugins/v2/logger"
 )
 
 type challenge string
@@ -41,7 +42,7 @@ func (u *RRSslUser) GetPrivateKey() crypto.PrivateKey {
 	return u.key
 }
 
-func ObtainCertificates(cacheDir, keyName, certName, email, challengeType, challengePort, challengeIface string, domains []string, useProduction bool) error {
+func ObtainCertificates(log logger.Logger, cacheDir, keyName, certName, email, challengeType, challengePort, challengeIface string, domains []string, useProduction bool) error {
 	const op = errors.Op("letsencrypt_obtain_certificates")
 	// Create a user. New accounts need an email and private key to start.
 	privateKey, err := ecdsa.GenerateKey(elliptic.P256(), rand.Reader)
@@ -121,11 +122,13 @@ func ObtainCertificates(cacheDir, keyName, certName, email, challengeType, chall
 	if err != nil {
 		return errors.E(op, err)
 	}
+	log.Debug("private key saved", "dir", path.Join(cacheDir, keyName))
 
 	err = os.WriteFile(path.Join(cacheDir, certName), certificates.Certificate, 0600)
 	if err != nil {
 		return errors.E(op, err)
 	}
+	log.Debug("certificate saved", "dir", path.Join(cacheDir, certName))
 
 	return nil
 }

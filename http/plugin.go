@@ -177,8 +177,9 @@ func (p *Plugin) serve(errCh chan error) {
 
 	if p.cfg.EnableACME() {
 		// for the first time - generate the certs
-		if p.cfg.Acme.FirstTime {
+		if p.cfg.Acme.ObtainCertificates {
 			err = ObtainCertificates(
+				p.log,
 				p.cfg.Acme.CacheDir,
 				p.cfg.Acme.PrivateKeyName,
 				p.cfg.Acme.CertificateName,
