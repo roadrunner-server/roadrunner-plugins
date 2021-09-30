@@ -5,7 +5,7 @@
 SHELL = /bin/sh
 
 test_coverage:
-	docker compose -f tests/env/docker-compose.yaml up -d --remove-orphans
+	docker-compose -f tests/env/docker-compose.yaml up -d --remove-orphans
 	rm -rf coverage-ci
 	mkdir ./coverage-ci
 	go test -v -race -cover -tags=debug -coverpkg=./... -coverprofile=./coverage-ci/ws_origin.out -covermode=atomic ./websockets
@@ -36,7 +36,7 @@ test_coverage:
 	go test -v -race -cover -tags=debug -coverpkg=./... -coverprofile=./coverage-ci/rpc.out -covermode=atomic ./tests/plugins/rpc
 	echo 'mode: atomic' > ./coverage-ci/summary.txt
 	tail -q -n +2 ./coverage-ci/*.out >> ./coverage-ci/summary.txt
-	docker compose -f tests/env/docker-compose.yaml down
+	docker-compose -f tests/env/docker-compose.yaml down
 
 test: ## Run application tests
 	docker compose -f tests/env/docker-compose.yaml up -d --remove-orphans
