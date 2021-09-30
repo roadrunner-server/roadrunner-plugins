@@ -159,7 +159,7 @@ func (p *Plugin) serve(errCh chan error) {
 	p.handler, err = handler.NewHandler(
 		p.cfg.MaxRequestSize,
 		p.cfg.InternalErrorCode,
-		*p.cfg.Uploads,
+		p.cfg.Uploads,
 		p.cfg.Cidrs,
 		p.pool,
 	)
@@ -177,18 +177,18 @@ func (p *Plugin) serve(errCh chan error) {
 
 	if p.cfg.EnableACME() {
 		// for the first time - generate the certs
-		if p.cfg.Acme.ObtainCertificates {
+		if p.cfg.SSLConfig.Acme.ObtainCertificates {
 			err = ObtainCertificates(
 				p.log,
-				p.cfg.Acme.CacheDir,
-				p.cfg.Acme.PrivateKeyName,
-				p.cfg.Acme.CertificateName,
-				p.cfg.Acme.Email,
-				p.cfg.Acme.ChallengeType,
-				p.cfg.Acme.ChallengePort,
-				p.cfg.Acme.ChallengeIface,
-				p.cfg.Acme.Domains,
-				p.cfg.Acme.UseProductionEndpoint,
+				p.cfg.SSLConfig.Acme.CacheDir,
+				p.cfg.SSLConfig.Acme.PrivateKeyName,
+				p.cfg.SSLConfig.Acme.CertificateName,
+				p.cfg.SSLConfig.Acme.Email,
+				p.cfg.SSLConfig.Acme.ChallengeType,
+				p.cfg.SSLConfig.Acme.ChallengePort,
+				p.cfg.SSLConfig.Acme.ChallengeIface,
+				p.cfg.SSLConfig.Acme.Domains,
+				p.cfg.SSLConfig.Acme.UseProductionEndpoint,
 			)
 
 			if err != nil {
@@ -380,7 +380,7 @@ func (p *Plugin) Reset() error {
 	p.handler, err = handler.NewHandler(
 		p.cfg.MaxRequestSize,
 		p.cfg.InternalErrorCode,
-		*p.cfg.Uploads,
+		p.cfg.Uploads,
 		p.cfg.Cidrs,
 		p.pool,
 	)

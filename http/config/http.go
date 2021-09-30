@@ -33,9 +33,6 @@ type HTTP struct {
 	// Pool configures worker pool.
 	Pool *pool.Config `mapstructure:"pool"`
 
-	// ACME configuration
-	Acme *AcmeConfig `mapstructure:"acme"`
-
 	// MaxRequestSize specified max size for payload body in megabytes, set 0 to unlimited.
 	MaxRequestSize uint64 `mapstructure:"max_request_size"`
 
@@ -59,7 +56,7 @@ func (c *HTTP) EnableHTTP() bool {
 
 // EnableTLS returns true if pool must listen TLS connections.
 func (c *HTTP) EnableTLS() bool {
-	if c.Acme != nil {
+	if c.SSLConfig.Acme != nil {
 		return true
 	}
 	return c.SSLConfig.Key != "" || c.SSLConfig.Cert != ""
@@ -67,16 +64,22 @@ func (c *HTTP) EnableTLS() bool {
 
 // EnableH2C when HTTP/2 extension must be enabled on TCP.
 func (c *HTTP) EnableH2C() bool {
+	if c.HTTP2Config == nil {
+		return false
+	}
 	return c.HTTP2Config.H2C
 }
 
 // EnableFCGI is true when FastCGI server must be enabled.
 func (c *HTTP) EnableFCGI() bool {
+	if c.FCGIConfig == nil {
+		return false
+	}
 	return c.FCGIConfig.Address != ""
 }
 
 func (c *HTTP) EnableACME() bool {
-	return c.Acme != nil
+	return c.SSLConfig.Acme != nil
 }
 
 // InitDefaults must populate HTTP values using given HTTP source. Must return error if HTTP is not valid.
@@ -93,40 +96,26 @@ func (c *HTTP) InitDefaults() error {
 		}
 	}
 
-	// init acme defaults if provided
-	if c.Acme != nil {
-		c.Acme.InitDefaults()
-	}
-
 	if c.InternalErrorCode == 0 {
 		c.InternalErrorCode = 500
 	}
 
-	if c.HTTP2Config == nil {
-		c.HTTP2Config = &HTTP2{}
+	if c.HTTP2Config != nil {
+		err := c.HTTP2Config.InitDefaults()
+		if err != nil {
+			return err
+		}
 	}
 
-	if c.FCGIConfig == nil {
-		c.FCGIConfig = &FCGI{}
+	if c.SSLConfig != nil {
+		c.SSLConfig.InitDefaults()
 	}
 
 	if c.Uploads == nil {
 		c.Uploads = &Uploads{}
 	}
 
-	if c.SSLConfig == nil {
-		c.SSLConfig = &SSL{}
-	}
-
-	if c.SSLConfig.Address == "" {
-		c.SSLConfig.Address = "127.0.0.1:443"
-	}
-
-	err := c.HTTP2Config.InitDefaults()
-	if err != nil {
-		return err
-	}
-	err = c.Uploads.InitDefaults()
+	err := c.Uploads.InitDefaults()
 	if err != nil {
 		return err
 	}
@@ -173,10 +162,6 @@ func (c *HTTP) Valid() error {
 	const op = errors.Op("validation")
 	if c.Uploads == nil {
 		return errors.E(op, errors.Str("malformed uploads config"))
-	}
-
-	if c.HTTP2Config == nil {
-		return errors.E(op, errors.Str("malformed http2 config"))
 	}
 
 	if c.Pool == nil {

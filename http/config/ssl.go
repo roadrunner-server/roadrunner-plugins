@@ -13,6 +13,9 @@ type SSL struct {
 	// Address to listen as HTTPS server, defaults to 0.0.0.0:443.
 	Address string
 
+	// ACME configuration
+	Acme *AcmeConfig `mapstructure:"acme"`
+
 	// Redirect when enabled forces all http connections to switch to https.
 	Redirect bool
 
@@ -28,6 +31,16 @@ type SSL struct {
 	// internal
 	host string
 	Port int
+}
+
+func (s *SSL) InitDefaults() {
+	if s.Acme != nil {
+		s.Acme.InitDefaults()
+	}
+
+	if s.Address == "" {
+		s.Address = "127.0.0.1:443"
+	}
 }
 
 func (s *SSL) Valid() error {
@@ -54,20 +67,23 @@ func (s *SSL) Valid() error {
 		return errors.E(op, errors.Errorf("unknown format, accepted format is [:<port> or <host>:<port>], provided: %s", s.Address))
 	}
 
-	if _, err := os.Stat(s.Key); err != nil {
-		if os.IsNotExist(err) {
-			return errors.E(op, errors.Errorf("key file '%s' does not exists", s.Key))
+	// the user use they own certificates
+	if s.Acme == nil {
+		if _, err := os.Stat(s.Key); err != nil {
+			if os.IsNotExist(err) {
+				return errors.E(op, errors.Errorf("key file '%s' does not exists", s.Key))
+			}
+
+			return err
 		}
 
-		return err
-	}
+		if _, err := os.Stat(s.Cert); err != nil {
+			if os.IsNotExist(err) {
+				return errors.E(op, errors.Errorf("cert file '%s' does not exists", s.Cert))
+			}
 
-	if _, err := os.Stat(s.Cert); err != nil {
-		if os.IsNotExist(err) {
-			return errors.E(op, errors.Errorf("cert file '%s' does not exists", s.Cert))
+			return err
 		}
-
-		return err
 	}
 
 	// RootCA is optional, but if provided - check it

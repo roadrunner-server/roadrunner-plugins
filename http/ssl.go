@@ -30,8 +30,8 @@ func (p *Plugin) serveHTTPS(errCh chan error) {
 		p.log.Debug("https(acme) server running", "port", p.cfg.SSLConfig.Address)
 		err = p.https.ServeTLS(
 			l,
-			path.Join(p.cfg.Acme.CacheDir, p.cfg.Acme.CertificateName),
-			path.Join(p.cfg.Acme.CacheDir, p.cfg.Acme.PrivateKeyName),
+			path.Join(p.cfg.SSLConfig.Acme.CacheDir, p.cfg.SSLConfig.Acme.CertificateName),
+			path.Join(p.cfg.SSLConfig.Acme.CacheDir, p.cfg.SSLConfig.Acme.PrivateKeyName),
 		)
 		if err != nil && err != http.ErrServerClosed {
 			errCh <- errors.E(op, err)

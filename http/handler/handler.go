@@ -58,7 +58,7 @@ func (e *ResponseEvent) Elapsed() time.Duration {
 // parsed files and query, payload will include parsed form dataTree (if any).
 type Handler struct {
 	maxRequestSize   uint64
-	uploads          config.Uploads
+	uploads          *config.Uploads
 	trusted          config.Cidrs
 	log              logger.Logger
 	pool             pool.Pool
@@ -68,7 +68,7 @@ type Handler struct {
 }
 
 // NewHandler return handle interface implementation
-func NewHandler(maxReqSize uint64, internalHTTPCode uint64, uploads config.Uploads, trusted config.Cidrs, pool pool.Pool) (*Handler, error) {
+func NewHandler(maxReqSize uint64, internalHTTPCode uint64, uploads *config.Uploads, trusted config.Cidrs, pool pool.Pool) (*Handler, error) {
 	if pool == nil {
 		return nil, errors.E(errors.Str("pool should be initialized"))
 	}
