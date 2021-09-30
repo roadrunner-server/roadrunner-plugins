@@ -33,14 +33,19 @@ type SSL struct {
 	Port int
 }
 
-func (s *SSL) InitDefaults() {
+func (s *SSL) InitDefaults() error {
 	if s.Acme != nil {
-		s.Acme.InitDefaults()
+		err := s.Acme.InitDefaults()
+		if err != nil {
+			return err
+		}
 	}
 
 	if s.Address == "" {
 		s.Address = "127.0.0.1:443"
 	}
+
+	return nil
 }
 
 func (s *SSL) Valid() error {

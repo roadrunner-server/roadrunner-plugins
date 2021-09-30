@@ -114,7 +114,10 @@ func (c *HTTP) InitDefaults() error {
 	}
 
 	if c.SSLConfig != nil {
-		c.SSLConfig.InitDefaults()
+		err := c.SSLConfig.InitDefaults()
+		if err != nil {
+			return err
+		}
 	}
 
 	if c.Uploads == nil {
