@@ -52,8 +52,41 @@ broadcast:
 
 ## 👀 New:
 
-- ✏️ [BETA] GRPC plugin update to v2.
+- ✏️ **[BETA]** GRPC plugin update to v2.
 - ✏️ [Roadrunner-plugins](https://github.com/spiral/roadrunner-plugins) repository. This is the new home for the roadrunner plugins with documentation, configuration samples, and common problems.
+- ✏️ **[BETA]** Let's Encrypt support. RR now can obtain an SSL certificate for your domain automatically. Here is the new configuration:
+```json
+{
+  "http": {
+    "address": "127.0.0.1:15389",
+    "max_request_size": 256,
+    "middleware": [],
+    "ssl": {
+      "address": ":443",
+      "acme": {  <---- NEW ACME SECTION --------------------------------
+        "cache_dir": "rr_le_certs",
+        "email": "your-cool-email@here",
+        "private_key_name": "test.key",
+        "certificate_name": "test.crt",
+        "challenge_type": "tlsalpn-01",
+        "challenge_port": "443",
+        "use_production_endpoint": false,
+        "domains": [
+          "your-cool-domain.here"
+          "your-another-cool-domain.here"
+        ],
+        "obtain_certificates": true
+      }
+    },
+    "pool": {
+      "num_workers": 10,
+      "allocate_timeout": "60s",
+      "destroy_timeout": "60s"
+    }
+  }
+}
+
+```
 
 ## 🩹 Fixes:
 

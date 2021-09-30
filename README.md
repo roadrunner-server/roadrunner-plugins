@@ -35,7 +35,7 @@ with much greater performance and flexibility.
 
 | Plugin                                              | Description                                                                                                                         | Docs                          |
 | --------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------- | ----------------------------- |
-| ![](https://img.shields.io/badge/-HTTP-green)       | Provides HTTP, HTTPS, FCGI transports                                                                                               |
+| ![](https://img.shields.io/badge/-HTTP-green)       | Provides HTTP, HTTPS, FCGI transports                                                                                               | [Docs](http/docs/http.md)
 | ![](https://img.shields.io/badge/-AMQP-blue)        | Provides AMQP (0-9-1) protocol support via RabbitMQ                                                                                 |
 | ![](https://img.shields.io/badge/-Beanstalk-blue)   | Provides [beanstalkd](https://github.com/beanstalkd/beanstalkd) queue support                                                       |
 | ![](https://img.shields.io/badge/-Boltdb-blue)      | Provides support for the [BoltDB](https://github.com/etcd-io/bbolt) key/value store. Used in the `Jobs` and `KV`                    |
