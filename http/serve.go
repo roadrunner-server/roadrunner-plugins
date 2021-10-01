@@ -90,7 +90,7 @@ func (p *Plugin) appendRootCa() error {
 }
 
 // Init https server
-func (p *Plugin) initSSL() *http.Server {
+func (p *Plugin) initTLS() *http.Server {
 	var topCipherSuites []uint16
 	var defaultCipherSuitesTLS13 []uint16
 

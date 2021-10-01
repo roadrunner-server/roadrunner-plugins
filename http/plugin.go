@@ -201,7 +201,7 @@ func (p *Plugin) serve(errCh chan error) {
 	}
 
 	if p.cfg.EnableTLS() {
-		p.https = p.initSSL()
+		p.https = p.initTLS()
 		if p.cfg.SSLConfig.RootCA != "" {
 			err = p.appendRootCa()
 			if err != nil {
