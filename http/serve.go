@@ -90,7 +90,7 @@ func (p *Plugin) appendRootCa() error {
 }
 
 // Init https server
-func (p *Plugin) initSSL() *http.Server {
+func (p *Plugin) initTLS() *http.Server {
 	var topCipherSuites []uint16
 	var defaultCipherSuitesTLS13 []uint16
 
@@ -145,13 +145,14 @@ func (p *Plugin) initSSL() *http.Server {
 		ErrorLog: p.stdLog,
 		TLSConfig: &tls.Config{
 			CurvePreferences: []tls.CurveID{
+				tls.X25519,
 				tls.CurveP256,
 				tls.CurveP384,
 				tls.CurveP521,
-				tls.X25519,
 			},
-			CipherSuites: DefaultCipherSuites,
-			MinVersion:   tls.VersionTLS12,
+			CipherSuites:             DefaultCipherSuites,
+			MinVersion:               tls.VersionTLS12,
+			PreferServerCipherSuites: true,
 		},
 	}
 

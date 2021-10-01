@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"sync"
 
+	"github.com/mholt/acmez"
 	endure "github.com/spiral/endure/pkg/container"
 	"github.com/spiral/errors"
 	"github.com/spiral/roadrunner-plugins/v2/config"
@@ -175,29 +176,6 @@ func (p *Plugin) serve(errCh chan error) {
 		1. User don't use http at all, then, to pass the LE challenge we have to ini
 	*/
 
-	if p.cfg.EnableACME() {
-		// for the first time - generate the certs
-		if p.cfg.SSLConfig.Acme.ObtainCertificates {
-			err = ObtainCertificates(
-				p.log,
-				p.cfg.SSLConfig.Acme.CacheDir,
-				p.cfg.SSLConfig.Acme.PrivateKeyName,
-				p.cfg.SSLConfig.Acme.CertificateName,
-				p.cfg.SSLConfig.Acme.Email,
-				p.cfg.SSLConfig.Acme.ChallengeType,
-				p.cfg.SSLConfig.Acme.ChallengePort,
-				p.cfg.SSLConfig.Acme.ChallengeIface,
-				p.cfg.SSLConfig.Acme.Domains,
-				p.cfg.SSLConfig.Acme.UseProductionEndpoint,
-			)
-
-			if err != nil {
-				errCh <- err
-				return
-			}
-		}
-	}
-
 	if p.cfg.EnableHTTP() {
 		if p.cfg.EnableH2C() {
 			p.http = &http.Server{
@@ -223,13 +201,34 @@ func (p *Plugin) serve(errCh chan error) {
 	}
 
 	if p.cfg.EnableTLS() {
-		p.https = p.initSSL()
+		p.https = p.initTLS()
 		if p.cfg.SSLConfig.RootCA != "" {
 			err = p.appendRootCa()
 			if err != nil {
 				errCh <- errors.E(op, err)
 				return
 			}
+		}
+
+		if p.cfg.EnableACME() {
+			// for the first time - generate the certs
+			tlsCfg, err := ObtainCertificates(
+				p.cfg.SSLConfig.Acme.CacheDir,
+				p.cfg.SSLConfig.Acme.Email,
+				p.cfg.SSLConfig.Acme.ChallengeType,
+				p.cfg.SSLConfig.Acme.Domains,
+				p.cfg.SSLConfig.Acme.UseProductionEndpoint,
+				p.cfg.SSLConfig.Acme.AltHTTPPort,
+				p.cfg.SSLConfig.Acme.AltTLSALPNPort,
+			)
+
+			if err != nil {
+				errCh <- err
+				return
+			}
+
+			p.https.TLSConfig.GetCertificate = tlsCfg.GetCertificate
+			p.https.TLSConfig.NextProtos = append(p.https.TLSConfig.NextProtos, acmez.ACMETLS1Protocol)
 		}
 
 		// if HTTP2Config not nil
