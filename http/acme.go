@@ -2,12 +2,10 @@ package http
 
 import (
 	"context"
-	"crypto"
 	"crypto/tls"
 	"time"
 
 	"github.com/caddyserver/certmagic"
-	"github.com/go-acme/lego/v4/registration"
 	"go.uber.org/zap"
 )
 
@@ -17,23 +15,6 @@ const (
 	HTTP01    challenge = "http-01"
 	TLSAlpn01 challenge = "tlsalpn-01"
 )
-
-// RRSslUser RR SSL user (needed to register the account)
-type RRSslUser struct {
-	Email        string
-	Registration *registration.Resource
-	key          crypto.PrivateKey
-}
-
-func (u *RRSslUser) GetEmail() string {
-	return u.Email
-}
-func (u RRSslUser) GetRegistration() *registration.Resource {
-	return u.Registration
-}
-func (u *RRSslUser) GetPrivateKey() crypto.PrivateKey {
-	return u.key
-}
 
 func ObtainCertificates(cacheDir, email, challengeType string, domains []string, useProduction bool, altHTTPPort, altTLSAlpnPort int) (*tls.Config, error) {
 	z, _ := zap.NewProduction()

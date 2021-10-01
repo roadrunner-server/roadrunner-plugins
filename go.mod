@@ -15,7 +15,6 @@ require (
 	github.com/cenkalti/backoff/v4 v4.1.1
 	github.com/emicklei/proto v1.9.1
 	github.com/fatih/color v1.13.0
-	github.com/go-acme/lego/v4 v4.4.0
 	github.com/go-redis/redis/v8 v8.11.3
 	github.com/gobwas/ws v1.1.0
 	github.com/gofiber/fiber/v2 v2.19.0
@@ -36,7 +35,7 @@ require (
 	go.etcd.io/bbolt v1.3.6
 	go.uber.org/zap v1.19.1
 	golang.org/x/net v0.0.0-20210929193557-e81a3d93ecf6
-	golang.org/x/sys v0.0.0-20210930141918-969570ce7c6c
+	golang.org/x/sys v0.0.0-20210930212924-f542c8878de8
 	google.golang.org/grpc v1.41.0
 	google.golang.org/protobuf v1.27.1
 	gopkg.in/natefinch/lumberjack.v2 v2.0.0
@@ -96,7 +95,6 @@ require (
 	golang.org/x/tools v0.1.7 // indirect
 	google.golang.org/genproto v0.0.0-20210930144712-2e2e1008e8a3 // indirect
 	gopkg.in/ini.v1 v1.63.2 // indirect
-	gopkg.in/square/go-jose.v2 v2.6.0 // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect
 	gopkg.in/yaml.v3 v3.0.0-20210107192922-496545a6307b // indirect
 )
