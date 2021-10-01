@@ -100,30 +100,7 @@ func (cfg *Config) BuildLogger() (*zap.Logger, error) {
 	case off, none:
 		return zap.NewNop(), nil
 	case production:
-		zCfg = zap.Config{
-			Level:       zap.NewAtomicLevelAt(zap.InfoLevel),
-			Development: false,
-			Sampling: &zap.SamplingConfig{
-				Initial:    100,
-				Thereafter: 100,
-			},
-			EncoderConfig: zapcore.EncoderConfig{
-				TimeKey:        "ts",
-				LevelKey:       "level",
-				NameKey:        "logger",
-				CallerKey:      "caller",
-				FunctionKey:    zapcore.OmitKey,
-				MessageKey:     "msg",
-				StacktraceKey:  "stacktrace",
-				LineEnding:     zapcore.DefaultLineEnding,
-				EncodeLevel:    zapcore.LowercaseLevelEncoder,
-				EncodeTime:     zapcore.EpochTimeEncoder,
-				EncodeDuration: zapcore.SecondsDurationEncoder,
-				EncodeCaller:   zapcore.ShortCallerEncoder,
-			},
-			OutputPaths:      []string{"stderr"},
-			ErrorOutputPaths: []string{"stderr"},
-		}
+		zCfg = zap.NewProductionConfig()
 	case development:
 		zCfg = zap.Config{
 			Level:       zap.NewAtomicLevelAt(zap.DebugLevel),

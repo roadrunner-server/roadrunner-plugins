@@ -28,7 +28,7 @@ func (z *ZapLogger) Init(cfg config.Configurer) error {
 
 		z.base, err = z.cfg.BuildLogger()
 		if err != nil {
-			return errors.E(op, errors.Disabled, err)
+			return errors.E(op, err)
 		}
 
 		return nil
@@ -36,17 +36,17 @@ func (z *ZapLogger) Init(cfg config.Configurer) error {
 
 	err = cfg.UnmarshalKey(PluginName, &z.cfg)
 	if err != nil {
-		return errors.E(op, errors.Disabled, err)
+		return errors.E(op, err)
 	}
 
 	err = cfg.UnmarshalKey(PluginName, &z.channels)
 	if err != nil {
-		return errors.E(op, errors.Disabled, err)
+		return errors.E(op, err)
 	}
 
 	z.base, err = z.cfg.BuildLogger()
 	if err != nil {
-		return errors.E(op, errors.Disabled, err)
+		return errors.E(op, err)
 	}
 	return nil
 }
