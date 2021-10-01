@@ -10,12 +10,19 @@ http:
   ssl:
     address: '0.0.0.0:443'
     acme:
+      # Directory where to put the certificates. Default: `rr_cache_dir`
       certs_dir: "rr_le_certs"
+      # User email. Should not be empty.
       email: "you-email-here@email"
+      # Alternate port for the HTTP-01 challenge (traffic should be proxied from the 80 port). Default: 80
       alt_http_port: 80
+      # Alternate port for the TLS-ALPN-01 challenge (traffic should be proxied from the 443 port). Default: 443
       alt_tlsalpn_port: 443
+      # Available challenges: `http-01`, `tlsalpn-01`. Default: `http-01`
       challenge_type: "http-01"
+      # Use production or staging endpoint. Useful for testing purposes
       use_production_endpoint: true
+      # List of domains. Should not be empty.
       domains:
         - "your-cool-domains.here"
 fcgi:
