@@ -11,6 +11,7 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/fatih/color"
 	"github.com/spiral/errors"
 	"github.com/spiral/roadrunner/v2/utils"
 )
@@ -20,6 +21,17 @@ type logOutput string
 const (
 	stderr logOutput = "stderr"
 	stdout logOutput = "stdout"
+)
+
+type rrColor string
+
+const (
+	white   rrColor = "white"
+	red     rrColor = "red"
+	green   rrColor = "green"
+	yellow  rrColor = "yellow"
+	blue    rrColor = "blue"
+	magenta rrColor = "magenta"
 )
 
 // Process structure contains an information about process, restart information, log, errors, etc
@@ -32,8 +44,11 @@ type Process struct {
 	Pid    int
 
 	// root plugin error chan
-	errCh     chan error
-	logOutput io.Writer
+	errCh      chan error
+	logOutput  io.Writer
+	errColor   string
+	color      string
+	lineEnding string
 
 	ExecTimeout     time.Duration
 	RemainAfterExit bool
@@ -45,13 +60,16 @@ type Process struct {
 }
 
 // NewServiceProcess constructs service process structure
-func NewServiceProcess(output string, restartAfterExit bool, execTimeout time.Duration, restartDelay uint64, command string, errCh chan error) *Process {
+func NewServiceProcess(color, errColor, output, lineEnding string, restartAfterExit bool, execTimeout time.Duration, restartDelay uint64, command string, errCh chan error) *Process {
 	p := &Process{
 		rawCmd:          command,
 		RestartSec:      restartDelay,
 		ExecTimeout:     execTimeout,
 		RemainAfterExit: restartAfterExit,
+		color:           color,
+		errColor:        errColor,
 		errCh:           errCh,
+		lineEnding:      lineEnding,
 	}
 
 	switch logOutput(output) {
@@ -68,7 +86,22 @@ func NewServiceProcess(output string, restartAfterExit bool, execTimeout time.Du
 
 // write message to the log (stderr)
 func (p *Process) Write(b []byte) (int, error) {
-	return p.logOutput.Write(b)
+	switch rrColor(p.color) {
+	case white:
+		return p.logOutput.Write(utils.AsBytes(color.HiWhiteString(fmt.Sprintf("%s%s", utils.AsString(b), p.lineEnding))))
+	case red:
+		return p.logOutput.Write(utils.AsBytes(color.HiRedString(fmt.Sprintf("%s%s", utils.AsString(b), p.lineEnding))))
+	case green:
+		return p.logOutput.Write(utils.AsBytes(color.HiGreenString(fmt.Sprintf("%s%s", utils.AsString(b), p.lineEnding))))
+	case yellow:
+		return p.logOutput.Write(utils.AsBytes(color.HiYellowString(fmt.Sprintf("%s%s", utils.AsString(b), p.lineEnding))))
+	case blue:
+		return p.logOutput.Write(utils.AsBytes(color.HiBlueString(fmt.Sprintf("%s%s", utils.AsString(b), p.lineEnding))))
+	case magenta:
+		return p.logOutput.Write(utils.AsBytes(color.HiMagentaString(fmt.Sprintf("%s%s", utils.AsString(b), p.lineEnding))))
+	default:
+		return p.logOutput.Write(utils.AsBytes(fmt.Sprintf("%s%s", utils.AsString(b), p.lineEnding)))
+	}
 }
 
 func (p *Process) start() {
@@ -114,7 +147,22 @@ func (p *Process) wait() {
 	// Wait error doesn't matter here
 	err := p.command.Wait()
 	if err != nil {
-		_, _ = p.logOutput.Write(utils.AsBytes(fmt.Sprintf("process wait error: %v", err)))
+		switch rrColor(p.errColor) {
+		case white:
+			_, _ = p.logOutput.Write(utils.AsBytes(color.HiWhiteString(fmt.Sprintf("%s:%v%s", "process wait error: ", err, p.lineEnding))))
+		case red:
+			_, _ = p.logOutput.Write(utils.AsBytes(color.HiRedString(fmt.Sprintf("%s:%v%s", "process wait error: ", err, p.lineEnding))))
+		case green:
+			_, _ = p.logOutput.Write(utils.AsBytes(color.HiGreenString(fmt.Sprintf("%s:%v%s", "process wait error: ", err, p.lineEnding))))
+		case yellow:
+			_, _ = p.logOutput.Write(utils.AsBytes(color.HiYellowString(fmt.Sprintf("%s:%v%s", "process wait error: ", err, p.lineEnding))))
+		case blue:
+			_, _ = p.logOutput.Write(utils.AsBytes(color.HiBlueString(fmt.Sprintf("%s:%v%s", "process wait error: ", err, p.lineEnding))))
+		case magenta:
+			_, _ = p.logOutput.Write(utils.AsBytes(color.HiMagentaString(fmt.Sprintf("%s:%v%s", "process wait error: ", err, p.lineEnding))))
+		default:
+			_, _ = p.logOutput.Write(utils.AsBytes(fmt.Sprintf("%s:%v%s", "process wait error: ", err, p.lineEnding)))
+		}
 	}
 	// wait for restart delay
 	if p.RemainAfterExit {

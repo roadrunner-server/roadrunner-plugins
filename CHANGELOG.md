@@ -14,9 +14,9 @@
 
 ```yaml
 broadcast:
-  default:
-    driver: memory
-    interval: 1
+    default:
+        driver: memory
+        interval: 1
 ```
 
 ### New style:
@@ -43,74 +43,80 @@ kv:
                 - "127.0.0.1:11211"
 
 broadcast:
-  default:
-    driver: redis
-    config: <------------------ NEW
-      addrs:
-        - "127.0.0.1:6379"
+    default:
+        driver: redis
+        config: <------------------ NEW
+            addrs:
+                - "127.0.0.1:6379"
 ```
 
 ## 👀 New:
 
 - ✏️ **[BETA]** GRPC plugin update to v2.
 - ✏️ [Roadrunner-plugins](https://github.com/spiral/roadrunner-plugins) repository. This is the new home for the roadrunner plugins with documentation, configuration samples, and common problems.
-- ✏️ **[BETA]** Let's Encrypt support. RR now can obtain an SSL certificate for your domain automatically. Here is the new configuration:
-```json
-{
-  "http":{
-    "address":"127.0.0.1:15389",
-    "max_request_size":256,
-    "middleware":[
-
-    ],
-    "ssl":{
-      "address":"0.0.0.0:443",
-      "acme":{
-        "certs_dir":"rr_le_certs",
-        "email":"you-email-here@email",
-        "challenge_type":"http-01",
-        "use_production_endpoint":true,
-        "domains":[
-          "your-cool-domain.here"
+- ✏️ **[BETA]** Let's Encrypt support. RR now can obtain an SSL certificate/PK for your domain automatically. Here is the new configuration:
+```yaml
+ssl:
+    address: '0.0.0.0:443'
+    acme:
+        certs_dir: rr_le_certs
+        email: you-email-here@email
+        # alternate port for the http challenge
+        "alt_http_port": 80,
+        # alternate port for the tls-alpn challenge
+        "alt_tlsalpn_port": 443,
+        challenge_type: http-01
+        use_production_endpoint: true
+        domains: [
+            "your-cool-domain.here",
+            "your-second-domain.here"
         ]
-      }
-    }
-  },
-  "pool":{
-    "num_workers":10,
-    "allocate_timeout":"60s",
-    "destroy_timeout":"60s"
-  }
-}
 ```
 
 - ✏️ Add new option to the `service` plugin. Service plugin will not use std rr logger as output in flavor of raw output.
-```json
-{
-    "service": {
-      "log_output": "stderr or stdout",      
-      "some_service_1": {
-      "command": "php tests/plugins/service/test_files/loop.php",
-      "process_num": 1,
-      "exec_timeout": 0,
-      "remain_after_exit": true,
-      "restart_sec": 1
-    }
-  }
-}
+
+New options:
+```yaml
+# Service plugin settings
+service:
+  some_service_1:
+    (....)
+    # Console output
+    #
+    # Default: stderr. Available options: stderr, stdout
+    output: "stderr"
+
+    # Endings for the stderr/stdout output
+    #
+    # Default: "\n". Available options: any.
+    line_ending: "\n"
+
+    # Color for regular output
+    #
+    # Default: none. Available options: white, red, green, yellow, blue, magenta
+    color: "green"
+
+    # Color for the process errors
+    #
+    # Default: none. Available options: white, red, green, yellow, blue, magenta
+    err_color: "red"
 ```
 
-```
+**!!!**
+Be careful, now, there is no logger plugin dependency for the `service` plugin. That means, that if you used `json` output, now,
+you need to serialize data on the `executable` (in the command) side.
+
 
 ## 🩹 Fixes:
 
 - 🐛 Fix: local and global configuration parsing.
 - 🐛 Fix: bug with the `boltdb-jobs` connection left open after RPC close command.
+- 🐛 Fix: close `beanstalk` connection and release associated resources after pipeline stop.
 
 ## 📦 Packages:
 
 - 📦 roadrunner `v2.5.0`
-- 📦 roadrunner-plugins `v2.5.0`  
+- 📦 roadrunner-plugins `v2.5.0`
 - 📦 roadrunner-temporal `v1.0.10`
 - 📦 goridge `v3.2.2`
 

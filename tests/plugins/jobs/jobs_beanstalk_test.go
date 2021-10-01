@@ -29,7 +29,7 @@ import (
 )
 
 func TestBeanstalkInit(t *testing.T) {
-	cont, err := endure.NewContainer(nil, endure.SetLogLevel(endure.ErrorLevel))
+	cont, err := endure.NewContainer(nil, endure.SetLogLevel(endure.ErrorLevel), endure.GracefulShutdownTimeout(time.Second*60))
 	assert.NoError(t, err)
 
 	cfg := &config.Viper{
@@ -118,7 +118,7 @@ func TestBeanstalkInit(t *testing.T) {
 }
 
 func TestBeanstalkDeclare(t *testing.T) {
-	cont, err := endure.NewContainer(nil, endure.SetLogLevel(endure.ErrorLevel))
+	cont, err := endure.NewContainer(nil, endure.SetLogLevel(endure.ErrorLevel), endure.GracefulShutdownTimeout(time.Second*60))
 	assert.NoError(t, err)
 
 	cfg := &config.Viper{
@@ -219,7 +219,7 @@ func TestBeanstalkDeclare(t *testing.T) {
 }
 
 func TestBeanstalkJobsError(t *testing.T) {
-	cont, err := endure.NewContainer(nil, endure.SetLogLevel(endure.ErrorLevel))
+	cont, err := endure.NewContainer(nil, endure.SetLogLevel(endure.ErrorLevel), endure.GracefulShutdownTimeout(time.Second*60))
 	assert.NoError(t, err)
 
 	cfg := &config.Viper{
@@ -322,7 +322,7 @@ func TestBeanstalkJobsError(t *testing.T) {
 }
 
 func TestBeanstalkStats(t *testing.T) {
-	cont, err := endure.NewContainer(nil, endure.SetLogLevel(endure.ErrorLevel))
+	cont, err := endure.NewContainer(nil, endure.SetLogLevel(endure.ErrorLevel), endure.GracefulShutdownTimeout(time.Second*60))
 	assert.NoError(t, err)
 
 	cfg := &config.Viper{
@@ -457,7 +457,7 @@ func TestBeanstalkStats(t *testing.T) {
 }
 
 func TestBeanstalkNoGlobalSection(t *testing.T) {
-	cont, err := endure.NewContainer(nil, endure.SetLogLevel(endure.ErrorLevel))
+	cont, err := endure.NewContainer(nil, endure.SetLogLevel(endure.ErrorLevel), endure.GracefulShutdownTimeout(time.Second*60))
 	assert.NoError(t, err)
 
 	cfg := &config.Viper{
