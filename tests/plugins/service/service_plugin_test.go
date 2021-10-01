@@ -11,11 +11,9 @@ import (
 	"testing"
 	"time"
 
-	"github.com/golang/mock/gomock"
 	endure "github.com/spiral/endure/pkg/container"
 	"github.com/spiral/roadrunner-plugins/v2/config"
 	"github.com/spiral/roadrunner-plugins/v2/service"
-	"github.com/spiral/roadrunner-plugins/v2/tests/mocks"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -28,29 +26,8 @@ func TestServiceInit(t *testing.T) {
 		Prefix: "rr",
 	}
 
-	controller := gomock.NewController(t)
-	mockLogger := mocks.NewMockLogger(controller)
-
-	mockLogger.EXPECT().Debug("worker destructed", "pid", gomock.Any()).AnyTimes()
-	mockLogger.EXPECT().Debug("worker constructed", "pid", gomock.Any()).AnyTimes()
-	mockLogger.EXPECT().Info("The number is: 0\n").MinTimes(1)
-	mockLogger.EXPECT().Info("The number is: 1\n").MinTimes(1)
-	mockLogger.EXPECT().Info("The number is: 2\n").MinTimes(1)
-	mockLogger.EXPECT().Info("The number is: 3\n").MinTimes(1)
-	mockLogger.EXPECT().Info("The number is: 4\n").AnyTimes()
-
-	// process interrupt error
-	mockLogger.EXPECT().Error("process wait error", gomock.Any()).MinTimes(2)
-
-	mockLogger.EXPECT().Info("Hello 0").MinTimes(1)
-	mockLogger.EXPECT().Info("Hello 1").MinTimes(1)
-	mockLogger.EXPECT().Info("Hello 2").MinTimes(1)
-	mockLogger.EXPECT().Info("Hello 3").MinTimes(1)
-	mockLogger.EXPECT().Info("Hello 4").AnyTimes()
-
 	err = cont.RegisterAll(
 		cfg,
-		mockLogger,
 		&service.Plugin{},
 	)
 	assert.NoError(t, err)
@@ -113,18 +90,8 @@ func TestServiceError(t *testing.T) {
 		Prefix: "rr",
 	}
 
-	controller := gomock.NewController(t)
-	mockLogger := mocks.NewMockLogger(controller)
-
-	mockLogger.EXPECT().Debug("worker destructed", "pid", gomock.Any()).AnyTimes()
-	mockLogger.EXPECT().Debug("worker constructed", "pid", gomock.Any()).AnyTimes()
-
-	// process interrupt error
-	mockLogger.EXPECT().Error("process wait error", gomock.Any()).MinTimes(2)
-
 	err = cont.RegisterAll(
 		cfg,
-		mockLogger,
 		&service.Plugin{},
 	)
 	assert.NoError(t, err)
@@ -184,22 +151,8 @@ func TestServiceRestarts(t *testing.T) {
 		Prefix: "rr",
 	}
 
-	controller := gomock.NewController(t)
-	mockLogger := mocks.NewMockLogger(controller)
-
-	mockLogger.EXPECT().Debug("worker destructed", "pid", gomock.Any()).AnyTimes()
-	mockLogger.EXPECT().Debug("worker constructed", "pid", gomock.Any()).AnyTimes()
-
-	// process interrupt error
-	mockLogger.EXPECT().Error("process wait error", gomock.Any()).MinTimes(1)
-
-	// should not be more than Hello 0, because of restarts
-	mockLogger.EXPECT().Info("Hello 0").MinTimes(1)
-	mockLogger.EXPECT().Info("Hello 1").AnyTimes()
-
 	err = cont.RegisterAll(
 		cfg,
-		mockLogger,
 		&service.Plugin{},
 	)
 	assert.NoError(t, err)

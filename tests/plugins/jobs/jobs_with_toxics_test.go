@@ -280,7 +280,7 @@ func TestDurabilityBeanstalk(t *testing.T) {
 	require.NoError(t, err)
 	defer deleteProxy("redial", t)
 
-	cont, err := endure.NewContainer(nil, endure.SetLogLevel(endure.ErrorLevel))
+	cont, err := endure.NewContainer(nil, endure.SetLogLevel(endure.ErrorLevel), endure.GracefulShutdownTimeout(time.Second*60))
 	require.NoError(t, err)
 
 	cfg := &config.Viper{
@@ -311,6 +311,7 @@ func TestDurabilityBeanstalk(t *testing.T) {
 	mockLogger.EXPECT().Info("beanstalk redial was successful").MinTimes(2)
 	mockLogger.EXPECT().Error("pipeline error", "pipeline", "test-1", "error", gomock.Any(), "start", gomock.Any(), "elapsed", gomock.Any()).AnyTimes()
 	mockLogger.EXPECT().Error("pipeline error", "pipeline", "test-2", "error", gomock.Any(), "start", gomock.Any(), "elapsed", gomock.Any()).AnyTimes()
+	mockLogger.EXPECT().Warn("beanstalk listener stopped").AnyTimes()
 
 	err = cont.RegisterAll(
 		cfg,

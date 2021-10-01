@@ -298,6 +298,9 @@ func (j *consumer) Stop(context.Context) error {
 		j.stopCh <- struct{}{}
 	}
 
+	// release associated resources
+	j.pool.Stop()
+
 	j.eh.Push(events.JobEvent{
 		Event:    events.EventPipeStopped,
 		Driver:   pipe.Driver(),

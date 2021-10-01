@@ -137,6 +137,14 @@ func (cp *ConnPool) Stats(_ context.Context) (map[string]string, error) {
 	return stat, nil
 }
 
+// Stop and close the connections
+func (cp *ConnPool) Stop() {
+	cp.Lock()
+	defer cp.Unlock()
+	_ = cp.conn.Close()
+	_ = cp.connT.Close()
+}
+
 func (cp *ConnPool) redial() error {
 	const op = errors.Op("connection_pool_redial")
 

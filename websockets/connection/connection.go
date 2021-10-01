@@ -40,7 +40,7 @@ func (c *Connection) Write(data []byte) error {
 
 	header := ws.Header{
 		Fin:    true,
-		OpCode: ws.OpBinary,
+		OpCode: ws.OpText,
 		Masked: false,
 		Length: int64(len(data)),
 	}

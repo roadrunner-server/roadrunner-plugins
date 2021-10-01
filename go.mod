@@ -26,16 +26,18 @@ require (
 	github.com/prometheus/client_golang v1.11.0
 	github.com/rabbitmq/amqp091-go v1.1.0
 	github.com/spf13/viper v1.9.0
+	// spiral
 	github.com/spiral/endure v1.0.4
 	github.com/spiral/errors v1.0.12
-	github.com/spiral/goridge/v3 v3.2.1
-	github.com/spiral/roadrunner/v2 v2.5.0-alpha.2
+	github.com/spiral/goridge/v3 v3.2.2-beta.1
+	github.com/spiral/roadrunner/v2 v2.5.0-beta.1
+	// spiral
 	github.com/stretchr/testify v1.7.0
 	github.com/yookoala/gofast v0.6.0
 	go.etcd.io/bbolt v1.3.6
 	go.uber.org/zap v1.19.1
 	golang.org/x/net v0.0.0-20210929193557-e81a3d93ecf6
-	golang.org/x/sys v0.0.0-20210930212924-f542c8878de8
+	golang.org/x/sys v0.0.0-20211001092434-39dca1131b70
 	google.golang.org/grpc v1.41.0
 	google.golang.org/protobuf v1.27.1
 	gopkg.in/natefinch/lumberjack.v2 v2.0.0
