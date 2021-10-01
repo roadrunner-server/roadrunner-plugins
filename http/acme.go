@@ -67,7 +67,7 @@ func ObtainCertificates(cacheDir, email, challengeType string, domains []string,
 		Agreed:                  true,
 		DisableHTTPChallenge:    false,
 		DisableTLSALPNChallenge: false,
-		ListenHost:              "127.0.0.1",
+		ListenHost:              "0.0.0.0",
 		AltHTTPPort:             altHTTPPort,
 		AltTLSALPNPort:          altTLSAlpnPort,
 		CertObtainTimeout:       time.Second * 240,
@@ -91,12 +91,14 @@ func ObtainCertificates(cacheDir, email, challengeType string, domains []string,
 
 	cfg.Issuers = append(cfg.Issuers, myAcme)
 
-	err := cfg.ObtainCertAsync(context.Background(), email)
-	if err != nil {
-		return nil, err
+	for i := 0; i < len(domains); i++ {
+		err := cfg.ObtainCertAsync(context.Background(), domains[i])
+		if err != nil {
+			return nil, err
+		}
 	}
 
-	err = cfg.ManageSync(context.Background(), domains)
+	err := cfg.ManageSync(context.Background(), domains)
 	if err != nil {
 		return nil, err
 	}
