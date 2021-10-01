@@ -73,7 +73,7 @@ ssl:
         ]
 ```
 
-- ✏️ Add a new option to the `service` plugin. Service plugin will not use std RR logger as output in the flavor of raw output.
+- ✏️ Add a new options to the `service` plugin. Service plugin will not use std RR logger as output in the flavor of raw output.
 
 New options:
 ```yaml

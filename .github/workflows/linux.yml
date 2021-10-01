@@ -67,7 +67,7 @@ jobs:
       - name: Install protoc
         uses: arduino/setup-protoc@v1
         with:
-          version: '3.17.3'
+          version: '3.18'
 
       - name: Run golang tests with coverage
         run: make test_coverage
