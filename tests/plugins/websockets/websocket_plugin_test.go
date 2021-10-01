@@ -613,10 +613,10 @@ func wsInit(t *testing.T) {
 	d, err := json.Marshal(messageWS("join", []byte("hello websockets"), "foo", "foo2"))
 	require.NoError(t, err)
 
-	err = wsutil.WriteClientBinary(conn, d)
+	err = wsutil.WriteClientText(conn, d)
 	assert.NoError(t, err)
 
-	msg, err := wsutil.ReadServerBinary(conn)
+	msg, err := wsutil.ReadServerText(conn)
 	require.NoError(t, err)
 	_ = msg
 	retMsg := utils.AsString(msg)
@@ -642,7 +642,7 @@ func RPCWsPubAsync(port string) func(t *testing.T) {
 			messagesToVerify = append(messagesToVerify, `{"topic":"foo2","payload":"hello, PHP2"}`)
 			i := 0
 			for {
-				msg, err2 := wsutil.ReadServerBinary(conn)
+				msg, err2 := wsutil.ReadServerText(conn)
 				retMsg := utils.AsString(msg)
 				assert.NoError(t, err2)
 				assert.Equal(t, messagesToVerify[i], retMsg)
@@ -658,7 +658,7 @@ func RPCWsPubAsync(port string) func(t *testing.T) {
 		d, err := json.Marshal(messageWS("join", []byte("hello websockets"), "foo", "foo2"))
 		require.NoError(t, err)
 
-		err = wsutil.WriteClientBinary(conn, d)
+		err = wsutil.WriteClientText(conn, d)
 		require.NoError(t, err)
 
 		time.Sleep(time.Second)
@@ -673,7 +673,7 @@ func RPCWsPubAsync(port string) func(t *testing.T) {
 			panic(err)
 		}
 
-		err = wsutil.WriteClientBinary(conn, d)
+		err = wsutil.WriteClientText(conn, d)
 		require.NoError(t, err)
 
 		time.Sleep(time.Second)
@@ -706,7 +706,7 @@ func RPCWsPub(port string) func(t *testing.T) {
 			messagesToVerify = append(messagesToVerify, `{"topic":"foo2","payload":"hello, PHP2"}`)
 			i := 0
 			for {
-				msg, err2 := wsutil.ReadServerBinary(conn)
+				msg, err2 := wsutil.ReadServerText(conn)
 				retMsg := utils.AsString(msg)
 				assert.NoError(t, err2)
 				assert.Equal(t, messagesToVerify[i], retMsg)
@@ -724,7 +724,7 @@ func RPCWsPub(port string) func(t *testing.T) {
 			panic(err)
 		}
 
-		err = wsutil.WriteClientBinary(conn, d)
+		err = wsutil.WriteClientText(conn, d)
 		assert.NoError(t, err)
 
 		time.Sleep(time.Second)
@@ -739,7 +739,7 @@ func RPCWsPub(port string) func(t *testing.T) {
 			panic(err)
 		}
 
-		err = wsutil.WriteClientBinary(conn, d)
+		err = wsutil.WriteClientText(conn, d)
 		assert.NoError(t, err)
 
 		time.Sleep(time.Second)
@@ -768,10 +768,10 @@ func RPCWsDeny(port string) func(t *testing.T) {
 			panic(err)
 		}
 
-		err = wsutil.WriteClientBinary(conn, d)
+		err = wsutil.WriteClientText(conn, d)
 		assert.NoError(t, err)
 
-		msg, err := wsutil.ReadServerBinary(conn)
+		msg, err := wsutil.ReadServerText(conn)
 		require.NoError(t, err)
 		retMsg := utils.AsString(msg)
 
@@ -784,10 +784,10 @@ func RPCWsDeny(port string) func(t *testing.T) {
 			panic(err)
 		}
 
-		err = wsutil.WriteClientBinary(conn, d)
+		err = wsutil.WriteClientText(conn, d)
 		assert.NoError(t, err)
 
-		msg, err = wsutil.ReadServerBinary(conn)
+		msg, err = wsutil.ReadServerText(conn)
 		require.NoError(t, err)
 		retMsg = utils.AsString(msg)
 

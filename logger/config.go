@@ -100,14 +100,36 @@ func (cfg *Config) BuildLogger() (*zap.Logger, error) {
 	case off, none:
 		return zap.NewNop(), nil
 	case production:
-		zCfg = zap.NewProductionConfig()
+		zCfg = zap.Config{
+			Level:       zap.NewAtomicLevelAt(zap.InfoLevel),
+			Development: false,
+			Sampling: &zap.SamplingConfig{
+				Initial:    100,
+				Thereafter: 100,
+			},
+			EncoderConfig: zapcore.EncoderConfig{
+				TimeKey:        "ts",
+				LevelKey:       "level",
+				NameKey:        "logger",
+				CallerKey:      "caller",
+				FunctionKey:    zapcore.OmitKey,
+				MessageKey:     "msg",
+				StacktraceKey:  "stacktrace",
+				LineEnding:     zapcore.DefaultLineEnding,
+				EncodeLevel:    zapcore.LowercaseLevelEncoder,
+				EncodeTime:     zapcore.EpochTimeEncoder,
+				EncodeDuration: zapcore.SecondsDurationEncoder,
+				EncodeCaller:   zapcore.ShortCallerEncoder,
+			},
+			OutputPaths:      []string{"stderr"},
+			ErrorOutputPaths: []string{"stderr"},
+		}
 	case development:
 		zCfg = zap.Config{
 			Level:       zap.NewAtomicLevelAt(zap.DebugLevel),
 			Development: true,
 			Encoding:    "console",
 			EncoderConfig: zapcore.EncoderConfig{
-				// Keys can be anything except the empty string.
 				TimeKey:        "T",
 				LevelKey:       "L",
 				NameKey:        "N",
@@ -117,10 +139,10 @@ func (cfg *Config) BuildLogger() (*zap.Logger, error) {
 				StacktraceKey:  "S",
 				LineEnding:     zapcore.DefaultLineEnding,
 				EncodeLevel:    ColoredLevelEncoder,
+				EncodeName:     ColoredNameEncoder,
 				EncodeTime:     zapcore.ISO8601TimeEncoder,
 				EncodeDuration: zapcore.StringDurationEncoder,
 				EncodeCaller:   zapcore.ShortCallerEncoder,
-				EncodeName:     ColoredNameEncoder,
 			},
 			OutputPaths:      []string{"stderr"},
 			ErrorOutputPaths: []string{"stderr"},
@@ -130,8 +152,9 @@ func (cfg *Config) BuildLogger() (*zap.Logger, error) {
 			Level:    zap.NewAtomicLevelAt(zap.InfoLevel),
 			Encoding: "console",
 			EncoderConfig: zapcore.EncoderConfig{
-				MessageKey: "message",
-				LineEnding: zapcore.DefaultLineEnding,
+				MessageKey:  "message",
+				LineEnding:  zapcore.DefaultLineEnding,
+				EncodeLevel: ColoredLevelEncoder,
 			},
 			OutputPaths:      []string{"stderr"},
 			ErrorOutputPaths: []string{"stderr"},
@@ -141,15 +164,19 @@ func (cfg *Config) BuildLogger() (*zap.Logger, error) {
 			Level:    zap.NewAtomicLevelAt(zap.DebugLevel),
 			Encoding: "console",
 			EncoderConfig: zapcore.EncoderConfig{
-				MessageKey:   "message",
-				LevelKey:     "level",
-				TimeKey:      "time",
-				NameKey:      "name",
-				EncodeName:   ColoredHashedNameEncoder,
-				EncodeLevel:  ColoredLevelEncoder,
-				EncodeTime:   UTCTimeEncoder,
-				LineEnding:   zapcore.DefaultLineEnding,
-				EncodeCaller: zapcore.ShortCallerEncoder,
+				TimeKey:        "T",
+				LevelKey:       "L",
+				NameKey:        "N",
+				CallerKey:      "C",
+				FunctionKey:    zapcore.OmitKey,
+				MessageKey:     "M",
+				StacktraceKey:  "S",
+				LineEnding:     zapcore.DefaultLineEnding,
+				EncodeLevel:    ColoredLevelEncoder,
+				EncodeName:     ColoredNameEncoder,
+				EncodeTime:     zapcore.ISO8601TimeEncoder,
+				EncodeDuration: zapcore.StringDurationEncoder,
+				EncodeCaller:   zapcore.ShortCallerEncoder,
 			},
 			OutputPaths:      []string{"stderr"},
 			ErrorOutputPaths: []string{"stderr"},

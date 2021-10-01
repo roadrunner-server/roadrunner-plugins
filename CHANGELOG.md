@@ -65,7 +65,7 @@ broadcast:
     ],
     "ssl":{
       "address":"0.0.0.0:443",
-      "acme":{ <------------- NEW
+      "acme":{
         "certs_dir":"rr_le_certs",
         "email":"you-email-here@email",
         "challenge_type":"http-01",
@@ -82,6 +82,23 @@ broadcast:
     "destroy_timeout":"60s"
   }
 }
+```
+
+- ✏️ Add new option to the `service` plugin. Service plugin will not use std rr logger as output in flavor of raw output.
+```json
+{
+    "service": {
+      "log_output": "stderr or stdout",      
+      "some_service_1": {
+      "command": "php tests/plugins/service/test_files/loop.php",
+      "process_num": 1,
+      "exec_timeout": 0,
+      "remain_after_exit": true,
+      "restart_sec": 1
+    }
+  }
+}
+```
 
 ```
 

@@ -1,6 +1,9 @@
 package service
 
 import (
+	"fmt"
+	"io"
+	"os"
 	"os/exec"
 	"strings"
 	"sync"
@@ -9,8 +12,14 @@ import (
 	"time"
 
 	"github.com/spiral/errors"
-	"github.com/spiral/roadrunner-plugins/v2/logger"
 	"github.com/spiral/roadrunner/v2/utils"
+)
+
+type logOutput string
+
+const (
+	stderr logOutput = "stderr"
+	stdout logOutput = "stdout"
 )
 
 // Process structure contains an information about process, restart information, log, errors, etc
@@ -23,9 +32,8 @@ type Process struct {
 	Pid    int
 
 	// root plugin error chan
-	errCh chan error
-	// logger
-	log logger.Logger
+	errCh     chan error
+	logOutput io.Writer
 
 	ExecTimeout     time.Duration
 	RemainAfterExit bool
@@ -37,21 +45,30 @@ type Process struct {
 }
 
 // NewServiceProcess constructs service process structure
-func NewServiceProcess(restartAfterExit bool, execTimeout time.Duration, restartDelay uint64, command string, l logger.Logger, errCh chan error) *Process {
-	return &Process{
+func NewServiceProcess(output string, restartAfterExit bool, execTimeout time.Duration, restartDelay uint64, command string, errCh chan error) *Process {
+	p := &Process{
 		rawCmd:          command,
 		RestartSec:      restartDelay,
 		ExecTimeout:     execTimeout,
 		RemainAfterExit: restartAfterExit,
 		errCh:           errCh,
-		log:             l,
 	}
+
+	switch logOutput(output) {
+	case stderr:
+		p.logOutput = os.Stderr
+	case stdout:
+		p.logOutput = os.Stdout
+	default:
+		p.logOutput = os.Stderr
+	}
+
+	return p
 }
 
 // write message to the log (stderr)
 func (p *Process) Write(b []byte) (int, error) {
-	p.log.Info(utils.AsString(b))
-	return len(b), nil
+	return p.logOutput.Write(b)
 }
 
 func (p *Process) start() {
@@ -97,7 +114,7 @@ func (p *Process) wait() {
 	// Wait error doesn't matter here
 	err := p.command.Wait()
 	if err != nil {
-		p.log.Error("process wait error", "error", err)
+		_, _ = p.logOutput.Write(utils.AsBytes(fmt.Sprintf("process wait error: %v", err)))
 	}
 	// wait for restart delay
 	if p.RemainAfterExit {
