@@ -65,7 +65,7 @@ broadcast:
     ],
     "ssl":{
       "address":"0.0.0.0:443",
-      "acme":{
+      "acme":{ <------------- NEW
         "certs_dir":"rr_le_certs",
         "email":"you-email-here@email",
         "challenge_type":"http-01",
