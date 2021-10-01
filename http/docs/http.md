@@ -14,6 +14,10 @@
       "acme": {
         "certs_dir": "rr_le_certs",
         "email": "you-email-here@email",
+        // alternate port for the http challenge
+        "alt_http_port": 80,
+        // alternate port for the tls-alpn challenge
+        "alt_tlsalpn_port": 443,
         "challenge_type": "http-01",
         "use_production_endpoint": true,
         "domains": [
