@@ -14,40 +14,40 @@
 
 ```yaml
 broadcast:
-    default:
-        driver: memory
-        interval: 1
+  default:
+    driver: memory
+    interval: 1
 ```
 
 ### New style:
 
 ```yaml
 broadcast:
-    default:
-        driver: memory
-        config: {} <--------------- NEW
+  default:
+    driver: memory
+    config: {} <--------------- NEW
 ```
 
 ```yaml
 kv:
-    memory-rr:
-        driver: memory
-        config: <--------------- NEW
-            interval: 1
+  memory-rr:
+    driver: memory
+    config: <--------------- NEW
+      interval: 1
 
 kv:
-    memcached-rr:
-        driver: memcached
-        config: <--------------- NEW
-            addr:
-                - "127.0.0.1:11211"
+  memcached-rr:
+    driver: memcached
+    config: <--------------- NEW
+      addr:
+        - "127.0.0.1:11211"
 
 broadcast:
-    default:
-        driver: redis
-        config: <------------------ NEW
-            addrs:
-                - "127.0.0.1:6379"
+  default:
+    driver: redis
+    config: <------------------ NEW
+      addrs:
+        - "127.0.0.1:6379"
 ```
 
 ## 👀 New:
@@ -56,17 +56,48 @@ broadcast:
 - ✏️ [Roadrunner-plugins](https://github.com/spiral/roadrunner-plugins) repository. This is the new home for the roadrunner plugins with documentation, configuration samples, and common problems.
 - ✏️ **[BETA]** Let's Encrypt support. RR now can obtain an SSL certificate/PK for your domain automatically. Here is the new configuration:
 ```yaml
-ssl:
-    address: '0.0.0.0:443'
-    acme:
+    ssl:
+      # Host and port to listen on (eg.: `127.0.0.1:443`).
+      #
+      # Default: ":443"
+      address: "127.0.0.1:443"
+
+      # Use ACME certificates provider (Let's encrypt)
+      acme:
+        # Directory to use as a certificate/pk, account info storage
+        #
+        # Optional. Default: rr_cache
         certs_dir: rr_le_certs
+
+        # User email
+        #
+        # Used to create LE account. Mandatory. Error on empty.
         email: you-email-here@email
-        # alternate port for the http challenge
-        "alt_http_port": 80,
-        # alternate port for the tls-alpn challenge
-        "alt_tlsalpn_port": 443,
+
+        # Alternate port for the http challenge. Challenge traffic should be redirected to this port if overridden.
+        #
+        # Optional. Default: 80
+        alt_http_port: 80,
+
+
+        # Alternate port for the tls-alpn-01 challenge. Challenge traffic should be redirected to this port if overridden.
+        #
+        # Optional. Default: 443.
+        alt_tlsalpn_port: 443,
+
+        # Challenge types
+        #
+        # Optional. Default: http-01. Possible values: http-01, tlsalpn-01
         challenge_type: http-01
+
+        # Use production or staging endpoints. NOTE, try to use the staging endpoint (`use_production_endpoint`: `false`) to make sure, that everything works correctly.
+        #
+        # Optional, but for production should be set to true. Default: false
         use_production_endpoint: true
+
+        # List of your domains to obtain certificates
+        #
+        # Mandatory. Error on empty.
         domains: [
             "your-cool-domain.here",
             "your-second-domain.here"
@@ -119,6 +150,7 @@ you need to serialize data on the `executable` (in the command) side.
 - 📦 roadrunner-plugins `v2.5.0`
 - 📦 roadrunner-temporal `v1.0.10`
 - 📦 goridge `v3.2.2`
+
 
 ## v2.4.1 (13.09.2021)
 
