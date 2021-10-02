@@ -85,11 +85,10 @@ func (r *redisChannel) unsub(topic string) error {
 	return nil
 }
 
-func (r *redisChannel) stop() error {
+func (r *redisChannel) stop() {
 	r.exit <- struct{}{}
 	close(r.out)
 	close(r.exit)
-	return nil
 }
 
 func (r *redisChannel) message() chan *pubsub.Message {

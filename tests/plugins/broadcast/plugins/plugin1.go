@@ -53,6 +53,10 @@ func (p *Plugin1) Serve() chan error {
 				return
 			}
 
+			if msg == nil {
+				continue
+			}
+
 			p.log.Info(fmt.Sprintf("%s: %s", Plugin1Name, *msg))
 		}
 	}()

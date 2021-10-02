@@ -20,27 +20,27 @@ type Plugin struct {
 	log logger.Logger
 }
 
-func (s *Plugin) Init(log logger.Logger, cfg config.Configurer) error {
+func (p *Plugin) Init(log logger.Logger, cfg config.Configurer) error {
 	if !cfg.Has(RootPluginName) {
 		return errors.E(errors.Disabled)
 	}
 
-	s.cfgPlugin = cfg
-	s.log = log
+	p.cfgPlugin = cfg
+	p.log = log
 	return nil
 }
 
 // Name returns plugin user-friendly name
-func (s *Plugin) Name() string {
+func (p *Plugin) Name() string {
 	return PluginName
 }
 
 // Available interface implementation
-func (s *Plugin) Available() {}
+func (p *Plugin) Available() {}
 
-func (s *Plugin) KvFromConfig(key string) (kv.Storage, error) {
+func (p *Plugin) KvFromConfig(key string) (kv.Storage, error) {
 	const op = errors.Op("boltdb_plugin_provide")
-	st, err := memcachedkv.NewMemcachedDriver(s.log, key, s.cfgPlugin)
+	st, err := memcachedkv.NewMemcachedDriver(p.log, key, p.cfgPlugin)
 	if err != nil {
 		return nil, errors.E(op, err)
 	}

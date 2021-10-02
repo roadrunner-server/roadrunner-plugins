@@ -32,6 +32,9 @@ type Subscriber interface {
 
 	// Connections returns all connections associated with the particular topic
 	Connections(topic string, ret map[string]struct{})
+
+	// Stop used to stop the driver and free up the connection
+	Stop()
 }
 
 // Publisher publish one or more messages

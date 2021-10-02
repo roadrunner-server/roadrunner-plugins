@@ -3,7 +3,6 @@ package redis
 import (
 	"sync"
 
-	"github.com/go-redis/redis/v8"
 	"github.com/spiral/errors"
 	"github.com/spiral/roadrunner-plugins/v2/config"
 	"github.com/spiral/roadrunner-plugins/v2/internal/common/kv"
@@ -21,35 +20,11 @@ type Plugin struct {
 	cfgPlugin config.Configurer
 	// logger
 	log logger.Logger
-	// redis universal client
-	universalClient redis.UniversalClient
-
-	// fanIn implementation used to deliver messages from all channels to the single websocket point
-	stopCh chan struct{}
 }
 
 func (p *Plugin) Init(cfg config.Configurer, log logger.Logger) error {
 	p.log = log
 	p.cfgPlugin = cfg
-	p.stopCh = make(chan struct{}, 1)
-
-	return nil
-}
-
-func (p *Plugin) Serve() chan error {
-	return make(chan error)
-}
-
-func (p *Plugin) Stop() error {
-	const op = errors.Op("redis_plugin_stop")
-	p.stopCh <- struct{}{}
-
-	if p.universalClient != nil {
-		err := p.universalClient.Close()
-		if err != nil {
-			return errors.E(op, err)
-		}
-	}
 
 	return nil
 }
@@ -61,7 +36,7 @@ func (p *Plugin) Name() string {
 // Available interface implementation
 func (p *Plugin) Available() {}
 
-// KVConstruct provides KV storage implementation over the redis plugin
+// KvFromConfig provides KV storage implementation over the redis plugin
 func (p *Plugin) KvFromConfig(key string) (kv.Storage, error) {
 	const op = errors.Op("redis_plugin_provide")
 	st, err := redis_kv.NewRedisDriver(p.log, key, p.cfgPlugin)
@@ -73,5 +48,10 @@ func (p *Plugin) KvFromConfig(key string) (kv.Storage, error) {
 }
 
 func (p *Plugin) PubSubFromConfig(key string) (pubsub.PubSub, error) {
-	return redis_pubsub.NewPubSubDriver(p.log, key, p.cfgPlugin, p.stopCh)
+	const op = errors.Op("pub_sub_from_config")
+	ps, err := redis_pubsub.NewPubSubDriver(p.log, key, p.cfgPlugin)
+	if err != nil {
+		return nil, errors.E(op, err)
+	}
+	return ps, nil
 }

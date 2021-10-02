@@ -17,7 +17,6 @@ test_coverage:
 	go test -v -race -cover -tags=debug -coverpkg=./... -coverprofile=./coverage-ci/kv_plugin.out -covermode=atomic ./tests/plugins/kv
 	go test -v -race -cover -tags=debug -coverpkg=./... -coverprofile=./coverage-ci/grpc_codec.out -covermode=atomic ./grpc/codec
 	go test -v -race -cover -tags=debug -coverpkg=./... -coverprofile=./coverage-ci/grpc_parser.out -covermode=atomic ./grpc/parser
-	go test -v -race -cover -tags=debug -coverpkg=./... -coverprofile=./coverage-ci/grpc_proxy.out -covermode=atomic ./grpc/proxy
 	go test -v -race -cover -tags=debug -coverpkg=./... -coverprofile=./coverage-ci/broadcast_plugin.out -covermode=atomic ./tests/plugins/broadcast
 	go test -v -race -cover -tags=debug -coverpkg=./... -coverprofile=./coverage-ci/websockets.out -covermode=atomic ./tests/plugins/websockets
 	go test -v -race -cover -tags=debug -coverpkg=./... -coverprofile=./coverage-ci/http.out -covermode=atomic ./tests/plugins/http
@@ -48,7 +47,6 @@ test: ## Run application tests
 	go test -v -race -tags=debug ./websockets
 	go test -v -race -tags=debug ./grpc/codec
 	go test -v -race -tags=debug ./grpc/parser
-	go test -v -race -tags=debug ./grpc/proxy
 	go test -v -race -tags=debug ./tests/plugins/jobs
 	go test -v -race -tags=debug ./tests/plugins/kv
 	go test -v -race -tags=debug ./tests/plugins/broadcast
