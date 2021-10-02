@@ -13,16 +13,16 @@ import (
 	"github.com/spiral/roadrunner/v2/utils"
 )
 
-type Driver struct {
+type driver struct {
 	universalClient redis.UniversalClient
 	log             logger.Logger
 	cfg             *Config
 }
 
-func NewRedisDriver(log logger.Logger, key string, cfgPlugin config.Configurer) (*Driver, error) {
+func NewRedisDriver(log logger.Logger, key string, cfgPlugin config.Configurer) (*driver, error) {
 	const op = errors.Op("new_redis_driver")
 
-	d := &Driver{
+	d := &driver{
 		log: log,
 	}
 
@@ -66,7 +66,7 @@ func NewRedisDriver(log logger.Logger, key string, cfgPlugin config.Configurer) 
 }
 
 // Has checks if value exists.
-func (d *Driver) Has(keys ...string) (map[string]bool, error) {
+func (d *driver) Has(keys ...string) (map[string]bool, error) {
 	const op = errors.Op("redis_driver_has")
 	if keys == nil {
 		return nil, errors.E(op, errors.NoKeys)
@@ -91,7 +91,7 @@ func (d *Driver) Has(keys ...string) (map[string]bool, error) {
 }
 
 // Get loads key content into slice.
-func (d *Driver) Get(key string) ([]byte, error) {
+func (d *driver) Get(key string) ([]byte, error) {
 	const op = errors.Op("redis_driver_get")
 	// to get cases like "  "
 	keyTrimmed := strings.TrimSpace(key)
@@ -104,7 +104,7 @@ func (d *Driver) Get(key string) ([]byte, error) {
 // MGet loads content of multiple values (some values might be skipped).
 // https://redis.io/commands/mget
 // Returns slice with the interfaces with values
-func (d *Driver) MGet(keys ...string) (map[string][]byte, error) {
+func (d *driver) MGet(keys ...string) (map[string][]byte, error) {
 	const op = errors.Op("redis_driver_mget")
 	if keys == nil {
 		return nil, errors.E(op, errors.NoKeys)
@@ -141,7 +141,7 @@ func (d *Driver) MGet(keys ...string) (map[string][]byte, error) {
 //
 // Use expiration for `SETEX`-like behavior.
 // Zero expiration means the key has no expiration time.
-func (d *Driver) Set(items ...*kvv1.Item) error {
+func (d *driver) Set(items ...*kvv1.Item) error {
 	const op = errors.Op("redis_driver_set")
 	if items == nil {
 		return errors.E(op, errors.NoKeys)
@@ -172,7 +172,7 @@ func (d *Driver) Set(items ...*kvv1.Item) error {
 }
 
 // Delete one or multiple keys.
-func (d *Driver) Delete(keys ...string) error {
+func (d *driver) Delete(keys ...string) error {
 	const op = errors.Op("redis_driver_delete")
 	if keys == nil {
 		return errors.E(op, errors.NoKeys)
@@ -190,7 +190,7 @@ func (d *Driver) Delete(keys ...string) error {
 
 // MExpire https://redis.io/commands/expire
 // timeout in RFC3339
-func (d *Driver) MExpire(items ...*kvv1.Item) error {
+func (d *driver) MExpire(items ...*kvv1.Item) error {
 	const op = errors.Op("redis_driver_mexpire")
 	now := time.Now()
 	for _, item := range items {
@@ -216,7 +216,7 @@ func (d *Driver) MExpire(items ...*kvv1.Item) error {
 
 // TTL https://redis.io/commands/ttl
 // return time in seconds (float64) for a given keys
-func (d *Driver) TTL(keys ...string) (map[string]string, error) {
+func (d *driver) TTL(keys ...string) (map[string]string, error) {
 	const op = errors.Op("redis_driver_ttl")
 	if keys == nil {
 		return nil, errors.E(op, errors.NoKeys)
@@ -243,7 +243,7 @@ func (d *Driver) TTL(keys ...string) (map[string]string, error) {
 	return m, nil
 }
 
-func (d *Driver) Clear() error {
+func (d *driver) Clear() error {
 	fdb := d.universalClient.FlushDB(context.Background())
 	if fdb.Err() != nil {
 		return fdb.Err()
@@ -252,4 +252,7 @@ func (d *Driver) Clear() error {
 	return nil
 }
 
-func (d *Driver) Stop() {}
+func (d *driver) Stop() {
+	// close the connection
+	_ = d.universalClient.Close()
+}

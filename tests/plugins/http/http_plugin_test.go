@@ -1625,7 +1625,7 @@ func serveStaticSampleEtag(t *testing.T) {
 	// OK 200 response
 	b, r, err := get("http://127.0.0.1:21603/sample.txt")
 	assert.NoError(t, err)
-	assert.Equal(t, "sample\n", b)
+	assert.Contains(t, b, "sample")
 	assert.Equal(t, r.StatusCode, http.StatusOK)
 	etag := r.Header.Get("Etag")
 
@@ -1909,7 +1909,7 @@ func staticNotForbid(t *testing.T) {
 func serveStaticSample(t *testing.T) {
 	b, r, err := get("http://127.0.0.1:21603/sample.txt")
 	assert.NoError(t, err)
-	assert.Equal(t, "sample\n", b)
+	assert.Contains(t, b, "sample")
 	_ = r.Body.Close()
 }
 

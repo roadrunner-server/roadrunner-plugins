@@ -11,7 +11,7 @@ import (
 	"github.com/spiral/roadrunner-plugins/v2/logger"
 )
 
-type PubSubDriver struct {
+type driver struct {
 	sync.RWMutex
 	cfg *Config
 
@@ -21,11 +21,10 @@ type PubSubDriver struct {
 	stopCh          chan struct{}
 }
 
-func NewPubSubDriver(log logger.Logger, key string, cfgPlugin config.Configurer, stopCh chan struct{}) (*PubSubDriver, error) {
+func NewPubSubDriver(log logger.Logger, key string, cfgPlugin config.Configurer) (*driver, error) {
 	const op = errors.Op("new_pub_sub_driver")
-	ps := &PubSubDriver{
-		log:    log,
-		stopCh: stopCh,
+	ps := &driver{
+		log: log,
 	}
 
 	// will be different for every connected driver
@@ -76,16 +75,15 @@ func NewPubSubDriver(log logger.Logger, key string, cfgPlugin config.Configurer,
 	return ps, nil
 }
 
-func (p *PubSubDriver) stop() {
+func (p *driver) stop() {
 	go func() {
 		for range p.stopCh {
-			_ = p.channel.stop()
 			return
 		}
 	}()
 }
 
-func (p *PubSubDriver) Publish(msg *pubsub.Message) error {
+func (p *driver) Publish(msg *pubsub.Message) error {
 	p.Lock()
 	defer p.Unlock()
 
@@ -97,7 +95,7 @@ func (p *PubSubDriver) Publish(msg *pubsub.Message) error {
 	return nil
 }
 
-func (p *PubSubDriver) PublishAsync(msg *pubsub.Message) {
+func (p *driver) PublishAsync(msg *pubsub.Message) {
 	go func() {
 		p.Lock()
 		defer p.Unlock()
@@ -109,7 +107,7 @@ func (p *PubSubDriver) PublishAsync(msg *pubsub.Message) {
 	}()
 }
 
-func (p *PubSubDriver) Subscribe(connectionID string, topics ...string) error {
+func (p *driver) Subscribe(connectionID string, topics ...string) error {
 	// just add a connection
 	for i := 0; i < len(topics); i++ {
 		// key - topic
@@ -129,7 +127,7 @@ func (p *PubSubDriver) Subscribe(connectionID string, topics ...string) error {
 	return p.channel.sub(topics...)
 }
 
-func (p *PubSubDriver) Unsubscribe(connectionID string, topics ...string) error {
+func (p *driver) Unsubscribe(connectionID string, topics ...string) error {
 	// Remove topics from the storage
 	for i := 0; i < len(topics); i++ {
 		srem := p.universalClient.SRem(context.Background(), topics[i], connectionID)
@@ -147,7 +145,7 @@ func (p *PubSubDriver) Unsubscribe(connectionID string, topics ...string) error 
 		}
 
 		// if we have associated connections - skip
-		if res == 1 { // exists means that topic still exists and some other nodes may have connections associated with it
+		if res == 1 { // exists mean that topic still exists and some other nodes may have connections associated with it
 			continue
 		}
 
@@ -161,7 +159,7 @@ func (p *PubSubDriver) Unsubscribe(connectionID string, topics ...string) error 
 	return nil
 }
 
-func (p *PubSubDriver) Connections(topic string, res map[string]struct{}) {
+func (p *driver) Connections(topic string, res map[string]struct{}) {
 	hget := p.universalClient.SMembersMap(context.Background(), topic)
 	r, err := hget.Result()
 	if err != nil {
@@ -175,11 +173,20 @@ func (p *PubSubDriver) Connections(topic string, res map[string]struct{}) {
 	}
 }
 
-// Next return next message
-func (p *PubSubDriver) Next(ctx context.Context) (*pubsub.Message, error) {
+func (p *driver) Stop() {
+	// close the connection
+	p.channel.stop()
+	_ = p.universalClient.Close()
+}
+
+// Next message
+func (p *driver) Next(ctx context.Context) (*pubsub.Message, error) {
 	const op = errors.Op("redis_driver_next")
 	select {
-	case msg := <-p.channel.message():
+	case msg, ok := <-p.channel.message():
+		if !ok {
+			return nil, nil
+		}
 		return msg, nil
 	case <-ctx.Done():
 		return nil, errors.E(op, errors.TimeOut, ctx.Err())
