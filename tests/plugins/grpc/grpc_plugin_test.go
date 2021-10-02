@@ -6,6 +6,7 @@ import (
 	"crypto/x509"
 	"os"
 	"os/signal"
+	"runtime"
 	"sync"
 	"syscall"
 	"testing"
@@ -249,6 +250,9 @@ func TestGrpcRqRsTLS(t *testing.T) {
 }
 
 func TestGrpcRqRsTLSRootCA(t *testing.T) {
+	if runtime.GOOS == "windows" {
+		t.Skip("root pool is not available on Windows")
+	}
 	cont, err := endure.NewContainer(nil, endure.SetLogLevel(endure.ErrorLevel))
 	assert.NoError(t, err)
 

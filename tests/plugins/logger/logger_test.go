@@ -424,8 +424,8 @@ func TestMarshalObjectLogging(t *testing.T) {
 	assert.Contains(t, string(f), "Example marshaller error")
 	assert.Equal(t, 4, strings.Count(string(f), "Example marshaller error"))
 
-	_ = os.Remove("test.log")
-
 	stopCh <- struct{}{}
 	wg.Wait()
+
+	_ = os.Remove("test.log")
 }
