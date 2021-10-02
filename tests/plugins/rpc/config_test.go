@@ -1,6 +1,7 @@
 package rpc
 
 import (
+	"runtime"
 	"testing"
 
 	"github.com/spiral/roadrunner-plugins/v2/rpc"
@@ -21,7 +22,11 @@ func TestConfig_Listener(t *testing.T) {
 	}()
 
 	assert.Equal(t, "tcp", ln.Addr().Network())
-	assert.Equal(t, "0.0.0.0:18001", ln.Addr().String())
+	if runtime.GOOS == "windows" {
+		assert.Equal(t, "[::]:18001", ln.Addr().String())
+	} else {
+		assert.Equal(t, "0.0.0.0:18001", ln.Addr().String())
+	}
 }
 
 func TestConfig_Listener2(t *testing.T) {
@@ -38,7 +43,11 @@ func TestConfig_Listener2(t *testing.T) {
 	}()
 
 	assert.Equal(t, "tcp", ln.Addr().Network())
-	assert.Equal(t, "0.0.0.0:18001", ln.Addr().String())
+	if runtime.GOOS == "windows" {
+		assert.Equal(t, "[::]:18001", ln.Addr().String())
+	} else {
+		assert.Equal(t, "0.0.0.0:18001", ln.Addr().String())
+	}
 }
 
 func TestConfig_ListenerIPV6(t *testing.T) {

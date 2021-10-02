@@ -40,9 +40,7 @@ func (m *MockLogger) Init() error {
 func (m *MockLogger) Debug(msg string, keyvals ...interface{}) {
 	m.ctrl.T.Helper()
 	varargs := []interface{}{msg}
-	for _, a := range keyvals {
-		varargs = append(varargs, a)
-	}
+	varargs = append(varargs, keyvals...)
 	m.ctrl.Call(m, "Debug", varargs...)
 }
 
@@ -57,9 +55,7 @@ func (mr *MockLoggerMockRecorder) Debug(msg interface{}, keyvals ...interface{})
 func (m *MockLogger) Error(msg string, keyvals ...interface{}) {
 	m.ctrl.T.Helper()
 	varargs := []interface{}{msg}
-	for _, a := range keyvals {
-		varargs = append(varargs, a)
-	}
+	varargs = append(varargs, keyvals...)
 	m.ctrl.Call(m, "Error", varargs...)
 }
 
@@ -74,9 +70,7 @@ func (mr *MockLoggerMockRecorder) Error(msg interface{}, keyvals ...interface{})
 func (m *MockLogger) Info(msg string, keyvals ...interface{}) {
 	m.ctrl.T.Helper()
 	varargs := []interface{}{msg}
-	for _, a := range keyvals {
-		varargs = append(varargs, a)
-	}
+	varargs = append(varargs, keyvals...)
 	m.ctrl.Call(m, "Info", varargs...)
 }
 
@@ -91,9 +85,7 @@ func (mr *MockLoggerMockRecorder) Info(msg interface{}, keyvals ...interface{}) 
 func (m *MockLogger) Warn(msg string, keyvals ...interface{}) {
 	m.ctrl.T.Helper()
 	varargs := []interface{}{msg}
-	for _, a := range keyvals {
-		varargs = append(varargs, a)
-	}
+	varargs = append(varargs, keyvals...)
 	m.ctrl.Call(m, "Warn", varargs...)
 }
 
@@ -130,10 +122,8 @@ func (m *MockWithLogger) EXPECT() *MockWithLoggerMockRecorder {
 // With mocks base method.
 func (m *MockWithLogger) With(keyvals ...interface{}) logger.Logger {
 	m.ctrl.T.Helper()
-	varargs := []interface{}{}
-	for _, a := range keyvals {
-		varargs = append(varargs, a)
-	}
+	var varargs []interface{}
+	varargs = append(varargs, keyvals...)
 	ret := m.ctrl.Call(m, "With", varargs...)
 	ret0, _ := ret[0].(logger.Logger)
 	return ret0
