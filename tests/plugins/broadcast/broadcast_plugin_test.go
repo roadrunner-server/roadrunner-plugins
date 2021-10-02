@@ -512,5 +512,6 @@ func redisFlushAll(addr string) func(t *testing.T) {
 		})
 
 		rdb.FlushAll(context.Background())
+		_ = rdb.Close()
 	}
 }
