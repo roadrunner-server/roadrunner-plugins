@@ -10,7 +10,6 @@ import (
 
 	j "github.com/json-iterator/go"
 	"github.com/spiral/errors"
-	"github.com/spiral/roadrunner-plugins/v2/http/attributes"
 	"github.com/spiral/roadrunner-plugins/v2/http/config"
 	"github.com/spiral/roadrunner-plugins/v2/logger"
 	"github.com/spiral/roadrunner/v2/payload"
@@ -71,19 +70,7 @@ func FetchIP(pair string) string {
 	return addr
 }
 
-// NewRequest creates new PSR7 compatible request using net/http request.
-func NewRequest(r *http.Request, cfg *config.Uploads) (*Request, error) {
-	req := &Request{
-		RemoteAddr: FetchIP(r.RemoteAddr),
-		Protocol:   r.Proto,
-		Method:     r.Method,
-		URI:        URI(r),
-		Header:     r.Header,
-		Cookies:    make(map[string]string),
-		RawQuery:   r.URL.RawQuery,
-		Attributes: attributes.All(r),
-	}
-
+func request(r *http.Request, req *Request, cfg *config.Uploads) error {
 	for _, c := range r.Cookies() {
 		if v, err := url.QueryUnescape(c.Value); err == nil {
 			req.Cookies[c.Name] = v
@@ -92,30 +79,30 @@ func NewRequest(r *http.Request, cfg *config.Uploads) (*Request, error) {
 
 	switch req.contentType() {
 	case contentNone:
-		return req, nil
+		return nil
 
 	case contentStream:
 		var err error
 		req.body, err = ioutil.ReadAll(r.Body)
-		return req, err
+		return err
 
 	case contentMultipart:
 		if err := r.ParseMultipartForm(defaultMaxMemory); err != nil {
-			return nil, err
+			return err
 		}
 
 		req.Uploads = parseUploads(r, cfg)
 		fallthrough
 	case contentFormData:
 		if err := r.ParseForm(); err != nil {
-			return nil, err
+			return err
 		}
 
 		req.body = parseData(r)
 	}
 
 	req.Parsed = true
-	return req, nil
+	return nil
 }
 
 // Open moves all uploaded files to temporary directory so it can be given to php later.

@@ -43,7 +43,7 @@ type middleware map[string]Middleware
 
 // Plugin manages pool, http servers. The main http plugin structure
 type Plugin struct {
-	sync.RWMutex
+	mu sync.RWMutex
 
 	// plugins
 	server server.Server
@@ -112,7 +112,6 @@ func (p *Plugin) Init(cfg config.Configurer, rrLogger logger.Logger, server serv
 	p.workersExporter = newWorkersExporter()
 	// initialize requests exporter
 	p.requestsExporter = newRequestsExporter()
-
 	p.server = server
 
 	return nil
@@ -120,8 +119,8 @@ func (p *Plugin) Init(cfg config.Configurer, rrLogger logger.Logger, server serv
 
 func (p *Plugin) logCallback(event interface{}) {
 	if ev, ok := event.(handler.ResponseEvent); ok {
-		p.log.Debug(fmt.Sprintf("%d %s %s", ev.Response.Status, ev.Request.Method, ev.Request.URI),
-			"remote", ev.Request.RemoteAddr,
+		p.log.Debug(fmt.Sprintf("%s %s %s", ev.Status, ev.Method, ev.URI),
+			"remote", ev.ReqRemoteAddr,
 			"elapsed", ev.Elapsed().String(),
 		)
 	}
@@ -133,9 +132,9 @@ func (p *Plugin) Serve() chan error {
 	// run whole process in the goroutine
 	go func() {
 		// protect http initialization
-		p.Lock()
+		p.mu.Lock()
 		p.serve(errCh)
-		p.Unlock()
+		p.mu.Unlock()
 	}()
 
 	return errCh
@@ -170,11 +169,6 @@ func (p *Plugin) serve(errCh chan error) {
 	}
 
 	p.handler.AddListener(p.logCallback, p.metricsCallback)
-
-	/*
-		cases:
-		1. User don't use http at all, then, to pass the LE challenge we have to ini
-	*/
 
 	if p.cfg.EnableHTTP() {
 		if p.cfg.EnableH2C() {
@@ -260,8 +254,8 @@ func (p *Plugin) serve(errCh chan error) {
 
 // Stop stops the http.
 func (p *Plugin) Stop() error {
-	p.Lock()
-	defer p.Unlock()
+	p.mu.Lock()
+	defer p.mu.Unlock()
 
 	if p.fcgi != nil {
 		err := p.fcgi.Shutdown(context.Background())
@@ -316,15 +310,15 @@ func (p *Plugin) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 	r = attributes.Init(r)
 	// protect the case, when user sendEvent Reset, and we are replacing handler with pool
-	p.RLock()
+	p.mu.RLock()
 	p.handler.ServeHTTP(w, r)
-	p.RUnlock()
+	p.mu.RUnlock()
 }
 
 // Workers returns slice with the process states for the workers
 func (p *Plugin) Workers() []*process.State {
-	p.RLock()
-	defer p.RUnlock()
+	p.mu.RLock()
+	defer p.mu.RUnlock()
 
 	workers := p.workers()
 
@@ -352,8 +346,8 @@ func (p *Plugin) Name() string {
 
 // Reset destroys the old pool and replaces it with new one, waiting for old pool to die
 func (p *Plugin) Reset() error {
-	p.Lock()
-	defer p.Unlock()
+	p.mu.Lock()
+	defer p.mu.Unlock()
 	const op = errors.Op("http_plugin_reset")
 	p.log.Info("HTTP plugin got restart request. Restarting...")
 	p.pool.Destroy(context.Background())
@@ -407,8 +401,8 @@ func (p *Plugin) AddMiddleware(name endure.Named, m Middleware) {
 
 // Status return status of the particular plugin
 func (p *Plugin) Status() status.Status {
-	p.RLock()
-	defer p.RUnlock()
+	p.mu.RLock()
+	defer p.mu.RUnlock()
 
 	workers := p.workers()
 	for i := 0; i < len(workers); i++ {
@@ -426,8 +420,8 @@ func (p *Plugin) Status() status.Status {
 
 // Ready return readiness status of the particular plugin
 func (p *Plugin) Ready() status.Status {
-	p.RLock()
-	defer p.RUnlock()
+	p.mu.RLock()
+	defer p.mu.RUnlock()
 
 	workers := p.workers()
 	for i := 0; i < len(workers); i++ {

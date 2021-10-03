@@ -21,17 +21,17 @@ type Response struct {
 	Body interface{}
 }
 
-// NewResponse creates new response based on given pool payload.
-func NewResponse(p *payload.Payload) (*Response, error) {
+func NewResponse(p *payload.Payload, rsp *Response) error {
 	const op = errors.Op("http_response")
-	r := &Response{Body: p.Body}
-	if err := json.Unmarshal(p.Context, r); err != nil {
-		return nil, errors.E(op, errors.Decode, err)
+	rsp.Body = p.Body
+	if err := json.Unmarshal(p.Context, rsp); err != nil {
+		return errors.E(op, errors.Decode, err)
 	}
 
-	return r, nil
+	return nil
 }
 
+//
 // Write writes response headers, status and body into ResponseWriter.
 func (r *Response) Write(w http.ResponseWriter) error {
 	// INFO map is the reference type in golang

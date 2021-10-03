@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/spiral/errors"
+	"github.com/spiral/roadrunner-plugins/v2/http/attributes"
 	"github.com/spiral/roadrunner-plugins/v2/http/config"
 	"github.com/spiral/roadrunner-plugins/v2/logger"
 	"github.com/spiral/roadrunner/v2/events"
@@ -38,12 +39,10 @@ func (e *ErrorEvent) Elapsed() time.Duration {
 
 // ResponseEvent represents singular http response event.
 type ResponseEvent struct {
-	// Request contains client request, must not be stored.
-	Request *Request
-
-	// Response contains service response.
-	Response *Response
-
+	Status        string
+	Method        string
+	URI           string
+	ReqRemoteAddr string
 	// event timings
 	start   time.Time
 	elapsed time.Duration
@@ -57,14 +56,19 @@ func (e *ResponseEvent) Elapsed() time.Duration {
 // Handler serves http connections to underlying PHP application using PSR-7 protocol. Context will include request headers,
 // parsed files and query, payload will include parsed form dataTree (if any).
 type Handler struct {
-	maxRequestSize   uint64
-	uploads          *config.Uploads
-	trusted          config.Cidrs
-	log              logger.Logger
-	pool             pool.Pool
-	mul              sync.Mutex
-	lsn              []events.Listener
+	maxRequestSize uint64
+	uploads        *config.Uploads
+	trusted        config.Cidrs
+	log            logger.Logger
+	pool           pool.Pool
+	mul            sync.Mutex
+	lsn            []events.Listener
+
 	internalHTTPCode uint64
+
+	// internal
+	reqPool  sync.Pool
+	respPool sync.Pool
 }
 
 // NewHandler return handle interface implementation
@@ -78,6 +82,22 @@ func NewHandler(maxReqSize uint64, internalHTTPCode uint64, uploads *config.Uplo
 		pool:             pool,
 		trusted:          trusted,
 		internalHTTPCode: internalHTTPCode,
+		reqPool: sync.Pool{
+			New: func() interface{} {
+				return &Request{
+					Attributes: make(map[string]interface{}),
+					Cookies:    make(map[string]string),
+				}
+			},
+		},
+		respPool: sync.Pool{
+			New: func() interface{} {
+				return &Response{
+					Body:    make([]byte, 0, 100),
+					Headers: make(map[string][]string),
+				}
+			},
+		},
 	}, nil
 }
 
@@ -89,7 +109,7 @@ func (h *Handler) AddListener(l ...events.Listener) {
 	h.lsn = l
 }
 
-// mdwr serve using PSR-7 requests passed to underlying application. Attempts to serve static files first if enabled.
+// ServeHTTP transform original request to the PSR-7 passed then to the underlying application. Attempts to serve static files first if enabled.
 func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	const op = errors.Op("serve_http")
 	start := time.Now()
@@ -115,7 +135,10 @@ func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	req, err := NewRequest(r, h.uploads)
+	req := h.getReq(r)
+	defer h.putReq(req)
+
+	err := request(r, req, h.uploads)
 	if err != nil {
 		// if pipe is broken, there is no sense to write the header
 		// in this case we just report about error
@@ -142,26 +165,37 @@ func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	rsp, err := h.pool.Exec(p)
+	wResp, err := h.pool.Exec(p)
 	if err != nil {
 		h.handleError(w, r, start, err)
 		h.sendEvent(ErrorEvent{Request: r, Error: errors.E(op, err), start: start, elapsed: time.Since(start)})
 		return
 	}
 
-	resp, err := NewResponse(rsp)
+	rsp := h.getRsp()
+	defer h.putRsp(rsp)
+
+	err = NewResponse(wResp, rsp)
 	if err != nil {
 		h.handleError(w, r, start, err)
 		h.sendEvent(ErrorEvent{Request: r, Error: errors.E(op, err), start: start, elapsed: time.Since(start)})
 		return
 	}
 
-	h.handleResponse(req, resp, start)
-	err = resp.Write(w)
+	err = rsp.Write(w)
 	if err != nil {
 		http.Error(w, errors.E(op, err).Error(), 500)
 		h.sendEvent(ErrorEvent{Request: r, Error: errors.E(op, err), start: start, elapsed: time.Since(start)})
 	}
+
+	h.sendEvent(ResponseEvent{
+		Status:        strconv.Itoa(rsp.Status),
+		Method:        req.Method,
+		URI:           req.URI,
+		ReqRemoteAddr: req.RemoteAddr,
+		start:         start,
+		elapsed:       time.Since(start),
+	})
 }
 
 // handleError will handle internal RR errors and return 500
@@ -182,11 +216,6 @@ func (h *Handler) handleError(w http.ResponseWriter, r *http.Request, start time
 		w.WriteHeader(int(h.internalHTTPCode))
 		h.sendEvent(ErrorEvent{Request: r, Error: errors.E(op, err), start: start, elapsed: time.Since(start)})
 	}
-}
-
-// handleResponse triggers response event.
-func (h *Handler) handleResponse(req *Request, resp *Response, start time.Time) {
-	h.sendEvent(ResponseEvent{Request: req, Response: resp, start: start, elapsed: time.Since(start)})
 }
 
 // sendEvent invokes event handler if any.
@@ -243,4 +272,41 @@ func (h *Handler) resolveIP(r *Request) {
 	if r.Header.Get("CF-Connecting-IP") != "" {
 		r.RemoteAddr = FetchIP(r.Header.Get("CF-Connecting-IP"))
 	}
+}
+
+func (h *Handler) putReq(req *Request) {
+	req.RemoteAddr = ""
+	req.Protocol = ""
+	req.Method = ""
+	req.URI = ""
+	req.Header = nil
+	req.Cookies = nil
+	req.RawQuery = ""
+	req.Attributes = nil
+	req.body = nil
+	h.reqPool.Put(req)
+}
+
+func (h *Handler) getReq(r *http.Request) *Request {
+	req := h.reqPool.Get().(*Request)
+	req.RemoteAddr = FetchIP(r.RemoteAddr)
+	req.Protocol = r.Proto
+	req.Method = r.Method
+	req.URI = URI(r)
+	req.Header = r.Header
+	req.Cookies = make(map[string]string)
+	req.RawQuery = r.URL.RawQuery
+	req.Attributes = attributes.All(r)
+	return req
+}
+
+func (h *Handler) putRsp(rsp *Response) {
+	rsp.Body = nil
+	rsp.Headers = nil
+	rsp.Status = 0
+	h.respPool.Put(rsp)
+}
+
+func (h *Handler) getRsp() *Response {
+	return h.respPool.Get().(*Response)
 }

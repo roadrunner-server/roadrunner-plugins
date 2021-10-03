@@ -1,8 +1,6 @@
 package http
 
 import (
-	"strconv"
-
 	"github.com/prometheus/client_golang/prometheus"
 	handler "github.com/spiral/roadrunner-plugins/v2/http/handler"
 )
@@ -17,11 +15,11 @@ func (p *Plugin) metricsCallback(event interface{}) {
 	switch e := event.(type) {
 	case handler.ResponseEvent:
 		p.requestsExporter.requestCounter.With(prometheus.Labels{
-			"status": strconv.Itoa(e.Response.Status),
+			"status": e.Status,
 		}).Inc()
 
 		p.requestsExporter.requestDuration.With(prometheus.Labels{
-			"status": strconv.Itoa(e.Response.Status),
+			"status": e.Status,
 		}).Observe(e.Elapsed().Seconds())
 	case handler.ErrorEvent:
 		p.requestsExporter.requestCounter.With(prometheus.Labels{
