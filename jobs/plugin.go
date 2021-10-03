@@ -259,7 +259,6 @@ func (p *Plugin) Serve() chan error { //nolint:gocognit
 							}
 
 							p.log.Error("job execute failed", "error", err)
-
 							p.putPayload(exec)
 							continue
 						}

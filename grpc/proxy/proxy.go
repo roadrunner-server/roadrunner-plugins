@@ -49,6 +49,8 @@ type Proxy struct {
 	name     string
 	metadata string
 	methods  []string
+
+	pldPool sync.Pool
 }
 
 // NewProxy creates new service proxy object.
@@ -59,6 +61,14 @@ func NewProxy(name string, metadata string, grpcPool pool.Pool, mu *sync.RWMutex
 		name:     name,
 		metadata: metadata,
 		methods:  make([]string, 0),
+		pldPool: sync.Pool{
+			New: func() interface{} {
+				return &payload.Payload{
+					Context: make([]byte, 0, 100),
+					Body:    make([]byte, 0, 100),
+				}
+			},
+		},
 	}
 }
 
@@ -114,13 +124,16 @@ func (p *Proxy) methodHandler(method string) func(srv interface{}, ctx context.C
 }
 
 func (p *Proxy) invoke(ctx context.Context, method string, in codec.RawMessage) (interface{}, error) {
-	payload, err := p.makePayload(ctx, method, in)
+	pld := p.getPld()
+	defer p.putPld(pld)
+
+	err := p.makePayload(ctx, method, in, pld)
 	if err != nil {
 		return nil, err
 	}
 
 	p.mu.RLock()
-	resp, err := p.grpcPool.Exec(payload)
+	resp, err := p.grpcPool.Exec(pld)
 	p.mu.RUnlock()
 
 	if err != nil {
@@ -160,8 +173,8 @@ func (p *Proxy) responseMetadata(resp *payload.Payload) (metadata.MD, error) {
 	return md, nil
 }
 
-// makePayload generates RoadRunner compatible payload based on GRPC message. todo: return error
-func (p *Proxy) makePayload(ctx context.Context, method string, body codec.RawMessage) (*payload.Payload, error) {
+// makePayload generates RoadRunner compatible payload based on GRPC message.
+func (p *Proxy) makePayload(ctx context.Context, method string, body codec.RawMessage, pld *payload.Payload) error {
 	ctxMD := make(map[string][]string)
 
 	if md, ok := metadata.FromIncomingContext(ctx); ok {
@@ -180,10 +193,23 @@ func (p *Proxy) makePayload(ctx context.Context, method string, body codec.RawMe
 	ctxData, err := json.Marshal(rpcContext{Service: p.name, Method: method, Context: ctxMD})
 
 	if err != nil {
-		return nil, err
+		return err
 	}
 
-	return &payload.Payload{Context: ctxData, Body: body}, nil
+	pld.Body = body
+	pld.Context = ctxData
+
+	return nil
+}
+
+func (p *Proxy) putPld(pld *payload.Payload) {
+	pld.Body = nil
+	pld.Context = nil
+	p.pldPool.Put(pld)
+}
+
+func (p *Proxy) getPld() *payload.Payload {
+	return p.pldPool.Get().(*payload.Payload)
 }
 
 // mounts proper error code for the error
