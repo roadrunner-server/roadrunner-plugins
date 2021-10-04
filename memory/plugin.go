@@ -28,14 +28,6 @@ func (p *Plugin) Init(log logger.Logger, cfg config.Configurer) error {
 	return nil
 }
 
-func (p *Plugin) Serve() chan error {
-	return make(chan error, 1)
-}
-
-func (p *Plugin) Stop() error {
-	return nil
-}
-
 func (p *Plugin) Name() string {
 	return PluginName
 }
@@ -57,12 +49,12 @@ func (p *Plugin) KvFromConfig(key string) (kv.Storage, error) {
 	return st, nil
 }
 
-// JobsConstruct creates new ephemeral consumer from the configuration
+// ConsumerFromConfig creates new ephemeral consumer from the configuration
 func (p *Plugin) ConsumerFromConfig(configKey string, e events.Handler, pq priorityqueue.Queue) (jobs.Consumer, error) {
 	return memoryjobs.NewJobBroker(configKey, p.log, p.cfg, e, pq)
 }
 
-// FromPipeline creates new ephemeral consumer from the provided pipeline
+// ConsumerFromPipeline creates new ephemeral consumer from the provided pipeline
 func (p *Plugin) ConsumerFromPipeline(pipeline *pipeline.Pipeline, e events.Handler, pq priorityqueue.Queue) (jobs.Consumer, error) {
 	return memoryjobs.FromPipeline(pipeline, p.log, e, pq)
 }

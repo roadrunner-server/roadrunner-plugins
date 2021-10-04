@@ -89,6 +89,7 @@ func (p *Plugin) Init(cfg config.Configurer, log logger.Logger, server server.Se
 	ctx, cancel := context.WithCancel(context.Background())
 	p.ctx = ctx
 	p.cancel = cancel
+
 	return nil
 }
 
@@ -340,22 +341,42 @@ func (p *Plugin) defaultAccessValidator(pool phpPool.Pool) validator.AccessValid
 	}
 }
 
+var pldPool = &sync.Pool{
+	New: func() interface{} {
+		return &payload.Payload{
+			Context: make([]byte, 0, 100),
+			Body:    make([]byte, 0, 100),
+		}
+	},
+}
+
+func putPld(pld *payload.Payload) {
+	pld.Body = nil
+	pld.Context = nil
+	pldPool.Put(pld)
+}
+
+func getPld() *payload.Payload {
+	return pldPool.Get().(*payload.Payload)
+}
+
 func exec(ctx []byte, pool phpPool.Pool) (*validator.AccessValidator, error) {
 	const op = errors.Op("exec")
-	pd := &payload.Payload{
-		Context: ctx,
-	}
+	pd := getPld()
+	defer putPld(pd)
 
-	resp, err := pool.Exec(pd)
+	pd.Context = ctx
+
+	rsp, err := pool.Exec(pd)
 	if err != nil {
 		return nil, errors.E(op, err)
 	}
 
 	val := &validator.AccessValidator{
-		Body: resp.Body,
+		Body: rsp.Body,
 	}
 
-	err = json.Unmarshal(resp.Context, val)
+	err = json.Unmarshal(rsp.Context, val)
 	if err != nil {
 		return nil, errors.E(op, err)
 	}

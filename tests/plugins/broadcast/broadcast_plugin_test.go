@@ -135,6 +135,7 @@ func TestBroadcastConfigError(t *testing.T) {
 
 	_, err = cont.Serve()
 	assert.Error(t, err)
+	_ = cont.Stop()
 }
 
 func TestBroadcastNoConfig(t *testing.T) {
@@ -176,6 +177,7 @@ func TestBroadcastNoConfig(t *testing.T) {
 	// should be just disabled
 	_, err = cont.Serve()
 	assert.NoError(t, err)
+	_ = cont.Stop()
 }
 
 func TestBroadcastSameSubscriber(t *testing.T) {
@@ -512,5 +514,6 @@ func redisFlushAll(addr string) func(t *testing.T) {
 		})
 
 		rdb.FlushAll(context.Background())
+		_ = rdb.Close()
 	}
 }

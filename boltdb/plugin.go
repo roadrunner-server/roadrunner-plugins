@@ -30,15 +30,6 @@ func (p *Plugin) Init(log logger.Logger, cfg config.Configurer) error {
 	return nil
 }
 
-// Serve is noop here
-func (p *Plugin) Serve() chan error {
-	return make(chan error, 1)
-}
-
-func (p *Plugin) Stop() error {
-	return nil
-}
-
 // Name returns plugin name
 func (p *Plugin) Name() string {
 	return PluginName
@@ -53,7 +44,6 @@ func (p *Plugin) KvFromConfig(key string) (kv.Storage, error) {
 	if err != nil {
 		return nil, errors.E(op, err)
 	}
-
 	return st, nil
 }
 

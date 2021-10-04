@@ -57,6 +57,16 @@ func (p *Plugin) Serve() chan error {
 }
 
 func (p *Plugin) Stop() error {
+	for k := range p.publishers {
+		p.publishers[k].Stop()
+	}
+
+	p.Lock()
+	for k := range p.publishers {
+		delete(p.publishers, k)
+	}
+	p.Unlock()
+
 	return nil
 }
 

@@ -37,7 +37,7 @@ require (
 	go.etcd.io/bbolt v1.3.6
 	go.uber.org/zap v1.19.1
 	golang.org/x/net v0.0.0-20210929193557-e81a3d93ecf6
-	golang.org/x/sys v0.0.0-20211001092434-39dca1131b70
+	golang.org/x/sys v0.0.0-20211003122950-b1ebd4e1001c
 	google.golang.org/grpc v1.41.0
 	google.golang.org/protobuf v1.27.1
 	gopkg.in/natefinch/lumberjack.v2 v2.0.0
@@ -76,7 +76,7 @@ require (
 	github.com/prometheus/client_model v0.2.0 // indirect
 	github.com/prometheus/common v0.31.1 // indirect
 	github.com/prometheus/procfs v0.7.3 // indirect
-	github.com/shirou/gopsutil v3.21.8+incompatible // indirect
+	github.com/shirou/gopsutil v3.21.9+incompatible // indirect
 	github.com/spf13/afero v1.6.0 // indirect
 	github.com/spf13/cast v1.4.1 // indirect
 	github.com/spf13/jwalterweatherman v1.1.0 // indirect
@@ -95,7 +95,7 @@ require (
 	golang.org/x/sync v0.0.0-20210220032951-036812b2e83c // indirect
 	golang.org/x/text v0.3.7 // indirect
 	golang.org/x/tools v0.1.7 // indirect
-	google.golang.org/genproto v0.0.0-20210930144712-2e2e1008e8a3 // indirect
+	google.golang.org/genproto v0.0.0-20211001223012-bfb93cce50d9 // indirect
 	gopkg.in/ini.v1 v1.63.2 // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect
 	gopkg.in/yaml.v3 v3.0.0-20210107192922-496545a6307b // indirect
