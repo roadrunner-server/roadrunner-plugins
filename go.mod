@@ -15,7 +15,7 @@ require (
 	github.com/cenkalti/backoff/v4 v4.1.1
 	github.com/emicklei/proto v1.9.1
 	github.com/fatih/color v1.13.0
-	github.com/go-redis/redis/v8 v8.11.3
+	github.com/go-redis/redis/v8 v8.11.4
 	github.com/gobwas/ws v1.1.0
 	github.com/gofiber/fiber/v2 v2.19.0
 	github.com/golang/mock v1.6.0
