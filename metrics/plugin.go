@@ -20,7 +20,7 @@ const (
 	// PluginName declares plugin name.
 	PluginName = "metrics"
 	// maxHeaderSize declares max header size for prometheus server
-	maxHeaderSize = 1024 * 1024 * 100 // 104MB
+	maxHeaderSize = 1 << 20 // 1MB
 )
 
 // Plugin to manage application metrics using Prometheus.
@@ -171,10 +171,10 @@ func (p *Plugin) Serve() chan error {
 		WriteTimeout:      time.Minute * 60,
 		TLSConfig: &tls.Config{
 			CurvePreferences: []tls.CurveID{
+				tls.X25519,
 				tls.CurveP256,
 				tls.CurveP384,
 				tls.CurveP521,
-				tls.X25519,
 			},
 			CipherSuites:             DefaultCipherSuites,
 			MinVersion:               tls.VersionTLS12,

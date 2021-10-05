@@ -23,7 +23,7 @@ func (p *Plugin) serveHTTP(errCh chan error) {
 		return
 	}
 
-	p.log.Debug("http server running", "port", p.cfg.Address)
+	p.log.Debug("http server is running", "address", p.cfg.Address)
 	err = p.http.Serve(l)
 	if err != nil && err != http.ErrServerClosed {
 		errCh <- errors.E(op, err)

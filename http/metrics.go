@@ -20,7 +20,7 @@ func (p *Plugin) metricsCallback(event interface{}) {
 
 		p.requestsExporter.requestDuration.With(prometheus.Labels{
 			"status": e.Status,
-		}).Observe(e.Elapsed().Seconds())
+		}).Observe(e.Elapsed.Seconds())
 	case handler.ErrorEvent:
 		p.requestsExporter.requestCounter.With(prometheus.Labels{
 			"status": "500",

@@ -1,0 +1,21 @@
+rpc:
+  listen: tcp://127.0.0.1:6004
+
+server:
+  command: "php ../../http/client.php echo pipes"
+  relay: "pipes"
+  relay_timeout: "20s"
+
+http:
+  address: 127.0.0.1:58332
+  max_request_size: 1024
+  access_logs: true
+  middleware: [ ]
+  pool:
+    num_workers: 2
+    max_jobs: 0
+    allocate_timeout: 60s
+    destroy_timeout: 60s
+logs:
+  mode: production
+  level: info

@@ -121,7 +121,7 @@ func TestMiddlewareNotExist(t *testing.T) {
 	mockLogger.EXPECT().Debug("worker constructed", "pid", gomock.Any()).AnyTimes()
 	mockLogger.EXPECT().Debug("worker destructed", "pid", gomock.Any()).AnyTimes()
 	mockLogger.EXPECT().Error(gomock.Any(), gomock.Any(), gomock.Any()).AnyTimes() // placeholder for the workerlogerror
-	mockLogger.EXPECT().Debug("http server running", "port", gomock.Any()).AnyTimes()
+	mockLogger.EXPECT().Debug("http server is running", "address", gomock.Any()).AnyTimes()
 
 	err = cont.RegisterAll(
 		cfg,
