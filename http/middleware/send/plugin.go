@@ -50,7 +50,7 @@ func (s *Plugin) Middleware(next http.Handler) http.Handler {
 			// check if the file exists
 			_, err := os.Stat(path)
 			if err != nil {
-				http.Error(w, err.Error(), http.StatusBadRequest)
+				http.Error(w, err.Error(), http.StatusNotFound)
 				return
 			}
 
@@ -64,7 +64,7 @@ func (s *Plugin) Middleware(next http.Handler) http.Handler {
 
 			_, err = io.Copy(w, buf)
 			if err != nil {
-				http.Error(w, err.Error(), http.StatusBadRequest)
+				http.Error(w, err.Error(), http.StatusInternalServerError)
 				return
 			}
 
