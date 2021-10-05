@@ -12,8 +12,8 @@ import (
 
 	endure "github.com/spiral/endure/pkg/container"
 	"github.com/spiral/roadrunner-plugins/v2/config"
-	"github.com/spiral/roadrunner-plugins/v2/headers"
 	httpPlugin "github.com/spiral/roadrunner-plugins/v2/http"
+	"github.com/spiral/roadrunner-plugins/v2/http/middleware/headers"
 	"github.com/spiral/roadrunner-plugins/v2/logger"
 	"github.com/spiral/roadrunner-plugins/v2/server"
 	"github.com/stretchr/testify/assert"
