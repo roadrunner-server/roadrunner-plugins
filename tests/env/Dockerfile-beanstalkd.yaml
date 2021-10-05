@@ -1,4 +1,4 @@
-FROM ubuntu:latest
+FROM ubuntu:rolling
 
 ARG DEBIAN_FRONTEND=noninteractive
 

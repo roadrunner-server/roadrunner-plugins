@@ -43,7 +43,7 @@ func TestHandler_Upload_File(t *testing.T) {
 	h, err := handler.NewHandler(1024, 500, &config.Uploads{
 		Dir:    os.TempDir(),
 		Forbid: []string{},
-	}, nil, pool)
+	}, nil, pool, nil, false)
 	assert.NoError(t, err)
 
 	hs := &http.Server{Addr: ":9021", Handler: h}
@@ -126,7 +126,7 @@ func TestHandler_Upload_NestedFile(t *testing.T) {
 	h, err := handler.NewHandler(1024, 500, &config.Uploads{
 		Dir:    os.TempDir(),
 		Forbid: []string{},
-	}, nil, pool)
+	}, nil, pool, nil, false)
 	assert.NoError(t, err)
 
 	hs := &http.Server{Addr: ":9022", Handler: h}
@@ -209,7 +209,7 @@ func TestHandler_Upload_File_NoTmpDir(t *testing.T) {
 	h, err := handler.NewHandler(1024, 500, &config.Uploads{
 		Dir:    "-------",
 		Forbid: []string{},
-	}, nil, pool)
+	}, nil, pool, nil, false)
 	assert.NoError(t, err)
 
 	hs := &http.Server{Addr: ":9023", Handler: h}
@@ -292,7 +292,7 @@ func TestHandler_Upload_File_Forbids(t *testing.T) {
 	h, err := handler.NewHandler(1024, 500, &config.Uploads{
 		Dir:    os.TempDir(),
 		Forbid: []string{".go"},
-	}, nil, pool)
+	}, nil, pool, nil, false)
 	assert.NoError(t, err)
 
 	hs := &http.Server{Addr: ":9024", Handler: h}

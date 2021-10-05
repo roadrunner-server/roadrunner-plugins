@@ -3,6 +3,7 @@
 ```yaml
 http:
   address: '127.0.0.1:8080'
+  access_logs: false
   max_request_size: 256
   middleware:
     - headers

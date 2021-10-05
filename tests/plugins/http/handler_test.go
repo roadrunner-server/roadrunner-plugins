@@ -5,10 +5,14 @@ import (
 	"context"
 	"io/ioutil"
 	"mime/multipart"
+	"net/http"
 	"net/url"
+	"os"
 	"os/exec"
 	"runtime"
 	"strings"
+	"testing"
+	"time"
 
 	"github.com/spiral/roadrunner-plugins/v2/http/config"
 	handler "github.com/spiral/roadrunner-plugins/v2/http/handler"
@@ -16,11 +20,6 @@ import (
 	"github.com/spiral/roadrunner/v2/transport/pipe"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-
-	"net/http"
-	"os"
-	"testing"
-	"time"
 )
 
 func TestHandler_Echo(t *testing.T) {
@@ -37,7 +36,7 @@ func TestHandler_Echo(t *testing.T) {
 	h, err := handler.NewHandler(1024, 500, &config.Uploads{
 		Dir:    os.TempDir(),
 		Forbid: []string{},
-	}, nil, p)
+	}, nil, p, nil, false)
 	assert.NoError(t, err)
 
 	hs := &http.Server{Addr: ":9177", Handler: h}
@@ -68,7 +67,7 @@ func Test_HandlerErrors(t *testing.T) {
 	_, err := handler.NewHandler(1024, 500, &config.Uploads{
 		Dir:    os.TempDir(),
 		Forbid: []string{},
-	}, nil, nil)
+	}, nil, nil, nil, false)
 	assert.Error(t, err)
 }
 
@@ -91,7 +90,7 @@ func TestHandler_Headers(t *testing.T) {
 	h, err := handler.NewHandler(1024, 500, &config.Uploads{
 		Dir:    os.TempDir(),
 		Forbid: []string{},
-	}, nil, p)
+	}, nil, p, nil, false)
 	assert.NoError(t, err)
 
 	hs := &http.Server{Addr: ":8078", Handler: h}
@@ -152,7 +151,7 @@ func TestHandler_Empty_User_Agent(t *testing.T) {
 	h, err := handler.NewHandler(1024, 500, &config.Uploads{
 		Dir:    os.TempDir(),
 		Forbid: []string{},
-	}, nil, p)
+	}, nil, p, nil, false)
 	assert.NoError(t, err)
 
 	hs := &http.Server{Addr: ":19658", Handler: h}
@@ -212,7 +211,7 @@ func TestHandler_User_Agent(t *testing.T) {
 	h, err := handler.NewHandler(1024, 500, &config.Uploads{
 		Dir:    os.TempDir(),
 		Forbid: []string{},
-	}, nil, p)
+	}, nil, p, nil, false)
 	assert.NoError(t, err)
 
 	hs := &http.Server{Addr: ":25688", Handler: h}
@@ -272,7 +271,7 @@ func TestHandler_Cookies(t *testing.T) {
 	h, err := handler.NewHandler(1024, 500, &config.Uploads{
 		Dir:    os.TempDir(),
 		Forbid: []string{},
-	}, nil, p)
+	}, nil, p, nil, false)
 	assert.NoError(t, err)
 
 	hs := &http.Server{Addr: ":8079", Handler: h}
@@ -337,7 +336,7 @@ func TestHandler_JsonPayload_POST(t *testing.T) {
 	h, err := handler.NewHandler(1024, 500, &config.Uploads{
 		Dir:    os.TempDir(),
 		Forbid: []string{},
-	}, nil, p)
+	}, nil, p, nil, false)
 	assert.NoError(t, err)
 
 	hs := &http.Server{Addr: ":8090", Handler: h}
@@ -401,7 +400,7 @@ func TestHandler_JsonPayload_PUT(t *testing.T) {
 	h, err := handler.NewHandler(1024, 500, &config.Uploads{
 		Dir:    os.TempDir(),
 		Forbid: []string{},
-	}, nil, p)
+	}, nil, p, nil, false)
 	assert.NoError(t, err)
 
 	hs := &http.Server{Addr: ":8081", Handler: h}
@@ -461,7 +460,7 @@ func TestHandler_JsonPayload_PATCH(t *testing.T) {
 	h, err := handler.NewHandler(1024, 500, &config.Uploads{
 		Dir:    os.TempDir(),
 		Forbid: []string{},
-	}, nil, p)
+	}, nil, p, nil, false)
 	assert.NoError(t, err)
 
 	hs := &http.Server{Addr: ":8082", Handler: h}
@@ -521,7 +520,7 @@ func TestHandler_FormData_POST(t *testing.T) {
 	h, err := handler.NewHandler(1024, 500, &config.Uploads{
 		Dir:    os.TempDir(),
 		Forbid: []string{},
-	}, nil, p)
+	}, nil, p, nil, false)
 	assert.NoError(t, err)
 
 	hs := &http.Server{Addr: ":10084", Handler: h}
@@ -594,7 +593,7 @@ func TestHandler_FormData_POST_Overwrite(t *testing.T) {
 	h, err := handler.NewHandler(1024, 500, &config.Uploads{
 		Dir:    os.TempDir(),
 		Forbid: []string{},
-	}, nil, p)
+	}, nil, p, nil, false)
 	assert.NoError(t, err)
 
 	hs := &http.Server{Addr: ":8083", Handler: h}
@@ -667,7 +666,7 @@ func TestHandler_FormData_POST_Form_UrlEncoded_Charset(t *testing.T) {
 	h, err := handler.NewHandler(1024, 500, &config.Uploads{
 		Dir:    os.TempDir(),
 		Forbid: []string{},
-	}, nil, p)
+	}, nil, p, nil, false)
 	assert.NoError(t, err)
 
 	hs := &http.Server{Addr: ":8085", Handler: h}
@@ -739,7 +738,7 @@ func TestHandler_FormData_PUT(t *testing.T) {
 	h, err := handler.NewHandler(1024, 500, &config.Uploads{
 		Dir:    os.TempDir(),
 		Forbid: []string{},
-	}, nil, p)
+	}, nil, p, nil, false)
 	assert.NoError(t, err)
 
 	hs := &http.Server{Addr: ":17834", Handler: h}
@@ -811,7 +810,7 @@ func TestHandler_FormData_PATCH(t *testing.T) {
 	h, err := handler.NewHandler(1024, 500, &config.Uploads{
 		Dir:    os.TempDir(),
 		Forbid: []string{},
-	}, nil, p)
+	}, nil, p, nil, false)
 	assert.NoError(t, err)
 
 	hs := &http.Server{Addr: ":8086", Handler: h}
@@ -883,7 +882,7 @@ func TestHandler_Multipart_POST(t *testing.T) {
 	h, err := handler.NewHandler(1024, 500, &config.Uploads{
 		Dir:    os.TempDir(),
 		Forbid: []string{},
-	}, nil, p)
+	}, nil, p, nil, false)
 	assert.NoError(t, err)
 
 	hs := &http.Server{Addr: ":8019", Handler: h}
@@ -997,7 +996,7 @@ func TestHandler_Multipart_PUT(t *testing.T) {
 	h, err := handler.NewHandler(1024, 500, &config.Uploads{
 		Dir:    os.TempDir(),
 		Forbid: []string{},
-	}, nil, p)
+	}, nil, p, nil, false)
 	assert.NoError(t, err)
 
 	hs := &http.Server{Addr: ":8020", Handler: h}
@@ -1111,7 +1110,7 @@ func TestHandler_Multipart_PATCH(t *testing.T) {
 	h, err := handler.NewHandler(1024, 500, &config.Uploads{
 		Dir:    os.TempDir(),
 		Forbid: []string{},
-	}, nil, p)
+	}, nil, p, nil, false)
 	assert.NoError(t, err)
 
 	hs := &http.Server{Addr: ":8021", Handler: h}
@@ -1227,7 +1226,7 @@ func TestHandler_Error(t *testing.T) {
 	h, err := handler.NewHandler(1024, 500, &config.Uploads{
 		Dir:    os.TempDir(),
 		Forbid: []string{},
-	}, nil, p)
+	}, nil, p, nil, false)
 	assert.NoError(t, err)
 
 	hs := &http.Server{Addr: ":8177", Handler: h}
@@ -1273,7 +1272,7 @@ func TestHandler_Error2(t *testing.T) {
 	h, err := handler.NewHandler(1024, 500, &config.Uploads{
 		Dir:    os.TempDir(),
 		Forbid: []string{},
-	}, nil, p)
+	}, nil, p, nil, false)
 	assert.NoError(t, err)
 
 	hs := &http.Server{Addr: ":8178", Handler: h}
@@ -1319,7 +1318,7 @@ func TestHandler_Error3(t *testing.T) {
 	h, err := handler.NewHandler(1, 500, &config.Uploads{
 		Dir:    os.TempDir(),
 		Forbid: []string{},
-	}, nil, p)
+	}, nil, p, nil, false)
 	assert.NoError(t, err)
 
 	hs := &http.Server{Addr: ":8179", Handler: h}
@@ -1378,7 +1377,7 @@ func TestHandler_ResponseDuration(t *testing.T) {
 	h, err := handler.NewHandler(1024, 500, &config.Uploads{
 		Dir:    os.TempDir(),
 		Forbid: []string{},
-	}, nil, p)
+	}, nil, p, nil, false)
 	assert.NoError(t, err)
 
 	hs := &http.Server{Addr: ":8180", Handler: h}
@@ -1401,7 +1400,7 @@ func TestHandler_ResponseDuration(t *testing.T) {
 	h.AddListener(func(event interface{}) {
 		switch t := event.(type) {
 		case handler.ResponseEvent:
-			if t.Elapsed() > 0 {
+			if t.Elapsed > 0 {
 				close(gotresp)
 			}
 		default:
@@ -1439,7 +1438,7 @@ func TestHandler_ResponseDurationDelayed(t *testing.T) {
 	h, err := handler.NewHandler(1024, 500, &config.Uploads{
 		Dir:    os.TempDir(),
 		Forbid: []string{},
-	}, nil, p)
+	}, nil, p, nil, false)
 	assert.NoError(t, err)
 
 	hs := &http.Server{Addr: ":8181", Handler: h}
@@ -1462,7 +1461,7 @@ func TestHandler_ResponseDurationDelayed(t *testing.T) {
 	h.AddListener(func(event interface{}) {
 		switch tp := event.(type) {
 		case handler.ResponseEvent:
-			if tp.Elapsed() > time.Second {
+			if tp.Elapsed > time.Second {
 				close(gotresp)
 			}
 		default:
@@ -1499,7 +1498,7 @@ func TestHandler_ErrorDuration(t *testing.T) {
 	h, err := handler.NewHandler(1024, 500, &config.Uploads{
 		Dir:    os.TempDir(),
 		Forbid: []string{},
-	}, nil, p)
+	}, nil, p, nil, false)
 	assert.NoError(t, err)
 
 	hs := &http.Server{Addr: ":8182", Handler: h}
@@ -1574,7 +1573,7 @@ func TestHandler_IP(t *testing.T) {
 	h, err := handler.NewHandler(1024, 500, &config.Uploads{
 		Dir:    os.TempDir(),
 		Forbid: []string{},
-	}, cidrs, p)
+	}, cidrs, p, nil, false)
 	assert.NoError(t, err)
 
 	hs := &http.Server{Addr: "127.0.0.1:8183", Handler: h}
@@ -1635,7 +1634,7 @@ func TestHandler_XRealIP(t *testing.T) {
 	h, err := handler.NewHandler(1024, 500, &config.Uploads{
 		Dir:    os.TempDir(),
 		Forbid: []string{},
-	}, cidrs, p)
+	}, cidrs, p, nil, false)
 	assert.NoError(t, err)
 
 	hs := &http.Server{Addr: "127.0.0.1:8184", Handler: h}
@@ -1701,7 +1700,7 @@ func TestHandler_XForwardedFor(t *testing.T) {
 	h, err := handler.NewHandler(1024, 500, &config.Uploads{
 		Dir:    os.TempDir(),
 		Forbid: []string{},
-	}, cidrs, p)
+	}, cidrs, p, nil, false)
 	assert.NoError(t, err)
 
 	hs := &http.Server{Addr: "127.0.0.1:8185", Handler: h}
@@ -1766,7 +1765,7 @@ func TestHandler_XForwardedFor_NotTrustedRemoteIp(t *testing.T) {
 	h, err := handler.NewHandler(1024, 500, &config.Uploads{
 		Dir:    os.TempDir(),
 		Forbid: []string{},
-	}, cidrs, p)
+	}, cidrs, p, nil, false)
 	assert.NoError(t, err)
 
 	hs := &http.Server{Addr: "127.0.0.1:8186", Handler: h}
@@ -1814,7 +1813,7 @@ func BenchmarkHandler_Listen_Echo(b *testing.B) {
 	h, err := handler.NewHandler(1024, 500, &config.Uploads{
 		Dir:    os.TempDir(),
 		Forbid: []string{},
-	}, nil, p)
+	}, nil, p, nil, false)
 	assert.NoError(b, err)
 
 	hs := &http.Server{Addr: ":8188", Handler: h}
