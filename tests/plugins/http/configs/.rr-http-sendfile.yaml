@@ -1,0 +1,19 @@
+server:
+  command: "php ../../psr-worker.php"
+  relay: "pipes"
+  relay_timeout: "20s"
+
+http:
+  address: 127.0.0.1:44444
+  max_request_size: 1024
+  middleware: ["sendfile"]
+
+  pool:
+    num_workers: 2
+    max_jobs: 0
+    allocate_timeout: 60s
+    destroy_timeout: 60s
+
+logs:
+  mode: development
+  level: info
