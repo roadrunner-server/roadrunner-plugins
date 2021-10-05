@@ -105,18 +105,6 @@ func (s *Plugin) Middleware(next http.Handler) http.Handler {
 			return
 		}
 
-		if s.cfg.Static.Request != nil {
-			for k, v := range s.cfg.Static.Request {
-				r.Header.Add(k, v)
-			}
-		}
-
-		if s.cfg.Static.Response != nil {
-			for k, v := range s.cfg.Static.Response {
-				w.Header().Set(k, v)
-			}
-		}
-
 		// first - create a proper file path
 		fPath := path.Clean(r.URL.Path)
 		ext := strings.ToLower(path.Ext(fPath))
@@ -138,6 +126,18 @@ func (s *Plugin) Middleware(next http.Handler) http.Handler {
 			}
 
 			// file extension allowed
+		}
+
+		if s.cfg.Static.Request != nil {
+			for k, v := range s.cfg.Static.Request {
+				r.Header.Add(k, v)
+			}
+		}
+
+		if s.cfg.Static.Response != nil {
+			for k, v := range s.cfg.Static.Response {
+				w.Header().Set(k, v)
+			}
 		}
 
 		// ok, file is not in the forbidden list

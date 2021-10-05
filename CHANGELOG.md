@@ -137,6 +137,7 @@ service:
 Be careful, now, there is no logger plugin dependency for the `service` plugin. That means, that if you used `json` output, now,
 you need to serialize data on the `executable` (in the command) side.
 
+- ✏️ Access log support at the `Info` log level. 
 
 ## 🩹 Fixes:
 
