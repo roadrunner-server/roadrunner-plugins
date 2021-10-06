@@ -299,6 +299,10 @@ func xsendfile(t *testing.T) {
 	assert.NoError(t, err)
 	require.True(t, len(b) > 0)
 	require.Empty(t, resp.Header.Get("X-Sendfile"))
+
+	file, err := os.ReadFile(fmt.Sprintf("%s/attributes_test.go", pwd))
+	require.NoError(t, err)
+	require.Equal(t, file, b)
 	require.NoError(t, resp.Body.Close())
 }
 
