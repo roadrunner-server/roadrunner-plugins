@@ -56,7 +56,7 @@ func TestReloadInit(t *testing.T) {
 	mockLogger.EXPECT().Info("HTTP handler listeners successfully re-added").MinTimes(1)
 	mockLogger.EXPECT().Info("HTTP plugin successfully restarted").MinTimes(1)
 	mockLogger.EXPECT().Error(gomock.Any(), gomock.Any(), gomock.Any()).AnyTimes() // placeholder for the workerlogerror
-	mockLogger.EXPECT().Debug("http server running", "port", gomock.Any()).AnyTimes()
+	mockLogger.EXPECT().Debug("http server is running", "address", gomock.Any()).AnyTimes()
 
 	err = cont.RegisterAll(
 		cfg,
@@ -154,7 +154,7 @@ func TestReloadHugeNumberOfFiles(t *testing.T) {
 	mockLogger.EXPECT().Info("HTTP handler listeners successfully re-added").MinTimes(1)
 	mockLogger.EXPECT().Info("HTTP plugin successfully restarted").MinTimes(1)
 	mockLogger.EXPECT().Error(gomock.Any(), gomock.Any(), gomock.Any()).AnyTimes() // placeholder for the workerlogerror
-	mockLogger.EXPECT().Debug("http server running", "port", gomock.Any()).AnyTimes()
+	mockLogger.EXPECT().Debug("http server is running", "address", gomock.Any()).AnyTimes()
 
 	err = cont.RegisterAll(
 		cfg,
@@ -265,7 +265,7 @@ func TestReloadFilterFileExt(t *testing.T) {
 	mockLogger.EXPECT().Info("HTTP handler listeners successfully re-added").MinTimes(1)
 	mockLogger.EXPECT().Info("HTTP plugin successfully restarted").MinTimes(1)
 	mockLogger.EXPECT().Error(gomock.Any(), gomock.Any(), gomock.Any()).AnyTimes() // placeholder for the workerlogerror
-	mockLogger.EXPECT().Debug("http server running", "port", gomock.Any()).AnyTimes()
+	mockLogger.EXPECT().Debug("http server is running", "address", gomock.Any()).AnyTimes()
 
 	err = cont.RegisterAll(
 		cfg,
@@ -398,7 +398,7 @@ func TestReloadCopy100(t *testing.T) {
 	mockLogger.EXPECT().Info("HTTP handler listeners successfully re-added").MinTimes(1)
 	mockLogger.EXPECT().Info("HTTP plugin successfully restarted").MinTimes(1)
 	mockLogger.EXPECT().Error(gomock.Any(), gomock.Any(), gomock.Any()).AnyTimes() // placeholder for the workerlogerror
-	mockLogger.EXPECT().Debug("http server running", "port", gomock.Any()).AnyTimes()
+	mockLogger.EXPECT().Debug("http server is running", "address", gomock.Any()).AnyTimes()
 
 	err = cont.RegisterAll(
 		cfg,
@@ -689,7 +689,7 @@ func TestReloadNoRecursion(t *testing.T) {
 	mockLogger.EXPECT().Info("HTTP handler listeners successfully re-added").MinTimes(1)
 	mockLogger.EXPECT().Info("HTTP plugin successfully restarted").MinTimes(1)
 	mockLogger.EXPECT().Error(gomock.Any(), gomock.Any(), gomock.Any()).AnyTimes() // placeholder for the workerlogerror
-	mockLogger.EXPECT().Debug("http server running", "port", gomock.Any()).AnyTimes()
+	mockLogger.EXPECT().Debug("http server is running", "address", gomock.Any()).AnyTimes()
 
 	err = cont.RegisterAll(
 		cfg,

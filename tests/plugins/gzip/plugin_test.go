@@ -12,8 +12,8 @@ import (
 	"github.com/golang/mock/gomock"
 	endure "github.com/spiral/endure/pkg/container"
 	"github.com/spiral/roadrunner-plugins/v2/config"
-	"github.com/spiral/roadrunner-plugins/v2/gzip"
 	httpPlugin "github.com/spiral/roadrunner-plugins/v2/http"
+	"github.com/spiral/roadrunner-plugins/v2/http/middleware/gzip"
 	"github.com/spiral/roadrunner-plugins/v2/logger"
 	"github.com/spiral/roadrunner-plugins/v2/server"
 	"github.com/spiral/roadrunner-plugins/v2/tests/mocks"
@@ -121,7 +121,7 @@ func TestMiddlewareNotExist(t *testing.T) {
 	mockLogger.EXPECT().Debug("worker constructed", "pid", gomock.Any()).AnyTimes()
 	mockLogger.EXPECT().Debug("worker destructed", "pid", gomock.Any()).AnyTimes()
 	mockLogger.EXPECT().Error(gomock.Any(), gomock.Any(), gomock.Any()).AnyTimes() // placeholder for the workerlogerror
-	mockLogger.EXPECT().Debug("http server running", "port", gomock.Any()).AnyTimes()
+	mockLogger.EXPECT().Debug("http server is running", "address", gomock.Any()).AnyTimes()
 
 	err = cont.RegisterAll(
 		cfg,

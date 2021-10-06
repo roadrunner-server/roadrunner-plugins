@@ -13,7 +13,10 @@ import (
 // HTTP configures RoadRunner HTTP server.
 type HTTP struct {
 	// Host and port to handle as http server.
-	Address string
+	Address string `mapstructure:"address"`
+
+	// AccessLogs turn on/off, logged at Info log level, default: false
+	AccessLogs bool `mapstructure:"access_logs"`
 
 	// Pool configures worker pool.
 	Pool *pool.Config `mapstructure:"pool"`

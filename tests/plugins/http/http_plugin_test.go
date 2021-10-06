@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"crypto/rand"
 	"crypto/tls"
+	"fmt"
 	"io"
 	"io/ioutil"
 	"net"
@@ -22,12 +23,13 @@ import (
 	endure "github.com/spiral/endure/pkg/container"
 	goridgeRpc "github.com/spiral/goridge/v3/pkg/rpc"
 	"github.com/spiral/roadrunner-plugins/v2/config"
-	"github.com/spiral/roadrunner-plugins/v2/gzip"
+	"github.com/spiral/roadrunner-plugins/v2/http/middleware/gzip"
+	"github.com/spiral/roadrunner-plugins/v2/http/middleware/send"
+	"github.com/spiral/roadrunner-plugins/v2/http/middleware/static"
 	"github.com/spiral/roadrunner-plugins/v2/informer"
 	"github.com/spiral/roadrunner-plugins/v2/logger"
 	"github.com/spiral/roadrunner-plugins/v2/resetter"
 	"github.com/spiral/roadrunner-plugins/v2/server"
-	"github.com/spiral/roadrunner-plugins/v2/static"
 	"github.com/spiral/roadrunner-plugins/v2/tests/mocks"
 	"github.com/spiral/roadrunner/v2/state/process"
 	"github.com/stretchr/testify/require"
@@ -108,6 +110,200 @@ func TestHTTPInit(t *testing.T) {
 
 	stopCh <- struct{}{}
 	wg.Wait()
+}
+
+func TestHTTPAccessLogs(t *testing.T) {
+	cont, err := endure.NewContainer(nil, endure.SetLogLevel(endure.ErrorLevel))
+	assert.NoError(t, err)
+
+	cfg := &config.Viper{
+		Path:   "configs/.rr-http-access-logs.yaml",
+		Prefix: "rr",
+	}
+
+	controller := gomock.NewController(t)
+	mockLogger := mocks.NewMockLogger(controller)
+
+	mockLogger.EXPECT().Debug("worker constructed", "pid", gomock.Any()).MinTimes(1)
+	mockLogger.EXPECT().Debug("http server is running", "address", gomock.Any()).AnyTimes()
+	mockLogger.EXPECT().Info(
+		gomock.Any(),
+		"method", "GET",
+		"remote_addr", "127.0.0.1",
+		"bytes_sent", "0",
+		"http_host", "127.0.0.1:58332",
+		"request", "hello=world",
+		"time_local", gomock.Any(),
+		"request_length", gomock.Any(),
+		"request_time", gomock.Any(),
+		"status", "201",
+		"http_user_agent", "Go-http-client/1.1",
+		"http_referer", "",
+	).AnyTimes()
+
+	err = cont.RegisterAll(
+		cfg,
+		mockLogger,
+		&server.Plugin{},
+		&httpPlugin.Plugin{},
+	)
+	assert.NoError(t, err)
+
+	err = cont.Init()
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	ch, err := cont.Serve()
+	assert.NoError(t, err)
+
+	sig := make(chan os.Signal, 1)
+	signal.Notify(sig, os.Interrupt, syscall.SIGINT, syscall.SIGTERM)
+
+	wg := &sync.WaitGroup{}
+	wg.Add(1)
+
+	stopCh := make(chan struct{}, 1)
+
+	go func() {
+		defer wg.Done()
+		for {
+			select {
+			case e := <-ch:
+				assert.Fail(t, "error", e.Error.Error())
+				err = cont.Stop()
+				if err != nil {
+					assert.FailNow(t, "error", err.Error())
+				}
+			case <-sig:
+				err = cont.Stop()
+				if err != nil {
+					assert.FailNow(t, "error", err.Error())
+				}
+				return
+			case <-stopCh:
+				// timeout
+				err = cont.Stop()
+				if err != nil {
+					assert.FailNow(t, "error", err.Error())
+				}
+				return
+			}
+		}
+	}()
+
+	time.Sleep(time.Second * 2)
+
+	t.Run("AccessLogsEcho", echoAccessLogs)
+
+	stopCh <- struct{}{}
+	wg.Wait()
+}
+
+func echoAccessLogs(t *testing.T) {
+	req, err := http.NewRequest("GET", "http://127.0.0.1:58332?hello=world", nil)
+	assert.NoError(t, err)
+
+	r, err := http.DefaultClient.Do(req)
+	assert.NoError(t, err)
+	b, err := ioutil.ReadAll(r.Body)
+	assert.NoError(t, err)
+	assert.Equal(t, 201, r.StatusCode)
+	assert.Equal(t, "WORLD", string(b))
+
+	err = r.Body.Close()
+	assert.NoError(t, err)
+}
+
+func TestHTTPXSendFile(t *testing.T) {
+	cont, err := endure.NewContainer(nil, endure.SetLogLevel(endure.ErrorLevel))
+	assert.NoError(t, err)
+
+	cfg := &config.Viper{
+		Path:   "configs/.rr-http-sendfile.yaml",
+		Prefix: "rr",
+	}
+
+	err = cont.RegisterAll(
+		cfg,
+		&logger.ZapLogger{},
+		&server.Plugin{},
+		&send.Plugin{},
+		&httpPlugin.Plugin{},
+	)
+	assert.NoError(t, err)
+
+	err = cont.Init()
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	ch, err := cont.Serve()
+	assert.NoError(t, err)
+
+	sig := make(chan os.Signal, 1)
+	signal.Notify(sig, os.Interrupt, syscall.SIGINT, syscall.SIGTERM)
+
+	wg := &sync.WaitGroup{}
+	wg.Add(1)
+
+	stopCh := make(chan struct{}, 1)
+
+	go func() {
+		defer wg.Done()
+		for {
+			select {
+			case e := <-ch:
+				assert.Fail(t, "error", e.Error.Error())
+				err = cont.Stop()
+				if err != nil {
+					assert.FailNow(t, "error", err.Error())
+				}
+			case <-sig:
+				err = cont.Stop()
+				if err != nil {
+					assert.FailNow(t, "error", err.Error())
+				}
+				return
+			case <-stopCh:
+				// timeout
+				err = cont.Stop()
+				if err != nil {
+					assert.FailNow(t, "error", err.Error())
+				}
+				return
+			}
+		}
+	}()
+
+	time.Sleep(time.Second * 2)
+	t.Run("X-Sendfile", xsendfile)
+	stopCh <- struct{}{}
+	wg.Wait()
+}
+
+func xsendfile(t *testing.T) {
+	parsedURL, _ := url.Parse("http://127.0.0.1:44444")
+	client := http.Client{}
+	pwd, _ := os.Getwd()
+	req := &http.Request{
+		Method: http.MethodGet,
+		URL:    parsedURL,
+		Header: map[string][]string{"x-sendfile": {fmt.Sprintf("%s/attributes_test.go", pwd)}},
+	}
+
+	resp, err := client.Do(req)
+	require.NoError(t, err)
+
+	b, err := ioutil.ReadAll(resp.Body)
+	assert.NoError(t, err)
+	require.True(t, len(b) > 0)
+	require.Empty(t, resp.Header.Get("X-Sendfile"))
+
+	file, err := os.ReadFile(fmt.Sprintf("%s/attributes_test.go", pwd))
+	require.NoError(t, err)
+	require.Equal(t, file, b)
+	require.NoError(t, resp.Body.Close())
 }
 
 func TestHTTPNoConfigSection(t *testing.T) {
@@ -749,7 +945,7 @@ func TestH2CUpgrade(t *testing.T) {
 
 	mockLogger.EXPECT().Error("server internal error", "message", gomock.Any()).MinTimes(1)
 	mockLogger.EXPECT().Debug("worker constructed", "pid", gomock.Any()).MinTimes(1)
-	mockLogger.EXPECT().Debug("http server running", "port", gomock.Any()).AnyTimes()
+	mockLogger.EXPECT().Debug("http server is running", "address", gomock.Any()).AnyTimes()
 
 	err = cont.RegisterAll(
 		cfg,
@@ -1072,7 +1268,7 @@ logs:
 	mockLogger.EXPECT().Debug("201 GET http://127.0.0.1:34999/?hello=world", "remote", "127.0.0.1", "elapsed", gomock.Any()).MinTimes(1)
 	mockLogger.EXPECT().Info("WORLD\n").MinTimes(1)
 	mockLogger.EXPECT().Error(gomock.Any(), gomock.Any(), gomock.Any()).AnyTimes() // placeholder for the workerlogerror
-	mockLogger.EXPECT().Debug("http server running", "port", gomock.Any()).AnyTimes()
+	mockLogger.EXPECT().Debug("http server is running", "address", gomock.Any()).AnyTimes()
 
 	err = cont.RegisterAll(
 		cfg,
@@ -2034,7 +2230,7 @@ func TestStaticFilesForbid(t *testing.T) {
 	mockLogger.EXPECT().Debug("possible path to dir provided").AnyTimes()
 	mockLogger.EXPECT().Debug("file extension is forbidden", gomock.Any(), gomock.Any()).AnyTimes()
 	mockLogger.EXPECT().Error(gomock.Any(), gomock.Any(), gomock.Any()).AnyTimes() // placeholder for the workerlogerror
-	mockLogger.EXPECT().Debug("http server running", "port", gomock.Any()).AnyTimes()
+	mockLogger.EXPECT().Debug("http server is running", "address", gomock.Any()).AnyTimes()
 
 	err = cont.RegisterAll(
 		cfg,
@@ -2203,7 +2399,7 @@ func TestHTTPIPv6Long(t *testing.T) {
 	mockLogger.EXPECT().Debug("worker constructed", "pid", gomock.Any()).AnyTimes()
 	mockLogger.EXPECT().Debug("Started RPC service", "address", "tcp://[0:0:0:0:0:0:0:1]:6005", "plugins", gomock.Any()).Times(1)
 	mockLogger.EXPECT().Debug("201 GET http://[0:0:0:0:0:0:0:1]:10684/?hello=world", "remote", "::1", "elapsed", gomock.Any()).Times(1)
-	mockLogger.EXPECT().Debug("http server running", "port", gomock.Any()).AnyTimes()
+	mockLogger.EXPECT().Debug("http server is running", "address", gomock.Any()).AnyTimes()
 
 	err = cont.RegisterAll(
 		cfg,
@@ -2280,7 +2476,7 @@ func TestHTTPIPv6Short(t *testing.T) {
 	mockLogger.EXPECT().Debug("worker constructed", "pid", gomock.Any()).AnyTimes()
 	mockLogger.EXPECT().Debug("Started RPC service", "address", "tcp://[::1]:6003", "plugins", gomock.Any()).Times(1)
 	mockLogger.EXPECT().Debug("201 GET http://[::1]:10784/?hello=world", "remote", "::1", "elapsed", gomock.Any()).Times(1)
-	mockLogger.EXPECT().Debug("http server running", "port", gomock.Any()).AnyTimes()
+	mockLogger.EXPECT().Debug("http server is running", "address", gomock.Any()).AnyTimes()
 
 	err = cont.RegisterAll(
 		cfg,

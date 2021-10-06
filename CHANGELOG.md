@@ -137,6 +137,33 @@ service:
 Be careful, now, there is no logger plugin dependency for the `service` plugin. That means, that if you used `json` output, now,
 you need to serialize data on the `executable` (in the command) side.
 
+- ✏️ [Access log support](https://github.com/spiral/roadrunner-plugins/issues/34) at the `Info` log level.
+```yaml
+http:
+  address: 127.0.0.1:55555
+  max_request_size: 1024
+  access_logs: true <-------- Access Logs ON/OFF
+  middleware: []
+
+  pool:
+    num_workers: 2
+    max_jobs: 0
+    allocate_timeout: 60s
+    destroy_timeout: 60s
+```
+- ✏️ HTTP middleware to handle Symfony's `X-Sendfile` [header](https://github.com/spiral/roadrunner-plugins/issues/9).
+```yaml
+http:
+  address: 127.0.0.1:44444
+  max_request_size: 1024
+  middleware: ["sendfile"] <----- NEW MIDDLEWARE
+
+  pool:
+    num_workers: 2
+    max_jobs: 0
+    allocate_timeout: 60s
+    destroy_timeout: 60s
+```
 
 ## 🩹 Fixes:
 
