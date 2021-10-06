@@ -145,6 +145,19 @@ http:
     destroy_timeout: 60s
 ```
 
+- ✏️ Service plugin now supports env variables passing to the script/executable/binary/any:
+```yaml
+service:
+  some_service_1:
+    command: "php test_files/loop_env.php"
+    process_num: 1
+    exec_timeout: 5s # s,m,h (seconds, minutes, hours)
+    remain_after_exit: true
+    env:  <----------------- NEW
+      foo: "BAR"
+    restart_sec: 1
+```
+
 ## 🩹 Fixes:
 
 - 🐛 Fix: local and global configuration parsing.
