@@ -104,38 +104,18 @@ broadcast:
         ]
 ```
 
-- ✏️ Add a new options to the `service` plugin. Service plugin will not use std RR logger as output in the flavor of raw output.
+- ✏️ Add a new option to the `log` plugin to configure the line ending. By default, used `\n`.
 
-New options:
+**New option**:
 ```yaml
-# Service plugin settings
-service:
-  some_service_1:
+# Logs plugin settings
+logs:
     (....)
-    # Console output
+    # Line ending
     #
-    # Default: stderr. Available options: stderr, stdout
-    output: "stderr"
-
-    # Endings for the stderr/stdout output
-    #
-    # Default: "\n". Available options: any.
+    # Default: "\n".
     line_ending: "\n"
-
-    # Color for regular output
-    #
-    # Default: none. Available options: white, red, green, yellow, blue, magenta
-    color: "green"
-
-    # Color for the process errors
-    #
-    # Default: none. Available options: white, red, green, yellow, blue, magenta
-    err_color: "red"
 ```
-
-**!!!**
-Be careful, now, there is no logger plugin dependency for the `service` plugin. That means, that if you used `json` output, now,
-you need to serialize data on the `executable` (in the command) side.
 
 - ✏️ [Access log support](https://github.com/spiral/roadrunner-plugins/issues/34) at the `Info` log level.
 ```yaml

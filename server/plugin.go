@@ -84,26 +84,25 @@ func (server *Plugin) Stop() error {
 }
 
 // CmdFactory provides worker command factory associated with given context.
-func (server *Plugin) CmdFactory(env Env) (func() *exec.Cmd, error) {
-	const op = errors.Op("server_plugin_cmd_factory")
-	var cmdArgs []string
-
-	// create command according to the config
-	cmdArgs = append(cmdArgs, strings.Split(server.cfg.Server.Command, " ")...)
-	if len(cmdArgs) < 2 {
-		return nil, errors.E(op, errors.Str("minimum command should be `<executable> <script>"))
-	}
-
-	// try to find a path here
-	err := server.scanCommand(cmdArgs)
-	if err != nil {
-		server.log.Info("scan command", "reason", err)
-	}
-
+func (server *Plugin) CmdFactory(env Env) func() *exec.Cmd {
 	return func() *exec.Cmd {
-		cmd := exec.Command(cmdArgs[0], cmdArgs[1:]...) //nolint:gosec
-		utils.IsolateProcess(cmd)
+		var cmdArgs []string
+		// create command according to the config
+		cmdArgs = append(cmdArgs, strings.Split(server.cfg.Server.Command, " ")...)
+		var cmd *exec.Cmd
+		if len(cmdArgs) == 1 {
+			cmd = exec.Command(cmdArgs[0]) //nolint:gosec
+		} else {
+			cmd = exec.Command(cmdArgs[0], cmdArgs[1:]...) //nolint:gosec
+		}
 
+		// try to find a path here
+		err := server.scanCommand(cmdArgs)
+		if err != nil {
+			server.log.Info("scan command", "reason", err)
+		}
+
+		utils.IsolateProcess(cmd)
 		// if user is not empty, and OS is linux or macos
 		// execute php worker from that particular user
 		if server.cfg.Server.User != "" {
@@ -114,9 +113,8 @@ func (server *Plugin) CmdFactory(env Env) (func() *exec.Cmd, error) {
 		}
 
 		cmd.Env = server.setEnv(env)
-
 		return cmd
-	}, nil
+	}
 }
 
 // NewWorker issues new standalone worker.
@@ -126,10 +124,7 @@ func (server *Plugin) NewWorker(ctx context.Context, env Env, listeners ...event
 	list := make([]events.Listener, 0, len(listeners))
 	list = append(list, server.collectWorkerEvents)
 
-	spawnCmd, err := server.CmdFactory(env)
-	if err != nil {
-		return nil, errors.E(op, err)
-	}
+	spawnCmd := server.CmdFactory(env)
 
 	w, err := server.factory.SpawnWorkerWithTimeout(ctx, spawnCmd(), list...)
 	if err != nil {
@@ -143,11 +138,7 @@ func (server *Plugin) NewWorker(ctx context.Context, env Env, listeners ...event
 func (server *Plugin) NewWorkerPool(ctx context.Context, opt *pool.Config, env Env, listeners ...events.Listener) (pool.Pool, error) {
 	const op = errors.Op("server_plugin_new_worker_pool")
 
-	spawnCmd, err := server.CmdFactory(env)
-	if err != nil {
-		return nil, errors.E(op, err)
-	}
-
+	spawnCmd := server.CmdFactory(env)
 	list := make([]events.Listener, 0, 2)
 	list = append(list, server.collectPoolEvents, server.collectWorkerEvents)
 	if len(listeners) != 0 {

@@ -177,7 +177,7 @@ func (cp *ConnPool) redial() error {
 		cp.conn = connTS
 		cp.connT = connT
 
-		cp.log.Info("beanstalk redial was successful")
+		cp.log.Debug("beanstalk redial was successful")
 		return nil
 	}
 

@@ -72,6 +72,9 @@ type Config struct {
 	// level of all loggers descended from this config.
 	Level string `mapstructure:"level"`
 
+	// Logger line ending. Default: "\n" for the all modes except production
+	LineEnding string `mapstructure:"line_ending"`
+
 	// Encoding sets the logger's encoding. InitDefault values are "json" and
 	// "console", as well as any third-party encodings registered via
 	// RegisterEncoder.
@@ -114,7 +117,7 @@ func (cfg *Config) BuildLogger() (*zap.Logger, error) {
 				FunctionKey:    zapcore.OmitKey,
 				MessageKey:     "M",
 				StacktraceKey:  "S",
-				LineEnding:     zapcore.DefaultLineEnding,
+				LineEnding:     cfg.LineEnding,
 				EncodeLevel:    ColoredLevelEncoder,
 				EncodeName:     ColoredNameEncoder,
 				EncodeTime:     zapcore.ISO8601TimeEncoder,
@@ -130,7 +133,7 @@ func (cfg *Config) BuildLogger() (*zap.Logger, error) {
 			Encoding: "console",
 			EncoderConfig: zapcore.EncoderConfig{
 				MessageKey:  "message",
-				LineEnding:  zapcore.DefaultLineEnding,
+				LineEnding:  cfg.LineEnding,
 				EncodeLevel: ColoredLevelEncoder,
 			},
 			OutputPaths:      []string{"stderr"},
@@ -148,7 +151,7 @@ func (cfg *Config) BuildLogger() (*zap.Logger, error) {
 				FunctionKey:    zapcore.OmitKey,
 				MessageKey:     "M",
 				StacktraceKey:  "S",
-				LineEnding:     zapcore.DefaultLineEnding,
+				LineEnding:     cfg.LineEnding,
 				EncodeLevel:    ColoredLevelEncoder,
 				EncodeName:     ColoredNameEncoder,
 				EncodeTime:     zapcore.ISO8601TimeEncoder,
@@ -214,5 +217,9 @@ func (cfg *Config) InitDefault() {
 	}
 	if cfg.Level == "" {
 		cfg.Level = "debug"
+	}
+
+	if cfg.LineEnding == "" {
+		cfg.LineEnding = zapcore.DefaultLineEnding
 	}
 }

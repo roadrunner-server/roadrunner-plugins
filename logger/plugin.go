@@ -44,6 +44,7 @@ func (z *ZapLogger) Init(cfg config.Configurer) error {
 		return errors.E(op, err)
 	}
 
+	z.cfg.InitDefault()
 	z.base, err = z.cfg.BuildLogger()
 	if err != nil {
 		return errors.E(op, err)

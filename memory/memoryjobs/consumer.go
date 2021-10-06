@@ -274,7 +274,7 @@ func (c *consumer) consume() {
 			select {
 			case item, ok := <-c.localPrefetch:
 				if !ok {
-					c.log.Warn("ephemeral local prefetch queue closed")
+					c.log.Debug("ephemeral local prefetch queue closed")
 					return
 				}
 

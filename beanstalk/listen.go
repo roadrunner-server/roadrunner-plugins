@@ -8,7 +8,7 @@ func (j *consumer) listen() {
 	for {
 		select {
 		case <-j.stopCh:
-			j.log.Warn("beanstalk listener stopped")
+			j.log.Debug("beanstalk listener stopped")
 			return
 		default:
 			id, body, err := j.pool.Reserve(j.reserveTimeout)
