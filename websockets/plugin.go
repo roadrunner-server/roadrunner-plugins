@@ -218,7 +218,7 @@ func (p *Plugin) Middleware(next http.Handler) http.Handler {
 
 		// Executor wraps a connection to have a safe abstraction
 		e := executor.NewExecutor(safeConn, p.log, connectionID, p.subReader, p.accessValidator, r)
-		p.log.Info("websocket client connected", "uuid", connectionID)
+		p.log.Debug("websocket client connected", "uuid", connectionID)
 
 		err = e.StartCommandLoop()
 		if err != nil {
@@ -244,7 +244,7 @@ func (p *Plugin) Middleware(next http.Handler) http.Handler {
 		}
 
 		safeConn = nil
-		p.log.Info("disconnected", "connectionID", connectionID)
+		p.log.Debug("disconnected", "connectionID", connectionID)
 	})
 }
 

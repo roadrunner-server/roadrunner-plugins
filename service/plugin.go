@@ -5,6 +5,7 @@ import (
 
 	"github.com/spiral/errors"
 	"github.com/spiral/roadrunner-plugins/v2/config"
+	"github.com/spiral/roadrunner-plugins/v2/logger"
 	"github.com/spiral/roadrunner/v2/state/process"
 )
 
@@ -12,12 +13,15 @@ const PluginName string = "service"
 
 type Plugin struct {
 	sync.Mutex
-	cfg Config
+
+	logger logger.Logger
+	cfg    Config
+
 	// all processes attached to the service
 	processes []*Process
 }
 
-func (service *Plugin) Init(cfg config.Configurer) error {
+func (service *Plugin) Init(cfg config.Configurer, log logger.Logger) error {
 	const op = errors.Op("service_plugin_init")
 	if !cfg.Has(PluginName) {
 		return errors.E(errors.Disabled)
@@ -29,6 +33,8 @@ func (service *Plugin) Init(cfg config.Configurer) error {
 
 	// init default parameters if not set by user
 	service.cfg.InitDefault()
+	// save the logger
+	service.logger = log
 
 	return nil
 }
@@ -49,14 +55,12 @@ func (service *Plugin) Serve() chan error {
 			for i := 0; i < service.cfg.Services[k].ProcessNum; i++ {
 				// create processor structure, which will process all the services
 				service.processes = append(service.processes, NewServiceProcess(
-					service.cfg.Services[k].RegularColor,
-					service.cfg.Services[k].ErrColor,
-					service.cfg.Services[k].Output,
-					service.cfg.Services[k].LineEnding,
 					service.cfg.Services[k].RemainAfterExit,
 					service.cfg.Services[k].ExecTimeout,
 					service.cfg.Services[k].RestartSec,
 					service.cfg.Services[k].Command,
+					service.cfg.Services[k].Env,
+					service.logger,
 					errCh,
 				))
 			}

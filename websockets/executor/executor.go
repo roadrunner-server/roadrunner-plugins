@@ -67,7 +67,7 @@ func (e *Executor) StartCommandLoop() error { //nolint:gocognit
 		}
 
 		if opCode == ws.OpClose {
-			e.log.Info("socket was closed", "reason", err)
+			e.log.Debug("socket was closed", "reason", err)
 			return nil
 		}
 

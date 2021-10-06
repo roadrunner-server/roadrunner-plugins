@@ -16,7 +16,7 @@ func (c *consumer) listener() {
 	for {
 		select {
 		case <-c.stopCh:
-			c.log.Info("boltdb listener stopped")
+			c.log.Debug("boltdb listener stopped")
 			return
 		case <-tt.C:
 			if atomic.LoadUint64(c.active) > uint64(c.prefetch) {
@@ -92,7 +92,7 @@ func (c *consumer) delayedJobsListener() {
 	for {
 		select {
 		case <-c.stopCh:
-			c.log.Info("boltdb listener stopped")
+			c.log.Debug("boltdb listener stopped")
 			return
 		case <-tt.C:
 			tx, err := c.db.Begin(true)
@@ -150,6 +150,7 @@ func (c *consumer) rollback(err error, tx *bolt.Tx) {
 	errR := tx.Rollback()
 	if errR != nil {
 		c.log.Error("transaction commit error, rollback failed", "error", err, "rollback error", errR)
+		return
 	}
 
 	c.log.Error("transaction commit error, rollback succeed", "error", err)

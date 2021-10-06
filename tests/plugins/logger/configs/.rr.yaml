@@ -1,3 +1,4 @@
 logs:
-  mode: development
+  mode: raw
+  line_ending: ""
   level: error
