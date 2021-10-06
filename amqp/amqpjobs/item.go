@@ -218,8 +218,8 @@ func (c *consumer) unpack(d amqp.Delivery) (*Item, error) {
 		item.Options.Pipeline = d.Headers[job.RRPipeline].(string)
 	}
 
-	if h, ok := d.Headers[job.RRHeaders].([]byte); ok {
-		err := json.Unmarshal(h, &item.Headers)
+	if h, ok := d.Headers[job.RRHeaders].(string); ok {
+		err := json.Unmarshal([]byte(h), &item.Headers)
 		if err != nil {
 			return nil, err
 		}
