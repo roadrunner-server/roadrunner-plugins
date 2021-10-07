@@ -11,6 +11,14 @@ services:
     ports:
       - "127.0.0.1:6379:6379"
 
+  nats:
+    image: nats:latest
+    expose:
+      - "4222"
+    ports:
+      - "8222:8222"
+      - "4222:4222"
+
   redis2:
     image: redis:6
     ports:
