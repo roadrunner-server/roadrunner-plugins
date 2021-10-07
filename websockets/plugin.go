@@ -149,7 +149,9 @@ func (p *Plugin) Serve() chan error {
 
 func (p *Plugin) Stop() error {
 	// close workers pool
-	p.workersPool.Stop()
+	if p.workersPool != nil {
+		p.workersPool.Stop()
+	}
 	// cancel context
 	p.cancel()
 	p.Lock()

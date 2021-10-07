@@ -61,12 +61,6 @@ func (p *Plugin) Stop() error {
 		p.publishers[k].Stop()
 	}
 
-	p.Lock()
-	for k := range p.publishers {
-		delete(p.publishers, k)
-	}
-	p.Unlock()
-
 	return nil
 }
 

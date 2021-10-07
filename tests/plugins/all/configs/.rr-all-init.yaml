@@ -1,9 +1,8 @@
-
 rpc:
   listen: tcp://127.0.0.1:6001
 
 server:
-  command: "php psr-worker.php"
+  command: "php ../../psr-worker.php"
   relay: pipes
   relay_timeout: 60s
 
@@ -32,11 +31,12 @@ logs:
       encoding: console
       output: stderr
       err_output: stdout
+
 kv:
   boltdb-south:
     driver: boltdb
     config:
-      file: "rr.db"
+      file: "rr-kv.db"
       permissions: 0777
       interval: 40
   us-central-kv:
@@ -56,30 +56,16 @@ kv:
 
 service:
   some_service_1:
-    command: php tests/plugins/service/test_files/loop.php
+    command: php ../../plugins/service/test_files/loop.php
     process_num: 1
     exec_timeout: 0
-    output: "stderr"
-    line_ending: "\n"
-    color: "green"
-    err_color: "red"
-    remain_after_exit: true
-    restart_sec: 1
-  some_service_2:
-    command: "binary"
-    process_num: 1
-    exec_timeout: 0
-    output: "stderr"
-    line_ending: "\n"
-    color: "green"
-    err_color: "red"
     remain_after_exit: true
     restart_sec: 1
 
 http:
   address: 127.0.0.1:47474
   max_request_size: 256
-  middleware: [ "headers", "gzip" ]
+  middleware: [ "headers", "gzip", "sendfile" ]
   trusted_subnets:
     [
         "10.0.0.0/8",
@@ -94,6 +80,7 @@ http:
   uploads:
     dir: "/tmp"
     forbid: [ ".php", ".exe", ".bat", ".sh" ]
+
   headers:
     cors:
       allowed_origin: "*"
@@ -139,7 +126,7 @@ http:
 redis:
   addrs:
     - "localhost:6379"
-    -
+
 websockets:
   broker: default-redis
   allowed_origin: "*"
@@ -186,6 +173,7 @@ boltdb:
 
 amqp:
   addr: amqp://guest:guest@127.0.0.1:5672/
+
 beanstalk:
   addr: tcp://127.0.0.1:11300
   timeout: 10s
@@ -285,6 +273,6 @@ grpc:
     destroy_timeout: 60
 
 endure:
-  grace_period: 30s
+  grace_period: 120s
   print_graph: false
   log_level: error
