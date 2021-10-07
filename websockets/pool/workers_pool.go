@@ -10,6 +10,9 @@ import (
 	"github.com/spiral/roadrunner/v2/utils"
 )
 
+// number of the WS pollers
+const workersNum int = 10
+
 type WorkersPool struct {
 	subscriber  pubsub.Subscriber
 	connections *sync.Map
@@ -35,7 +38,7 @@ func NewWorkersPool(subscriber pubsub.Subscriber, connections *sync.Map, log log
 	}
 
 	// start 10 workers
-	for i := 0; i < 50; i++ {
+	for i := 0; i < workersNum; i++ {
 		wp.do()
 	}
 
@@ -47,7 +50,7 @@ func (wp *WorkersPool) Queue(msg *pubsub.Message) {
 }
 
 func (wp *WorkersPool) Stop() {
-	for i := 0; i < 50; i++ {
+	for i := 0; i < workersNum; i++ {
 		wp.exit <- struct{}{}
 	}
 

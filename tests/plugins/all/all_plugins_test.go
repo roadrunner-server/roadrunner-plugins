@@ -36,10 +36,11 @@ import (
 	"github.com/spiral/roadrunner-plugins/v2/status"
 	"github.com/spiral/roadrunner-plugins/v2/websockets"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestAllPluginsInit(t *testing.T) {
-	cont, err := endure.NewContainer(nil, endure.SetLogLevel(endure.ErrorLevel))
+	cont, err := endure.NewContainer(nil, endure.SetLogLevel(endure.DebugLevel), endure.GracefulShutdownTimeout(time.Second*30))
 	assert.NoError(t, err)
 
 	cfg := &config.Viper{
@@ -123,9 +124,11 @@ func TestAllPluginsInit(t *testing.T) {
 		}
 	}()
 
-	time.Sleep(time.Second * 1)
+	time.Sleep(time.Second * 5)
 
 	stopCh <- struct{}{}
 
 	wg.Wait()
+
+	require.NoError(t, os.RemoveAll("./rr.db"))
 }

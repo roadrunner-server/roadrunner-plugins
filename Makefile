@@ -33,6 +33,7 @@ test_coverage:
 	go test -v -race -cover -tags=debug -coverpkg=./... -coverprofile=./coverage-ci/metrics.out -covermode=atomic ./tests/plugins/metrics
 	go test -v -race -cover -tags=debug -coverpkg=./... -coverprofile=./coverage-ci/resetter.out -covermode=atomic ./tests/plugins/resetter
 	go test -v -race -cover -tags=debug -coverpkg=./... -coverprofile=./coverage-ci/rpc.out -covermode=atomic ./tests/plugins/rpc
+	go test -v -race -cover -tags=debug -coverpkg=./... -coverprofile=./coverage-ci/all_plugins.out -covermode=atomic ./tests/plugins/all
 	echo 'mode: atomic' > ./coverage-ci/summary.txt
 	tail -q -n +2 ./coverage-ci/*.out >> ./coverage-ci/summary.txt
 	docker-compose -f tests/env/docker-compose.yaml down
@@ -66,6 +67,7 @@ test: ## Run application tests
 	go test -v -race -tags=debug ./tests/plugins/metrics
 	go test -v -race -tags=debug ./tests/plugins/resetter
 	go test -v -race -tags=debug ./tests/plugins/rpc
+	go test -v -race -tags=debug ./tests/plugins/all
 	docker compose -f tests/env/docker-compose.yaml down
 
 generate-proto:
