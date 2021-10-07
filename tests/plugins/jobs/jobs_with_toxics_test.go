@@ -48,21 +48,21 @@ func TestDurabilityAMQP(t *testing.T) {
 	mockLogger.EXPECT().Debug("worker constructed", "pid", gomock.Any()).AnyTimes()
 	mockLogger.EXPECT().Debug("Started RPC service", "address", "tcp://127.0.0.1:6001", "plugins", gomock.Any()).Times(1)
 
-	mockLogger.EXPECT().Info("pipeline active", "pipeline", "test-1", "start", gomock.Any(), "elapsed", gomock.Any()).Times(2)
-	mockLogger.EXPECT().Info("pipeline active", "pipeline", "test-2", "start", gomock.Any(), "elapsed", gomock.Any()).Times(2)
+	mockLogger.EXPECT().Debug("pipeline active", "pipeline", "test-1", "start", gomock.Any(), "elapsed", gomock.Any()).Times(2)
+	mockLogger.EXPECT().Debug("pipeline active", "pipeline", "test-2", "start", gomock.Any(), "elapsed", gomock.Any()).Times(2)
 
 	mockLogger.EXPECT().Error(gomock.Any(), gomock.Any(), gomock.Any()).AnyTimes()
 
-	mockLogger.EXPECT().Warn("pipeline stopped", "pipeline", "test-1", "start", gomock.Any(), "elapsed", gomock.Any()).Times(1)
-	mockLogger.EXPECT().Warn("pipeline stopped", "pipeline", "test-2", "start", gomock.Any(), "elapsed", gomock.Any()).Times(1)
+	mockLogger.EXPECT().Debug("pipeline stopped", "pipeline", "test-1", "start", gomock.Any(), "elapsed", gomock.Any()).Times(1)
+	mockLogger.EXPECT().Debug("pipeline stopped", "pipeline", "test-2", "start", gomock.Any(), "elapsed", gomock.Any()).Times(1)
 
-	mockLogger.EXPECT().Info("job pushed to the queue", "start", gomock.Any(), "elapsed", gomock.Any()).MinTimes(1)
-	mockLogger.EXPECT().Info("job processing started", "start", gomock.Any(), "elapsed", gomock.Any()).MinTimes(1)
-	mockLogger.EXPECT().Info("job processed without errors", "ID", gomock.Any(), "start", gomock.Any(), "elapsed", gomock.Any()).MinTimes(1)
+	mockLogger.EXPECT().Debug("job pushed to the queue", "start", gomock.Any(), "elapsed", gomock.Any()).MinTimes(1)
+	mockLogger.EXPECT().Debug("job processing started", "start", gomock.Any(), "elapsed", gomock.Any()).MinTimes(1)
+	mockLogger.EXPECT().Debug("job processed without errors", "ID", gomock.Any(), "start", gomock.Any(), "elapsed", gomock.Any()).MinTimes(1)
 	mockLogger.EXPECT().Error("job push error, job might be lost", "error", gomock.Any(), "pipeline", "test-1", "ID", gomock.Any(), "driver", "amqp", "start", gomock.Any(), "elapsed", gomock.Any()).MinTimes(1)
 	mockLogger.EXPECT().Error("job push error, job might be lost", "error", gomock.Any(), "pipeline", "test-2", "ID", gomock.Any(), "driver", "amqp", "start", gomock.Any(), "elapsed", gomock.Any()).MinTimes(1)
 
-	mockLogger.EXPECT().Info("delivery channel closed, leaving the rabbit listener").Times(4)
+	mockLogger.EXPECT().Debug("delivery channel closed, leaving the rabbit listener").Times(4)
 
 	// redial errors
 	mockLogger.EXPECT().Warn("rabbitmq reconnecting, caused by", "error", gomock.Any()).AnyTimes()
@@ -174,24 +174,24 @@ func TestDurabilitySQS(t *testing.T) {
 	mockLogger.EXPECT().Debug("worker constructed", "pid", gomock.Any()).AnyTimes()
 	mockLogger.EXPECT().Debug("Started RPC service", "address", "tcp://127.0.0.1:6001", "plugins", gomock.Any()).Times(1)
 
-	mockLogger.EXPECT().Info("pipeline active", "pipeline", "test-1", "start", gomock.Any(), "elapsed", gomock.Any()).Times(1)
-	mockLogger.EXPECT().Info("pipeline active", "pipeline", "test-2", "start", gomock.Any(), "elapsed", gomock.Any()).Times(1)
+	mockLogger.EXPECT().Debug("pipeline active", "pipeline", "test-1", "start", gomock.Any(), "elapsed", gomock.Any()).Times(1)
+	mockLogger.EXPECT().Debug("pipeline active", "pipeline", "test-2", "start", gomock.Any(), "elapsed", gomock.Any()).Times(1)
 
 	mockLogger.EXPECT().Error(gomock.Any(), gomock.Any(), gomock.Any()).AnyTimes()
 
-	mockLogger.EXPECT().Warn("pipeline stopped", "pipeline", "test-1", "start", gomock.Any(), "elapsed", gomock.Any()).Times(1)
-	mockLogger.EXPECT().Warn("pipeline stopped", "pipeline", "test-2", "start", gomock.Any(), "elapsed", gomock.Any()).Times(1)
+	mockLogger.EXPECT().Debug("pipeline stopped", "pipeline", "test-1", "start", gomock.Any(), "elapsed", gomock.Any()).Times(1)
+	mockLogger.EXPECT().Debug("pipeline stopped", "pipeline", "test-2", "start", gomock.Any(), "elapsed", gomock.Any()).Times(1)
 
-	mockLogger.EXPECT().Info("job pushed to the queue", "start", gomock.Any(), "elapsed", gomock.Any()).AnyTimes()
-	mockLogger.EXPECT().Info("job processing started", "start", gomock.Any(), "elapsed", gomock.Any()).AnyTimes()
-	mockLogger.EXPECT().Info("job processed without errors", "ID", gomock.Any(), "start", gomock.Any(), "elapsed", gomock.Any()).AnyTimes()
+	mockLogger.EXPECT().Debug("job pushed to the queue", "start", gomock.Any(), "elapsed", gomock.Any()).AnyTimes()
+	mockLogger.EXPECT().Debug("job processing started", "start", gomock.Any(), "elapsed", gomock.Any()).AnyTimes()
+	mockLogger.EXPECT().Debug("job processed without errors", "ID", gomock.Any(), "start", gomock.Any(), "elapsed", gomock.Any()).AnyTimes()
 	// redial errors
 	mockLogger.EXPECT().Error("pipeline error", "pipeline", "test-1", "error", gomock.Any(), "start", gomock.Any(), "elapsed", gomock.Any()).AnyTimes()
 	mockLogger.EXPECT().Error("pipeline error", "pipeline", "test-2", "error", gomock.Any(), "start", gomock.Any(), "elapsed", gomock.Any()).AnyTimes()
 
 	// stop
-	mockLogger.EXPECT().Warn("sqs listener stopped").AnyTimes()
-	mockLogger.EXPECT().Info("------> job poller stopped <------").AnyTimes()
+	mockLogger.EXPECT().Debug("sqs listener stopped").AnyTimes()
+	mockLogger.EXPECT().Debug("------> job poller stopped <------").AnyTimes()
 
 	err = cont.RegisterAll(
 		cfg,
@@ -295,23 +295,24 @@ func TestDurabilityBeanstalk(t *testing.T) {
 	mockLogger.EXPECT().Debug("worker destructed", "pid", gomock.Any()).AnyTimes()
 	mockLogger.EXPECT().Debug("worker constructed", "pid", gomock.Any()).AnyTimes()
 	mockLogger.EXPECT().Debug("Started RPC service", "address", "tcp://127.0.0.1:6001", "plugins", gomock.Any()).Times(1)
+	mockLogger.EXPECT().Error("job processed with errors", "error", gomock.Any(), "ID", gomock.Any(), "start", gomock.Any(), "elapsed", gomock.Any()).AnyTimes()
 
-	mockLogger.EXPECT().Info("pipeline active", "pipeline", "test-1", "start", gomock.Any(), "elapsed", gomock.Any()).Times(1)
-	mockLogger.EXPECT().Info("pipeline active", "pipeline", "test-2", "start", gomock.Any(), "elapsed", gomock.Any()).Times(1)
+	mockLogger.EXPECT().Debug("pipeline active", "pipeline", "test-1", "start", gomock.Any(), "elapsed", gomock.Any()).Times(1)
+	mockLogger.EXPECT().Debug("pipeline active", "pipeline", "test-2", "start", gomock.Any(), "elapsed", gomock.Any()).Times(1)
 
 	mockLogger.EXPECT().Error(gomock.Any(), gomock.Any(), gomock.Any()).AnyTimes()
 
-	mockLogger.EXPECT().Info("job pushed to the queue", "start", gomock.Any(), "elapsed", gomock.Any()).MinTimes(1)
-	mockLogger.EXPECT().Warn("pipeline stopped", "pipeline", "test-1", "start", gomock.Any(), "elapsed", gomock.Any()).Times(1)
-	mockLogger.EXPECT().Warn("pipeline stopped", "pipeline", "test-2", "start", gomock.Any(), "elapsed", gomock.Any()).Times(1)
+	mockLogger.EXPECT().Debug("job pushed to the queue", "start", gomock.Any(), "elapsed", gomock.Any()).MinTimes(1)
+	mockLogger.EXPECT().Debug("pipeline stopped", "pipeline", "test-1", "start", gomock.Any(), "elapsed", gomock.Any()).Times(1)
+	mockLogger.EXPECT().Debug("pipeline stopped", "pipeline", "test-2", "start", gomock.Any(), "elapsed", gomock.Any()).Times(1)
 
-	mockLogger.EXPECT().Info("job processing started", "start", gomock.Any(), "elapsed", gomock.Any()).MinTimes(1)
-	mockLogger.EXPECT().Info("job processed without errors", "ID", gomock.Any(), "start", gomock.Any(), "elapsed", gomock.Any()).MinTimes(1)
+	mockLogger.EXPECT().Debug("job processing started", "start", gomock.Any(), "elapsed", gomock.Any()).MinTimes(1)
+	mockLogger.EXPECT().Debug("job processed without errors", "ID", gomock.Any(), "start", gomock.Any(), "elapsed", gomock.Any()).MinTimes(1)
 	// redial errors
-	mockLogger.EXPECT().Info("beanstalk redial was successful").MinTimes(2)
+	mockLogger.EXPECT().Debug("beanstalk redial was successful").MinTimes(2)
 	mockLogger.EXPECT().Error("pipeline error", "pipeline", "test-1", "error", gomock.Any(), "start", gomock.Any(), "elapsed", gomock.Any()).AnyTimes()
 	mockLogger.EXPECT().Error("pipeline error", "pipeline", "test-2", "error", gomock.Any(), "start", gomock.Any(), "elapsed", gomock.Any()).AnyTimes()
-	mockLogger.EXPECT().Warn("beanstalk listener stopped").AnyTimes()
+	mockLogger.EXPECT().Debug("beanstalk listener stopped").AnyTimes()
 
 	err = cont.RegisterAll(
 		cfg,

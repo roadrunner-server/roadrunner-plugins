@@ -112,7 +112,7 @@ func (p *Plugin) Init(cfg config.Configurer, log logger.Logger, server server.Se
 	return nil
 }
 
-func (p *Plugin) Serve() chan error { //nolint:gocognit
+func (p *Plugin) Serve() chan error {
 	errCh := make(chan error, 1)
 	const op = errors.Op("jobs_plugin_serve")
 
@@ -189,141 +189,7 @@ func (p *Plugin) Serve() chan error { //nolint:gocognit
 	}
 
 	// start listening
-	go func() {
-		for i := uint8(0); i < p.cfg.NumPollers; i++ {
-			go func() {
-				for {
-					select {
-					case <-p.stopCh:
-						p.log.Info("------> job poller stopped <------")
-						return
-					default:
-						// get prioritized JOB from the queue
-						jb := p.queue.ExtractMin()
-
-						// parse the context
-						// for each job, context contains:
-						/*
-							1. Job class
-							2. Job ID provided from the outside
-							3. Job Headers map[string][]string
-							4. Timeout in seconds
-							5. Pipeline name
-						*/
-
-						start := time.Now()
-						p.events.Push(events.JobEvent{
-							Event:   events.EventJobStart,
-							ID:      jb.ID(),
-							Start:   start,
-							Elapsed: 0,
-						})
-
-						ctx, err := jb.Context()
-						if err != nil {
-							p.events.Push(events.JobEvent{
-								Event:   events.EventJobError,
-								Error:   err,
-								ID:      jb.ID(),
-								Start:   start,
-								Elapsed: time.Since(start),
-							})
-
-							errNack := jb.Nack()
-							if errNack != nil {
-								p.log.Error("negatively acknowledge failed", "error", errNack)
-							}
-							p.log.Error("job marshal context", "error", err)
-							continue
-						}
-
-						// get payload from the sync.Pool
-						exec := p.getPayload(jb.Body(), ctx)
-
-						// protect from the pool reset
-						p.RLock()
-						resp, err := p.workersPool.Exec(exec)
-						p.RUnlock()
-						if err != nil {
-							p.events.Push(events.JobEvent{
-								Event:   events.EventJobError,
-								ID:      jb.ID(),
-								Error:   err,
-								Start:   start,
-								Elapsed: time.Since(start),
-							})
-							// RR protocol level error, Nack the job
-							errNack := jb.Nack()
-							if errNack != nil {
-								p.log.Error("negatively acknowledge failed", "error", errNack)
-							}
-
-							p.log.Error("job execute failed", "error", err)
-							p.putPayload(exec)
-							continue
-						}
-
-						// if response is nil or body is nil, just acknowledge the job
-						if resp == nil || resp.Body == nil {
-							p.putPayload(exec)
-							err = jb.Ack()
-							if err != nil {
-								p.events.Push(events.JobEvent{
-									Event:   events.EventJobError,
-									ID:      jb.ID(),
-									Error:   err,
-									Start:   start,
-									Elapsed: time.Since(start),
-								})
-								p.log.Error("acknowledge error, job might be missed", "error", err)
-								continue
-							}
-
-							p.events.Push(events.JobEvent{
-								Event:   events.EventJobOK,
-								ID:      jb.ID(),
-								Start:   start,
-								Elapsed: time.Since(start),
-							})
-
-							continue
-						}
-
-						// handle the response protocol
-						err = handleResponse(resp.Body, jb, p.log)
-						if err != nil {
-							p.events.Push(events.JobEvent{
-								Event:   events.EventJobError,
-								ID:      jb.ID(),
-								Start:   start,
-								Error:   err,
-								Elapsed: time.Since(start),
-							})
-							p.putPayload(exec)
-							errNack := jb.Nack()
-							if errNack != nil {
-								p.log.Error("negatively acknowledge failed, job might be lost", "root error", err, "error nack", errNack)
-								continue
-							}
-
-							p.log.Error("job negatively acknowledged", "error", err)
-							continue
-						}
-
-						p.events.Push(events.JobEvent{
-							Event:   events.EventJobOK,
-							ID:      jb.ID(),
-							Start:   start,
-							Elapsed: time.Since(start),
-						})
-
-						// return payload
-						p.putPayload(exec)
-					}
-				}
-			}()
-		}
-	}()
+	p.listener()
 
 	return errCh
 }
@@ -678,25 +544,25 @@ func (p *Plugin) collectJobsEvents(event interface{}) {
 	if jev, ok := event.(events.JobEvent); ok {
 		switch jev.Event {
 		case events.EventPipePaused:
-			p.log.Info("pipeline paused", "pipeline", jev.Pipeline, "driver", jev.Driver, "start", jev.Start.UTC(), "elapsed", jev.Elapsed)
+			p.log.Debug("pipeline paused", "pipeline", jev.Pipeline, "driver", jev.Driver, "start", jev.Start.UTC(), "elapsed", jev.Elapsed)
 		case events.EventJobStart:
-			p.log.Info("job processing started", "start", jev.Start.UTC(), "elapsed", jev.Elapsed)
+			p.log.Debug("job processing started", "start", jev.Start.UTC(), "elapsed", jev.Elapsed)
 		case events.EventJobOK:
-			p.log.Info("job processed without errors", "ID", jev.ID, "start", jev.Start.UTC(), "elapsed", jev.Elapsed)
+			p.log.Debug("job processed without errors", "ID", jev.ID, "start", jev.Start.UTC(), "elapsed", jev.Elapsed)
 		case events.EventPushOK:
-			p.log.Info("job pushed to the queue", "start", jev.Start.UTC(), "elapsed", jev.Elapsed)
+			p.log.Debug("job pushed to the queue", "start", jev.Start.UTC(), "elapsed", jev.Elapsed)
 		case events.EventPushError:
 			p.log.Error("job push error, job might be lost", "error", jev.Error, "pipeline", jev.Pipeline, "ID", jev.ID, "driver", jev.Driver, "start", jev.Start.UTC(), "elapsed", jev.Elapsed)
 		case events.EventJobError:
 			p.log.Error("job processed with errors", "error", jev.Error, "ID", jev.ID, "start", jev.Start.UTC(), "elapsed", jev.Elapsed)
 		case events.EventPipeActive:
-			p.log.Info("pipeline active", "pipeline", jev.Pipeline, "start", jev.Start.UTC(), "elapsed", jev.Elapsed)
+			p.log.Debug("pipeline active", "pipeline", jev.Pipeline, "start", jev.Start.UTC(), "elapsed", jev.Elapsed)
 		case events.EventPipeStopped:
-			p.log.Warn("pipeline stopped", "pipeline", jev.Pipeline, "start", jev.Start.UTC(), "elapsed", jev.Elapsed)
+			p.log.Debug("pipeline stopped", "pipeline", jev.Pipeline, "start", jev.Start.UTC(), "elapsed", jev.Elapsed)
 		case events.EventPipeError:
 			p.log.Error("pipeline error", "pipeline", jev.Pipeline, "error", jev.Error, "start", jev.Start.UTC(), "elapsed", jev.Elapsed)
 		case events.EventDriverReady:
-			p.log.Info("driver ready", "pipeline", jev.Pipeline, "start", jev.Start.UTC(), "elapsed", jev.Elapsed)
+			p.log.Debug("driver ready", "pipeline", jev.Pipeline, "start", jev.Start.UTC(), "elapsed", jev.Elapsed)
 		}
 	}
 }

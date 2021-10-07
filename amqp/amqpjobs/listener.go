@@ -8,7 +8,7 @@ func (c *consumer) listener(deliv <-chan amqp.Delivery) {
 			select {
 			case msg, ok := <-deliv:
 				if !ok {
-					c.log.Info("delivery channel closed, leaving the rabbit listener")
+					c.log.Debug("delivery channel closed, leaving the rabbit listener")
 					return
 				}
 

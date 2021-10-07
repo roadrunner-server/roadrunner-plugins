@@ -61,11 +61,7 @@ func (f *Foo) Serve() chan error {
 	}
 
 	// test CMDFactory
-	cmd, err := f.wf.CmdFactory(nil)
-	if err != nil {
-		errCh <- err
-		return errCh
-	}
+	cmd := f.wf.CmdFactory(nil)
 	if cmd == nil {
 		errCh <- errors.E(op, errors.Str("command is nil"))
 		return errCh

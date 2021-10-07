@@ -22,7 +22,7 @@ func (c *consumer) listen(ctx context.Context) { //nolint:gocognit
 	for {
 		select {
 		case <-c.pauseCh:
-			c.log.Warn("sqs listener stopped")
+			c.log.Debug("sqs listener stopped")
 			return
 		default:
 			message, err := c.client.ReceiveMessage(ctx, &sqs.ReceiveMessageInput{
