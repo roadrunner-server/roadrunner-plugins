@@ -131,7 +131,7 @@ http:
     allocate_timeout: 60s
     destroy_timeout: 60s
 ```
-- ✏️ HTTP middleware to handle Symfony's `X-Sendfile` [header](https://github.com/spiral/roadrunner-plugins/issues/9).
+- ✏️ HTTP middleware to handle `X-Sendfile` [header](https://github.com/spiral/roadrunner-plugins/issues/9).
 ```yaml
 http:
   address: 127.0.0.1:44444
