@@ -30,14 +30,14 @@ require (
 	github.com/spiral/endure v1.0.4
 	github.com/spiral/errors v1.0.12
 	github.com/spiral/goridge/v3 v3.2.2-beta.1
-	github.com/spiral/roadrunner/v2 v2.5.0-beta.1
+	github.com/spiral/roadrunner/v2 v2.5.0-beta.2
 	// spiral
 	github.com/stretchr/testify v1.7.0
 	github.com/yookoala/gofast v0.6.0
 	go.etcd.io/bbolt v1.3.6
 	go.uber.org/zap v1.19.1
-	golang.org/x/net v0.0.0-20211005215030-d2e5035098b3
-	golang.org/x/sys v0.0.0-20211004093028-2c5d950f24ef
+	golang.org/x/net v0.0.0-20211006190231-62292e806868
+	golang.org/x/sys v0.0.0-20211006225509-1a26e0398eed
 	google.golang.org/grpc v1.41.0
 	google.golang.org/protobuf v1.27.1
 	gopkg.in/natefinch/lumberjack.v2 v2.0.0
