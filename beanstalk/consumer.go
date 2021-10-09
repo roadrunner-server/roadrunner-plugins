@@ -10,7 +10,7 @@ import (
 	"time"
 
 	"github.com/spiral/errors"
-	"github.com/spiral/roadrunner-plugins/v2/config"
+	cfgPlugin "github.com/spiral/roadrunner-plugins/v2/config"
 	"github.com/spiral/roadrunner-plugins/v2/jobs/job"
 	"github.com/spiral/roadrunner-plugins/v2/jobs/pipeline"
 	"github.com/spiral/roadrunner-plugins/v2/logger"
@@ -44,13 +44,11 @@ type consumer struct {
 	requeueCh chan *Item
 }
 
-func NewBeanstalkConsumer(configKey string, log logger.Logger, cfg config.Configurer, e events.Handler, pq priorityqueue.Queue) (*consumer, error) {
+func NewBeanstalkConsumer(configKey string, log logger.Logger, cfg cfgPlugin.Configurer, e events.Handler, pq priorityqueue.Queue) (*consumer, error) {
 	const op = errors.Op("new_beanstalk_consumer")
 
 	// PARSE CONFIGURATION -------
-	var pipeCfg Config
-	var globalCfg GlobalCfg
-
+	var conf config
 	if !cfg.Has(configKey) {
 		return nil, errors.E(op, errors.Errorf("no configuration by provided key: %s", configKey))
 	}
@@ -60,28 +58,26 @@ func NewBeanstalkConsumer(configKey string, log logger.Logger, cfg config.Config
 		return nil, errors.E(op, errors.Str("no global beanstalk configuration, global configuration should contain beanstalk addrs and timeout"))
 	}
 
-	err := cfg.UnmarshalKey(configKey, &pipeCfg)
+	err := cfg.UnmarshalKey(configKey, &conf)
 	if err != nil {
 		return nil, errors.E(op, err)
 	}
 
-	pipeCfg.InitDefault()
-
-	err = cfg.UnmarshalKey(pluginName, &globalCfg)
+	err = cfg.UnmarshalKey(pluginName, &conf)
 	if err != nil {
 		return nil, errors.E(op, err)
 	}
 
-	globalCfg.InitDefault()
+	conf.InitDefault()
 
 	// PARSE CONFIGURATION -------
 
-	dsn := strings.Split(globalCfg.Addr, "://")
+	dsn := strings.Split(conf.Addr, "://")
 	if len(dsn) != 2 {
-		return nil, errors.E(op, errors.Errorf("invalid socket DSN (tcp://127.0.0.1:11300, unix://beanstalk.sock), provided: %s", globalCfg.Addr))
+		return nil, errors.E(op, errors.Errorf("invalid socket DSN (tcp://127.0.0.1:11300, unix://beanstalk.sock), provided: %s", conf.Addr))
 	}
 
-	cPool, err := NewConnPool(dsn[0], dsn[1], pipeCfg.Tube, globalCfg.Timeout, log)
+	cPool, err := NewConnPool(dsn[0], dsn[1], conf.Tube, conf.Timeout, log)
 	if err != nil {
 		return nil, errors.E(op, err)
 	}
@@ -94,11 +90,11 @@ func NewBeanstalkConsumer(configKey string, log logger.Logger, cfg config.Config
 		pool:           cPool,
 		network:        dsn[0],
 		addr:           dsn[1],
-		tout:           globalCfg.Timeout,
-		tName:          pipeCfg.Tube,
-		reserveTimeout: pipeCfg.ReserveTimeout,
-		tubePriority:   pipeCfg.TubePriority,
-		priority:       pipeCfg.PipePriority,
+		tout:           conf.Timeout,
+		tName:          conf.Tube,
+		reserveTimeout: conf.ReserveTimeout,
+		tubePriority:   conf.TubePriority,
+		priority:       conf.PipePriority,
 
 		// buffered with two because jobs root plugin can call Stop at the same time as Pause
 		stopCh:      make(chan struct{}, 2),
@@ -109,32 +105,30 @@ func NewBeanstalkConsumer(configKey string, log logger.Logger, cfg config.Config
 	return jc, nil
 }
 
-func FromPipeline(pipe *pipeline.Pipeline, log logger.Logger, cfg config.Configurer, e events.Handler, pq priorityqueue.Queue) (*consumer, error) {
+func FromPipeline(pipe *pipeline.Pipeline, log logger.Logger, cfg cfgPlugin.Configurer, e events.Handler, pq priorityqueue.Queue) (*consumer, error) {
 	const op = errors.Op("new_beanstalk_consumer")
 
 	// PARSE CONFIGURATION -------
-	var globalCfg GlobalCfg
-
+	var conf config
 	// if no global section
 	if !cfg.Has(pluginName) {
 		return nil, errors.E(op, errors.Str("no global beanstalk configuration, global configuration should contain beanstalk addrs and timeout"))
 	}
 
-	err := cfg.UnmarshalKey(pluginName, &globalCfg)
+	err := cfg.UnmarshalKey(pluginName, &conf)
 	if err != nil {
 		return nil, errors.E(op, err)
 	}
 
-	globalCfg.InitDefault()
-
+	conf.InitDefault()
 	// PARSE CONFIGURATION -------
 
-	dsn := strings.Split(globalCfg.Addr, "://")
+	dsn := strings.Split(conf.Addr, "://")
 	if len(dsn) != 2 {
-		return nil, errors.E(op, errors.Errorf("invalid socket DSN (tcp://127.0.0.1:11300, unix://beanstalk.sock), provided: %s", globalCfg.Addr))
+		return nil, errors.E(op, errors.Errorf("invalid socket DSN (tcp://127.0.0.1:11300, unix://beanstalk.sock), provided: %s", conf.Addr))
 	}
 
-	cPool, err := NewConnPool(dsn[0], dsn[1], pipe.String(tube, "default"), globalCfg.Timeout, log)
+	cPool, err := NewConnPool(dsn[0], dsn[1], pipe.String(tube, "default"), conf.Timeout, log)
 	if err != nil {
 		return nil, errors.E(op, err)
 	}
@@ -147,7 +141,7 @@ func FromPipeline(pipe *pipeline.Pipeline, log logger.Logger, cfg config.Configu
 		pool:           cPool,
 		network:        dsn[0],
 		addr:           dsn[1],
-		tout:           globalCfg.Timeout,
+		tout:           conf.Timeout,
 		tName:          pipe.String(tube, "default"),
 		reserveTimeout: time.Second * time.Duration(pipe.Int(reserveTimeout, 5)),
 		tubePriority:   utils.Uint32(uint32(pipe.Int(tubePriority, 1))),

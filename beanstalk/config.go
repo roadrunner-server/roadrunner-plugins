@@ -12,29 +12,19 @@ const (
 	reserveTimeout string = "reserve_timeout"
 )
 
-type GlobalCfg struct {
+type config struct {
+	// global
 	Addr    string        `mapstructure:"addr"`
 	Timeout time.Duration `mapstructure:"timeout"`
-}
 
-func (c *GlobalCfg) InitDefault() {
-	if c.Addr == "" {
-		c.Addr = "tcp://127.0.0.1:11300"
-	}
-
-	if c.Timeout == 0 {
-		c.Timeout = time.Second * 30
-	}
-}
-
-type Config struct {
+	// local
 	PipePriority   int64         `mapstructure:"priority"`
 	TubePriority   *uint32       `mapstructure:"tube_priority"`
 	Tube           string        `mapstructure:"tube"`
 	ReserveTimeout time.Duration `mapstructure:"reserve_timeout"`
 }
 
-func (c *Config) InitDefault() {
+func (c *config) InitDefault() {
 	if c.Tube == "" {
 		c.Tube = "default"
 	}
@@ -49,5 +39,13 @@ func (c *Config) InitDefault() {
 
 	if c.PipePriority == 0 {
 		c.PipePriority = 10
+	}
+
+	if c.Addr == "" {
+		c.Addr = "tcp://127.0.0.1:11300"
+	}
+
+	if c.Timeout == 0 {
+		c.Timeout = time.Second * 30
 	}
 }

@@ -10,7 +10,7 @@ import (
 	"time"
 
 	"github.com/spiral/errors"
-	"github.com/spiral/roadrunner-plugins/v2/config"
+	cfgPlugin "github.com/spiral/roadrunner-plugins/v2/config"
 	"github.com/spiral/roadrunner-plugins/v2/jobs/job"
 	"github.com/spiral/roadrunner-plugins/v2/jobs/pipeline"
 	"github.com/spiral/roadrunner-plugins/v2/logger"
@@ -52,7 +52,7 @@ type consumer struct {
 	stopCh chan struct{}
 }
 
-func NewBoltDBJobs(configKey string, log logger.Logger, cfg config.Configurer, e events.Handler, pq priorityqueue.Queue) (*consumer, error) {
+func NewBoltDBJobs(configKey string, log logger.Logger, cfg cfgPlugin.Configurer, e events.Handler, pq priorityqueue.Queue) (*consumer, error) {
 	const op = errors.Op("init_boltdb_jobs")
 
 	if !cfg.Has(configKey) {
@@ -64,22 +64,19 @@ func NewBoltDBJobs(configKey string, log logger.Logger, cfg config.Configurer, e
 		return nil, errors.E(op, errors.Str("no global boltdb configuration"))
 	}
 
-	conf := &GlobalCfg{}
-	err := cfg.UnmarshalKey(PluginName, conf)
+	var localCfg config
+	err := cfg.UnmarshalKey(PluginName, &localCfg)
 	if err != nil {
 		return nil, errors.E(op, err)
 	}
 
-	localCfg := &Config{}
-	err = cfg.UnmarshalKey(configKey, localCfg)
+	err = cfg.UnmarshalKey(configKey, &localCfg)
 	if err != nil {
 		return nil, errors.E(op, err)
 	}
 
 	localCfg.InitDefaults()
-	conf.InitDefaults()
-
-	db, err := bolt.Open(localCfg.File, os.FileMode(conf.Permissions), &bolt.Options{
+	db, err := bolt.Open(localCfg.File, os.FileMode(localCfg.Permissions), &bolt.Options{
 		Timeout:        time.Second * 20,
 		NoGrowSync:     false,
 		NoFreelistSync: false,
@@ -130,7 +127,7 @@ func NewBoltDBJobs(configKey string, log logger.Logger, cfg config.Configurer, e
 	}
 
 	return &consumer{
-		permissions: conf.Permissions,
+		permissions: localCfg.Permissions,
 		file:        localCfg.File,
 		priority:    localCfg.Priority,
 		prefetch:    localCfg.Prefetch,
@@ -151,7 +148,7 @@ func NewBoltDBJobs(configKey string, log logger.Logger, cfg config.Configurer, e
 	}, nil
 }
 
-func FromPipeline(pipeline *pipeline.Pipeline, log logger.Logger, cfg config.Configurer, e events.Handler, pq priorityqueue.Queue) (*consumer, error) {
+func FromPipeline(pipeline *pipeline.Pipeline, log logger.Logger, cfg cfgPlugin.Configurer, e events.Handler, pq priorityqueue.Queue) (*consumer, error) {
 	const op = errors.Op("init_boltdb_jobs")
 
 	// if no global section
@@ -159,7 +156,7 @@ func FromPipeline(pipeline *pipeline.Pipeline, log logger.Logger, cfg config.Con
 		return nil, errors.E(op, errors.Str("no global boltdb configuration"))
 	}
 
-	conf := &GlobalCfg{}
+	var conf config
 	err := cfg.UnmarshalKey(PluginName, conf)
 	if err != nil {
 		return nil, errors.E(op, err)

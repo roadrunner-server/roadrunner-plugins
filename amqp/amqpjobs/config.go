@@ -20,12 +20,12 @@ const (
 	contentType string = "application/octet-stream"
 )
 
-type GlobalCfg struct {
+// config is used to parse pipeline configuration
+type config struct {
+	// global
 	Addr string `mapstructure:"addr"`
-}
 
-// Config is used to parse pipeline configuration
-type Config struct {
+	// local
 	Prefetch      int    `mapstructure:"prefetch"`
 	Queue         string `mapstructure:"queue"`
 	Priority      int64  `mapstructure:"priority"`
@@ -37,7 +37,7 @@ type Config struct {
 	RequeueOnFail bool   `mapstructure:"requeue_on_fail"`
 }
 
-func (c *Config) InitDefault() {
+func (c *config) InitDefault() {
 	// all options should be in sync with the pipeline defaults in the ConsumerFromPipeline method
 	if c.ExchangeType == "" {
 		c.ExchangeType = "direct"
@@ -58,9 +58,7 @@ func (c *Config) InitDefault() {
 	if c.Priority == 0 {
 		c.Priority = 10
 	}
-}
 
-func (c *GlobalCfg) InitDefault() {
 	if c.Addr == "" {
 		c.Addr = "amqp://guest:guest@127.0.0.1:5672/"
 	}
