@@ -7,6 +7,7 @@ import (
 	"github.com/spiral/errors"
 	"github.com/spiral/roadrunner-plugins/v2/config"
 	"github.com/spiral/roadrunner-plugins/v2/grpc/codec"
+	"github.com/spiral/roadrunner-plugins/v2/grpc/proxy"
 	"github.com/spiral/roadrunner-plugins/v2/logger"
 	"github.com/spiral/roadrunner-plugins/v2/server"
 	"github.com/spiral/roadrunner/v2/events"
@@ -23,13 +24,14 @@ const (
 )
 
 type Plugin struct {
-	mu       *sync.RWMutex
-	config   *Config
-	gPool    pool.Pool
-	opts     []grpc.ServerOption
-	services []func(server *grpc.Server)
-	server   *grpc.Server
-	rrServer server.Server
+	mu        *sync.RWMutex
+	config    *Config
+	gPool     pool.Pool
+	opts      []grpc.ServerOption
+	services  []func(server *grpc.Server)
+	server    *grpc.Server
+	rrServer  server.Server
+	proxyList []*proxy.Proxy
 
 	// events handler
 	events events.Handler
@@ -62,6 +64,7 @@ func (p *Plugin) Init(cfg config.Configurer, log logger.Logger, server server.Se
 	p.events = events.NewEventsHandler()
 	p.events.AddListener(p.collectGRPCEvents)
 	p.rrServer = server
+	p.proxyList = make([]*proxy.Proxy, 0, 1)
 
 	// worker's GRPC mode
 	if p.config.Env == nil {
@@ -157,6 +160,11 @@ func (p *Plugin) Reset() error {
 	}, p.config.Env, p.collectGRPCEvents)
 	if err != nil {
 		return errors.E(op, err)
+	}
+
+	// update pointers to the pool
+	for i := 0; i < len(p.proxyList); i++ {
+		p.proxyList[i].UpdatePool(p.gPool)
 	}
 
 	return nil

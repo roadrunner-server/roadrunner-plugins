@@ -158,11 +158,22 @@ service:
     restart_sec: 1
 ```
 
+- ✏️ Server plugin can accept scripts (sh, bash, etc) in it's `command` configuration key:
+```yaml
+server:
+    command: "./script.sh OR sh script.sh" <--- UPDATED
+    relay: "pipes"
+    relay_timeout: "20s"
+```
+The script should start a worker as the last command. For the `pipes`, scripts should not contain programs, which can close `stdin`, `stdout` or `stderr`.
+
+
 ## 🩹 Fixes:
 
 - 🐛 Fix: local and global configuration parsing.
 - 🐛 Fix: bug with the `boltdb-jobs` connection left open after RPC close command.
 - 🐛 Fix: close `beanstalk` connection and release associated resources after pipeline stopped.
+- 🐛 Fix: grpc plugin fails to handle requests after calling `reset`.
 
 ## 📦 Packages:
 
