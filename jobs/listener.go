@@ -46,11 +46,12 @@ func (p *Plugin) listener() { //nolint:gocognit
 							Elapsed: time.Since(start),
 						})
 
+						p.log.Error("job marshal context", "error", err)
+
 						errNack := jb.Nack()
 						if errNack != nil {
 							p.log.Error("negatively acknowledge failed", "error", errNack)
 						}
-						p.log.Error("job marshal context", "error", err)
 						continue
 					}
 

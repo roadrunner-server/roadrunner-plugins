@@ -4,10 +4,17 @@ import (
 	json "github.com/json-iterator/go"
 )
 
+type Reply string
+
+var (
+	Ack Reply = "+ACK"
+	Nak Reply = "-NAK"
+)
+
 // blocking
 func (c *consumer) listenerInit() error {
 	var err error
-	c.sub, err = c.conn.ChanSubscribe(c.natsQ, c.msgCh)
+	c.sub, err = c.pushConn.ChanSubscribe(c.natsQ, c.msgCh)
 	if err != nil {
 		return err
 	}
@@ -19,6 +26,15 @@ func (c *consumer) listenerStart() {
 	for {
 		select {
 		case m := <-c.msgCh:
+			if len(m.Data) == 4 {
+				switch m.Data[0] {
+				// ASCII +
+				case byte(43):
+					continue
+				}
+			}
+
+			//m.Reply = c.natsQ
 			item := new(Item)
 
 			err := json.Unmarshal(m.Data, item)

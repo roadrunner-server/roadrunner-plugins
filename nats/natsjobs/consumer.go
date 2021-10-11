@@ -28,7 +28,7 @@ type consumer struct {
 	sync.RWMutex
 	log       logger.Logger
 	eh        events.Handler
-	conn      *nats.Conn
+	pushConn  *nats.Conn
 	queue     priorityqueue.Queue
 	prefetch  int
 	listeners uint32
@@ -83,7 +83,7 @@ func FromConfig(configKey string, e events.Handler, log logger.Logger, cfg cfgPl
 	cs := &consumer{
 		log:      log,
 		eh:       e,
-		conn:     conn,
+		pushConn: conn,
 		natsQ:    conf.Queue,
 		queue:    queue,
 		url:      conf.Addr,
@@ -112,7 +112,7 @@ func FromPipeline(pipe *pipeline.Pipeline, e events.Handler, log logger.Logger, 
 	conf.InitDefaults()
 
 	conn, err := nats.Connect(conf.Addr,
-		//nats.NoEcho(),
+		nats.NoEcho(),
 		nats.Timeout(time.Minute),
 		nats.MaxReconnects(-1),
 		nats.ReconnectWait(time.Second*2),
@@ -127,7 +127,7 @@ func FromPipeline(pipe *pipeline.Pipeline, e events.Handler, log logger.Logger, 
 	cs := &consumer{
 		log:      log,
 		eh:       e,
-		conn:     conn,
+		pushConn: conn,
 		natsQ:    pipe.String("queue", "default"),
 		queue:    queue,
 		prefetch: pipe.Int("prefetch", 100),
@@ -149,7 +149,7 @@ func (c *consumer) Push(_ context.Context, job *job.Job) error {
 		return errors.E(op, err)
 	}
 
-	err = c.conn.Publish(c.natsQ, data)
+	err = c.pushConn.Publish(c.natsQ, data)
 	if err != nil {
 		return errors.E(op, err)
 	}
@@ -205,7 +205,7 @@ func (c *consumer) Stop(_ context.Context) error {
 
 	pipe := c.pipeline.Load().(*pipeline.Pipeline)
 
-	c.conn.Close()
+	c.pushConn.Close()
 
 	c.eh.Push(events.JobEvent{
 		Event:    events.EventPipeStopped,
@@ -320,7 +320,7 @@ func (c *consumer) requeue(item *Item) error {
 		return errors.E(op, err)
 	}
 
-	err = c.conn.Publish(c.natsQ, data)
+	err = c.pushConn.Publish(c.natsQ, data)
 	if err != nil {
 		return errors.E(op, err)
 	}

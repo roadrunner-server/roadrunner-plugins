@@ -207,10 +207,11 @@ func TestNATSDeclare(t *testing.T) {
 	t.Run("DeclarePipeline", declareNATSPipe)
 	t.Run("ConsumePipeline", resumePipes("test-3"))
 	t.Run("PushPipeline", pushToPipe("test-3"))
-	time.Sleep(time.Second)
-	t.Run("PausePipeline", pausePipelines("test-3"))
-	time.Sleep(time.Second)
-	t.Run("DestroyPipeline", destroyPipelines("test-3"))
+	t.Run("PushPipeline", pushToPipe("test-3"))
+	//time.Sleep(time.Second)
+	//t.Run("PausePipeline", pausePipelines("test-3"))
+	//time.Sleep(time.Second)
+	//t.Run("DestroyPipeline", destroyPipelines("test-3"))
 
 	time.Sleep(time.Second * 50)
 	stopCh <- struct{}{}
