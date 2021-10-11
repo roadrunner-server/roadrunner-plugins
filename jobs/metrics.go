@@ -48,7 +48,7 @@ func newStatsExporter(stats informer.Informer) *statsExporter {
 
 func (se *statsExporter) metricsCallback(event interface{}) {
 	if jev, ok := event.(events.JobEvent); ok {
-		switch jev.Event { //nolint:exhaustive
+		switch jev.Event {
 		case events.EventJobOK:
 			atomic.AddUint64(&se.jobsOk, 1)
 		case events.EventPushOK:
@@ -57,6 +57,9 @@ func (se *statsExporter) metricsCallback(event interface{}) {
 			atomic.AddUint64(&se.pushErr, 1)
 		case events.EventJobError:
 			atomic.AddUint64(&se.jobsErr, 1)
+		case events.EventDriverReady, events.EventJobStart,
+			events.EventPipeActive, events.EventPipeError,
+			events.EventPipePaused, events.EventPipeStopped:
 		}
 	}
 }
