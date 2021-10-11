@@ -132,6 +132,7 @@ http:
     destroy_timeout: 60s
 ```
 - ✏️ HTTP middleware to handle `X-Sendfile` [header](https://github.com/spiral/roadrunner-plugins/issues/9).
+Middleware reads the file in 10mb chunks. If the file size is smaller than 10mb, the middleware fits its buffer to the file size.
 ```yaml
 http:
   address: 127.0.0.1:44444

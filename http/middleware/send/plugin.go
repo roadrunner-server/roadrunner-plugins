@@ -1,37 +1,33 @@
 package send
 
 import (
-	"bytes"
 	"io"
 	"net/http"
 	"os"
 	"strings"
 
-	"github.com/spiral/errors"
-	"github.com/spiral/roadrunner-plugins/v2/config"
+	"github.com/spiral/roadrunner-plugins/v2/logger"
 )
 
-const xSendHeader string = "X-Sendfile"
-
-// PluginName contains default service name.
 const (
-	RootPluginName string = "http"
 	PluginName     string = "sendfile"
+	ContentTypeKey string = "Content-Type"
+	ContentTypeVal string = "application/octet-stream"
+	xSendHeader    string = "X-Sendfile"
+	bufSize        int    = 10 * 1024 * 1024 // 10MB chunks
 )
 
-type Plugin struct{}
+type Plugin struct {
+	log logger.Logger
+}
 
-func (s *Plugin) Init(cfg config.Configurer) error {
-	const op = errors.Op("sendfile_plugin_init")
-	if !cfg.Has(RootPluginName) {
-		return errors.E(op, errors.Disabled)
-	}
-
+func (p *Plugin) Init(log logger.Logger) error {
+	p.log = log
 	return nil
 }
 
 // Middleware is HTTP plugin middleware to serve headers
-func (s *Plugin) Middleware(next http.Handler) http.Handler {
+func (p *Plugin) Middleware(next http.Handler) http.Handler {
 	// Define the http.HandlerFunc
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if path := r.Header.Get(xSendHeader); path != "" {
@@ -48,26 +44,56 @@ func (s *Plugin) Middleware(next http.Handler) http.Handler {
 			}
 
 			// check if the file exists
-			_, err := os.Stat(path)
+			fs, err := os.Stat(path)
 			if err != nil {
-				http.Error(w, err.Error(), http.StatusNotFound)
+				http.Error(w, "not found", http.StatusNotFound)
 				return
 			}
 
-			data, err := os.ReadFile(path)
-			if err != nil {
-				http.Error(w, err.Error(), http.StatusInternalServerError)
-				return
-			}
-
-			buf := bytes.NewReader(data)
-
-			_, err = io.Copy(w, buf)
+			f, err := os.OpenFile(path, os.O_RDONLY, 0)
 			if err != nil {
 				http.Error(w, err.Error(), http.StatusInternalServerError)
 				return
 			}
 
+			size := fs.Size()
+			var buf []byte
+			// do not allocate large buffer for the small files
+			if size < int64(bufSize) {
+				// allocate exact size
+				buf = make([]byte, size)
+			} else {
+				// allocate default 10mb buf
+				buf = make([]byte, bufSize)
+			}
+
+			off := 0
+			for {
+				n, err := f.ReadAt(buf, int64(off))
+				if err != nil {
+					if err == io.EOF {
+						break
+					}
+
+					http.Error(w, err.Error(), http.StatusInternalServerError)
+					return
+				}
+
+				buf = buf[:n]
+				_, err = w.Write(buf)
+				if err != nil {
+					// we can't write response into the response writer
+					p.log.Error("write response", "error", err)
+					return
+				}
+
+				if f, ok := w.(http.Flusher); ok {
+					f.Flush()
+				}
+				off += n
+			}
+
+			r.Header.Set(ContentTypeKey, ContentTypeVal)
 			r.Header.Del(xSendHeader)
 			return
 		}
@@ -75,10 +101,9 @@ func (s *Plugin) Middleware(next http.Handler) http.Handler {
 		next.ServeHTTP(w, r)
 	})
 }
-
-func (s *Plugin) Name() string {
+func (p *Plugin) Name() string {
 	return PluginName
 }
 
 // Available interface implementation
-func (s *Plugin) Available() {}
+func (p *Plugin) Available() {}
