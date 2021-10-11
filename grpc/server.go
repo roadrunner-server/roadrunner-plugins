@@ -35,12 +35,13 @@ func (p *Plugin) createGRPCserver() (*grpc.Server, error) {
 		}
 
 		for _, service := range services {
-			p := proxy.NewProxy(fmt.Sprintf("%s.%s", service.Package, service.Name), p.config.Proto, p.gPool, p.mu)
+			px := proxy.NewProxy(fmt.Sprintf("%s.%s", service.Package, service.Name), p.config.Proto, p.gPool, p.mu)
 			for _, m := range service.Methods {
-				p.RegisterMethod(m.Name)
+				px.RegisterMethod(m.Name)
 			}
 
-			server.RegisterService(p.ServiceDesc(), p)
+			server.RegisterService(px.ServiceDesc(), px)
+			p.proxyList = append(p.proxyList, px)
 		}
 	}
 

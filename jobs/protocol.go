@@ -31,7 +31,7 @@ type errorResp struct {
 
 func handleResponse(resp []byte, jb pq.Item, log logger.Logger) error {
 	const op = errors.Op("jobs_handle_response")
-	// TODO(rustatian) to sync.Pool
+	// todo(rustatian) to sync.Pool
 	p := &protocol{}
 
 	err := json.Unmarshal(resp, p)
@@ -47,7 +47,7 @@ func handleResponse(resp []byte, jb pq.Item, log logger.Logger) error {
 			return errors.E(op, err)
 		}
 	case Error:
-		// TODO(rustatian) to sync.Pool
+		// todo(rustatian) to sync.Pool
 		er := &errorResp{}
 
 		err = json.Unmarshal(p.Data, er)
@@ -57,6 +57,7 @@ func handleResponse(resp []byte, jb pq.Item, log logger.Logger) error {
 
 		log.Error("jobs protocol error", "error", er.Msg, "delay", er.Delay, "requeue", er.Requeue)
 
+		// requeue the job
 		if er.Requeue {
 			err = jb.Requeue(er.Headers, er.Delay)
 			if err != nil {
@@ -65,7 +66,13 @@ func handleResponse(resp []byte, jb pq.Item, log logger.Logger) error {
 			return nil
 		}
 
-		return errors.E(op, errors.Errorf("jobs response error: %v", er.Msg))
+		// user don't want to requeue the job - silently ACK and return nil
+		errAck := jb.Ack()
+		if errAck != nil {
+			log.Error("job acknowledge", "message", er.Msg, "error", errAck)
+		}
+
+		return nil
 
 	default:
 		err = jb.Ack()
