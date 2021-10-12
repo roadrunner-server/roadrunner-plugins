@@ -11,7 +11,7 @@ require (
 	github.com/aws/smithy-go v1.8.0
 	github.com/beanstalkd/go-beanstalk v0.1.0
 	github.com/bradfitz/gomemcache v0.0.0-20190913173617-a41fca850d0b
-	github.com/caddyserver/certmagic v0.15.0
+	github.com/caddyserver/certmagic v0.15.1
 	github.com/cenkalti/backoff/v4 v4.1.1
 	github.com/emicklei/proto v1.9.1
 	github.com/fatih/color v1.13.0
