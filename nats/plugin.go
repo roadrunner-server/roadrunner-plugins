@@ -1,7 +1,6 @@
 package nats
 
 import (
-	"github.com/spiral/errors"
 	"github.com/spiral/roadrunner-plugins/v2/config"
 	"github.com/spiral/roadrunner-plugins/v2/internal/common/jobs"
 	"github.com/spiral/roadrunner-plugins/v2/jobs/pipeline"
@@ -21,11 +20,6 @@ type Plugin struct {
 }
 
 func (p *Plugin) Init(log logger.Logger, cfg config.Configurer) error {
-	const op = errors.Op("nats_plugin_init")
-	if !cfg.Has(pluginName) {
-		return errors.E(op, errors.Disabled)
-	}
-
 	p.log = log
 	p.cfg = cfg
 	return nil

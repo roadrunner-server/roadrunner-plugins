@@ -213,7 +213,7 @@ func deleteProxy(name string, t *testing.T) {
 func stats(state *jobState.State) func(t *testing.T) {
 	return func(t *testing.T) {
 		conn, err := net.Dial("tcp", "127.0.0.1:6001")
-		assert.NoError(t, err)
+		require.NoError(t, err)
 		client := rpc.NewClientWithCodec(goridgeRpc.NewClientCodec(conn))
 
 		st := &jobsv1beta.Stats{}

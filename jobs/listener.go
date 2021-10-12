@@ -78,6 +78,7 @@ func (p *Plugin) listener() { //nolint:gocognit
 
 						p.log.Error("job execute failed", "error", err)
 						p.putPayload(exec)
+						jb = nil
 						continue
 					}
 
@@ -94,6 +95,7 @@ func (p *Plugin) listener() { //nolint:gocognit
 								Elapsed: time.Since(start),
 							})
 							p.log.Error("acknowledge error, job might be missed", "error", err)
+							jb = nil
 							continue
 						}
 
@@ -104,6 +106,7 @@ func (p *Plugin) listener() { //nolint:gocognit
 							Elapsed: time.Since(start),
 						})
 
+						jb = nil
 						continue
 					}
 
@@ -121,10 +124,12 @@ func (p *Plugin) listener() { //nolint:gocognit
 						errNack := jb.Nack()
 						if errNack != nil {
 							p.log.Error("negatively acknowledge failed, job might be lost", "root error", err, "error nack", errNack)
+							jb = nil
 							continue
 						}
 
 						p.log.Error("job negatively acknowledged", "error", err)
+						jb = nil
 						continue
 					}
 
@@ -137,6 +142,7 @@ func (p *Plugin) listener() { //nolint:gocognit
 
 					// return payload
 					p.putPayload(exec)
+					jb = nil
 				}
 			}
 		}()

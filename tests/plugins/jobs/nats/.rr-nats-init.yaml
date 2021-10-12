@@ -29,13 +29,18 @@ jobs:
       driver: nats
       prefetch: 100
       queue: test-1-queue
+      subject: "default"
+      stream: "foo"
+      deliver_new: "true"
       priority: 1
 
     test-2:
       driver: nats
       prefetch: 100
       queue: test-2-queue
+      subject: "default"
+      stream: "foo"
+      deliver_new: "true"
       priority: 2
 
   consume: [ "test-1", "test-2" ]
-

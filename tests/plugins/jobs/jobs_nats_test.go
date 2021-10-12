@@ -37,29 +37,27 @@ func TestNATSInit(t *testing.T) {
 		Prefix: "rr",
 	}
 
-	//controller := gomock.NewController(t)
-	//mockLogger := mocks.NewMockLogger(controller)
-	//
-	//// general
-	//mockLogger.EXPECT().Debug("worker destructed", "pid", gomock.Any()).AnyTimes()
-	//mockLogger.EXPECT().Debug("worker constructed", "pid", gomock.Any()).AnyTimes()
-	//mockLogger.EXPECT().Debug("Started RPC service", "address", "tcp://127.0.0.1:6001", "plugins", gomock.Any()).Times(1)
-	//mockLogger.EXPECT().Error(gomock.Any(), gomock.Any(), gomock.Any()).AnyTimes()
-	//
-	//mockLogger.EXPECT().Debug("pipeline active", "pipeline", "test-2", "start", gomock.Any(), "elapsed", gomock.Any()).Times(1)
-	//mockLogger.EXPECT().Debug("pipeline active", "pipeline", "test-1", "start", gomock.Any(), "elapsed", gomock.Any()).Times(1)
-	//
-	//mockLogger.EXPECT().Debug("pipeline stopped", "pipeline", "test-1", "start", gomock.Any(), "elapsed", gomock.Any()).Times(1)
-	//mockLogger.EXPECT().Debug("pipeline stopped", "pipeline", "test-2", "start", gomock.Any(), "elapsed", gomock.Any()).Times(1)
-	//
-	//mockLogger.EXPECT().Debug("delivery channel closed, leaving the rabbit listener").Times(2)
+	controller := gomock.NewController(t)
+	mockLogger := mocks.NewMockLogger(controller)
+
+	// general
+	mockLogger.EXPECT().Debug("worker destructed", "pid", gomock.Any()).AnyTimes()
+	mockLogger.EXPECT().Debug("worker constructed", "pid", gomock.Any()).AnyTimes()
+	mockLogger.EXPECT().Debug("Started RPC service", "address", "tcp://127.0.0.1:6001", "plugins", gomock.Any()).Times(1)
+	mockLogger.EXPECT().Error(gomock.Any(), gomock.Any(), gomock.Any()).AnyTimes()
+
+	mockLogger.EXPECT().Debug("pipeline active", "pipeline", "test-2", "start", gomock.Any(), "elapsed", gomock.Any()).Times(1)
+	mockLogger.EXPECT().Debug("pipeline active", "pipeline", "test-1", "start", gomock.Any(), "elapsed", gomock.Any()).Times(1)
+
+	mockLogger.EXPECT().Debug("pipeline stopped", "pipeline", "test-1", "start", gomock.Any(), "elapsed", gomock.Any()).Times(1)
+	mockLogger.EXPECT().Debug("pipeline stopped", "pipeline", "test-2", "start", gomock.Any(), "elapsed", gomock.Any()).Times(1)
+	mockLogger.EXPECT().Warn(gomock.Any()).AnyTimes()
 
 	err = cont.RegisterAll(
 		cfg,
 		&server.Plugin{},
 		&rpcPlugin.Plugin{},
-		&logger.ZapLogger{},
-		//mockLogger,
+		mockLogger,
 		&jobs.Plugin{},
 		&resetter.Plugin{},
 		&informer.Plugin{},
@@ -126,30 +124,29 @@ func TestNATSDeclare(t *testing.T) {
 		Prefix: "rr",
 	}
 
-	//controller := gomock.NewController(t)
-	//mockLogger := mocks.NewMockLogger(controller)
-	//
-	//// general
-	//mockLogger.EXPECT().Debug("worker destructed", "pid", gomock.Any()).AnyTimes()
-	//mockLogger.EXPECT().Debug("worker constructed", "pid", gomock.Any()).AnyTimes()
-	//mockLogger.EXPECT().Debug("Started RPC service", "address", "tcp://127.0.0.1:6001", "plugins", gomock.Any()).Times(1)
-	//mockLogger.EXPECT().Error(gomock.Any(), gomock.Any(), gomock.Any()).AnyTimes()
-	//
-	//mockLogger.EXPECT().Debug("job pushed to the queue", "start", gomock.Any(), "elapsed", gomock.Any()).MinTimes(1)
-	//mockLogger.EXPECT().Debug("job processed without errors", "ID", gomock.Any(), "start", gomock.Any(), "elapsed", gomock.Any()).MinTimes(1)
-	//mockLogger.EXPECT().Debug("job processing started", "start", gomock.Any(), "elapsed", gomock.Any()).MinTimes(1)
-	//
-	//mockLogger.EXPECT().Debug("pipeline active", "pipeline", "test-3", "start", gomock.Any(), "elapsed", gomock.Any()).Times(1)
-	//mockLogger.EXPECT().Debug("pipeline paused", "pipeline", "test-3", "driver", "amqp", "start", gomock.Any(), "elapsed", gomock.Any()).Times(1)
-	//mockLogger.EXPECT().Debug("pipeline stopped", "pipeline", "test-3", "start", gomock.Any(), "elapsed", gomock.Any()).Times(1)
-	//mockLogger.EXPECT().Debug("delivery channel closed, leaving the rabbit listener").Times(1)
+	controller := gomock.NewController(t)
+	mockLogger := mocks.NewMockLogger(controller)
+
+	// general
+	mockLogger.EXPECT().Debug("worker destructed", "pid", gomock.Any()).AnyTimes()
+	mockLogger.EXPECT().Debug("worker constructed", "pid", gomock.Any()).AnyTimes()
+	mockLogger.EXPECT().Debug("Started RPC service", "address", "tcp://127.0.0.1:6001", "plugins", gomock.Any()).Times(1)
+	mockLogger.EXPECT().Error(gomock.Any(), gomock.Any(), gomock.Any()).AnyTimes()
+
+	mockLogger.EXPECT().Debug("job pushed to the queue", "start", gomock.Any(), "elapsed", gomock.Any()).MinTimes(1)
+	mockLogger.EXPECT().Debug("job processed without errors", "ID", gomock.Any(), "start", gomock.Any(), "elapsed", gomock.Any()).MinTimes(1)
+	mockLogger.EXPECT().Debug("job processing started", "start", gomock.Any(), "elapsed", gomock.Any()).MinTimes(1)
+
+	mockLogger.EXPECT().Debug("pipeline active", "pipeline", "test-3", "start", gomock.Any(), "elapsed", gomock.Any()).Times(1)
+	mockLogger.EXPECT().Debug("pipeline paused", "pipeline", "test-3", "driver", "nats", "start", gomock.Any(), "elapsed", gomock.Any()).Times(1)
+	mockLogger.EXPECT().Debug("pipeline stopped", "pipeline", "test-3", "start", gomock.Any(), "elapsed", gomock.Any()).Times(1)
+	mockLogger.EXPECT().Warn(gomock.Any()).AnyTimes()
 
 	err = cont.RegisterAll(
 		cfg,
 		&server.Plugin{},
 		&rpcPlugin.Plugin{},
-		&logger.ZapLogger{},
-		//mockLogger,
+		mockLogger,
 		&jobs.Plugin{},
 		&resetter.Plugin{},
 		&informer.Plugin{},
@@ -207,13 +204,11 @@ func TestNATSDeclare(t *testing.T) {
 	t.Run("DeclarePipeline", declareNATSPipe)
 	t.Run("ConsumePipeline", resumePipes("test-3"))
 	t.Run("PushPipeline", pushToPipe("test-3"))
-	t.Run("PushPipeline", pushToPipe("test-3"))
-	//time.Sleep(time.Second)
-	//t.Run("PausePipeline", pausePipelines("test-3"))
-	//time.Sleep(time.Second)
-	//t.Run("DestroyPipeline", destroyPipelines("test-3"))
+	time.Sleep(time.Second)
+	t.Run("PausePipeline", pausePipelines("test-3"))
+	time.Sleep(time.Second)
+	t.Run("DestroyPipeline", destroyPipelines("test-3"))
 
-	time.Sleep(time.Second * 50)
 	stopCh <- struct{}{}
 	wg.Wait()
 }
@@ -241,10 +236,10 @@ func TestNATSJobsError(t *testing.T) {
 	mockLogger.EXPECT().Debug("job processing started", "start", gomock.Any(), "elapsed", gomock.Any()).MinTimes(1)
 
 	mockLogger.EXPECT().Debug("pipeline active", "pipeline", "test-3", "start", gomock.Any(), "elapsed", gomock.Any()).Times(1)
-	mockLogger.EXPECT().Debug("pipeline paused", "pipeline", "test-3", "driver", "amqp", "start", gomock.Any(), "elapsed", gomock.Any()).Times(1)
+	mockLogger.EXPECT().Debug("pipeline paused", "pipeline", "test-3", "driver", "nats", "start", gomock.Any(), "elapsed", gomock.Any()).Times(1)
 	mockLogger.EXPECT().Error("jobs protocol error", "error", "error", "delay", gomock.Any(), "requeue", gomock.Any()).Times(3)
 	mockLogger.EXPECT().Debug("pipeline stopped", "pipeline", "test-3", "start", gomock.Any(), "elapsed", gomock.Any()).Times(1)
-	mockLogger.EXPECT().Debug("delivery channel closed, leaving the rabbit listener").Times(1)
+	mockLogger.EXPECT().Warn(gomock.Any()).AnyTimes()
 
 	err = cont.RegisterAll(
 		cfg,
@@ -352,7 +347,7 @@ func TestNATSStats(t *testing.T) {
 	assert.NoError(t, err)
 
 	cfg := &config.Viper{
-		Path:   "nats/.rr-nats-declare.yaml",
+		Path:   "nats/.rr-nats-stat.yaml",
 		Prefix: "rr",
 	}
 
@@ -365,13 +360,13 @@ func TestNATSStats(t *testing.T) {
 	mockLogger.EXPECT().Debug("Started RPC service", "address", "tcp://127.0.0.1:6001", "plugins", gomock.Any()).Times(1)
 	mockLogger.EXPECT().Error(gomock.Any(), gomock.Any(), gomock.Any()).AnyTimes()
 
-	mockLogger.EXPECT().Debug("job pushed to the queue", "start", gomock.Any(), "elapsed", gomock.Any()).MinTimes(1)
 	mockLogger.EXPECT().Debug("pipeline active", "pipeline", "test-3", "start", gomock.Any(), "elapsed", gomock.Any()).Times(2)
-	mockLogger.EXPECT().Debug("pipeline paused", "pipeline", "test-3", "driver", "amqp", "start", gomock.Any(), "elapsed", gomock.Any()).Times(1)
-	mockLogger.EXPECT().Debug("job processed without errors", "ID", gomock.Any(), "start", gomock.Any(), "elapsed", gomock.Any()).MinTimes(1)
+	mockLogger.EXPECT().Debug("job pushed to the queue", "start", gomock.Any(), "elapsed", gomock.Any()).MinTimes(1)
 	mockLogger.EXPECT().Debug("job processing started", "start", gomock.Any(), "elapsed", gomock.Any()).MinTimes(1)
+	mockLogger.EXPECT().Debug("job processed without errors", "ID", gomock.Any(), "start", gomock.Any(), "elapsed", gomock.Any()).MinTimes(1)
+	mockLogger.EXPECT().Debug("pipeline paused", "pipeline", "test-3", "driver", "nats", "start", gomock.Any(), "elapsed", gomock.Any()).Times(1)
 	mockLogger.EXPECT().Debug("pipeline stopped", "pipeline", "test-3", "start", gomock.Any(), "elapsed", gomock.Any()).Times(1)
-	mockLogger.EXPECT().Debug("delivery channel closed, leaving the rabbit listener").AnyTimes()
+	mockLogger.EXPECT().Warn(gomock.Any()).AnyTimes()
 
 	err = cont.RegisterAll(
 		cfg,
@@ -439,17 +434,16 @@ func TestNATSStats(t *testing.T) {
 	t.Run("PausePipeline", pausePipelines("test-3"))
 	time.Sleep(time.Second * 2)
 	t.Run("PushPipeline", pushToPipe("test-3"))
-	t.Run("PushPipelineDelayed", pushToPipeDelayed("test-3", 5))
 
 	out := &jobState.State{}
 	t.Run("Stats", stats(out))
 
-	assert.Equal(t, out.Pipeline, "test-3")
-	assert.Equal(t, out.Driver, "nats")
-	assert.Equal(t, out.Queue, "default")
+	assert.Equal(t, "test-3", out.Pipeline)
+	assert.Equal(t, "nats", out.Driver)
+	assert.Equal(t, "default", out.Queue)
 
-	assert.Equal(t, int64(1), out.Active)
-	assert.Equal(t, int64(1), out.Delayed)
+	assert.Equal(t, int64(0), out.Active)
+	assert.Equal(t, int64(0), out.Delayed)
 	assert.Equal(t, int64(0), out.Reserved)
 	assert.Equal(t, false, out.Ready)
 
@@ -479,18 +473,20 @@ func TestNATSStats(t *testing.T) {
 
 func declareNATSPipe(t *testing.T) {
 	conn, err := net.Dial("tcp", "127.0.0.1:6001")
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	client := rpc.NewClientWithCodec(goridgeRpc.NewClientCodec(conn))
 
 	pipe := &jobsv1beta.DeclareRequest{Pipeline: map[string]string{
-		"driver":   "nats",
-		"name":     "test-3",
-		"queue":    "default",
-		"prefetch": "100",
-		"priority": "3",
+		"driver":      "nats",
+		"name":        "test-3",
+		"subject":     "default",
+		"stream":      "foo",
+		"deliver_new": "true",
+		"prefetch":    "100",
+		"priority":    "3",
 	}}
 
 	er := &jobsv1beta.Empty{}
 	err = client.Call("jobs.Declare", pipe, er)
-	assert.NoError(t, err)
+	require.NoError(t, err)
 }

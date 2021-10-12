@@ -39,9 +39,13 @@ type Options struct {
 	Delay int64 `json:"delay,omitempty"`
 
 	// private
-	requeueFn func(*Item) error
-	ack       func(...nats.AckOpt) error
-	nak       func(...nats.AckOpt) error
+	deleteAfterAck bool
+	requeueFn      func(*Item) error
+	ack            func(...nats.AckOpt) error
+	nak            func(...nats.AckOpt) error
+	stream         string
+	seq            uint64
+	sub            nats.JetStreamContext
 }
 
 // DelayDuration returns delay duration in a form of time.Duration.
@@ -81,7 +85,19 @@ func (i *Item) Context() ([]byte, error) {
 }
 
 func (i *Item) Ack() error {
-	return i.Options.ack()
+	err := i.Options.ack()
+	if err != nil {
+		return err
+	}
+
+	if i.Options.deleteAfterAck {
+		err = i.Options.sub.DeleteMsg(i.Options.stream, i.Options.seq)
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
 }
 
 func (i *Item) Nack() error {
@@ -104,6 +120,13 @@ func (i *Item) Requeue(headers map[string][]string, _ int64) error {
 	err = i.Options.ack()
 	if err != nil {
 		return err
+	}
+
+	if i.Options.deleteAfterAck {
+		err = i.Options.sub.DeleteMsg(i.Options.stream, i.Options.seq)
+		if err != nil {
+			return err
+		}
 	}
 
 	return nil

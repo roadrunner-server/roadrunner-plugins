@@ -1,7 +1,7 @@
 package amqp
 
 import (
-	amqpjobs "github.com/spiral/roadrunner-plugins/v2/amqp/amqpjobs"
+	"github.com/spiral/roadrunner-plugins/v2/amqp/amqpjobs"
 	"github.com/spiral/roadrunner-plugins/v2/config"
 	"github.com/spiral/roadrunner-plugins/v2/internal/common/jobs"
 	"github.com/spiral/roadrunner-plugins/v2/jobs/pipeline"
@@ -35,7 +35,7 @@ func (p *Plugin) ConsumerFromConfig(configKey string, e events.Handler, pq prior
 	return amqpjobs.NewAMQPConsumer(configKey, p.log, p.cfg, e, pq)
 }
 
-// FromPipeline constructs AMQP driver from pipeline
+// ConsumerFromPipeline constructs AMQP driver from pipeline
 func (p *Plugin) ConsumerFromPipeline(pipe *pipeline.Pipeline, e events.Handler, pq priorityqueue.Queue) (jobs.Consumer, error) {
 	return amqpjobs.FromPipeline(pipe, p.log, p.cfg, e, pq)
 }

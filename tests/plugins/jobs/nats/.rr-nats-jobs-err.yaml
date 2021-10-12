@@ -6,13 +6,8 @@ server:
   relay: "pipes"
   relay_timeout: "20s"
 
-amqp:
-  addr: amqp://guest:guest@127.0.0.1:5672/
-
-logs:
-  level: debug
-  encoding: console
-  mode: development
+nats:
+  addr: ""
 
 jobs:
   num_pollers: 1
@@ -22,3 +17,8 @@ jobs:
     max_jobs: 0
     allocate_timeout: 60s
     destroy_timeout: 60s
+
+logs:
+  level: debug
+  encoding: console
+  mode: development

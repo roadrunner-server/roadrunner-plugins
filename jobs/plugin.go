@@ -413,6 +413,11 @@ func (p *Plugin) Pause(pp string) {
 		p.log.Error("no such pipeline", "requested", pp)
 	}
 
+	if pipe == nil {
+		p.log.Error("no pipe registered, value is nil")
+		return
+	}
+
 	ppl := pipe.(*pipeline.Pipeline)
 
 	d, ok := p.consumers.Load(ppl.Name())
@@ -430,6 +435,11 @@ func (p *Plugin) Resume(pp string) {
 	pipe, ok := p.pipelines.Load(pp)
 	if !ok {
 		p.log.Error("no such pipeline", "requested", pp)
+	}
+
+	if pipe == nil {
+		p.log.Error("no pipe registered, value is nil")
+		return
 	}
 
 	ppl := pipe.(*pipeline.Pipeline)
@@ -500,6 +510,10 @@ func (p *Plugin) Destroy(pp string) error {
 
 	// type conversion
 	ppl := pipe.(*pipeline.Pipeline)
+	if pipe == nil {
+		p.log.Error("no pipe registered, value is nil")
+		return errors.Str("no pipe registered, value is nil")
+	}
 
 	// delete consumer
 	d, ok := p.consumers.LoadAndDelete(ppl.Name())

@@ -28,7 +28,7 @@ func (p *Plugin) Init(log logger.Logger) error {
 }
 
 // Middleware is HTTP plugin middleware to serve headers
-func (p *Plugin) Middleware(next http.Handler) http.Handler {
+func (p *Plugin) Middleware(next http.Handler) http.Handler { //nolint:gocognit
 	// Define the http.HandlerFunc
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if path := r.Header.Get(xSendHeader); path != "" {
@@ -56,6 +56,9 @@ func (p *Plugin) Middleware(next http.Handler) http.Handler {
 				http.Error(w, err.Error(), http.StatusInternalServerError)
 				return
 			}
+			defer func() {
+				_ = f.Close()
+			}()
 
 			size := fs.Size()
 			var buf []byte
@@ -102,6 +105,7 @@ func (p *Plugin) Middleware(next http.Handler) http.Handler {
 		next.ServeHTTP(w, r)
 	})
 }
+
 func (p *Plugin) Name() string {
 	return PluginName
 }

@@ -28,18 +28,25 @@ type consumer struct {
 	sync.RWMutex
 	log       logger.Logger
 	eh        events.Handler
-	pushConn  *nats.Conn
 	queue     priorityqueue.Queue
-	prefetch  int
 	listeners uint32
 	pipeline  atomic.Value
-	sub       *nats.Subscription
-	msgCh     chan *nats.Msg
 	stopCh    chan struct{}
 
+	// nats
+	conn  *nats.Conn
+	sub   *nats.Subscription
+	msgCh chan *nats.Msg
+	js    nats.JetStreamContext
+
 	// config
-	url   string
-	natsQ string
+	subject            string
+	stream             string
+	prefetch           int
+	rateLimit          uint64
+	deleteAfterAck     bool
+	deliverNew         bool
+	deleteStreamOnStop bool
 }
 
 func FromConfig(configKey string, e events.Handler, log logger.Logger, cfg cfgPlugin.Configurer, queue priorityqueue.Queue) (*consumer, error) {
@@ -80,16 +87,46 @@ func FromConfig(configKey string, e events.Handler, log logger.Logger, cfg cfgPl
 		return nil, errors.E(op, err)
 	}
 
+	js, err := conn.JetStream()
+	if err != nil {
+		return nil, errors.E(op, err)
+	}
+
+	si, err := js.StreamInfo(conf.Stream)
+	if err != nil {
+		if err.Error() == "nats: stream not found" {
+			// skip
+		} else {
+			return nil, errors.E(op, err)
+		}
+	}
+
+	if si == nil {
+		_, err = js.AddStream(&nats.StreamConfig{
+			Name:     conf.Stream,
+			Subjects: []string{conf.Subject},
+		})
+		if err != nil {
+			return nil, errors.E(op, err)
+		}
+	}
+
 	cs := &consumer{
-		log:      log,
-		eh:       e,
-		pushConn: conn,
-		natsQ:    conf.Queue,
-		queue:    queue,
-		url:      conf.Addr,
-		prefetch: conf.Prefetch,
-		msgCh:    make(chan *nats.Msg, conf.Prefetch),
-		stopCh:   make(chan struct{}),
+		log:    log,
+		eh:     e,
+		stopCh: make(chan struct{}),
+		queue:  queue,
+
+		conn:               conn,
+		js:                 js,
+		subject:            conf.Subject,
+		stream:             conf.Stream,
+		deleteAfterAck:     conf.DeleteAfterAck,
+		deleteStreamOnStop: conf.DeleteStreamOnStop,
+		prefetch:           conf.Prefetch,
+		deliverNew:         conf.DeliverNew,
+		rateLimit:          conf.RateLimit,
+		msgCh:              make(chan *nats.Msg, conf.Prefetch),
 	}
 
 	return cs, nil
@@ -124,15 +161,42 @@ func FromPipeline(pipe *pipeline.Pipeline, e events.Handler, log logger.Logger, 
 		return nil, errors.E(op, err)
 	}
 
+	js, err := conn.JetStream()
+	if err != nil {
+		return nil, errors.E(op, err)
+	}
+
+	si, err := js.StreamInfo(pipe.String(pipeStream, "default-stream"))
+	if err != nil {
+		return nil, errors.E(op, err)
+	}
+
+	if si == nil {
+		_, err = js.AddStream(&nats.StreamConfig{
+			Name:     pipe.String(pipeStream, "default-stream"),
+			Subjects: []string{pipe.String(pipeSubject, "default")},
+		})
+		if err != nil {
+			return nil, errors.E(op, err)
+		}
+	}
+
 	cs := &consumer{
-		log:      log,
-		eh:       e,
-		pushConn: conn,
-		natsQ:    pipe.String("queue", "default"),
-		queue:    queue,
-		prefetch: pipe.Int("prefetch", 100),
-		msgCh:    make(chan *nats.Msg, pipe.Int("prefetch", 100)),
-		stopCh:   make(chan struct{}),
+		log:    log,
+		eh:     e,
+		queue:  queue,
+		stopCh: make(chan struct{}),
+
+		conn:               conn,
+		js:                 js,
+		subject:            pipe.String(pipeSubject, "default"),
+		stream:             pipe.String(pipeStream, "default-stream"),
+		prefetch:           pipe.Int(pipePrefetch, 100),
+		deleteAfterAck:     pipe.Bool(pipeDeleteAfterAck, false),
+		deliverNew:         pipe.Bool(pipeDeliverNew, false),
+		deleteStreamOnStop: pipe.Bool(pipeDeleteStreamOnStop, false),
+		rateLimit:          uint64(pipe.Int(pipeRateLimit, 1000)),
+		msgCh:              make(chan *nats.Msg, pipe.Int(pipePrefetch, 100)),
 	}
 
 	return cs, nil
@@ -149,7 +213,7 @@ func (c *consumer) Push(_ context.Context, job *job.Job) error {
 		return errors.E(op, err)
 	}
 
-	err = c.pushConn.Publish(c.natsQ, data)
+	_, err = c.js.Publish(c.subject, data)
 	if err != nil {
 		return errors.E(op, err)
 	}
@@ -163,7 +227,7 @@ func (c *consumer) Register(_ context.Context, pipeline *pipeline.Pipeline) erro
 	return nil
 }
 
-func (c *consumer) Run(ctx context.Context, p *pipeline.Pipeline) error {
+func (c *consumer) Run(_ context.Context, p *pipeline.Pipeline) error {
 	start := time.Now()
 	const op = errors.Op("nats_run")
 
@@ -192,32 +256,6 @@ func (c *consumer) Run(ctx context.Context, p *pipeline.Pipeline) error {
 	return nil
 }
 
-func (c *consumer) Stop(_ context.Context) error {
-	start := time.Now()
-
-	if atomic.LoadUint32(&c.listeners) > 0 {
-		if c.sub != nil {
-			_ = c.sub.Drain()
-			_ = c.sub.Unsubscribe()
-		}
-		c.stopCh <- struct{}{}
-	}
-
-	pipe := c.pipeline.Load().(*pipeline.Pipeline)
-
-	c.pushConn.Close()
-
-	c.eh.Push(events.JobEvent{
-		Event:    events.EventPipeStopped,
-		Driver:   pipe.Driver(),
-		Pipeline: pipe.Name(),
-		Start:    start,
-		Elapsed:  time.Since(start),
-	})
-
-	return nil
-}
-
 func (c *consumer) Pause(_ context.Context, p string) {
 	start := time.Now()
 
@@ -233,11 +271,14 @@ func (c *consumer) Pause(_ context.Context, p string) {
 		return
 	}
 
+	// remove listener
 	atomic.AddUint32(&c.listeners, ^uint32(0))
 
 	if c.sub != nil {
-		_ = c.sub.Drain()
-		_ = c.sub.Unsubscribe()
+		err := c.sub.Drain()
+		if err != nil {
+			c.log.Error("drain error", "error", err)
+		}
 	}
 
 	c.stopCh <- struct{}{}
@@ -274,6 +315,8 @@ func (c *consumer) Resume(_ context.Context, p string) {
 
 	go c.listenerStart()
 
+	atomic.AddUint32(&c.listeners, 1)
+
 	c.eh.Push(events.JobEvent{
 		Event:    events.EventPipeActive,
 		Driver:   pipe.Driver(),
@@ -284,27 +327,68 @@ func (c *consumer) Resume(_ context.Context, p string) {
 }
 
 func (c *consumer) State(_ context.Context) (*jobState.State, error) {
-	if c.sub == nil {
-		return nil, errors.Str("can't get state, no available subscribers")
-	}
-
 	pipe := c.pipeline.Load().(*pipeline.Pipeline)
-	res, _, err := c.sub.Pending()
-	if err != nil {
-		return nil, err
-	}
 
 	st := &jobState.State{
 		Pipeline: pipe.Name(),
 		Driver:   pipe.Driver(),
-		Queue:    c.natsQ,
-		Active:   0,
-		Delayed:  0,
-		Reserved: int64(res),
+		Queue:    c.subject,
 		Ready:    ready(atomic.LoadUint32(&c.listeners)),
 	}
 
+	if c.sub != nil {
+		ci, err := c.sub.ConsumerInfo()
+		if err != nil {
+			return nil, err
+		}
+
+		if ci != nil {
+			st.Active = int64(ci.NumAckPending)
+			st.Reserved = int64(ci.NumWaiting)
+			st.Delayed = 0
+		}
+	}
+
 	return st, nil
+}
+
+func (c *consumer) Stop(_ context.Context) error {
+	start := time.Now()
+
+	if atomic.LoadUint32(&c.listeners) > 0 {
+		if c.sub != nil {
+			err := c.sub.Drain()
+			if err != nil {
+				c.log.Error("drain error", "error", err)
+			}
+		}
+
+		c.stopCh <- struct{}{}
+	}
+
+	if c.deleteStreamOnStop {
+		err := c.js.DeleteStream(c.stream)
+		if err != nil {
+			return err
+		}
+	}
+
+	pipe := c.pipeline.Load().(*pipeline.Pipeline)
+	err := c.conn.Drain()
+	if err != nil {
+		return err
+	}
+
+	c.conn.Close()
+	c.eh.Push(events.JobEvent{
+		Event:    events.EventPipeStopped,
+		Driver:   pipe.Driver(),
+		Pipeline: pipe.Name(),
+		Start:    start,
+		Elapsed:  time.Since(start),
+	})
+
+	return nil
 }
 
 // private
@@ -320,10 +404,13 @@ func (c *consumer) requeue(item *Item) error {
 		return errors.E(op, err)
 	}
 
-	err = c.pushConn.Publish(c.natsQ, data)
+	_, err = c.js.Publish(c.subject, data)
 	if err != nil {
 		return errors.E(op, err)
 	}
+
+	// delete the old message
+	_ = c.js.DeleteMsg(c.stream, item.Options.seq)
 
 	item = nil
 	return nil
@@ -342,7 +429,7 @@ func disconnectHandler(log logger.Logger) func(*nats.Conn, error) {
 			return
 		}
 
-		log.Warn("nast disconnected, trying to reconnect...")
+		log.Warn("nast disconnected")
 	}
 }
 

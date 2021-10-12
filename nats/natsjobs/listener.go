@@ -2,19 +2,21 @@ package natsjobs
 
 import (
 	json "github.com/json-iterator/go"
-)
-
-type Reply string
-
-var (
-	Ack Reply = "+ACK"
-	Nak Reply = "-NAK"
+	"github.com/nats-io/nats.go"
 )
 
 // blocking
 func (c *consumer) listenerInit() error {
 	var err error
-	c.sub, err = c.pushConn.ChanSubscribe(c.natsQ, c.msgCh)
+
+	opts := make([]nats.SubOpt, 0)
+	if c.deliverNew {
+		opts = append(opts, nats.DeliverNew())
+	}
+
+	opts = append(opts, nats.RateLimit(c.rateLimit))
+	opts = append(opts, nats.AckExplicit())
+	c.sub, err = c.js.ChanSubscribe(c.subject, c.msgCh, opts...)
 	if err != nil {
 		return err
 	}
@@ -26,18 +28,15 @@ func (c *consumer) listenerStart() {
 	for {
 		select {
 		case m := <-c.msgCh:
-			if len(m.Data) == 4 {
-				switch m.Data[0] {
-				// ASCII +
-				case byte(43):
-					continue
-				}
+			// only JS messages
+			meta, err := m.Metadata()
+			if err != nil {
+				c.log.Info("not JS message", "error", err)
+				continue
 			}
 
-			//m.Reply = c.natsQ
 			item := new(Item)
-
-			err := json.Unmarshal(m.Data, item)
+			err = json.Unmarshal(m.Data, item)
 			if err != nil {
 				c.log.Error("unmarshal nats payload", "error", err)
 				continue
@@ -47,6 +46,15 @@ func (c *consumer) listenerStart() {
 			item.Options.ack = m.Ack
 			item.Options.nak = m.Nak
 			item.Options.requeueFn = c.requeue
+			// sequence needed for the requeue
+			item.Options.seq = meta.Sequence.Stream
+
+			// needed only if delete after ack is true
+			if c.deleteAfterAck {
+				item.Options.stream = c.stream
+				item.Options.sub = c.js
+				item.Options.deleteAfterAck = c.deleteAfterAck
+			}
 
 			c.queue.Insert(item)
 		case <-c.stopCh:
