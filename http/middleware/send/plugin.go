@@ -1,6 +1,7 @@
 package send
 
 import (
+	"errors"
 	"io"
 	"net/http"
 	"os"
@@ -71,7 +72,7 @@ func (p *Plugin) Middleware(next http.Handler) http.Handler {
 			for {
 				n, err := f.ReadAt(buf, int64(off))
 				if err != nil {
-					if err == io.EOF {
+					if errors.Is(err, io.EOF) {
 						break
 					}
 
