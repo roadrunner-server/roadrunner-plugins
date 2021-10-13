@@ -12,12 +12,13 @@ import (
 	"github.com/spiral/roadrunner-plugins/v2/internal/common/jobs"
 	"github.com/spiral/roadrunner-plugins/v2/jobs/job"
 	"github.com/spiral/roadrunner-plugins/v2/jobs/pipeline"
+	rh "github.com/spiral/roadrunner-plugins/v2/jobs/protocol"
 	"github.com/spiral/roadrunner-plugins/v2/logger"
 	"github.com/spiral/roadrunner-plugins/v2/server"
 	"github.com/spiral/roadrunner/v2/events"
 	"github.com/spiral/roadrunner/v2/payload"
 	"github.com/spiral/roadrunner/v2/pool"
-	priorityqueue "github.com/spiral/roadrunner/v2/priority_queue"
+	pq "github.com/spiral/roadrunner/v2/priority_queue"
 	jobState "github.com/spiral/roadrunner/v2/state/job"
 	"github.com/spiral/roadrunner/v2/state/process"
 )
@@ -47,7 +48,7 @@ type Plugin struct {
 	events events.Handler
 
 	// priority queue implementation
-	queue priorityqueue.Queue
+	queue pq.Queue
 
 	// parent config for broken options. keys are pipelines names, values - pointers to the associated pipeline
 	pipelines sync.Map
@@ -61,6 +62,7 @@ type Plugin struct {
 	// internal payloads pool
 	pldPool       sync.Pool
 	statsExporter *statsExporter
+	respHandler   *rh.RespHandler
 }
 
 func (p *Plugin) Init(cfg config.Configurer, log logger.Logger, server server.Server) error {
@@ -102,12 +104,13 @@ func (p *Plugin) Init(cfg config.Configurer, log logger.Logger, server server.Se
 	}
 
 	// initialize priority queue
-	p.queue = priorityqueue.NewBinHeap(p.cfg.PipelineSize)
+	p.queue = pq.NewBinHeap(p.cfg.PipelineSize)
 	p.log = log
 
 	// metrics
 	p.statsExporter = newStatsExporter(p)
 	p.events.AddListener(p.statsExporter.metricsCallback)
+	p.respHandler = rh.NewResponseHandler(log)
 
 	return nil
 }

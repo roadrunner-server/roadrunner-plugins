@@ -111,7 +111,7 @@ func (p *Plugin) listener() { //nolint:gocognit
 					}
 
 					// handle the response protocol
-					err = handleResponse(resp.Body, jb, p.log)
+					err = p.respHandler.Handle(resp.Body, jb)
 					if err != nil {
 						p.events.Push(events.JobEvent{
 							Event:   events.EventJobError,
