@@ -17,7 +17,7 @@ require (
 	github.com/fatih/color v1.13.0
 	github.com/go-redis/redis/v8 v8.11.4
 	github.com/gobwas/ws v1.1.0
-	github.com/gofiber/fiber/v2 v2.20.1
+	github.com/gofiber/fiber/v2 v2.20.2
 	github.com/golang/mock v1.6.0
 	github.com/google/uuid v1.3.0
 	github.com/json-iterator/go v1.1.12
