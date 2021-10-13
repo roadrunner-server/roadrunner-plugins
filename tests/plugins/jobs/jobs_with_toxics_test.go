@@ -429,8 +429,8 @@ func TestDurabilityNATS(t *testing.T) {
 	// redial errors
 	mockLogger.EXPECT().Error("pipeline error", "pipeline", "test-1", "error", gomock.Any(), "start", gomock.Any(), "elapsed", gomock.Any()).AnyTimes()
 	mockLogger.EXPECT().Error("pipeline error", "pipeline", "test-2", "error", gomock.Any(), "start", gomock.Any(), "elapsed", gomock.Any()).AnyTimes()
-	mockLogger.EXPECT().Error("nats disconnected", "error", "EOF").MinTimes(1)
-	mockLogger.EXPECT().Warn("connection lost, reconnecting", "url", "nats://127.0.0.1:19224").MinTimes(1)
+	mockLogger.EXPECT().Error("nats disconnected", "error", "EOF").AnyTimes()
+	mockLogger.EXPECT().Warn("connection lost, reconnecting", "url", "nats://127.0.0.1:19224").AnyTimes()
 
 	// stop
 	mockLogger.EXPECT().Warn(gomock.Any()).AnyTimes()
