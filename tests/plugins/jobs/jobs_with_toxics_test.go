@@ -16,6 +16,7 @@ import (
 	"github.com/spiral/roadrunner-plugins/v2/config"
 	"github.com/spiral/roadrunner-plugins/v2/informer"
 	"github.com/spiral/roadrunner-plugins/v2/jobs"
+	"github.com/spiral/roadrunner-plugins/v2/nats"
 	"github.com/spiral/roadrunner-plugins/v2/resetter"
 	rpcPlugin "github.com/spiral/roadrunner-plugins/v2/rpc"
 	"github.com/spiral/roadrunner-plugins/v2/server"
@@ -388,6 +389,128 @@ func TestDurabilityBeanstalk(t *testing.T) {
 	t.Run("PushPipelineWhileRedialing-2", pushToPipe("test-2"))
 
 	time.Sleep(time.Second * 10)
+
+	stopCh <- struct{}{}
+	wg.Wait()
+}
+
+func TestDurabilityNATS(t *testing.T) {
+	client := toxiproxy.NewClient("127.0.0.1:8474")
+
+	_, err := client.CreateProxy("redial", "127.0.0.1:19224", "127.0.0.1:4222")
+	require.NoError(t, err)
+	defer deleteProxy("redial", t)
+
+	cont, err := endure.NewContainer(nil, endure.SetLogLevel(endure.ErrorLevel))
+	require.NoError(t, err)
+
+	cfg := &config.Viper{
+		Path:   "durability/.rr-nats-durability-redial.yaml",
+		Prefix: "rr",
+	}
+
+	controller := gomock.NewController(t)
+	mockLogger := mocks.NewMockLogger(controller)
+
+	// general
+	mockLogger.EXPECT().Debug("worker destructed", "pid", gomock.Any()).AnyTimes()
+	mockLogger.EXPECT().Debug("worker constructed", "pid", gomock.Any()).AnyTimes()
+	mockLogger.EXPECT().Debug("Started RPC service", "address", "tcp://127.0.0.1:6001", "plugins", gomock.Any()).Times(1)
+
+	mockLogger.EXPECT().Debug("pipeline active", "pipeline", "test-1", "start", gomock.Any(), "elapsed", gomock.Any()).Times(1)
+	mockLogger.EXPECT().Debug("pipeline active", "pipeline", "test-2", "start", gomock.Any(), "elapsed", gomock.Any()).Times(1)
+
+	mockLogger.EXPECT().Error(gomock.Any(), gomock.Any(), gomock.Any()).AnyTimes()
+
+	mockLogger.EXPECT().Debug("pipeline stopped", "pipeline", "test-1", "start", gomock.Any(), "elapsed", gomock.Any()).Times(1)
+	mockLogger.EXPECT().Debug("pipeline stopped", "pipeline", "test-2", "start", gomock.Any(), "elapsed", gomock.Any()).Times(1)
+
+	mockLogger.EXPECT().Debug("job pushed to the queue", "start", gomock.Any(), "elapsed", gomock.Any()).AnyTimes()
+	// redial errors
+	mockLogger.EXPECT().Error("pipeline error", "pipeline", "test-1", "error", gomock.Any(), "start", gomock.Any(), "elapsed", gomock.Any()).AnyTimes()
+	mockLogger.EXPECT().Error("pipeline error", "pipeline", "test-2", "error", gomock.Any(), "start", gomock.Any(), "elapsed", gomock.Any()).AnyTimes()
+	mockLogger.EXPECT().Error("nats disconnected", "error", "EOF").MinTimes(1)
+	mockLogger.EXPECT().Warn("connection lost, reconnecting", "url", "nats://127.0.0.1:19224").MinTimes(1)
+
+	// stop
+	mockLogger.EXPECT().Warn(gomock.Any()).AnyTimes()
+
+	err = cont.RegisterAll(
+		cfg,
+		&server.Plugin{},
+		&rpcPlugin.Plugin{},
+		mockLogger,
+		&jobs.Plugin{},
+		&resetter.Plugin{},
+		&informer.Plugin{},
+		&nats.Plugin{},
+	)
+	require.NoError(t, err)
+
+	err = cont.Init()
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	ch, err := cont.Serve()
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	sig := make(chan os.Signal, 1)
+	signal.Notify(sig, os.Interrupt, syscall.SIGINT, syscall.SIGTERM)
+
+	wg := &sync.WaitGroup{}
+	wg.Add(1)
+
+	stopCh := make(chan struct{}, 1)
+
+	go func() {
+		defer wg.Done()
+		for {
+			select {
+			case e := <-ch:
+				assert.Fail(t, "error", e.Error.Error())
+				err = cont.Stop()
+				if err != nil {
+					assert.FailNow(t, "error", err.Error())
+				}
+			case <-sig:
+				err = cont.Stop()
+				if err != nil {
+					assert.FailNow(t, "error", err.Error())
+				}
+				return
+			case <-stopCh:
+				// timeout
+				err = cont.Stop()
+				if err != nil {
+					assert.FailNow(t, "error", err.Error())
+				}
+				return
+			}
+		}
+	}()
+
+	time.Sleep(time.Second * 3)
+	disableProxy("redial", t)
+	time.Sleep(time.Second * 3)
+
+	go func() {
+		time.Sleep(time.Second)
+		t.Run("PushPipelineWhileRedialing-1", pushToPipe("test-1"))
+		time.Sleep(time.Second)
+		t.Run("PushPipelineWhileRedialing-2", pushToPipe("test-2"))
+	}()
+
+	time.Sleep(time.Second * 5)
+	enableProxy("redial", t)
+	time.Sleep(time.Second * 2)
+
+	t.Run("PushPipelineWhileRedialing-3", pushToPipe("test-1"))
+	t.Run("PushPipelineWhileRedialing-4", pushToPipe("test-2"))
+
+	time.Sleep(time.Second * 2)
 
 	stopCh <- struct{}{}
 	wg.Wait()

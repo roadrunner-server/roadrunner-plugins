@@ -13,7 +13,7 @@ test_coverage:
 	go test -v -race -cover -tags=debug -coverpkg=./... -coverprofile=./coverage-ci/server_cmd.out -covermode=atomic ./server
 	go test -v -race -cover -tags=debug -coverpkg=./... -coverprofile=./coverage-ci/struct_jobs.out -covermode=atomic ./jobs/job
 	go test -v -race -cover -tags=debug -coverpkg=./... -coverprofile=./coverage-ci/pipeline_jobs.out -covermode=atomic ./jobs/pipeline
-	go test -v -race -cover -tags=debug -coverpkg=./... -coverprofile=./coverage-ci/jobs_core.out -covermode=atomic ./tests/plugins/jobs
+	go test -timeout 20m -v -race -cover -tags=debug -coverpkg=./... -coverprofile=./coverage-ci/jobs_core.out -covermode=atomic ./tests/plugins/jobs
 	go test -v -race -cover -tags=debug -coverpkg=./... -coverprofile=./coverage-ci/kv_plugin.out -covermode=atomic ./tests/plugins/kv
 	go test -v -race -cover -tags=debug -coverpkg=./... -coverprofile=./coverage-ci/grpc_codec.out -covermode=atomic ./grpc/codec
 	go test -v -race -cover -tags=debug -coverpkg=./... -coverprofile=./coverage-ci/grpc_parser.out -covermode=atomic ./grpc/parser
@@ -48,7 +48,7 @@ test: ## Run application tests
 	go test -v -race -tags=debug ./websockets
 	go test -v -race -tags=debug ./grpc/codec
 	go test -v -race -tags=debug ./grpc/parser
-	go test -v -race -tags=debug ./tests/plugins/jobs
+	go test -timeout 20m -v -race -tags=debug ./tests/plugins/jobs
 	go test -v -race -tags=debug ./tests/plugins/kv
 	go test -v -race -tags=debug ./tests/plugins/broadcast
 	go test -v -race -tags=debug ./tests/plugins/websockets

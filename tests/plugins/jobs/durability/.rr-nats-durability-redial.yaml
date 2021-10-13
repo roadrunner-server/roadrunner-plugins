@@ -6,9 +6,8 @@ server:
   relay: "pipes"
   relay_timeout: "20s"
 
-beanstalk:
-  addr: tcp://127.0.0.1:11400
-  timeout: 10s
+nats:
+  addr: "nats://127.0.0.1:19224"
 
 logs:
   level: debug
@@ -18,6 +17,7 @@ logs:
 jobs:
   num_pollers: 10
   pipeline_size: 100000
+  timeout: 20
   pool:
     num_workers: 10
     max_jobs: 0
@@ -26,18 +26,25 @@ jobs:
 
   pipelines:
     test-1:
-      driver: beanstalk
-      priority: 11
-      tube_priority: 1
-      tube: default-1
-      reserve_timeout: 10s
+      driver: nats
+      prefetch: 100
+      subject: "default"
+      stream: "foo"
+      deliver_new: "true"
+      rate_limit: 100
+      delete_after_ack: "true"
+      priority: 1
 
     test-2:
-      driver: beanstalk
-      priority: 11
-      tube_priority: 3
-      tube: default-2
-      reserve_timeout: 10s
+      driver: nats
+      prefetch: 100
+      subject: "default2"
+      stream: "foo2"
+      rate_limit: 100
+      deliver_new: "true"
+      delete_after_ack: "true"
+      priority: 2
+
 
   # list of pipelines to be consumed by the server, keep empty if you want to start consuming manually
   consume: [ "test-1", "test-2" ]

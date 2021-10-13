@@ -78,7 +78,8 @@ func FromConfig(configKey string, e events.Handler, log logger.Logger, cfg cfgPl
 		nats.NoEcho(),
 		nats.Timeout(time.Minute),
 		nats.MaxReconnects(-1),
-		nats.ReconnectWait(time.Second*2),
+		nats.PingInterval(time.Second*10),
+		nats.ReconnectWait(time.Second),
 		nats.ReconnectBufSize(reconnectBuffer),
 		nats.ReconnectHandler(reconnectHandler(log)),
 		nats.DisconnectErrHandler(disconnectHandler(log)),
@@ -152,7 +153,8 @@ func FromPipeline(pipe *pipeline.Pipeline, e events.Handler, log logger.Logger, 
 		nats.NoEcho(),
 		nats.Timeout(time.Minute),
 		nats.MaxReconnects(-1),
-		nats.ReconnectWait(time.Second*2),
+		nats.PingInterval(time.Second*10),
+		nats.ReconnectWait(time.Second),
 		nats.ReconnectBufSize(reconnectBuffer),
 		nats.ReconnectHandler(reconnectHandler(log)),
 		nats.DisconnectErrHandler(disconnectHandler(log)),
@@ -168,7 +170,11 @@ func FromPipeline(pipe *pipeline.Pipeline, e events.Handler, log logger.Logger, 
 
 	si, err := js.StreamInfo(pipe.String(pipeStream, "default-stream"))
 	if err != nil {
-		return nil, errors.E(op, err)
+		if err.Error() == "nats: stream not found" {
+			// skip
+		} else {
+			return nil, errors.E(op, err)
+		}
 	}
 
 	if si == nil {
@@ -380,6 +386,7 @@ func (c *consumer) Stop(_ context.Context) error {
 	}
 
 	c.conn.Close()
+	c.msgCh = nil
 	c.eh.Push(events.JobEvent{
 		Event:    events.EventPipeStopped,
 		Driver:   pipe.Driver(),
@@ -417,8 +424,8 @@ func (c *consumer) requeue(item *Item) error {
 }
 
 func reconnectHandler(log logger.Logger) func(*nats.Conn) {
-	return func(_ *nats.Conn) {
-		log.Warn("connection lost, reconnecting...")
+	return func(conn *nats.Conn) {
+		log.Warn("connection lost, reconnecting", "url", conn.ConnectedUrl())
 	}
 }
 
