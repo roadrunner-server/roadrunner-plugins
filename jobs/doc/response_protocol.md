@@ -9,14 +9,16 @@ Types are:
 ```
 0 - NO_ERROR
 1 - ERROR
-2 - ...
+2 - RESPONSE
 ```
 
-- `NO_ERROR`: contains only `type` and empty `data`.
-- `ERROR` : contains `type`: 1, and `data` field with: `message` describing the error, `requeue` flag to requeue the
+- `NO_ERROR`: contains only `type` - 0, and empty `data`.
+- `ERROR` : contains `type` - 1, and `data` field with: `message` describing the error, `requeue` flag to requeue the
   job,
   `delay_seconds`: to delay a queue for a provided amount of seconds, `headers` - job's headers represented as hashmap
   with string key and array of strings as a value.
+
+- `RESPONSE`: response message type.
 
 For example:
 
@@ -39,6 +41,28 @@ For example:
     "data": {
         "message": "internal worker error",
         "requeue": true,
+        "headers": [
+            {
+                "test": [
+                    "1",
+                    "2",
+                    "3"
+                ]
+            }
+        ],
+        "delay_seconds": 10
+    }
+}
+```
+
+`RESPONSE`:
+
+```json
+{
+    "type": 2,
+    "data": {
+        "driver": "amqp",
+        "queue": true,
         "headers": [
             {
                 "test": [

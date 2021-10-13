@@ -53,6 +53,7 @@ func TestDurabilityAMQP(t *testing.T) {
 	mockLogger.EXPECT().Debug("pipeline active", "pipeline", "test-2", "start", gomock.Any(), "elapsed", gomock.Any()).Times(2)
 
 	mockLogger.EXPECT().Error(gomock.Any(), gomock.Any(), gomock.Any()).AnyTimes()
+	mockLogger.EXPECT().Error("job processed with errors", "error", gomock.Any(), "ID", gomock.Any(), "start", gomock.Any(), "elapsed", gomock.Any()).AnyTimes()
 
 	mockLogger.EXPECT().Debug("pipeline stopped", "pipeline", "test-1", "start", gomock.Any(), "elapsed", gomock.Any()).Times(1)
 	mockLogger.EXPECT().Debug("pipeline stopped", "pipeline", "test-2", "start", gomock.Any(), "elapsed", gomock.Any()).Times(1)
@@ -179,6 +180,7 @@ func TestDurabilitySQS(t *testing.T) {
 	mockLogger.EXPECT().Debug("pipeline active", "pipeline", "test-2", "start", gomock.Any(), "elapsed", gomock.Any()).Times(1)
 
 	mockLogger.EXPECT().Error(gomock.Any(), gomock.Any(), gomock.Any()).AnyTimes()
+	mockLogger.EXPECT().Error("job processed with errors", "error", gomock.Any(), "ID", gomock.Any(), "start", gomock.Any(), "elapsed", gomock.Any()).AnyTimes()
 
 	mockLogger.EXPECT().Debug("pipeline stopped", "pipeline", "test-1", "start", gomock.Any(), "elapsed", gomock.Any()).Times(1)
 	mockLogger.EXPECT().Debug("pipeline stopped", "pipeline", "test-2", "start", gomock.Any(), "elapsed", gomock.Any()).Times(1)
@@ -302,6 +304,7 @@ func TestDurabilityBeanstalk(t *testing.T) {
 	mockLogger.EXPECT().Debug("pipeline active", "pipeline", "test-2", "start", gomock.Any(), "elapsed", gomock.Any()).Times(1)
 
 	mockLogger.EXPECT().Error(gomock.Any(), gomock.Any(), gomock.Any()).AnyTimes()
+	mockLogger.EXPECT().Error("job processed with errors", "error", gomock.Any(), "ID", gomock.Any(), "start", gomock.Any(), "elapsed", gomock.Any()).AnyTimes()
 
 	mockLogger.EXPECT().Debug("job pushed to the queue", "start", gomock.Any(), "elapsed", gomock.Any()).MinTimes(1)
 	mockLogger.EXPECT().Debug("pipeline stopped", "pipeline", "test-1", "start", gomock.Any(), "elapsed", gomock.Any()).Times(1)
@@ -421,6 +424,7 @@ func TestDurabilityNATS(t *testing.T) {
 	mockLogger.EXPECT().Debug("pipeline active", "pipeline", "test-2", "start", gomock.Any(), "elapsed", gomock.Any()).Times(1)
 
 	mockLogger.EXPECT().Error(gomock.Any(), gomock.Any(), gomock.Any()).AnyTimes()
+	mockLogger.EXPECT().Error("job processed with errors", "error", gomock.Any(), "ID", gomock.Any(), "start", gomock.Any(), "elapsed", gomock.Any()).AnyTimes()
 
 	mockLogger.EXPECT().Debug("pipeline stopped", "pipeline", "test-1", "start", gomock.Any(), "elapsed", gomock.Any()).Times(1)
 	mockLogger.EXPECT().Debug("pipeline stopped", "pipeline", "test-2", "start", gomock.Any(), "elapsed", gomock.Any()).Times(1)
