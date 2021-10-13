@@ -18,7 +18,7 @@ Types are:
   `delay_seconds`: to delay a queue for a provided amount of seconds, `headers` - job's headers represented as hashmap
   with string key and array of strings as a value.
 
-- `RESPONSE`: response message type.
+- `RESPONSE`: response message type. Message type - 2. Contains `queue` (eg. tube, subject) name. Payload should be sent via response `Context`. 
 
 For example:
 
@@ -27,8 +27,8 @@ For example:
 
 ```json
 {
-    "type": 0,
-    "data": {}
+  "type": 0,
+  "data": {}
 }
 
 ```
@@ -37,21 +37,21 @@ For example:
 
 ```json
 {
-    "type": 1,
-    "data": {
-        "message": "internal worker error",
-        "requeue": true,
-        "headers": [
-            {
-                "test": [
-                    "1",
-                    "2",
-                    "3"
-                ]
-            }
-        ],
-        "delay_seconds": 10
-    }
+  "type": 1,
+  "data": {
+    "message": "internal worker error",
+    "requeue": true,
+    "headers": [
+      {
+        "test": [
+          "1",
+          "2",
+          "3"
+        ]
+      }
+    ],
+    "delay_seconds": 10
+  }
 }
 ```
 
@@ -59,20 +59,9 @@ For example:
 
 ```json
 {
-    "type": 2,
-    "data": {
-        "driver": "amqp",
-        "queue": true,
-        "headers": [
-            {
-                "test": [
-                    "1",
-                    "2",
-                    "3"
-                ]
-            }
-        ],
-        "delay_seconds": 10
-    }
+  "type": 2,
+  "data": {
+    "queue": "foo"
+  }
 }
 ```
