@@ -27,7 +27,7 @@ require (
 	github.com/rabbitmq/amqp091-go v1.1.0
 	github.com/spf13/viper v1.9.0
 	// spiral
-	github.com/spiral/endure v1.0.4
+	github.com/spiral/endure v1.0.5
 	github.com/spiral/errors v1.0.12
 	github.com/spiral/goridge/v3 v3.2.2-beta.1
 	github.com/spiral/roadrunner/v2 v2.5.0-beta.3
