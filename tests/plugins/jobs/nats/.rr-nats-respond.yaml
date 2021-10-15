@@ -2,7 +2,7 @@ rpc:
   listen: tcp://127.0.0.1:6001
 
 server:
-  command: "php ../../jobs_ok.php"
+  command: "php ../../jobs_respond.php"
   relay: "pipes"
   relay_timeout: "20s"
 
@@ -15,9 +15,8 @@ logs:
   mode: development
 
 jobs:
-  num_pollers: 1
+  num_pollers: 10
   pipeline_size: 100000
-  timeout: 1
   pool:
     num_workers: 10
     max_jobs: 0
@@ -28,17 +27,9 @@ jobs:
     test-1:
       driver: nats
       prefetch: 100
-      subject: "default"
-      stream: "foo"
+      subject: "test-1-queue"
+      stream: "foo-bar"
       deliver_new: "true"
       priority: 1
 
-    test-2:
-      driver: nats
-      prefetch: 100
-      subject: "default"
-      stream: "foo"
-      deliver_new: "true"
-      priority: 2
-
-  consume: [ "test-1", "test-2" ]
+  consume: [ "test-1" ]

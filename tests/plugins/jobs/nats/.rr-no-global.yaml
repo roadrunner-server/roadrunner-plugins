@@ -27,7 +27,6 @@ jobs:
     test-1:
       driver: nats
       prefetch: 100
-      queue: test-1-queue
       subject: "default"
       stream: "foo"
       deliver_new: "true"
@@ -36,7 +35,6 @@ jobs:
     test-2:
       driver: nats
       prefetch: 100
-      queue: test-2-queue
       subject: "default"
       stream: "foo"
       deliver_new: "true"

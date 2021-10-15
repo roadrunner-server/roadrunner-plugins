@@ -70,22 +70,20 @@ func NewSQSConsumer(configKey string, log logger.Logger, cfg cfgPlugin.Configure
 	}
 
 	// PARSE CONFIGURATION -------
-	var pipeCfg Config
-	var globalCfg GlobalCfg
-
-	err := cfg.UnmarshalKey(configKey, &pipeCfg)
+	var conf Config
+	err := cfg.UnmarshalKey(configKey, &conf)
 	if err != nil {
 		return nil, errors.E(op, err)
 	}
 
-	pipeCfg.InitDefault()
+	conf.InitDefault()
 
-	err = cfg.UnmarshalKey(pluginName, &globalCfg)
+	err = cfg.UnmarshalKey(pluginName, &conf)
 	if err != nil {
 		return nil, errors.E(op, err)
 	}
 
-	globalCfg.InitDefault()
+	conf.InitDefault()
 
 	// initialize job consumer
 	jb := &consumer{
@@ -93,24 +91,24 @@ func NewSQSConsumer(configKey string, log logger.Logger, cfg cfgPlugin.Configure
 		log:               log,
 		eh:                e,
 		messageGroupID:    uuid.NewString(),
-		attributes:        pipeCfg.Attributes,
-		tags:              pipeCfg.Tags,
-		queue:             pipeCfg.Queue,
-		prefetch:          pipeCfg.Prefetch,
-		visibilityTimeout: pipeCfg.VisibilityTimeout,
-		waitTime:          pipeCfg.WaitTimeSeconds,
-		region:            globalCfg.Region,
-		key:               globalCfg.Key,
-		sessionToken:      globalCfg.SessionToken,
-		secret:            globalCfg.Secret,
-		endpoint:          globalCfg.Endpoint,
+		attributes:        conf.Attributes,
+		tags:              conf.Tags,
+		queue:             conf.Queue,
+		prefetch:          conf.Prefetch,
+		visibilityTimeout: conf.VisibilityTimeout,
+		waitTime:          conf.WaitTimeSeconds,
+		region:            conf.Region,
+		key:               conf.Key,
+		sessionToken:      conf.SessionToken,
+		secret:            conf.Secret,
+		endpoint:          conf.Endpoint,
 		pauseCh:           make(chan struct{}, 1),
 	}
 
 	// PARSE CONFIGURATION -------
 
 	awsConf, err := config.LoadDefaultConfig(context.Background(),
-		config.WithRegion(globalCfg.Region),
+		config.WithRegion(conf.Region),
 		config.WithCredentialsProvider(credentials.NewStaticCredentialsProvider(jb.key, jb.secret, jb.sessionToken)))
 	if err != nil {
 		return nil, errors.E(op, err)
@@ -151,14 +149,12 @@ func FromPipeline(pipe *pipeline.Pipeline, log logger.Logger, cfg cfgPlugin.Conf
 	}
 
 	// PARSE CONFIGURATION -------
-	var globalCfg GlobalCfg
-
-	err := cfg.UnmarshalKey(pluginName, &globalCfg)
+	var conf Config
+	err := cfg.UnmarshalKey(pluginName, &conf)
 	if err != nil {
 		return nil, errors.E(op, err)
 	}
-
-	globalCfg.InitDefault()
+	conf.InitDefault()
 
 	attr := make(map[string]string)
 	err = pipe.Map(attributes, attr)
@@ -184,18 +180,18 @@ func FromPipeline(pipe *pipeline.Pipeline, log logger.Logger, cfg cfgPlugin.Conf
 		prefetch:          int32(pipe.Int(pref, 10)),
 		visibilityTimeout: int32(pipe.Int(visibility, 0)),
 		waitTime:          int32(pipe.Int(waitTime, 0)),
-		region:            globalCfg.Region,
-		key:               globalCfg.Key,
-		sessionToken:      globalCfg.SessionToken,
-		secret:            globalCfg.Secret,
-		endpoint:          globalCfg.Endpoint,
+		region:            conf.Region,
+		key:               conf.Key,
+		sessionToken:      conf.SessionToken,
+		secret:            conf.Secret,
+		endpoint:          conf.Endpoint,
 		pauseCh:           make(chan struct{}, 1),
 	}
 
 	// PARSE CONFIGURATION -------
 
 	awsConf, err := config.LoadDefaultConfig(context.Background(),
-		config.WithRegion(globalCfg.Region),
+		config.WithRegion(conf.Region),
 		config.WithCredentialsProvider(credentials.NewStaticCredentialsProvider(jb.key, jb.secret, jb.sessionToken)))
 	if err != nil {
 		return nil, errors.E(op, err)

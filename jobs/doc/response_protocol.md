@@ -30,7 +30,6 @@ For example:
   "type": 0,
   "data": {}
 }
-
 ```
 
 `ERROR`:
@@ -61,7 +60,8 @@ For example:
 {
   "type": 2,
   "data": {
-    "queue": "foo"
+    "queue": "foo",
+    "payload": "binary_payload"
   }
 }
 ```

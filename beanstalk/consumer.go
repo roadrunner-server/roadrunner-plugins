@@ -9,6 +9,7 @@ import (
 	"sync/atomic"
 	"time"
 
+	"github.com/beanstalkd/go-beanstalk"
 	"github.com/spiral/errors"
 	cfgPlugin "github.com/spiral/roadrunner-plugins/v2/config"
 	"github.com/spiral/roadrunner-plugins/v2/jobs/job"
@@ -155,17 +156,17 @@ func FromPipeline(pipe *pipeline.Pipeline, log logger.Logger, cfg cfgPlugin.Conf
 
 	return jc, nil
 }
-func (j *consumer) Push(ctx context.Context, jb *job.Job) error {
+func (c *consumer) Push(ctx context.Context, jb *job.Job) error {
 	const op = errors.Op("beanstalk_push")
 	// check if the pipeline registered
 
 	// load atomic value
-	pipe := j.pipeline.Load().(*pipeline.Pipeline)
+	pipe := c.pipeline.Load().(*pipeline.Pipeline)
 	if pipe.Name() != jb.Options.Pipeline {
 		return errors.E(op, errors.Errorf("no such pipeline: %s, actual: %s", jb.Options.Pipeline, pipe.Name()))
 	}
 
-	err := j.handleItem(ctx, fromJob(jb))
+	err := c.handleItem(ctx, fromJob(jb))
 	if err != nil {
 		return errors.E(op, err)
 	}
@@ -173,7 +174,158 @@ func (j *consumer) Push(ctx context.Context, jb *job.Job) error {
 	return nil
 }
 
-func (j *consumer) handleItem(ctx context.Context, item *Item) error {
+func (c *consumer) Register(_ context.Context, p *pipeline.Pipeline) error {
+	// register the pipeline
+	c.pipeline.Store(p)
+	return nil
+}
+
+// State https://github.com/beanstalkd/beanstalkd/blob/master/doc/protocol.txt#L514
+func (c *consumer) State(ctx context.Context) (*jobState.State, error) {
+	const op = errors.Op("beanstalk_state")
+	stat, err := c.pool.Stats(ctx)
+	if err != nil {
+		return nil, errors.E(op, err)
+	}
+
+	pipe := c.pipeline.Load().(*pipeline.Pipeline)
+
+	out := &jobState.State{
+		Pipeline: pipe.Name(),
+		Driver:   pipe.Driver(),
+		Queue:    c.tName,
+		Ready:    ready(atomic.LoadUint32(&c.listeners)),
+	}
+
+	// set stat, skip errors (replace with 0)
+	// https://github.com/beanstalkd/beanstalkd/blob/master/doc/protocol.txt#L523
+	if v, err := strconv.Atoi(stat["current-jobs-ready"]); err == nil {
+		out.Active = int64(v)
+	}
+
+	// https://github.com/beanstalkd/beanstalkd/blob/master/doc/protocol.txt#L525
+	if v, err := strconv.Atoi(stat["current-jobs-reserved"]); err == nil {
+		// this is not an error, reserved in beanstalk behaves like an active jobs
+		out.Reserved = int64(v)
+	}
+
+	// https://github.com/beanstalkd/beanstalkd/blob/master/doc/protocol.txt#L528
+	if v, err := strconv.Atoi(stat["current-jobs-delayed"]); err == nil {
+		out.Delayed = int64(v)
+	}
+
+	return out, nil
+}
+
+func (c *consumer) Run(_ context.Context, p *pipeline.Pipeline) error {
+	const op = errors.Op("beanstalk_run")
+	start := time.Now()
+
+	// load atomic value
+	// check if the pipeline registered
+	pipe := c.pipeline.Load().(*pipeline.Pipeline)
+	if pipe.Name() != p.Name() {
+		return errors.E(op, errors.Errorf("no such pipeline: %s, actual: %s", p.Name(), pipe.Name()))
+	}
+
+	atomic.AddUint32(&c.listeners, 1)
+
+	go c.listen()
+
+	c.eh.Push(events.JobEvent{
+		Event:    events.EventPipeActive,
+		Driver:   pipe.Driver(),
+		Pipeline: pipe.Name(),
+		Start:    start,
+		Elapsed:  time.Since(start),
+	})
+
+	return nil
+}
+
+func (c *consumer) Stop(context.Context) error {
+	start := time.Now()
+	pipe := c.pipeline.Load().(*pipeline.Pipeline)
+
+	if atomic.LoadUint32(&c.listeners) == 1 {
+		c.stopCh <- struct{}{}
+	}
+
+	// release associated resources
+	c.pool.Stop()
+
+	c.eh.Push(events.JobEvent{
+		Event:    events.EventPipeStopped,
+		Driver:   pipe.Driver(),
+		Pipeline: pipe.Name(),
+		Start:    start,
+		Elapsed:  time.Since(start),
+	})
+
+	return nil
+}
+
+func (c *consumer) Pause(_ context.Context, p string) {
+	start := time.Now()
+	// load atomic value
+	pipe := c.pipeline.Load().(*pipeline.Pipeline)
+	if pipe.Name() != p {
+		c.log.Error("no such pipeline", "requested", p, "actual", pipe.Name())
+		return
+	}
+
+	l := atomic.LoadUint32(&c.listeners)
+	// no active listeners
+	if l == 0 {
+		c.log.Warn("no active listeners, nothing to pause")
+		return
+	}
+
+	atomic.AddUint32(&c.listeners, ^uint32(0))
+
+	c.stopCh <- struct{}{}
+
+	c.eh.Push(events.JobEvent{
+		Event:    events.EventPipePaused,
+		Driver:   pipe.Driver(),
+		Pipeline: pipe.Name(),
+		Start:    start,
+		Elapsed:  time.Since(start),
+	})
+}
+
+func (c *consumer) Resume(_ context.Context, p string) {
+	start := time.Now()
+	// load atomic value
+	pipe := c.pipeline.Load().(*pipeline.Pipeline)
+	if pipe.Name() != p {
+		c.log.Error("no such pipeline", "requested", p, "actual", pipe.Name())
+		return
+	}
+
+	l := atomic.LoadUint32(&c.listeners)
+	// no active listeners
+	if l == 1 {
+		c.log.Warn("sqs listener already in the active state")
+		return
+	}
+
+	// start listener
+	go c.listen()
+
+	// increase num of listeners
+	atomic.AddUint32(&c.listeners, 1)
+
+	c.eh.Push(events.JobEvent{
+		Event:    events.EventPipeActive,
+		Driver:   pipe.Driver(),
+		Pipeline: pipe.Name(),
+		Start:    start,
+		Elapsed:  time.Since(start),
+	})
+}
+
+func (c *consumer) handleItem(ctx context.Context, item *Item) error {
 	const op = errors.Op("beanstalk_handle_item")
 
 	bb := new(bytes.Buffer)
@@ -203,9 +355,9 @@ func (j *consumer) handleItem(ctx context.Context, item *Item) error {
 	// <ttr> seconds, the job will time out and the server will release the job.
 	//	The minimum ttr is 1. If the client sends 0, the server will silently
 	// increase the ttr to 1. Maximum ttr is 2**32-1.
-	id, err := j.pool.Put(ctx, body, *j.tubePriority, item.Options.DelayDuration(), j.tout)
+	id, err := c.pool.Put(ctx, body, *c.tubePriority, item.Options.DelayDuration(), c.tout)
 	if err != nil {
-		errD := j.pool.Delete(ctx, id)
+		errD := c.pool.Delete(ctx, id)
 		if errD != nil {
 			return errors.E(op, errors.Errorf("%s:%s", err.Error(), errD.Error()))
 		}
@@ -215,155 +367,21 @@ func (j *consumer) handleItem(ctx context.Context, item *Item) error {
 	return nil
 }
 
-func (j *consumer) Register(_ context.Context, p *pipeline.Pipeline) error {
-	// register the pipeline
-	j.pipeline.Store(p)
-	return nil
-}
-
-// State https://github.com/beanstalkd/beanstalkd/blob/master/doc/protocol.txt#L514
-func (j *consumer) State(ctx context.Context) (*jobState.State, error) {
-	const op = errors.Op("beanstalk_state")
-	stat, err := j.pool.Stats(ctx)
+func (c *consumer) handleTPush(data []byte, tube string) error {
+	// todo(rustatian): hash c.addr+c.network, store, and then get from the map and put data
+	// it's tooo big overhead to connect every time
+	connT, err := beanstalk.DialTimeout(c.network, c.addr, c.tout)
 	if err != nil {
-		return nil, errors.E(op, err)
+		return err
 	}
 
-	pipe := j.pipeline.Load().(*pipeline.Pipeline)
-
-	out := &jobState.State{
-		Pipeline: pipe.Name(),
-		Driver:   pipe.Driver(),
-		Queue:    j.tName,
-		Ready:    ready(atomic.LoadUint32(&j.listeners)),
+	t := beanstalk.NewTube(connT, tube)
+	_, err = t.Put(data, 0, 0, c.tout)
+	if err != nil {
+		return err
 	}
 
-	// set stat, skip errors (replace with 0)
-	// https://github.com/beanstalkd/beanstalkd/blob/master/doc/protocol.txt#L523
-	if v, err := strconv.Atoi(stat["current-jobs-ready"]); err == nil {
-		out.Active = int64(v)
-	}
-
-	// https://github.com/beanstalkd/beanstalkd/blob/master/doc/protocol.txt#L525
-	if v, err := strconv.Atoi(stat["current-jobs-reserved"]); err == nil {
-		// this is not an error, reserved in beanstalk behaves like an active jobs
-		out.Reserved = int64(v)
-	}
-
-	// https://github.com/beanstalkd/beanstalkd/blob/master/doc/protocol.txt#L528
-	if v, err := strconv.Atoi(stat["current-jobs-delayed"]); err == nil {
-		out.Delayed = int64(v)
-	}
-
-	return out, nil
-}
-
-func (j *consumer) Run(_ context.Context, p *pipeline.Pipeline) error {
-	const op = errors.Op("beanstalk_run")
-	start := time.Now()
-
-	// load atomic value
-	// check if the pipeline registered
-	pipe := j.pipeline.Load().(*pipeline.Pipeline)
-	if pipe.Name() != p.Name() {
-		return errors.E(op, errors.Errorf("no such pipeline: %s, actual: %s", p.Name(), pipe.Name()))
-	}
-
-	atomic.AddUint32(&j.listeners, 1)
-
-	go j.listen()
-
-	j.eh.Push(events.JobEvent{
-		Event:    events.EventPipeActive,
-		Driver:   pipe.Driver(),
-		Pipeline: pipe.Name(),
-		Start:    start,
-		Elapsed:  time.Since(start),
-	})
-
-	return nil
-}
-
-func (j *consumer) Stop(context.Context) error {
-	start := time.Now()
-	pipe := j.pipeline.Load().(*pipeline.Pipeline)
-
-	if atomic.LoadUint32(&j.listeners) == 1 {
-		j.stopCh <- struct{}{}
-	}
-
-	// release associated resources
-	j.pool.Stop()
-
-	j.eh.Push(events.JobEvent{
-		Event:    events.EventPipeStopped,
-		Driver:   pipe.Driver(),
-		Pipeline: pipe.Name(),
-		Start:    start,
-		Elapsed:  time.Since(start),
-	})
-
-	return nil
-}
-
-func (j *consumer) Pause(_ context.Context, p string) {
-	start := time.Now()
-	// load atomic value
-	pipe := j.pipeline.Load().(*pipeline.Pipeline)
-	if pipe.Name() != p {
-		j.log.Error("no such pipeline", "requested", p, "actual", pipe.Name())
-		return
-	}
-
-	l := atomic.LoadUint32(&j.listeners)
-	// no active listeners
-	if l == 0 {
-		j.log.Warn("no active listeners, nothing to pause")
-		return
-	}
-
-	atomic.AddUint32(&j.listeners, ^uint32(0))
-
-	j.stopCh <- struct{}{}
-
-	j.eh.Push(events.JobEvent{
-		Event:    events.EventPipePaused,
-		Driver:   pipe.Driver(),
-		Pipeline: pipe.Name(),
-		Start:    start,
-		Elapsed:  time.Since(start),
-	})
-}
-
-func (j *consumer) Resume(_ context.Context, p string) {
-	start := time.Now()
-	// load atomic value
-	pipe := j.pipeline.Load().(*pipeline.Pipeline)
-	if pipe.Name() != p {
-		j.log.Error("no such pipeline", "requested", p, "actual", pipe.Name())
-		return
-	}
-
-	l := atomic.LoadUint32(&j.listeners)
-	// no active listeners
-	if l == 1 {
-		j.log.Warn("sqs listener already in the active state")
-		return
-	}
-
-	// start listener
-	go j.listen()
-
-	// increase num of listeners
-	atomic.AddUint32(&j.listeners, 1)
-
-	j.eh.Push(events.JobEvent{
-		Event:    events.EventPipeActive,
-		Driver:   pipe.Driver(),
-		Pipeline: pipe.Name(),
-		Start:    start,
-		Elapsed:  time.Since(start),
-	})
+	return connT.Close()
 }
 
 func ready(r uint32) bool {

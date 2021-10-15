@@ -452,7 +452,6 @@ func (c *consumer) handleItem(ctx context.Context, msg *Item) error {
 			return errors.E(op, err)
 		}
 
-		const op = errors.Op("rabbitmq_handle_item")
 		// handle timeouts
 		if msg.Options.DelayDuration() > 0 {
 			atomic.AddInt64(c.delayed, 1)
@@ -494,7 +493,6 @@ func (c *consumer) handleItem(ctx context.Context, msg *Item) error {
 			return nil
 		}
 
-		// insert to the local, limited pipeline
 		err = pch.Publish(c.exchangeName, c.routingKey, false, false, amqp.Publishing{
 			Headers:      table,
 			ContentType:  contentType,
@@ -511,6 +509,27 @@ func (c *consumer) handleItem(ctx context.Context, msg *Item) error {
 	case <-ctx.Done():
 		return errors.E(op, errors.TimeOut, ctx.Err())
 	}
+}
+
+func (c *consumer) handleQPush(ctx context.Context, msg []byte, queue string) error {
+	const op = errors.Op("rabbitmq_handle_item")
+	ch, err := c.conn.Channel()
+	if err != nil {
+		return errors.E(op, err)
+	}
+
+	err = ch.Publish(c.exchangeName, queue, false, false, amqp.Publishing{
+		ContentType:  contentType,
+		Timestamp:    time.Now(),
+		DeliveryMode: amqp.Persistent,
+		Body:         msg,
+	})
+
+	if err != nil {
+		return errors.E(op, err)
+	}
+
+	return ch.Close()
 }
 
 func ready(r uint32) bool {

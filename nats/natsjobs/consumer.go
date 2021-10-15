@@ -423,6 +423,15 @@ func (c *consumer) requeue(item *Item) error {
 	return nil
 }
 
+func (c *consumer) respond(data []byte, subject string) error {
+	const op = errors.Op("nats_respond")
+	err := c.conn.Publish(subject, data)
+	if err != nil {
+		return errors.E(op, err)
+	}
+	return nil
+}
+
 func reconnectHandler(log logger.Logger) func(*nats.Conn) {
 	return func(conn *nats.Conn) {
 		log.Warn("connection lost, reconnecting", "url", conn.ConnectedUrl())

@@ -11,16 +11,15 @@ const (
 	waitTime   string = "wait_time"
 )
 
-type GlobalCfg struct {
+// Config is used to parse pipeline configuration
+type Config struct {
+	// global
 	Key          string `mapstructure:"key"`
 	Secret       string `mapstructure:"secret"`
 	Region       string `mapstructure:"region"`
 	SessionToken string `mapstructure:"session_token"`
 	Endpoint     string `mapstructure:"endpoint"`
-}
 
-// Config is used to parse pipeline configuration
-type Config struct {
 	// The duration (in seconds) that the received messages are hidden from subsequent
 	// retrieve requests after being retrieved by a ReceiveMessage request.
 	VisibilityTimeout int32 `mapstructure:"visibility_timeout"`
@@ -85,13 +84,11 @@ type Config struct {
 	Tags map[string]string `mapstructure:"tags"`
 }
 
-func (c *GlobalCfg) InitDefault() {
+func (c *Config) InitDefault() {
 	if c.Endpoint == "" {
 		c.Endpoint = "http://127.0.0.1:9324"
 	}
-}
 
-func (c *Config) InitDefault() {
 	if c.Queue == nil {
 		c.Queue = aws.String("default")
 	}

@@ -9,9 +9,12 @@ import (
 	json "github.com/json-iterator/go"
 	amqp "github.com/rabbitmq/amqp091-go"
 	"github.com/spiral/errors"
+	"github.com/spiral/roadrunner-plugins/v2/internal/common/jobs"
 	"github.com/spiral/roadrunner-plugins/v2/jobs/job"
 	"github.com/spiral/roadrunner/v2/utils"
 )
+
+var _ jobs.Acknowledger = (*Item)(nil)
 
 type Item struct {
 	// Job contains pluginName of job broker (usually PHP class).
@@ -54,6 +57,8 @@ type Options struct {
 
 	// requeueFn used as a pointer to the push function
 	requeueFn func(context.Context, *Item) error
+	qPushFn   func(context.Context, []byte, string) error
+
 	// delayed jobs TODO(rustatian): figure out how to get stats from the DLX
 	delayed     *int64
 	multipleAsk bool
@@ -139,6 +144,15 @@ func (i *Item) Requeue(headers map[string][]string, delay int64) error {
 	return nil
 }
 
+// Respond to the queue within pipeline
+func (i *Item) Respond(data []byte, queue string) error {
+	err := i.Options.qPushFn(context.Background(), data, queue)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
 // fromDelivery converts amqp.Delivery into an Item which will be pushed to the PQ
 func (c *consumer) fromDelivery(d amqp.Delivery) (*Item, error) {
 	const op = errors.Op("from_delivery_convert")
@@ -161,6 +175,8 @@ func (c *consumer) fromDelivery(d amqp.Delivery) (*Item, error) {
 
 	// requeue func
 	item.Options.requeueFn = c.handleItem
+	// func to handle push
+	item.Options.qPushFn = c.handleQPush
 	return i, nil
 }
 

@@ -2,10 +2,10 @@ package protocol
 
 import (
 	json "github.com/json-iterator/go"
-	pq "github.com/spiral/roadrunner/v2/priority_queue"
+	"github.com/spiral/roadrunner-plugins/v2/internal/common/jobs"
 )
 
-func (rh *RespHandler) handleErrResp(data []byte, jb pq.Item) error {
+func (rh *RespHandler) handleErrResp(data []byte, jb jobs.Acknowledger) error {
 	er := rh.getErrResp()
 	defer rh.putErrResp(er)
 

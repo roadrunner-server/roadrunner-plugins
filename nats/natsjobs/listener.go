@@ -46,6 +46,7 @@ func (c *consumer) listenerStart() {
 			item.Options.ack = m.Ack
 			item.Options.nak = m.Nak
 			item.Options.requeueFn = c.requeue
+			item.Options.respondFn = c.respond
 			// sequence needed for the requeue
 			item.Options.seq = meta.Sequence.Stream
 

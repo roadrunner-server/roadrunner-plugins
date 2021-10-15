@@ -8,5 +8,6 @@ type errorResp struct {
 }
 
 type queueResp struct {
-	Queue string `json:"queue"`
+	Queue   string `json:"queue"`
+	Payload string `json:"payload"`
 }

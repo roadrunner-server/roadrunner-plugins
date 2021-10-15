@@ -24,6 +24,21 @@ type Consumer interface {
 	State(ctx context.Context) (*jobState.State, error)
 }
 
+// Acknowledger provides queue specific item management
+type Acknowledger interface {
+	// Ack - acknowledge the Item after processing
+	Ack() error
+
+	// Nack - discard the Item
+	Nack() error
+
+	// Requeue - put the message back to the queue with the optional delay
+	Requeue(headers map[string][]string, delay int64) error
+
+	// Respond to the queue
+	Respond(payload []byte, queue string) error
+}
+
 // Constructor constructs Consumer interface. Endure abstraction.
 type Constructor interface {
 	ConsumerFromConfig(configKey string, e events.Handler, queue priorityqueue.Queue) (Consumer, error)

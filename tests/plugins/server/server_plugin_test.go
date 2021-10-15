@@ -12,6 +12,7 @@ import (
 	"github.com/spiral/roadrunner-plugins/v2/logger"
 	"github.com/spiral/roadrunner-plugins/v2/server"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestAppPipes(t *testing.T) {
@@ -269,10 +270,12 @@ func TestAppWrongRelay(t *testing.T) {
 	}
 
 	err = container.Init()
-	assert.NoError(t, err)
+	require.Error(t, err)
 
 	_, err = container.Serve()
 	assert.Error(t, err)
+
+	_ = container.Stop()
 }
 
 func TestAppWrongCommand(t *testing.T) {

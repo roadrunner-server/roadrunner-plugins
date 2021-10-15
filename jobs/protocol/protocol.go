@@ -5,8 +5,9 @@ import (
 
 	json "github.com/json-iterator/go"
 	"github.com/spiral/errors"
+	"github.com/spiral/roadrunner-plugins/v2/internal/common/jobs"
 	"github.com/spiral/roadrunner-plugins/v2/logger"
-	pq "github.com/spiral/roadrunner/v2/priority_queue"
+	"github.com/spiral/roadrunner/v2/payload"
 )
 
 type Type uint32
@@ -57,12 +58,12 @@ func NewResponseHandler(log logger.Logger) *RespHandler {
 	}
 }
 
-func (rh *RespHandler) Handle(resp []byte, jb pq.Item) error {
+func (rh *RespHandler) Handle(pld *payload.Payload, jb jobs.Acknowledger) error {
 	const op = errors.Op("jobs_handle_response")
 	p := rh.getProtocol()
 	defer rh.putProtocol(p)
 
-	err := json.Unmarshal(resp, p)
+	err := json.Unmarshal(pld.Body, p)
 	if err != nil {
 		return errors.E(op, err)
 	}
@@ -84,8 +85,11 @@ func (rh *RespHandler) Handle(resp []byte, jb pq.Item) error {
 		return nil
 		// RR should send a response to the queue/tube/subject
 	case Response:
-		qs := rh.getQResp()
-		defer rh.putQResp(qs)
+		err = rh.handleQueueResp(p.Data, jb)
+		if err != nil {
+			return err
+		}
+		return nil
 	default:
 		err = jb.Ack()
 		if err != nil {

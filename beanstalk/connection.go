@@ -39,7 +39,7 @@ func NewConnPool(network, address, tName string, tout time.Duration, log logger.
 		return nil, err
 	}
 
-	tube := beanstalk.NewTube(connT, tName)
+	tb := beanstalk.NewTube(connT, tName)
 	ts := beanstalk.NewTubeSet(connTS, tName)
 
 	return &ConnPool{
@@ -51,7 +51,7 @@ func NewConnPool(network, address, tName string, tout time.Duration, log logger.
 		conn:    connTS,
 		connT:   connT,
 		ts:      ts,
-		t:       tube,
+		t:       tb,
 	}, nil
 }
 

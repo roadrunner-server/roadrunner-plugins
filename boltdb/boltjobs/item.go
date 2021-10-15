@@ -200,6 +200,10 @@ func (i *Item) Requeue(headers map[string][]string, delay int64) error {
 	return tx.Commit()
 }
 
+func (i *Item) Respond(_ []byte, _ string) error {
+	return nil
+}
+
 func (i *Item) attachDB(db *bbolt.DB, active, delayed *uint64) {
 	i.Options.db = db
 	i.Options.active = active
