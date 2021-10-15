@@ -61,10 +61,11 @@ with much greater performance and flexibility.
 | ![](https://img.shields.io/badge/-Static-blue)      | HTTP middleware to serve static files                                                                                               |
 | ![](https://img.shields.io/badge/-Status-green)     | Provides support for the health and readiness checks                                                                                |
 | ![](https://img.shields.io/badge/-Websockets-green) | Provides support for the broadcasting events via websockets                                                                         |
+| ![](https://img.shields.io/badge/-NATS-blue)        | NATS jobs driver                                                                                                                    | [Docs](nats/docs/nats.md)     |
 
 Legend:  
 `Green` - is a regular RR2 plugins.  
-`Blue` - is a driver for the RR2 plugin.  
+`Blue` - is a driver for the RR2 plugin.
 
 # Writing Plugins
 
