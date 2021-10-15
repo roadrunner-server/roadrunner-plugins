@@ -10,7 +10,7 @@ import (
 	"github.com/google/uuid"
 	amqp "github.com/rabbitmq/amqp091-go"
 	"github.com/spiral/errors"
-	"github.com/spiral/roadrunner-plugins/v2/config"
+	cfgPlugin "github.com/spiral/roadrunner-plugins/v2/config"
 	"github.com/spiral/roadrunner-plugins/v2/jobs/job"
 	"github.com/spiral/roadrunner-plugins/v2/jobs/pipeline"
 	"github.com/spiral/roadrunner-plugins/v2/logger"
@@ -62,7 +62,7 @@ type consumer struct {
 }
 
 // NewAMQPConsumer initializes rabbitmq pipeline
-func NewAMQPConsumer(configKey string, log logger.Logger, cfg config.Configurer, e events.Handler, pq priorityqueue.Queue) (*consumer, error) {
+func NewAMQPConsumer(configKey string, log logger.Logger, cfg cfgPlugin.Configurer, e events.Handler, pq priorityqueue.Queue) (*consumer, error) {
 	const op = errors.Op("new_amqp_consumer")
 	// we need to obtain two parts of the amqp information here.
 	// firs part - address to connect, it is located in the global section under the amqp pluginName
@@ -78,22 +78,19 @@ func NewAMQPConsumer(configKey string, log logger.Logger, cfg config.Configurer,
 	}
 
 	// PARSE CONFIGURATION START -------
-	var pipeCfg Config
-	var globalCfg GlobalCfg
+	var conf config
 
-	err := cfg.UnmarshalKey(configKey, &pipeCfg)
+	err := cfg.UnmarshalKey(configKey, &conf)
 	if err != nil {
 		return nil, errors.E(op, err)
 	}
 
-	pipeCfg.InitDefault()
-
-	err = cfg.UnmarshalKey(pluginName, &globalCfg)
+	err = cfg.UnmarshalKey(pluginName, &conf)
 	if err != nil {
 		return nil, errors.E(op, err)
 	}
 
-	globalCfg.InitDefault()
+	conf.InitDefault()
 	// PARSE CONFIGURATION END -------
 
 	jb := &consumer{
@@ -104,27 +101,27 @@ func NewAMQPConsumer(configKey string, log logger.Logger, cfg config.Configurer,
 		stopCh:    make(chan struct{}),
 		// TODO to config
 		retryTimeout: time.Minute * 5,
-		priority:     pipeCfg.Priority,
+		priority:     conf.Priority,
 		delayed:      utils.Int64(0),
 
 		publishChan:   make(chan *amqp.Channel, 1),
-		routingKey:    pipeCfg.RoutingKey,
-		queue:         pipeCfg.Queue,
-		exchangeType:  pipeCfg.ExchangeType,
-		exchangeName:  pipeCfg.Exchange,
-		prefetch:      pipeCfg.Prefetch,
-		exclusive:     pipeCfg.Exclusive,
-		multipleAck:   pipeCfg.MultipleAck,
-		requeueOnFail: pipeCfg.RequeueOnFail,
+		routingKey:    conf.RoutingKey,
+		queue:         conf.Queue,
+		exchangeType:  conf.ExchangeType,
+		exchangeName:  conf.Exchange,
+		prefetch:      conf.Prefetch,
+		exclusive:     conf.Exclusive,
+		multipleAck:   conf.MultipleAck,
+		requeueOnFail: conf.RequeueOnFail,
 	}
 
-	jb.conn, err = amqp.Dial(globalCfg.Addr)
+	jb.conn, err = amqp.Dial(conf.Addr)
 	if err != nil {
 		return nil, errors.E(op, err)
 	}
 
 	// save address
-	jb.connStr = globalCfg.Addr
+	jb.connStr = conf.Addr
 
 	err = jb.initRabbitMQ()
 	if err != nil {
@@ -144,7 +141,7 @@ func NewAMQPConsumer(configKey string, log logger.Logger, cfg config.Configurer,
 	return jb, nil
 }
 
-func FromPipeline(pipeline *pipeline.Pipeline, log logger.Logger, cfg config.Configurer, e events.Handler, pq priorityqueue.Queue) (*consumer, error) {
+func FromPipeline(pipeline *pipeline.Pipeline, log logger.Logger, cfg cfgPlugin.Configurer, e events.Handler, pq priorityqueue.Queue) (*consumer, error) {
 	const op = errors.Op("new_amqp_consumer_from_pipeline")
 	// we need to obtain two parts of the amqp information here.
 	// firs part - address to connect, it is located in the global section under the amqp pluginName
@@ -156,15 +153,12 @@ func FromPipeline(pipeline *pipeline.Pipeline, log logger.Logger, cfg config.Con
 	}
 
 	// PARSE CONFIGURATION -------
-	var globalCfg GlobalCfg
-
-	err := cfg.UnmarshalKey(pluginName, &globalCfg)
+	var conf config
+	err := cfg.UnmarshalKey(pluginName, &conf)
 	if err != nil {
 		return nil, errors.E(op, err)
 	}
-
-	globalCfg.InitDefault()
-
+	conf.InitDefault()
 	// PARSE CONFIGURATION -------
 
 	jb := &consumer{
@@ -188,13 +182,13 @@ func FromPipeline(pipeline *pipeline.Pipeline, log logger.Logger, cfg config.Con
 		requeueOnFail: pipeline.Bool(requeueOnFail, false),
 	}
 
-	jb.conn, err = amqp.Dial(globalCfg.Addr)
+	jb.conn, err = amqp.Dial(conf.Addr)
 	if err != nil {
 		return nil, errors.E(op, err)
 	}
 
 	// save address
-	jb.connStr = globalCfg.Addr
+	jb.connStr = conf.Addr
 
 	err = jb.initRabbitMQ()
 	if err != nil {
@@ -458,7 +452,6 @@ func (c *consumer) handleItem(ctx context.Context, msg *Item) error {
 			return errors.E(op, err)
 		}
 
-		const op = errors.Op("rabbitmq_handle_item")
 		// handle timeouts
 		if msg.Options.DelayDuration() > 0 {
 			atomic.AddInt64(c.delayed, 1)
@@ -500,7 +493,6 @@ func (c *consumer) handleItem(ctx context.Context, msg *Item) error {
 			return nil
 		}
 
-		// insert to the local, limited pipeline
 		err = pch.Publish(c.exchangeName, c.routingKey, false, false, amqp.Publishing{
 			Headers:      table,
 			ContentType:  contentType,
@@ -517,6 +509,27 @@ func (c *consumer) handleItem(ctx context.Context, msg *Item) error {
 	case <-ctx.Done():
 		return errors.E(op, errors.TimeOut, ctx.Err())
 	}
+}
+
+func (c *consumer) handleQPush(ctx context.Context, msg []byte, queue string) error {
+	const op = errors.Op("rabbitmq_handle_item")
+	ch, err := c.conn.Channel()
+	if err != nil {
+		return errors.E(op, err)
+	}
+
+	err = ch.Publish(c.exchangeName, queue, false, false, amqp.Publishing{
+		ContentType:  contentType,
+		Timestamp:    time.Now(),
+		DeliveryMode: amqp.Persistent,
+		Body:         msg,
+	})
+
+	if err != nil {
+		return errors.E(op, err)
+	}
+
+	return ch.Close()
 }
 
 func ready(r uint32) bool {

@@ -1,39 +1,43 @@
 package beanstalk
 
 import (
+	"context"
+
 	"github.com/beanstalkd/go-beanstalk"
 )
 
-func (j *consumer) listen() {
+func (c *consumer) listen() {
 	for {
 		select {
-		case <-j.stopCh:
-			j.log.Debug("beanstalk listener stopped")
+		case <-c.stopCh:
+			c.log.Debug("beanstalk listener stopped")
 			return
 		default:
-			id, body, err := j.pool.Reserve(j.reserveTimeout)
+			id, body, err := c.pool.Reserve(c.reserveTimeout)
 			if err != nil {
 				if errB, ok := err.(beanstalk.ConnError); ok {
 					switch errB.Err { //nolint:gocritic
 					case beanstalk.ErrTimeout:
-						j.log.Info("beanstalk reserve timeout", "warn", errB.Op)
+						c.log.Info("beanstalk reserve timeout", "warn", errB.Op)
 						continue
 					}
 				}
 				// in case of other error - continue
-				j.log.Error("beanstalk reserve", "error", err)
+				c.log.Error("beanstalk reserve", "error", err)
 				continue
 			}
 
+			// todo(rustatian): to sync pool
 			item := &Item{}
-			err = j.unpack(id, body, item)
+			err = c.unpack(id, body, item)
 			if err != nil {
-				j.log.Error("beanstalk unpack item", "error", err)
+				c.log.Error("beanstalk unpack item", "error", err)
+				_ = c.pool.Delete(context.Background(), id)
 				continue
 			}
 
 			// insert job into the priority queue
-			j.pq.Insert(item)
+			c.pq.Insert(item)
 		}
 	}
 }

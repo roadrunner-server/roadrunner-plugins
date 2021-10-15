@@ -159,6 +159,18 @@ func (i *Item) Requeue(headers map[string][]string, delay int64) error {
 	return nil
 }
 
+func (i *Item) Respond(data []byte, queue string) error {
+	const op = errors.Op("sqs_respond")
+	_, err := i.Options.client.SendMessage(context.Background(), &sqs.SendMessageInput{
+		MessageBody: aws.String(utils.AsString(data)),
+		QueueUrl:    aws.String(queue),
+	})
+	if err != nil {
+		return errors.E(op, err)
+	}
+	return nil
+}
+
 func fromJob(job *job.Job) *Item {
 	return &Item{
 		Job:     job.Job,

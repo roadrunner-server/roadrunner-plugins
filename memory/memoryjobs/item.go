@@ -106,6 +106,11 @@ func (i *Item) Requeue(headers map[string][]string, delay int64) error {
 	return nil
 }
 
+// Respond for the in-memory is no-op
+func (i *Item) Respond(data []byte, queue string) error {
+	return nil
+}
+
 // atomicallyReduceCount reduces counter of active or delayed jobs
 func (i *Item) atomicallyReduceCount() {
 	// if job was delayed, reduce number of the delayed jobs

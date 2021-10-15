@@ -1,7 +1,7 @@
 package beanstalk
 
 import (
-	"github.com/spiral/roadrunner-plugins/v2/config"
+	cfgPlugin "github.com/spiral/roadrunner-plugins/v2/config"
 	"github.com/spiral/roadrunner-plugins/v2/internal/common/jobs"
 	"github.com/spiral/roadrunner-plugins/v2/jobs/pipeline"
 	"github.com/spiral/roadrunner-plugins/v2/logger"
@@ -15,10 +15,10 @@ const (
 
 type Plugin struct {
 	log logger.Logger
-	cfg config.Configurer
+	cfg cfgPlugin.Configurer
 }
 
-func (p *Plugin) Init(log logger.Logger, cfg config.Configurer) error {
+func (p *Plugin) Init(log logger.Logger, cfg cfgPlugin.Configurer) error {
 	p.log = log
 	p.cfg = cfg
 	return nil

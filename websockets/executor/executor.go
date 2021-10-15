@@ -81,7 +81,7 @@ func (e *Executor) StartCommandLoop() error { //nolint:gocognit
 
 		// nil message, continue
 		if msg == nil {
-			e.log.Warn("nil message, skipping")
+			e.log.Debug("nil message, skipping")
 			continue
 		}
 

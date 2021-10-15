@@ -1,6 +1,8 @@
 package amqpjobs
 
-import amqp "github.com/rabbitmq/amqp091-go"
+import (
+	amqp "github.com/rabbitmq/amqp091-go"
+)
 
 func (c *consumer) listener(deliv <-chan amqp.Delivery) {
 	go func() {
@@ -15,8 +17,14 @@ func (c *consumer) listener(deliv <-chan amqp.Delivery) {
 				d, err := c.fromDelivery(msg)
 				if err != nil {
 					c.log.Error("amqp delivery convert", "error", err)
+					err = msg.Nack(true, false)
+					if err != nil {
+						c.log.Error("nack failed", "error", err)
+					}
+
 					continue
 				}
+
 				// insert job into the main priority queue
 				c.pq.Insert(d)
 			}

@@ -63,8 +63,15 @@ func (p Pipeline) Int(name string, d int) int {
 // Bool must return option value as bool or return default value.
 func (p Pipeline) Bool(name string, d bool) bool {
 	if value, ok := p[name]; ok {
-		if i, ok := value.(bool); ok {
-			return i
+		if i, ok := value.(string); ok {
+			switch i {
+			case "true":
+				return true
+			case "false":
+				return false
+			default:
+				return false
+			}
 		}
 	}
 

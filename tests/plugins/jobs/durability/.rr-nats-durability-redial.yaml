@@ -1,0 +1,51 @@
+rpc:
+  listen: tcp://127.0.0.1:6001
+
+server:
+  command: "php ../../jobs_ok.php"
+  relay: "pipes"
+  relay_timeout: "20s"
+
+nats:
+  addr: "nats://127.0.0.1:19224"
+
+logs:
+  level: debug
+  encoding: console
+  mode: development
+
+jobs:
+  num_pollers: 10
+  pipeline_size: 100000
+  timeout: 20
+  pool:
+    num_workers: 10
+    max_jobs: 0
+    allocate_timeout: 60s
+    destroy_timeout: 60s
+
+  pipelines:
+    test-1:
+      driver: nats
+      prefetch: 100
+      subject: "default"
+      stream: "foo"
+      deliver_new: "true"
+      rate_limit: 100
+      delete_after_ack: "true"
+      priority: 1
+
+    test-2:
+      driver: nats
+      prefetch: 100
+      subject: "default2"
+      stream: "foo2"
+      rate_limit: 100
+      deliver_new: "true"
+      delete_after_ack: "true"
+      priority: 2
+
+
+  # list of pipelines to be consumed by the server, keep empty if you want to start consuming manually
+  consume: [ "test-1", "test-2" ]
+

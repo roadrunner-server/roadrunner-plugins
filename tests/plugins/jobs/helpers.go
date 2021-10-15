@@ -25,7 +25,7 @@ const (
 func resumePipes(pipes ...string) func(t *testing.T) {
 	return func(t *testing.T) {
 		conn, err := net.Dial("tcp", "127.0.0.1:6001")
-		assert.NoError(t, err)
+		require.NoError(t, err)
 		client := rpc.NewClientWithCodec(goridgeRpc.NewClientCodec(conn))
 
 		pipe := &jobsv1beta.Pipelines{Pipelines: make([]string, len(pipes))}
@@ -36,14 +36,14 @@ func resumePipes(pipes ...string) func(t *testing.T) {
 
 		er := &jobsv1beta.Empty{}
 		err = client.Call(resume, pipe, er)
-		assert.NoError(t, err)
+		require.NoError(t, err)
 	}
 }
 
 func pushToDisabledPipe(pipeline string) func(t *testing.T) {
 	return func(t *testing.T) {
 		conn, err := net.Dial("tcp", "127.0.0.1:6001")
-		assert.NoError(t, err)
+		require.NoError(t, err)
 		client := rpc.NewClientWithCodec(goridgeRpc.NewClientCodec(conn))
 
 		req := &jobsv1beta.PushRequest{Job: &jobsv1beta.Job{
@@ -59,14 +59,14 @@ func pushToDisabledPipe(pipeline string) func(t *testing.T) {
 
 		er := &jobsv1beta.Empty{}
 		err = client.Call(push, req, er)
-		assert.NoError(t, err)
+		require.NoError(t, err)
 	}
 }
 
 func pushToPipe(pipeline string) func(t *testing.T) {
 	return func(t *testing.T) {
 		conn, err := net.Dial("tcp", "127.0.0.1:6001")
-		assert.NoError(t, err)
+		require.NoError(t, err)
 		client := rpc.NewClientWithCodec(goridgeRpc.NewClientCodec(conn))
 
 		req := &jobsv1beta.PushRequest{Job: &jobsv1beta.Job{
@@ -83,7 +83,7 @@ func pushToPipe(pipeline string) func(t *testing.T) {
 
 		er := &jobsv1beta.Empty{}
 		err = client.Call(push, req, er)
-		assert.NoError(t, err)
+		require.NoError(t, err)
 	}
 }
 
@@ -213,7 +213,7 @@ func deleteProxy(name string, t *testing.T) {
 func stats(state *jobState.State) func(t *testing.T) {
 	return func(t *testing.T) {
 		conn, err := net.Dial("tcp", "127.0.0.1:6001")
-		assert.NoError(t, err)
+		require.NoError(t, err)
 		client := rpc.NewClientWithCodec(goridgeRpc.NewClientCodec(conn))
 
 		st := &jobsv1beta.Stats{}

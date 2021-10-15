@@ -6,25 +6,17 @@ const (
 	prefetch string = "prefetch"
 )
 
-type GlobalCfg struct {
-	// db file permissions
+type config struct {
+	// global
 	Permissions int `mapstructure:"permissions"`
-	// consume timeout
-}
 
-func (c *GlobalCfg) InitDefaults() {
-	if c.Permissions == 0 {
-		c.Permissions = 0777
-	}
-}
-
-type Config struct {
+	// local
 	File     string `mapstructure:"file"`
 	Priority int    `mapstructure:"priority"`
 	Prefetch int    `mapstructure:"prefetch"`
 }
 
-func (c *Config) InitDefaults() {
+func (c *config) InitDefaults() {
 	if c.File == "" {
 		c.File = "rr.db"
 	}
@@ -35,5 +27,9 @@ func (c *Config) InitDefaults() {
 
 	if c.Prefetch == 0 {
 		c.Prefetch = 1000
+	}
+
+	if c.Permissions == 0 {
+		c.Permissions = 0777
 	}
 }

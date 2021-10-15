@@ -13,11 +13,10 @@ services:
 
   nats:
     image: nats:latest
-    expose:
-      - "4222"
+    command:
+      - "-js"
     ports:
-      - "8222:8222"
-      - "4222:4222"
+      - "127.0.0.1:4222:4222"
 
   redis2:
     image: redis:6

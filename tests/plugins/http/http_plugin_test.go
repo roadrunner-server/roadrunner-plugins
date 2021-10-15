@@ -304,6 +304,7 @@ func xsendfile(t *testing.T) {
 	require.NoError(t, err)
 	require.Equal(t, file, b)
 	require.NoError(t, resp.Body.Close())
+	_, _ = io.Discard.Write(file)
 }
 
 func TestHTTPNoConfigSection(t *testing.T) {

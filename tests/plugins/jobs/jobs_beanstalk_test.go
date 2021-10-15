@@ -487,21 +487,126 @@ func TestBeanstalkNoGlobalSection(t *testing.T) {
 	require.Error(t, err)
 }
 
+func TestBeanstalkRespond(t *testing.T) {
+	cont, err := endure.NewContainer(nil, endure.SetLogLevel(endure.ErrorLevel), endure.GracefulShutdownTimeout(time.Second*60))
+	assert.NoError(t, err)
+
+	cfg := &config.Viper{
+		Path:   "beanstalk/.rr-beanstalk-respond.yaml",
+		Prefix: "rr",
+	}
+
+	controller := gomock.NewController(t)
+	mockLogger := mocks.NewMockLogger(controller)
+
+	// general
+	mockLogger.EXPECT().Debug("worker destructed", "pid", gomock.Any()).AnyTimes()
+	mockLogger.EXPECT().Debug("worker constructed", "pid", gomock.Any()).AnyTimes()
+	mockLogger.EXPECT().Debug("Started RPC service", "address", "tcp://127.0.0.1:6001", "plugins", gomock.Any()).Times(1)
+
+	mockLogger.EXPECT().Error("beanstalk reserve", "error", gomock.Any()).AnyTimes()
+	mockLogger.EXPECT().Error("beanstalk unpack item", "error", gomock.Any()).MinTimes(1)
+
+	mockLogger.EXPECT().Debug("job pushed to the queue", "start", gomock.Any(), "elapsed", gomock.Any()).MinTimes(1)
+	mockLogger.EXPECT().Debug("job processing started", "start", gomock.Any(), "elapsed", gomock.Any()).MinTimes(1)
+	mockLogger.EXPECT().Debug("job processed without errors", "ID", gomock.Any(), "start", gomock.Any(), "elapsed", gomock.Any()).MinTimes(1)
+
+	mockLogger.EXPECT().Debug("pipeline active", "pipeline", "test-3", "start", gomock.Any(), "elapsed", gomock.Any()).Times(1)
+	mockLogger.EXPECT().Debug("pipeline active", "pipeline", "test-1", "start", gomock.Any(), "elapsed", gomock.Any()).Times(1)
+
+	mockLogger.EXPECT().Debug("beanstalk reserve timeout", "warn", "reserve-with-timeout").AnyTimes()
+
+	mockLogger.EXPECT().Debug("pipeline stopped", "pipeline", "test-3", "start", gomock.Any(), "elapsed", gomock.Any()).Times(1)
+	mockLogger.EXPECT().Debug("pipeline stopped", "pipeline", "test-1", "start", gomock.Any(), "elapsed", gomock.Any()).Times(1)
+	mockLogger.EXPECT().Debug("beanstalk listener stopped").AnyTimes()
+
+	err = cont.RegisterAll(
+		cfg,
+		&server.Plugin{},
+		&rpcPlugin.Plugin{},
+		mockLogger,
+		&jobs.Plugin{},
+		&resetter.Plugin{},
+		&informer.Plugin{},
+		&beanstalk.Plugin{},
+	)
+	assert.NoError(t, err)
+
+	err = cont.Init()
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	ch, err := cont.Serve()
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	sig := make(chan os.Signal, 1)
+	signal.Notify(sig, os.Interrupt, syscall.SIGINT, syscall.SIGTERM)
+
+	wg := &sync.WaitGroup{}
+	wg.Add(1)
+
+	stopCh := make(chan struct{}, 1)
+
+	go func() {
+		defer wg.Done()
+		for {
+			select {
+			case e := <-ch:
+				assert.Fail(t, "error", e.Error.Error())
+				err = cont.Stop()
+				if err != nil {
+					assert.FailNow(t, "error", err.Error())
+				}
+			case <-sig:
+				err = cont.Stop()
+				if err != nil {
+					assert.FailNow(t, "error", err.Error())
+				}
+				return
+			case <-stopCh:
+				// timeout
+				err = cont.Stop()
+				if err != nil {
+					assert.FailNow(t, "error", err.Error())
+				}
+				return
+			}
+		}
+	}()
+
+	time.Sleep(time.Second * 3)
+
+	t.Run("DeclareBeanstalkPipeline", declareBeanstalkPipe)
+	t.Run("ConsumeBeanstalkPipeline", resumePipes("test-3"))
+	t.Run("PushBeanstalkPipeline", pushToPipe("test-3"))
+	time.Sleep(time.Second)
+	t.Run("DestroyBeanstalkPipeline", destroyPipelines("test-3"))
+	t.Run("DestroyBeanstalkPipeline", destroyPipelines("test-1"))
+
+	time.Sleep(time.Second * 5)
+	stopCh <- struct{}{}
+	wg.Wait()
+	time.Sleep(time.Second)
+}
+
 func declareBeanstalkPipe(t *testing.T) {
 	conn, err := net.Dial("tcp", "127.0.0.1:6001")
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	client := rpc.NewClientWithCodec(goridgeRpc.NewClientCodec(conn))
 
 	pipe := &jobsv1beta.DeclareRequest{Pipeline: map[string]string{
 		"driver":          "beanstalk",
 		"name":            "test-3",
 		"tube":            "default",
-		"reserve_timeout": "1",
+		"reserve_timeout": "60s",
 		"priority":        "3",
 		"tube_priority":   "10",
 	}}
 
 	er := &jobsv1beta.Empty{}
 	err = client.Call("jobs.Declare", pipe, er)
-	assert.NoError(t, err)
+	require.NoError(t, err)
 }

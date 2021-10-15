@@ -3,6 +3,7 @@ package jobs
 import (
 	"time"
 
+	"github.com/spiral/roadrunner-plugins/v2/internal/common/jobs"
 	"github.com/spiral/roadrunner/v2/events"
 )
 
@@ -46,11 +47,12 @@ func (p *Plugin) listener() { //nolint:gocognit
 							Elapsed: time.Since(start),
 						})
 
-						errNack := jb.Nack()
+						p.log.Error("job marshal context", "error", err)
+
+						errNack := jb.(jobs.Acknowledger).Nack()
 						if errNack != nil {
 							p.log.Error("negatively acknowledge failed", "error", errNack)
 						}
-						p.log.Error("job marshal context", "error", err)
 						continue
 					}
 
@@ -69,13 +71,25 @@ func (p *Plugin) listener() { //nolint:gocognit
 							Start:   start,
 							Elapsed: time.Since(start),
 						})
+						if _, ok := jb.(jobs.Acknowledger); !ok {
+							p.log.Error("job execute failed, job is not a Acknowledger, skipping Ack/Nack")
+							p.putPayload(exec)
+							continue
+						}
 						// RR protocol level error, Nack the job
-						errNack := jb.Nack()
+						errNack := jb.(jobs.Acknowledger).Nack()
 						if errNack != nil {
 							p.log.Error("negatively acknowledge failed", "error", errNack)
 						}
 
 						p.log.Error("job execute failed", "error", err)
+						p.putPayload(exec)
+						jb = nil
+						continue
+					}
+
+					if _, ok := jb.(jobs.Acknowledger); !ok {
+						// can't acknowledge, just continue
 						p.putPayload(exec)
 						continue
 					}
@@ -83,7 +97,7 @@ func (p *Plugin) listener() { //nolint:gocognit
 					// if response is nil or body is nil, just acknowledge the job
 					if resp == nil || resp.Body == nil {
 						p.putPayload(exec)
-						err = jb.Ack()
+						err = jb.(jobs.Acknowledger).Ack()
 						if err != nil {
 							p.events.Push(events.JobEvent{
 								Event:   events.EventJobError,
@@ -93,6 +107,7 @@ func (p *Plugin) listener() { //nolint:gocognit
 								Elapsed: time.Since(start),
 							})
 							p.log.Error("acknowledge error, job might be missed", "error", err)
+							jb = nil
 							continue
 						}
 
@@ -103,11 +118,12 @@ func (p *Plugin) listener() { //nolint:gocognit
 							Elapsed: time.Since(start),
 						})
 
+						jb = nil
 						continue
 					}
 
 					// handle the response protocol
-					err = handleResponse(resp.Body, jb, p.log)
+					err = p.respHandler.Handle(resp, jb.(jobs.Acknowledger))
 					if err != nil {
 						p.events.Push(events.JobEvent{
 							Event:   events.EventJobError,
@@ -117,13 +133,15 @@ func (p *Plugin) listener() { //nolint:gocognit
 							Elapsed: time.Since(start),
 						})
 						p.putPayload(exec)
-						errNack := jb.Nack()
+						errNack := jb.(jobs.Acknowledger).Nack()
 						if errNack != nil {
 							p.log.Error("negatively acknowledge failed, job might be lost", "root error", err, "error nack", errNack)
+							jb = nil
 							continue
 						}
 
 						p.log.Error("job negatively acknowledged", "error", err)
+						jb = nil
 						continue
 					}
 
@@ -136,6 +154,7 @@ func (p *Plugin) listener() { //nolint:gocognit
 
 					// return payload
 					p.putPayload(exec)
+					jb = nil
 				}
 			}
 		}()

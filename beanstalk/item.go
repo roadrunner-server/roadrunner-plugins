@@ -8,6 +8,7 @@ import (
 
 	"github.com/beanstalkd/go-beanstalk"
 	json "github.com/json-iterator/go"
+	"github.com/spiral/errors"
 	"github.com/spiral/roadrunner-plugins/v2/jobs/job"
 	"github.com/spiral/roadrunner/v2/utils"
 )
@@ -42,9 +43,10 @@ type Options struct {
 	Delay int64 `json:"delay,omitempty"`
 
 	// Private ================
-	id        uint64
-	conn      *beanstalk.Conn
-	requeueFn func(context.Context, *Item) error
+	id          uint64
+	conn        *beanstalk.Conn
+	requeueFn   func(context.Context, *Item) error
+	handleTPush func([]byte, string) error
 }
 
 // DelayDuration returns delay duration in a form of time.Duration.
@@ -111,6 +113,15 @@ func (i *Item) Requeue(headers map[string][]string, delay int64) error {
 	return nil
 }
 
+func (i *Item) Respond(data []byte, queue string) error {
+	const op = errors.Op("beanstalk_respond")
+	err := i.Options.handleTPush(data, queue)
+	if err != nil {
+		return errors.E(op, err)
+	}
+	return nil
+}
+
 func fromJob(job *job.Job) *Item {
 	return &Item{
 		Job:     job.Job,
@@ -125,14 +136,15 @@ func fromJob(job *job.Job) *Item {
 	}
 }
 
-func (j *consumer) unpack(id uint64, data []byte, out *Item) error {
+func (c *consumer) unpack(id uint64, data []byte, out *Item) error {
 	err := gob.NewDecoder(bytes.NewBuffer(data)).Decode(out)
 	if err != nil {
 		return err
 	}
-	out.Options.conn = j.pool.conn
+	out.Options.conn = c.pool.conn
 	out.Options.id = id
-	out.Options.requeueFn = j.handleItem
+	out.Options.requeueFn = c.handleItem
+	out.Options.handleTPush = c.handleTPush
 
 	return nil
 }
