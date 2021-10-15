@@ -168,6 +168,41 @@ server:
 ```
 The script should start a worker as the last command. For the `pipes`, scripts should not contain programs, which can close `stdin`, `stdout` or `stderr`.
 
+- ✏️ Nats jobs driver support - [PR](https://github.com/spiral/roadrunner-plugins/pull/68).
+```yaml
+nats:
+  addr: "demo.nats.io"
+
+jobs:
+  num_pollers: 10
+  pipeline_size: 100000
+  pool:
+    num_workers: 10
+    max_jobs: 0
+    allocate_timeout: 60s
+    destroy_timeout: 60s
+
+  pipelines:
+    test-1:
+      driver: nats
+      prefetch: 100
+      subject: "default"
+      stream: "foo"
+      deliver_new: "true"
+      rate_limit: 100
+      delete_stream_on_stop: false
+      delete_after_ack: false
+      priority: 2
+
+  consume: [ "test-1" ]
+```
+- Driver uses NATS JetStream API and not compatible with non-js API.
+
+
+- ✏️ Response API for the NATS, RabbitMQ, SQS and Beanstalk drivers. This means, that you'll be able to respond from the worker to a different queue.  
+  Limitations:
+   - To send a response to the queue maintained by the RR, you should send it as a `Job` type. There is no limitation for the other queues (tubes, subjects) responses.
+   - Driver uses the same endpoint (address) to send the response as specified in the configuration.
 
 ## 🩹 Fixes:
 
@@ -181,6 +216,7 @@ The script should start a worker as the last command. For the `pipes`, scripts s
 - 📦 roadrunner `v2.5.0`
 - 📦 roadrunner-plugins `v2.5.0`
 - 📦 roadrunner-temporal `v1.0.10`
+- 📦 endure `v1.0.5`
 - 📦 goridge `v3.2.2`
 
 
