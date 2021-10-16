@@ -110,11 +110,11 @@ broadcast:
 ```yaml
 # Logs plugin settings
 logs:
-    (....)
-    # Line ending
-    #
-    # Default: "\n".
-    line_ending: "\n"
+  (....)
+  # Line ending
+  #
+  # Default: "\n".
+  line_ending: "\n"
 ```
 
 - ✏️ [Access log support](https://github.com/spiral/roadrunner-plugins/issues/34) at the `Info` log level.
@@ -132,7 +132,7 @@ http:
     destroy_timeout: 60s
 ```
 - ✏️ HTTP middleware to handle `X-Sendfile` [header](https://github.com/spiral/roadrunner-plugins/issues/9).
-Middleware reads the file in 10mb chunks. If the file size is smaller than 10mb, the middleware fits its buffer to the file size.
+  Middleware reads the file in 10mb chunks. If the file size is smaller than 10mb, the middleware fits the buffer to the file size.
 ```yaml
 http:
   address: 127.0.0.1:44444
@@ -199,10 +199,10 @@ jobs:
 - Driver uses NATS JetStream API and not compatible with non-js API.
 
 
-- ✏️ Response API for the NATS, RabbitMQ, SQS and Beanstalk drivers. This means, that you'll be able to respond from the worker to a different queue.  
+- ✏️ Response API for the NATS, RabbitMQ, SQS and Beanstalk drivers. This means, that you'll be able to respond to a specified in the response queue.  
   Limitations:
-   - To send a response to the queue maintained by the RR, you should send it as a `Job` type. There is no limitation for the other queues (tubes, subjects) responses.
-   - Driver uses the same endpoint (address) to send the response as specified in the configuration.
+  - To send a response to the queue maintained by the RR, you should send it as a `Job` type. There is no limitation for the other queues (tubes, subjects) responses.
+  - Driver uses the same endpoint (address) to send the response as specified in the configuration.
 
 ## 🩹 Fixes:
 
