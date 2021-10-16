@@ -28,21 +28,21 @@ jobs:
     test-1:
       driver: nats
       prefetch: 100
-      subject: "default"
-      stream: "foo"
-      deliver_new: "true"
+      subject: default
+      stream: foo
+      deliver_new: true
       rate_limit: 100
-      delete_after_ack: "true"
+      delete_after_ack: true
       priority: 1
 
     test-2:
       driver: nats
       prefetch: 100
-      subject: "default2"
-      stream: "foo2"
+      subject: default2
+      stream: foo2
       rate_limit: 100
-      deliver_new: "true"
-      delete_after_ack: "true"
+      deliver_new: true
+      delete_after_ack: true
       priority: 2
 
 
