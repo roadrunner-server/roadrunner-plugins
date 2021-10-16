@@ -131,5 +131,5 @@ func TestAllPluginsInit(t *testing.T) {
 	wg.Wait()
 
 	time.Sleep(time.Second)
-	require.NoError(t, os.RemoveAll("rr-kv.db"))
+	require.NoError(t, os.RemoveAll("rr.db"))
 }
