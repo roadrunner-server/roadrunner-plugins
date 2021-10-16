@@ -31,14 +31,14 @@ require (
 	github.com/spiral/endure v1.0.6
 	github.com/spiral/errors v1.0.12
 	github.com/spiral/goridge/v3 v3.2.2
-	github.com/spiral/roadrunner/v2 v2.5.0-beta.4
+	github.com/spiral/roadrunner/v2 v2.5.0-rc.1
 	// spiral
 	github.com/stretchr/testify v1.7.0
 	github.com/yookoala/gofast v0.6.0
 	go.etcd.io/bbolt v1.3.6
 	go.uber.org/zap v1.19.1
-	golang.org/x/net v0.0.0-20211014222326-fd004c51d1d6
-	golang.org/x/sys v0.0.0-20211013075003-97ac67df715c
+	golang.org/x/net v0.0.0-20211015210444-4f30a5c0130f
+	golang.org/x/sys v0.0.0-20211015200801-69063c4bb744
 	google.golang.org/grpc v1.41.0
 	google.golang.org/protobuf v1.27.1
 	gopkg.in/natefinch/lumberjack.v2 v2.0.0
@@ -99,7 +99,7 @@ require (
 	golang.org/x/sync v0.0.0-20210220032951-036812b2e83c // indirect
 	golang.org/x/text v0.3.7 // indirect
 	golang.org/x/tools v0.1.7 // indirect
-	google.golang.org/genproto v0.0.0-20211015135405-485ec31e706e // indirect
+	google.golang.org/genproto v0.0.0-20211016002631-37fc39342514 // indirect
 	gopkg.in/ini.v1 v1.63.2 // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect
 	gopkg.in/yaml.v3 v3.0.0-20210107192922-496545a6307b // indirect
