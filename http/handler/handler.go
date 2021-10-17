@@ -133,24 +133,7 @@ func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 	// validating request size
 	if h.maxRequestSize != 0 {
-		const op = errors.Op("http_handler_max_size")
-		length := r.Header.Get("Content-Length")
-		if length != "" {
-			// try to parse the value from the `content-length` header
-			size, err := strconv.ParseInt(length, 10, 64)
-			if err != nil {
-				// if got an error while parsing -> assign 500 code to the writer and return
-				http.Error(w, "", 500)
-				h.sendEvent(ErrorEvent{Error: errors.E(op, errors.Str("error while parsing value from the `content-length` header")), start: start, elapsed: time.Since(start)})
-				return
-			}
-
-			if size > int64(h.maxRequestSize) {
-				h.sendEvent(ErrorEvent{Error: errors.E(op, errors.Str("request body max size is exceeded")), start: start, elapsed: time.Since(start)})
-				http.Error(w, errors.E(op, errors.Str("request body max size is exceeded")).Error(), http.StatusBadRequest)
-				return
-			}
-		}
+		h.checkReqSize(r.Header.Get("Content-Length"), w, start)
 	}
 
 	req := h.getReq(r)
@@ -180,14 +163,14 @@ func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 	err = req.Payload(pld)
 	if err != nil {
-		h.handleError(w, r, start, err)
+		h.handleError(w, start, err)
 		h.sendEvent(ErrorEvent{Error: errors.E(op, err), start: start, elapsed: time.Since(start)})
 		return
 	}
 
 	wResp, err := h.pool.Exec(pld)
 	if err != nil {
-		h.handleError(w, r, start, err)
+		h.handleError(w, start, err)
 		h.sendEvent(ErrorEvent{Error: errors.E(op, err), start: start, elapsed: time.Since(start)})
 		return
 	}
@@ -197,18 +180,39 @@ func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 	err = NewResponse(wResp, rsp)
 	if err != nil {
-		h.handleError(w, r, start, err)
+		h.handleError(w, start, err)
 		h.sendEvent(ErrorEvent{Error: errors.E(op, err), start: start, elapsed: time.Since(start)})
 		return
 	}
 
 	err = rsp.Write(w)
 	if err != nil {
-		http.Error(w, errors.E(op, err).Error(), 500)
+		h.handleError(w, start, err)
 		h.sendEvent(ErrorEvent{Error: errors.E(op, err), start: start, elapsed: time.Since(start)})
+		return
 	}
 
 	h.sendLog(r, rsp, req, start)
+}
+
+func (h *Handler) checkReqSize(length string, w http.ResponseWriter, start time.Time) {
+	const op = errors.Op("http_handler_max_size")
+	if length != "" {
+		// try to parse the value from the `content-length` header
+		size, err := strconv.ParseInt(length, 10, 64)
+		if err != nil {
+			// if got an error while parsing -> assign 500 code to the writer and return
+			http.Error(w, "", 500)
+			h.sendEvent(ErrorEvent{Error: errors.E(op, errors.Str("error while parsing value from the `content-length` header")), start: start, elapsed: time.Since(start)})
+			return
+		}
+
+		if size > int64(h.maxRequestSize) {
+			h.sendEvent(ErrorEvent{Error: errors.E(op, errors.Str("request body max size is exceeded")), start: start, elapsed: time.Since(start)})
+			http.Error(w, errors.E(op, errors.Str("request body max size is exceeded")).Error(), http.StatusBadRequest)
+			return
+		}
+	}
 }
 
 // sendLog sends log event (access log or regular debug log)
@@ -249,7 +253,7 @@ func (h *Handler) sendLog(r *http.Request, rsp *Response, req *Request, start ti
 }
 
 // handleError will handle internal RR errors and return 500
-func (h *Handler) handleError(w http.ResponseWriter, r *http.Request, start time.Time, err error) {
+func (h *Handler) handleError(w http.ResponseWriter, start time.Time, err error) {
 	const op = errors.Op("handle_error")
 	// internal error types, user should not see them
 	if errors.Is(errors.SoftJob, err) ||
