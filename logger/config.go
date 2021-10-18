@@ -103,20 +103,44 @@ func (cfg *Config) BuildLogger() (*zap.Logger, error) {
 	case off, none:
 		return zap.NewNop(), nil
 	case production:
-		zCfg = zap.NewProductionConfig()
+		zCfg = zap.Config{
+			Level:       zap.NewAtomicLevelAt(zap.InfoLevel),
+			Development: false,
+			Sampling: &zap.SamplingConfig{
+				Initial:    100,
+				Thereafter: 100,
+			},
+			Encoding: "json",
+			EncoderConfig: zapcore.EncoderConfig{
+				TimeKey:        "ts",
+				LevelKey:       "level",
+				NameKey:        "logger",
+				CallerKey:      zapcore.OmitKey,
+				FunctionKey:    zapcore.OmitKey,
+				MessageKey:     "msg",
+				StacktraceKey:  zapcore.OmitKey,
+				LineEnding:     cfg.LineEnding,
+				EncodeLevel:    zapcore.LowercaseLevelEncoder,
+				EncodeTime:     zapcore.EpochTimeEncoder,
+				EncodeDuration: zapcore.SecondsDurationEncoder,
+				EncodeCaller:   zapcore.ShortCallerEncoder,
+			},
+			OutputPaths:      []string{"stderr"},
+			ErrorOutputPaths: []string{"stderr"},
+		}
 	case development:
 		zCfg = zap.Config{
 			Level:       zap.NewAtomicLevelAt(zap.DebugLevel),
 			Development: true,
 			Encoding:    "console",
 			EncoderConfig: zapcore.EncoderConfig{
-				TimeKey:        "T",
-				LevelKey:       "L",
-				NameKey:        "N",
-				CallerKey:      "C",
+				TimeKey:        "ts",
+				LevelKey:       "level",
+				NameKey:        "logger",
+				CallerKey:      zapcore.OmitKey,
 				FunctionKey:    zapcore.OmitKey,
-				MessageKey:     "M",
-				StacktraceKey:  "S",
+				MessageKey:     "msg",
+				StacktraceKey:  zapcore.OmitKey,
 				LineEnding:     cfg.LineEnding,
 				EncodeLevel:    ColoredLevelEncoder,
 				EncodeName:     ColoredNameEncoder,
@@ -147,10 +171,10 @@ func (cfg *Config) BuildLogger() (*zap.Logger, error) {
 				TimeKey:        "T",
 				LevelKey:       "L",
 				NameKey:        "N",
-				CallerKey:      "C",
+				CallerKey:      zapcore.OmitKey,
 				FunctionKey:    zapcore.OmitKey,
 				MessageKey:     "M",
-				StacktraceKey:  "S",
+				StacktraceKey:  zapcore.OmitKey,
 				LineEnding:     cfg.LineEnding,
 				EncodeLevel:    ColoredLevelEncoder,
 				EncodeName:     ColoredNameEncoder,

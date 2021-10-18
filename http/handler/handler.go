@@ -133,25 +133,38 @@ func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 	// validating request size
 	if h.maxRequestSize != 0 {
-		err := h.checkReqSize(r.Header.Get("Content-Length"), w, start)
-		if err != nil {
-			h.sendEvent(ErrorEvent{Error: errors.E(op, err), start: start, elapsed: time.Since(start)})
-			return
+		const op = errors.Op("http_handler_max_size")
+		if length := r.Header.Get("content-length"); length != "" {
+			// try to parse the value from the `content-length` header
+			size, err := strconv.ParseInt(length, 10, 64)
+			if err != nil {
+				// if got an error while parsing -> assign 500 code to the writer and return
+				http.Error(w, "", 500)
+				h.sendEvent(ErrorEvent{Error: errors.E(op, errors.Str("error while parsing value from the `content-length` header")), start: start, elapsed: time.Since(start)})
+				return
+			}
+
+			if size > int64(h.maxRequestSize) {
+				h.sendEvent(ErrorEvent{Error: errors.E(op, errors.Str("request body max size is exceeded")), start: start, elapsed: time.Since(start)})
+				http.Error(w, errors.E(op, errors.Str("request body max size is exceeded")).Error(), http.StatusBadRequest)
+				return
+			}
 		}
 	}
 
 	req := h.getReq(r)
-	defer h.putReq(req)
 
 	err := request(r, req, h.uploads)
 	if err != nil {
 		// if pipe is broken, there is no sense to write the header
 		// in this case we just report about error
 		if err == errEPIPE {
+			h.putReq(req)
 			h.sendEvent(ErrorEvent{Error: err, start: start, elapsed: time.Since(start)})
 			return
 		}
 
+		h.putReq(req)
 		http.Error(w, errors.E(op, err).Error(), 500)
 		h.sendEvent(ErrorEvent{Error: errors.E(op, err), start: start, elapsed: time.Since(start)})
 		return
@@ -160,13 +173,14 @@ func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	// proxy IP resolution
 	h.resolveIP(req)
 	req.Open(h.log)
-	defer req.Close(h.log)
-
+	// get payload from the pool
 	pld := h.getPld()
-	defer h.putPld(pld)
 
 	err = req.Payload(pld)
 	if err != nil {
+		req.Close(h.log)
+		h.putReq(req)
+		h.putPld(pld)
 		h.handleError(w, start, err)
 		h.sendEvent(ErrorEvent{Error: errors.E(op, err), start: start, elapsed: time.Since(start)})
 		return
@@ -174,16 +188,22 @@ func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 	wResp, err := h.pool.Exec(pld)
 	if err != nil {
+		req.Close(h.log)
+		h.putReq(req)
+		h.putPld(pld)
 		h.handleError(w, start, err)
 		h.sendEvent(ErrorEvent{Error: errors.E(op, err), start: start, elapsed: time.Since(start)})
 		return
 	}
 
 	rsp := h.getRsp()
-	defer h.putRsp(rsp)
 
 	err = NewResponse(wResp, rsp)
 	if err != nil {
+		req.Close(h.log)
+		h.putReq(req)
+		h.putRsp(rsp)
+		h.putPld(pld)
 		h.handleError(w, start, err)
 		h.sendEvent(ErrorEvent{Error: errors.E(op, err), start: start, elapsed: time.Since(start)})
 		return
@@ -191,32 +211,22 @@ func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 	err = rsp.Write(w)
 	if err != nil {
+		req.Close(h.log)
+		h.putReq(req)
+		h.putRsp(rsp)
+		h.putPld(pld)
 		h.handleError(w, start, err)
 		h.sendEvent(ErrorEvent{Error: errors.E(op, err), start: start, elapsed: time.Since(start)})
 		return
 	}
 
-	h.sendLog(r, rsp, req, start)
-}
-
-func (h *Handler) checkReqSize(length string, w http.ResponseWriter, start time.Time) error {
-	const op = errors.Op("http_handler_max_size")
-	if length != "" {
-		// try to parse the value from the `content-length` header
-		size, err := strconv.ParseInt(length, 10, 64)
-		if err != nil {
-			// if got an error while parsing -> assign 500 code to the writer and return
-			http.Error(w, "", 500)
-			return errors.Str("error while parsing value from the `content-length` header")
-		}
-
-		if size > int64(h.maxRequestSize) {
-			http.Error(w, errors.E(op, errors.Str("request body max size is exceeded")).Error(), http.StatusBadRequest)
-			return errors.Str("request body max size is exceeded")
-		}
-	}
-
-	return nil
+	go func() {
+		h.sendLog(r, rsp, req, start)
+		h.putReq(req)
+		h.putRsp(rsp)
+		h.putPld(pld)
+		req.Close(h.log)
+	}()
 }
 
 // sendLog sends log event (access log or regular debug log)

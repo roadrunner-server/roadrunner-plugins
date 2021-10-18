@@ -159,7 +159,6 @@ func (p *Plugin) Serve() chan error {
 
 func (p *Plugin) serve(errCh chan error) {
 	var err error
-	const op = errors.Op("http_plugin_serve")
 	p.pool, err = p.server.NewWorkerPool(context.Background(), &pool.Config{
 		Debug:           p.cfg.Pool.Debug,
 		NumWorkers:      p.cfg.Pool.NumWorkers,
@@ -169,7 +168,7 @@ func (p *Plugin) serve(errCh chan error) {
 		Supervisor:      p.cfg.Pool.Supervisor,
 	}, p.cfg.Env)
 	if err != nil {
-		errCh <- errors.E(op, err)
+		errCh <- err
 		return
 	}
 
@@ -183,7 +182,7 @@ func (p *Plugin) serve(errCh chan error) {
 		p.cfg.AccessLogs,
 	)
 	if err != nil {
-		errCh <- errors.E(op, err)
+		errCh <- err
 		return
 	}
 
@@ -218,14 +217,14 @@ func (p *Plugin) serve(errCh chan error) {
 		if p.cfg.SSLConfig.RootCA != "" {
 			err = p.appendRootCa()
 			if err != nil {
-				errCh <- errors.E(op, err)
+				errCh <- err
 				return
 			}
 		}
 
 		if p.cfg.EnableACME() {
 			// for the first time - generate the certs
-			tlsCfg, err := ObtainCertificates(
+			tlsCfg, errObt := ObtainCertificates(
 				p.cfg.SSLConfig.Acme.CacheDir,
 				p.cfg.SSLConfig.Acme.Email,
 				p.cfg.SSLConfig.Acme.ChallengeType,
@@ -235,8 +234,8 @@ func (p *Plugin) serve(errCh chan error) {
 				p.cfg.SSLConfig.Acme.AltTLSALPNPort,
 			)
 
-			if err != nil {
-				errCh <- err
+			if errObt != nil {
+				errCh <- errObt
 				return
 			}
 
@@ -246,8 +245,8 @@ func (p *Plugin) serve(errCh chan error) {
 
 		// if HTTP2Config not nil
 		if p.cfg.HTTP2Config != nil {
-			if err := p.initHTTP2(); err != nil {
-				errCh <- errors.E(op, err)
+			if err = p.initHTTP2(); err != nil {
+				errCh <- err
 				return
 			}
 		}
