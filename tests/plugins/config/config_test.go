@@ -89,6 +89,50 @@ func TestConfigOverwriteFail(t *testing.T) {
 	assert.Error(t, err)
 }
 
+func TestConfigOverwriteFail_2(t *testing.T) {
+	container, err := endure.NewContainer(nil, endure.RetryOnFail(false), endure.SetLogLevel(endure.ErrorLevel))
+	if err != nil {
+		t.Fatal(err)
+	}
+	vp := &config.Viper{}
+	vp.Path = "configs/.rr.yaml"
+	vp.Prefix = "rr"
+	vp.Flags = []string{"rpc.listen="}
+
+	err = container.RegisterAll(
+		&logger.ZapLogger{},
+		&rpc.Plugin{},
+		vp,
+		&Foo2{},
+	)
+	assert.NoError(t, err)
+
+	err = container.Init()
+	assert.Error(t, err)
+}
+
+func TestConfigOverwriteFail_3(t *testing.T) {
+	container, err := endure.NewContainer(nil, endure.RetryOnFail(false), endure.SetLogLevel(endure.ErrorLevel))
+	if err != nil {
+		t.Fatal(err)
+	}
+	vp := &config.Viper{}
+	vp.Path = "configs/.rr.yaml"
+	vp.Prefix = "rr"
+	vp.Flags = []string{"="}
+
+	err = container.RegisterAll(
+		&logger.ZapLogger{},
+		&rpc.Plugin{},
+		vp,
+		&Foo2{},
+	)
+	assert.NoError(t, err)
+
+	err = container.Init()
+	assert.Error(t, err)
+}
+
 func TestConfigOverwriteValid(t *testing.T) {
 	container, err := endure.NewContainer(nil, endure.RetryOnFail(false), endure.SetLogLevel(endure.ErrorLevel))
 	if err != nil {

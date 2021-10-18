@@ -143,6 +143,17 @@ func parseFlag(flag string) (string, string, error) {
 	}
 
 	parts := strings.SplitN(strings.TrimLeft(flag, " \"'`"), "=", 2)
+	if len(parts) < 2 {
+		return "", "", errors.Str("usage: -o key=value")
+	}
+
+	if parts[0] == "" {
+		return "", "", errors.Str("key should not be empty")
+	}
+
+	if parts[1] == "" {
+		return "", "", errors.Str("value should not be empty")
+	}
 
 	return strings.Trim(parts[0], " \n\t"), parseValue(strings.Trim(parts[1], " \n\t")), nil
 }
