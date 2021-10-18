@@ -153,17 +153,18 @@ func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 
 	req := h.getReq(r)
-	defer h.putReq(req)
 
 	err := request(r, req, h.uploads)
 	if err != nil {
 		// if pipe is broken, there is no sense to write the header
 		// in this case we just report about error
 		if err == errEPIPE {
+			h.putReq(req)
 			h.sendEvent(ErrorEvent{Error: err, start: start, elapsed: time.Since(start)})
 			return
 		}
 
+		h.putReq(req)
 		http.Error(w, errors.E(op, err).Error(), 500)
 		h.sendEvent(ErrorEvent{Error: errors.E(op, err), start: start, elapsed: time.Since(start)})
 		return
@@ -172,13 +173,13 @@ func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	// proxy IP resolution
 	h.resolveIP(req)
 	req.Open(h.log)
-	defer req.Close(h.log)
-
 	pld := h.getPld()
-	defer h.putPld(pld)
 
 	err = req.Payload(pld)
 	if err != nil {
+		req.Close(h.log)
+		h.putReq(req)
+		h.putPld(pld)
 		h.handleError(w, start, err)
 		h.sendEvent(ErrorEvent{Error: errors.E(op, err), start: start, elapsed: time.Since(start)})
 		return
@@ -186,16 +187,22 @@ func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 	wResp, err := h.pool.Exec(pld)
 	if err != nil {
+		req.Close(h.log)
+		h.putReq(req)
+		h.putPld(pld)
 		h.handleError(w, start, err)
 		h.sendEvent(ErrorEvent{Error: errors.E(op, err), start: start, elapsed: time.Since(start)})
 		return
 	}
 
 	rsp := h.getRsp()
-	defer h.putRsp(rsp)
 
 	err = NewResponse(wResp, rsp)
 	if err != nil {
+		req.Close(h.log)
+		h.putReq(req)
+		h.putRsp(rsp)
+		h.putPld(pld)
 		h.handleError(w, start, err)
 		h.sendEvent(ErrorEvent{Error: errors.E(op, err), start: start, elapsed: time.Since(start)})
 		return
@@ -203,12 +210,22 @@ func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 	err = rsp.Write(w)
 	if err != nil {
+		req.Close(h.log)
+		h.putReq(req)
+		h.putRsp(rsp)
+		h.putPld(pld)
 		h.handleError(w, start, err)
 		h.sendEvent(ErrorEvent{Error: errors.E(op, err), start: start, elapsed: time.Since(start)})
 		return
 	}
 
-	h.sendLog(r, rsp, req, start)
+	go func() {
+		h.sendLog(r, rsp, req, start)
+		h.putReq(req)
+		h.putRsp(rsp)
+		h.putPld(pld)
+		req.Close(h.log)
+	}()
 }
 
 // sendLog sends log event (access log or regular debug log)
