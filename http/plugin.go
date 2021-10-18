@@ -224,7 +224,7 @@ func (p *Plugin) serve(errCh chan error) {
 
 		if p.cfg.EnableACME() {
 			// for the first time - generate the certs
-			tlsCfg, err := ObtainCertificates(
+			tlsCfg, errObt := ObtainCertificates(
 				p.cfg.SSLConfig.Acme.CacheDir,
 				p.cfg.SSLConfig.Acme.Email,
 				p.cfg.SSLConfig.Acme.ChallengeType,
@@ -234,8 +234,8 @@ func (p *Plugin) serve(errCh chan error) {
 				p.cfg.SSLConfig.Acme.AltTLSALPNPort,
 			)
 
-			if err != nil {
-				errCh <- err
+			if errObt != nil {
+				errCh <- errObt
 				return
 			}
 
