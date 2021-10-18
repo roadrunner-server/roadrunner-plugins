@@ -173,6 +173,7 @@ func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	// proxy IP resolution
 	h.resolveIP(req)
 	req.Open(h.log)
+	// get payload from the pool
 	pld := h.getPld()
 
 	err = req.Payload(pld)
