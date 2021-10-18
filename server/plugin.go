@@ -127,8 +127,6 @@ func (p *Plugin) NewWorker(ctx context.Context, env Env, listeners ...events.Lis
 
 // NewWorkerPool issues new worker pool.
 func (p *Plugin) NewWorkerPool(ctx context.Context, opt *pool.Config, env Env, listeners ...events.Listener) (pool.Pool, error) {
-	const op = errors.Op("server_plugin_new_worker_pool")
-
 	spawnCmd := p.CmdFactory(env)
 	list := make([]events.Listener, 0, 2)
 	list = append(list, p.collectPoolEvents, p.collectWorkerEvents)
@@ -138,7 +136,7 @@ func (p *Plugin) NewWorkerPool(ctx context.Context, opt *pool.Config, env Env, l
 
 	pl, err := pool.Initialize(ctx, spawnCmd, p.factory, opt, pool.AddListeners(list...))
 	if err != nil {
-		return nil, errors.E(op, err)
+		return nil, err
 	}
 
 	return pl, nil

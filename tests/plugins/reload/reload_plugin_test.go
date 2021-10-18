@@ -580,7 +580,7 @@ func randomChangesInRecursiveDirs(t *testing.T) {
 	}
 
 	filenames := []string{
-		"file_", // should be update
+		"file_", // should be updated
 		"foo_",  // should be created
 		"bar_",  // should be created
 	}
