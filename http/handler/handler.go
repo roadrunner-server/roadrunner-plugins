@@ -133,10 +133,22 @@ func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 	// validating request size
 	if h.maxRequestSize != 0 {
-		err := h.checkReqSize(r.Header.Get("Content-Length"), w, start)
-		if err != nil {
-			h.sendEvent(ErrorEvent{Error: errors.E(op, err), start: start, elapsed: time.Since(start)})
-			return
+		const op = errors.Op("http_handler_max_size")
+		if length := r.Header.Get("content-length"); length != "" {
+			// try to parse the value from the `content-length` header
+			size, err := strconv.ParseInt(length, 10, 64)
+			if err != nil {
+				// if got an error while parsing -> assign 500 code to the writer and return
+				http.Error(w, "", 500)
+				h.sendEvent(ErrorEvent{Error: errors.E(op, errors.Str("error while parsing value from the `content-length` header")), start: start, elapsed: time.Since(start)})
+				return
+			}
+
+			if size > int64(h.maxRequestSize) {
+				h.sendEvent(ErrorEvent{Error: errors.E(op, errors.Str("request body max size is exceeded")), start: start, elapsed: time.Since(start)})
+				http.Error(w, errors.E(op, errors.Str("request body max size is exceeded")).Error(), http.StatusBadRequest)
+				return
+			}
 		}
 	}
 
@@ -197,26 +209,6 @@ func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 
 	h.sendLog(r, rsp, req, start)
-}
-
-func (h *Handler) checkReqSize(length string, w http.ResponseWriter, start time.Time) error {
-	const op = errors.Op("http_handler_max_size")
-	if length != "" {
-		// try to parse the value from the `content-length` header
-		size, err := strconv.ParseInt(length, 10, 64)
-		if err != nil {
-			// if got an error while parsing -> assign 500 code to the writer and return
-			http.Error(w, "", 500)
-			return errors.Str("error while parsing value from the `content-length` header")
-		}
-
-		if size > int64(h.maxRequestSize) {
-			http.Error(w, errors.E(op, errors.Str("request body max size is exceeded")).Error(), http.StatusBadRequest)
-			return errors.Str("request body max size is exceeded")
-		}
-	}
-
-	return nil
 }
 
 // sendLog sends log event (access log or regular debug log)
