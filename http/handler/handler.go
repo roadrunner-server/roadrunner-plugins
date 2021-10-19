@@ -134,7 +134,7 @@ func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	// validating request size
 	if h.maxRequestSize != 0 {
 		const op = errors.Op("http_handler_max_size")
-		if length := r.Header.Get("content-length"); length != "" {
+		if length := r.Header.Get(ContentLen); length != "" {
 			// try to parse the value from the `content-length` header
 			size, err := strconv.ParseInt(length, 10, 64)
 			if err != nil {
