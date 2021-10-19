@@ -31,7 +31,7 @@ require (
 	github.com/spiral/endure v1.0.6
 	github.com/spiral/errors v1.0.12
 	github.com/spiral/goridge/v3 v3.2.3
-	github.com/spiral/roadrunner/v2 v2.5.0-rc.2
+	github.com/spiral/roadrunner/v2 v2.5.0
 	// spiral
 	github.com/stretchr/testify v1.7.0
 	github.com/yookoala/gofast v0.6.0
@@ -99,7 +99,7 @@ require (
 	golang.org/x/sync v0.0.0-20210220032951-036812b2e83c // indirect
 	golang.org/x/text v0.3.7 // indirect
 	golang.org/x/tools v0.1.7 // indirect
-	google.golang.org/genproto v0.0.0-20211016002631-37fc39342514 // indirect
+	google.golang.org/genproto v0.0.0-20211018162055-cf77aa76bad2 // indirect
 	gopkg.in/ini.v1 v1.63.2 // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect
 	gopkg.in/yaml.v3 v3.0.0-20210107192922-496545a6307b // indirect

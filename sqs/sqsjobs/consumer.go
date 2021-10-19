@@ -1,4 +1,4 @@
-package sqs
+package sqsjobs
 
 import (
 	"context"
@@ -22,6 +22,10 @@ import (
 	"github.com/spiral/roadrunner/v2/events"
 	priorityqueue "github.com/spiral/roadrunner/v2/priority_queue"
 	jobState "github.com/spiral/roadrunner/v2/state/job"
+)
+
+const (
+	pluginName string = "sqs"
 )
 
 type consumer struct {

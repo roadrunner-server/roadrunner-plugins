@@ -252,6 +252,8 @@ func (p *Plugin) collectWorkerEvents(event interface{}) {
 			// stderr event is INFO level
 		case events.EventWorkerStderr:
 			p.log.Info(utils.AsString(we.Payload.([]byte)))
+		case events.EventWorkerWaitExit:
+			p.log.Debug("worker process exited", "reason", we.Payload)
 		}
 	}
 }
