@@ -169,39 +169,11 @@ func TestDurabilitySQS(t *testing.T) {
 		Prefix: "rr",
 	}
 
-	controller := gomock.NewController(t)
-	mockLogger := mocks.NewMockLogger(controller)
-
-	// general
-	mockLogger.EXPECT().Debug("worker destructed", "pid", gomock.Any()).AnyTimes()
-	mockLogger.EXPECT().Debug("worker constructed", "pid", gomock.Any()).AnyTimes()
-	mockLogger.EXPECT().Debug("Started RPC service", "address", "tcp://127.0.0.1:6001", "plugins", gomock.Any()).Times(1)
-
-	mockLogger.EXPECT().Debug("pipeline active", "pipeline", "test-1", "start", gomock.Any(), "elapsed", gomock.Any()).Times(1)
-	mockLogger.EXPECT().Debug("pipeline active", "pipeline", "test-2", "start", gomock.Any(), "elapsed", gomock.Any()).Times(1)
-
-	mockLogger.EXPECT().Error(gomock.Any(), gomock.Any(), gomock.Any()).AnyTimes()
-	mockLogger.EXPECT().Error("job processed with errors", "error", gomock.Any(), "ID", gomock.Any(), "start", gomock.Any(), "elapsed", gomock.Any()).AnyTimes()
-
-	mockLogger.EXPECT().Debug("pipeline stopped", "pipeline", "test-1", "start", gomock.Any(), "elapsed", gomock.Any()).Times(1)
-	mockLogger.EXPECT().Debug("pipeline stopped", "pipeline", "test-2", "start", gomock.Any(), "elapsed", gomock.Any()).Times(1)
-
-	mockLogger.EXPECT().Debug("job pushed to the queue", "start", gomock.Any(), "elapsed", gomock.Any()).AnyTimes()
-	mockLogger.EXPECT().Debug("job processing started", "start", gomock.Any(), "elapsed", gomock.Any()).AnyTimes()
-	mockLogger.EXPECT().Debug("job processed without errors", "ID", gomock.Any(), "start", gomock.Any(), "elapsed", gomock.Any()).AnyTimes()
-	// redial errors
-	mockLogger.EXPECT().Error("pipeline error", "pipeline", "test-1", "error", gomock.Any(), "start", gomock.Any(), "elapsed", gomock.Any()).AnyTimes()
-	mockLogger.EXPECT().Error("pipeline error", "pipeline", "test-2", "error", gomock.Any(), "start", gomock.Any(), "elapsed", gomock.Any()).AnyTimes()
-
-	// stop
-	mockLogger.EXPECT().Debug("sqs listener stopped").AnyTimes()
-	mockLogger.EXPECT().Debug("------> job poller stopped <------").AnyTimes()
-
 	err = cont.RegisterAll(
 		cfg,
 		&server.Plugin{},
 		&rpcPlugin.Plugin{},
-		mockLogger,
+		&logger.ZapLogger{},
 		&jobs.Plugin{},
 		&resetter.Plugin{},
 		&informer.Plugin{},

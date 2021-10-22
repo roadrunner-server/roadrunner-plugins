@@ -96,6 +96,7 @@ func NewHandler(maxReqSize uint64, internalHTTPCode uint64, uploads *config.Uplo
 				return &Request{
 					Attributes: make(map[string]interface{}),
 					Cookies:    make(map[string]string),
+					body:       nil,
 				}
 			},
 		},
@@ -206,6 +207,11 @@ func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	h.sendLog(r, rsp, req, start)
+	h.putReq(req)
+	h.putRsp(rsp)
+	h.putPld(pld)
+	req.Close(h.log)
 	go func() {
 		h.sendLog(r, status, req, start)
 		h.putReq(req)
@@ -335,6 +341,8 @@ func (h *Handler) putReq(req *Request) {
 	req.Header = nil
 	req.Cookies = nil
 	req.RawQuery = ""
+	req.Parsed = false
+	req.Uploads = nil
 	req.Attributes = nil
 	req.body = nil
 	h.reqPool.Put(req)
