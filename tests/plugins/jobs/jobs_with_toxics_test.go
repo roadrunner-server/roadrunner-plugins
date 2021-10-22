@@ -192,6 +192,9 @@ func TestDurabilitySQS(t *testing.T) {
 	// redial errors
 	mockLogger.EXPECT().Error("pipeline error", "pipeline", "test-1", "error", gomock.Any(), "start", gomock.Any(), "elapsed", gomock.Any()).AnyTimes()
 	mockLogger.EXPECT().Error("pipeline error", "pipeline", "test-2", "error", gomock.Any(), "start", gomock.Any(), "elapsed", gomock.Any()).AnyTimes()
+	mockLogger.EXPECT().Error("receive message", "error code", gomock.Any(), "message", gomock.Any(), "error fault", gomock.Any()).AnyTimes()
+	mockLogger.EXPECT().Error("receive message", "error", gomock.Any()).AnyTimes()
+	mockLogger.EXPECT().Error("create queue", "error", gomock.Any()).AnyTimes()
 
 	// stop
 	mockLogger.EXPECT().Debug("sqs listener stopped").AnyTimes()
