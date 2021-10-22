@@ -8,6 +8,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/newrelic/go-agent/v3/newrelic"
 	"github.com/spiral/errors"
 	"github.com/spiral/roadrunner-plugins/v2/http/attributes"
 	"github.com/spiral/roadrunner-plugins/v2/http/config"
@@ -19,8 +20,9 @@ import (
 
 const (
 	// MB is 1024 bytes
-	MB         uint64 = 1024 * 1024
-	ContentLen string = "Content-Length"
+	MB                    uint64 = 1024 * 1024
+	ContentLen            string = "Content-Length"
+	workerExecSegmentName        = "worker_exec"
 )
 
 // ErrorEvent represents singular http error event.
@@ -186,8 +188,11 @@ func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	tx := newrelic.FromContext(r.Context())
+	seg := tx.StartSegment(workerExecSegmentName)
 	wResp, err := h.pool.Exec(pld)
 	if err != nil {
+		seg.End()
 		req.Close(h.log)
 		h.putReq(req)
 		h.putPld(pld)
@@ -195,6 +200,7 @@ func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		h.sendEvent(ErrorEvent{Error: errors.E(op, err), start: start, elapsed: time.Since(start)})
 		return
 	}
+	seg.End()
 
 	rsp := h.getRsp()
 
