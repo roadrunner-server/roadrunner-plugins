@@ -207,17 +207,10 @@ func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	h.sendLog(r, rsp, req, start)
+	h.sendLog(r, status, req, start)
 	h.putReq(req)
-	h.putRsp(rsp)
 	h.putPld(pld)
 	req.Close(h.log)
-	go func() {
-		h.sendLog(r, status, req, start)
-		h.putReq(req)
-		h.putPld(pld)
-		req.Close(h.log)
-	}()
 }
 
 // sendLog sends log event (access log or regular debug log)
