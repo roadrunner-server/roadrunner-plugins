@@ -1,0 +1,20 @@
+rpc:
+  listen: tcp://127.0.0.1:6008
+
+server:
+  command: "php ../../psr-worker-post.php"
+  relay: "pipes"
+  relay_timeout: "20s"
+
+http:
+  address: 127.0.0.1:10084
+  max_request_size: 1024
+  middleware: []
+  pool:
+    num_workers: 2
+    max_jobs: 0
+    allocate_timeout: 60s
+    destroy_timeout: 60s
+logs:
+  mode: development
+  level: error
