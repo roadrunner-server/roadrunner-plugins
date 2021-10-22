@@ -129,15 +129,22 @@ func (r *Request) Payload(p *payload.Payload) error {
 	const op = errors.Op("marshal_payload")
 
 	var err error
-	if p.Context, err = json.Marshal(r); err != nil {
-		return errors.E(op, errors.Encode, err)
+	p.Context, err = json.Marshal(r)
+	if err != nil {
+		return err
 	}
 
+	// check if body was already parsed
 	if r.Parsed {
-		if p.Body, err = json.Marshal(r.body); err != nil {
+		p.Body, err = json.Marshal(r.body)
+		if err != nil {
 			return errors.E(op, errors.Encode, err)
 		}
-	} else if r.body != nil {
+
+		return nil
+	}
+
+	if r.body != nil {
 		p.Body = r.body.([]byte)
 	}
 
