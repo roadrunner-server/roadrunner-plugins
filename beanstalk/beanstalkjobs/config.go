@@ -1,4 +1,4 @@
-package beanstalk
+package beanstalkjobs
 
 import (
 	"time"

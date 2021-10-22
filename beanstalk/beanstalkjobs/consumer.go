@@ -1,4 +1,4 @@
-package beanstalk
+package beanstalkjobs
 
 import (
 	"bytes"
@@ -19,6 +19,10 @@ import (
 	priorityqueue "github.com/spiral/roadrunner/v2/priority_queue"
 	jobState "github.com/spiral/roadrunner/v2/state/job"
 	"github.com/spiral/roadrunner/v2/utils"
+)
+
+const (
+	pluginName string = "beanstalk"
 )
 
 type consumer struct {
