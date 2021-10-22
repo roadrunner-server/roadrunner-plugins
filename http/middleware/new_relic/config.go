@@ -6,16 +6,15 @@ import (
 	"github.com/spiral/errors"
 )
 
-const newRelicLK string = "NEW_RELIC_LICENSE_KEY"
+const (
+	newRelicLK      string = "NEW_RELIC_LICENSE_KEY"
+	newRelicAppName string = "NEW_RELIC_APP_NAME"
+)
 
 type Config struct {
-	FromEnv    bool   `mapstructure:"from_env"`
 	AppName    string `mapstructure:"app_name"`
 	LicenseKey string `mapstructure:"license_key"`
 }
-
-// 1 - config
-// 2 - env variable
 
 func (c *Config) InitDefaults() error {
 	if c.LicenseKey == "" {
@@ -29,7 +28,13 @@ func (c *Config) InitDefaults() error {
 	}
 
 	if c.AppName == "" {
-		c.AppName = "roadrunner"
+		an := os.Getenv(newRelicAppName)
+
+		if an == "" {
+			return errors.Str("application name should not be empty")
+		}
+
+		c.AppName = os.Getenv(newRelicAppName)
 	}
 
 	return nil

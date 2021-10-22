@@ -8,7 +8,6 @@ import (
 	"sync"
 	"time"
 
-	"github.com/newrelic/go-agent/v3/newrelic"
 	"github.com/spiral/errors"
 	"github.com/spiral/roadrunner-plugins/v2/http/attributes"
 	"github.com/spiral/roadrunner-plugins/v2/http/config"
@@ -20,9 +19,8 @@ import (
 
 const (
 	// MB is 1024 bytes
-	MB                    uint64 = 1024 * 1024
-	ContentLen            string = "Content-Length"
-	workerExecSegmentName        = "worker_exec"
+	MB         uint64 = 1024 * 1024
+	ContentLen string = "Content-Length"
 )
 
 // ErrorEvent represents singular http error event.
@@ -104,8 +102,8 @@ func NewHandler(maxReqSize uint64, internalHTTPCode uint64, uploads *config.Uplo
 		respPool: sync.Pool{
 			New: func() interface{} {
 				return &Response{
-					Body:    make([]byte, 0, 100),
 					Headers: make(map[string][]string),
+					Status:  -1,
 				}
 			},
 		},
@@ -188,11 +186,8 @@ func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	tx := newrelic.FromContext(r.Context())
-	seg := tx.StartSegment(workerExecSegmentName)
 	wResp, err := h.pool.Exec(pld)
 	if err != nil {
-		seg.End()
 		req.Close(h.log)
 		h.putReq(req)
 		h.putPld(pld)
@@ -200,26 +195,11 @@ func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		h.sendEvent(ErrorEvent{Error: errors.E(op, err), start: start, elapsed: time.Since(start)})
 		return
 	}
-	seg.End()
 
-	rsp := h.getRsp()
-
-	err = NewResponse(wResp, rsp)
+	status, err := h.Write(r, wResp, w)
 	if err != nil {
 		req.Close(h.log)
 		h.putReq(req)
-		h.putRsp(rsp)
-		h.putPld(pld)
-		h.handleError(w, start, err)
-		h.sendEvent(ErrorEvent{Error: errors.E(op, err), start: start, elapsed: time.Since(start)})
-		return
-	}
-
-	err = rsp.Write(w)
-	if err != nil {
-		req.Close(h.log)
-		h.putReq(req)
-		h.putRsp(rsp)
 		h.putPld(pld)
 		h.handleError(w, start, err)
 		h.sendEvent(ErrorEvent{Error: errors.E(op, err), start: start, elapsed: time.Since(start)})
@@ -227,22 +207,21 @@ func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 
 	go func() {
-		h.sendLog(r, rsp, req, start)
+		h.sendLog(r, status, req, start)
 		h.putReq(req)
-		h.putRsp(rsp)
 		h.putPld(pld)
 		req.Close(h.log)
 	}()
 }
 
 // sendLog sends log event (access log or regular debug log)
-func (h *Handler) sendLog(r *http.Request, rsp *Response, req *Request, start time.Time) {
+func (h *Handler) sendLog(r *http.Request, status int, req *Request, start time.Time) {
 	if h.accessLogs {
 		body, _ := json.Marshal(r.Header)
 		reqLen := len(body) + int(r.ContentLength)
 
 		h.sendEvent(ResponseEvent{
-			Status:        strconv.Itoa(rsp.Status),
+			Status:        strconv.Itoa(status),
 			Method:        req.Method,
 			URI:           req.URI,
 			ReqRemoteAddr: req.RemoteAddr,
@@ -262,7 +241,7 @@ func (h *Handler) sendLog(r *http.Request, rsp *Response, req *Request, start ti
 		})
 	} else {
 		h.sendEvent(ResponseEvent{
-			Status:        strconv.Itoa(rsp.Status),
+			Status:        strconv.Itoa(status),
 			Method:        req.Method,
 			URI:           req.URI,
 			ReqRemoteAddr: req.RemoteAddr,
@@ -375,9 +354,8 @@ func (h *Handler) getReq(r *http.Request) *Request {
 }
 
 func (h *Handler) putRsp(rsp *Response) {
-	rsp.Body = nil
 	rsp.Headers = nil
-	rsp.Status = 0
+	rsp.Status = -1
 	h.respPool.Put(rsp)
 }
 

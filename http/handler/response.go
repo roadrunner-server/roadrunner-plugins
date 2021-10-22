@@ -1,12 +1,18 @@
 package handler
 
 import (
-	"io"
+	"bytes"
 	"net/http"
 	"strings"
 
-	"github.com/spiral/errors"
+	"github.com/newrelic/go-agent/v3/newrelic"
 	"github.com/spiral/roadrunner/v2/payload"
+	"github.com/spiral/roadrunner/v2/utils"
+)
+
+const (
+	rrNewRelicKey          string = "rr_newrelic"
+	newRelicTransactionKey string = "transaction_name"
 )
 
 // Response handles PSR7 response logic.
@@ -16,81 +22,94 @@ type Response struct {
 
 	// Header contains list of response headers.
 	Headers map[string][]string `json:"headers"`
-
-	// associated Body payload.
-	Body interface{}
 }
 
-func NewResponse(p *payload.Payload, rsp *Response) error {
-	const op = errors.Op("http_response")
-	rsp.Body = p.Body
-	if err := json.Unmarshal(p.Context, rsp); err != nil {
-		return errors.E(op, errors.Decode, err)
+// Write writes response headers, status and body into ResponseWriter.
+func (h *Handler) Write(rq *http.Request, pld *payload.Payload, w http.ResponseWriter) (int, error) {
+	rsp := h.getRsp()
+	defer h.putRsp(rsp)
+
+	// unmarshal context into response
+	err := json.Unmarshal(pld.Context, rsp)
+	if err != nil {
+		return 0, err
 	}
 
-	return nil
-}
+	// handle push headers
+	if len(rsp.Headers[http2pushHeaderKey]) != 0 {
+		push := rsp.Headers[http2pushHeaderKey]
 
-//
-// Write writes response headers, status and body into ResponseWriter.
-func (r *Response) Write(w http.ResponseWriter) error {
-	// INFO map is the reference type in golang
-	p := handlePushHeaders(r.Headers)
-	if pusher, ok := w.(http.Pusher); ok {
-		for _, v := range p {
-			err := pusher.Push(v, nil)
-			if err != nil {
-				return err
+		if pusher, ok := w.(http.Pusher); ok {
+			for i := 0; i < len(push); i++ {
+				err = pusher.Push(rsp.Headers[http2pushHeaderKey][i], nil)
+				if err != nil {
+					return 0, err
+				}
 			}
 		}
 	}
 
-	handleTrailers(r.Headers)
-	for n, h := range r.Headers {
-		for _, v := range h {
-			w.Header().Add(n, v)
+	tx := newrelic.FromContext(rq.Context())
+	// we have a new relic mdw enabled
+	if tx != nil {
+		hdr := rsp.Headers[rrNewRelicKey]
+		if len(hdr) == 0 {
+			// to be sure
+			delete(rsp.Headers, rrNewRelicKey)
+			goto cont
+		}
+
+		for i := 0; i < len(hdr); i++ {
+			// 58 according to the ASCII table is -> :
+			pos := bytes.IndexByte(utils.AsBytes(hdr[i]), 58)
+
+			// not found
+			if pos == -1 {
+				continue
+			}
+
+			// handle :foo and foo: cases
+			if len(hdr[i][:pos]) == 0 || len(hdr[i][pos:]) == 0 {
+				continue
+			}
+
+			if bytes.Equal(utils.AsBytes(hdr[i][pos:]), utils.AsBytes(newRelicTransactionKey)) {
+				tx.SetName(hdr[i][pos:])
+				continue
+			}
+
+			tx.AddAttribute(hdr[i][pos:], hdr[i][:pos])
 		}
 	}
 
-	w.WriteHeader(r.Status)
+	// delete sensitive information
+	delete(rsp.Headers, rrNewRelicKey)
 
-	if data, ok := r.Body.([]byte); ok {
-		_, err := w.Write(data)
-		if err != nil {
-			return handleWriteError(err)
+cont:
+
+	if len(rsp.Headers[TrailerHeaderKey]) != 0 {
+		handleTrailers(rsp.Headers)
+	}
+
+	// write all headers from the response to the writer
+	for k := range rsp.Headers {
+		for kk := range rsp.Headers[k] {
+			w.Header().Add(k, rsp.Headers[k][kk])
 		}
 	}
 
-	if rc, ok := r.Body.(io.Reader); ok {
-		if _, err := io.Copy(w, rc); err != nil {
-			return err
-		}
+	w.WriteHeader(rsp.Status)
+	_, err = w.Write(pld.Body)
+	if err != nil {
+		return 0, err
 	}
 
-	return nil
-}
-
-func handlePushHeaders(h map[string][]string) []string {
-	var p []string
-	pushHeader, ok := h[http2pushHeaderKey]
-	if !ok {
-		return p
-	}
-
-	p = append(p, pushHeader...)
-
-	delete(h, http2pushHeaderKey)
-
-	return p
+	status := rsp.Status
+	return status, nil
 }
 
 func handleTrailers(h map[string][]string) {
-	trailers, ok := h[TrailerHeaderKey]
-	if !ok {
-		return
-	}
-
-	for _, tr := range trailers {
+	for _, tr := range h[TrailerHeaderKey] {
 		for _, n := range strings.Split(tr, ",") {
 			n = strings.Trim(n, "\t ")
 			if v, ok := h[n]; ok {
