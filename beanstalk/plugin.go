@@ -1,6 +1,7 @@
 package beanstalk
 
 import (
+	"github.com/spiral/roadrunner-plugins/v2/beanstalk/beanstalkjobs"
 	cfgPlugin "github.com/spiral/roadrunner-plugins/v2/config"
 	"github.com/spiral/roadrunner-plugins/v2/internal/common/jobs"
 	"github.com/spiral/roadrunner-plugins/v2/jobs/pipeline"
@@ -39,9 +40,9 @@ func (p *Plugin) Name() string {
 func (p *Plugin) Available() {}
 
 func (p *Plugin) ConsumerFromConfig(configKey string, eh events.Handler, pq priorityqueue.Queue) (jobs.Consumer, error) {
-	return NewBeanstalkConsumer(configKey, p.log, p.cfg, eh, pq)
+	return beanstalkjobs.NewBeanstalkConsumer(configKey, p.log, p.cfg, eh, pq)
 }
 
 func (p *Plugin) ConsumerFromPipeline(pipe *pipeline.Pipeline, eh events.Handler, pq priorityqueue.Queue) (jobs.Consumer, error) {
-	return FromPipeline(pipe, p.log, p.cfg, eh, pq)
+	return beanstalkjobs.FromPipeline(pipe, p.log, p.cfg, eh, pq)
 }

@@ -312,6 +312,7 @@ func (c *consumer) Run(_ context.Context, p *pipeline.Pipeline) error {
 	atomic.AddUint32(&c.listeners, 1)
 
 	// start listener
+	// TODO(rustatian) context with cancel to cancel receive operation on stop
 	go c.listen(context.Background())
 
 	c.eh.Push(events.JobEvent{
