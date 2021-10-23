@@ -24,7 +24,7 @@ while ($req = $psr7->waitRequest()) {
         $rrNewRelic = [
             'shopId:1', //custom data
             'auth:password', //custom data
-            'name:transactionName' //name - special key to override the name. By default it will use requestUri.
+            'transaction_name:test_transaction' //name - special key to override the name. By default it will use requestUri.
         ];
 
         $resp = $resp->withHeader('rr_newrelic', $rrNewRelic);

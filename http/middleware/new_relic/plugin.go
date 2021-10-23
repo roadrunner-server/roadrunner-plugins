@@ -14,7 +14,7 @@ import (
 const (
 	pluginName             string = "new_relic"
 	path                   string = "http.new_relic"
-	rrNewRelicKey          string = "rr_newrelic"
+	rrNewRelicKey          string = "Rr_newrelic"
 	newRelicTransactionKey string = "transaction_name"
 )
 
@@ -80,62 +80,57 @@ func (p *Plugin) Middleware(next http.Handler) http.Handler {
 
 		next.ServeHTTP(rrWriter, r)
 
-		// after request was handled
-		tx := newrelic.FromContext(r.Context())
-		// we have a new relic mdw enabled
-		if tx != nil {
-			hdr := rrWriter.hdrToSend[rrNewRelicKey]
-			if len(hdr) == 0 {
-				// to be sure
-				delete(rrWriter.hdrToSend, rrNewRelicKey)
+		hdr := rrWriter.hdrToSend[rrNewRelicKey]
+		if len(hdr) == 0 {
+			// to be sure
+			delete(rrWriter.hdrToSend, rrNewRelicKey)
 
-				for k := range rrWriter.hdrToSend {
-					for kk := range rrWriter.hdrToSend[k] {
-						w.Header().Add(k, rrWriter.hdrToSend[k][kk])
-					}
+			for k := range rrWriter.hdrToSend {
+				for kk := range rrWriter.hdrToSend[k] {
+					w.Header().Add(k, rrWriter.hdrToSend[k][kk])
 				}
-
-				return
 			}
 
-			for i := 0; i < len(hdr); i++ {
-				// 58 according to the ASCII table is -> :
-				pos := bytes.IndexByte(utils.AsBytes(hdr[i]), 58)
+			return
+		}
 
-				// not found
-				if pos == -1 {
-					continue
-				}
+		for i := 0; i < len(hdr); i++ {
+			// 58 according to the ASCII table is -> :
+			pos := bytes.IndexByte(utils.AsBytes(hdr[i]), 58)
 
-				// remove spaces
-				trimmed := bytes.Trim(utils.AsBytes(hdr[i]), " ")
-
-				// ":foo" or ":"
-				if pos == 0 {
-					continue
-				}
-
-				/*
-					we should split headers into 2 parts. Parts are separated by the colon (:)
-					"foo:bar"
-					we should not panic on cases like:
-					":foo"
-					"foo: bar"
-					:
-				*/
-
-				// handle case like this "bar:"
-				if len(trimmed) < pos+1 {
-					continue
-				}
-
-				if bytes.Equal(trimmed[pos:], utils.AsBytes(newRelicTransactionKey)) {
-					tx.SetName(utils.AsString(trimmed[pos+1:]))
-					continue
-				}
-
-				tx.AddAttribute(utils.AsString(trimmed[:pos]), trimmed[pos+1:])
+			// not found
+			if pos == -1 {
+				continue
 			}
+
+			// remove spaces
+			trimmed := bytes.Trim(utils.AsBytes(hdr[i]), " ")
+
+			// ":foo" or ":"
+			if pos == 0 {
+				continue
+			}
+
+			/*
+				we should split headers into 2 parts. Parts are separated by the colon (:)
+				"foo:bar"
+				we should not panic on cases like:
+				":foo"
+				"foo: bar"
+				:
+			*/
+
+			// handle case like this "bar:"
+			if len(trimmed) < pos+1 {
+				continue
+			}
+
+			if bytes.Equal(trimmed[:pos], utils.AsBytes(newRelicTransactionKey)) {
+				txn.SetName(utils.AsString(trimmed[pos+1:]))
+				continue
+			}
+
+			txn.AddAttribute(utils.AsString(trimmed[:pos]), utils.AsString(trimmed[pos+1:]))
 		}
 
 		// delete sensitive information
