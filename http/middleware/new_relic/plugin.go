@@ -67,6 +67,7 @@ func (p *Plugin) Init(cfg config.Configurer) error {
 func (p *Plugin) Middleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		txn := p.app.StartTransaction(r.RequestURI)
+		defer txn.End()
 
 		w = txn.SetWebResponse(w)
 		txn.SetWebRequestHTTP(r)
@@ -143,8 +144,6 @@ func (p *Plugin) Middleware(next http.Handler) http.Handler {
 				delete(rrWriter.hdrToSend, k)
 			}
 		}
-
-		txn.End()
 	})
 }
 

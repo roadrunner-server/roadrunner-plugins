@@ -23,8 +23,24 @@ License key and application name could be set via environment variables: (leave 
 - app_name: `NEW_RELIC_APP_NAME`.  
 
 
-To set New Relic attributes, the PHP worker should send them witing the `rr_newrelic` header key. Attributes should be separated by the `:`, for example `foo:bar`, where `foo` is a key and `bar` is a value.
+To set the New Relic attributes, the PHP worker should send headers values witing the `rr_newrelic` header key. Attributes should be separated by the `:`, for example `foo:bar`, where `foo` is a key and `bar` is a value.
 New Relic attributes sent from the worker will not appear in the HTTP response, they will be sent directly to the New Relic.
+
+To see the sample of the PHP library, see the @arku31 implementation: https://github.com/arku31/roadrunner-newrelic
+
+The special key which PHP may set to overwrite the transaction name is: `transaction_name`.
+For example: `transaction_name:foo` means: set transaction name as `foo`.
+By default, `RequestURI` is used as the transaction name.   
+```php
+        $resp = new \Nyholm\Psr7\Response();
+        $rrNewRelic = [
+            'shopId:1', //custom data
+            'auth:password', //custom data
+            'transaction_name:test_transaction' //name - special key to override the name. By default it will use requestUri.
+        ];
+
+        $resp = $resp->withHeader('rr_newrelic', $rrNewRelic);
+```
 
 
 ## v2.5.1 (22.10.2021)
