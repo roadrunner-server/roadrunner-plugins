@@ -14,7 +14,7 @@ import (
 const (
 	pluginName             string = "new_relic"
 	path                   string = "http.new_relic"
-	rrNewRelicKey          string = "Rr_newrelic"
+	rrNewRelicKey          string = "rr_newrelic"
 	newRelicTransactionKey string = "transaction_name"
 )
 
