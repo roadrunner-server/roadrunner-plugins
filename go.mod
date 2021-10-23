@@ -24,6 +24,7 @@ require (
 	github.com/klauspost/compress v1.13.6
 	github.com/mholt/acmez v1.0.0
 	github.com/nats-io/nats.go v1.13.0
+	github.com/newrelic/go-agent/v3 v3.15.0
 	github.com/prometheus/client_golang v1.11.0
 	github.com/rabbitmq/amqp091-go v1.1.0
 	github.com/spf13/viper v1.9.0
@@ -75,7 +76,6 @@ require (
 	github.com/nats-io/nats-server/v2 v2.6.1 // indirect
 	github.com/nats-io/nkeys v0.3.0 // indirect
 	github.com/nats-io/nuid v1.0.1 // indirect
-	github.com/newrelic/go-agent/v3 v3.15.0 // indirect
 	github.com/pelletier/go-toml v1.9.4 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
 	github.com/prometheus/client_model v0.2.0 // indirect

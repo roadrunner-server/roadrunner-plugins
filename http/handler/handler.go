@@ -197,7 +197,7 @@ func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	status, err := h.Write(r, wResp, w)
+	status, err := h.Write(wResp, w)
 	if err != nil {
 		req.Close(h.log)
 		h.putReq(req)
@@ -208,9 +208,9 @@ func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 
 	h.sendLog(r, status, req, start)
-	h.putReq(req)
 	h.putPld(pld)
 	req.Close(h.log)
+	h.putReq(req)
 }
 
 // sendLog sends log event (access log or regular debug log)
@@ -327,17 +327,6 @@ func (h *Handler) resolveIP(r *Request) {
 }
 
 func (h *Handler) putReq(req *Request) {
-	req.RemoteAddr = ""
-	req.Protocol = ""
-	req.Method = ""
-	req.URI = ""
-	req.Header = nil
-	req.Cookies = nil
-	req.RawQuery = ""
-	req.Parsed = false
-	req.Uploads = nil
-	req.Attributes = nil
-	req.body = nil
 	h.reqPool.Put(req)
 }
 
@@ -351,6 +340,9 @@ func (h *Handler) getReq(r *http.Request) *Request {
 	req.Cookies = make(map[string]string)
 	req.RawQuery = r.URL.RawQuery
 	req.Attributes = attributes.All(r)
+
+	req.Parsed = false
+	req.body = nil
 	return req
 }
 
