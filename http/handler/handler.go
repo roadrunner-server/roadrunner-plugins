@@ -103,8 +103,8 @@ func NewHandler(maxReqSize uint64, internalHTTPCode uint64, uploads *config.Uplo
 		respPool: sync.Pool{
 			New: func() interface{} {
 				return &Response{
-					Body:    make([]byte, 0, 100),
 					Headers: make(map[string][]string),
+					Status:  -1,
 				}
 			},
 		},
@@ -197,45 +197,30 @@ func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	rsp := h.getRsp()
-
-	err = NewResponse(wResp, rsp)
+	status, err := h.Write(wResp, w)
 	if err != nil {
 		req.Close(h.log)
 		h.putReq(req)
-		h.putRsp(rsp)
 		h.putPld(pld)
 		h.handleError(w, start, err)
 		h.sendEvent(ErrorEvent{Error: errors.E(op, err), start: start, elapsed: time.Since(start)})
 		return
 	}
 
-	err = rsp.Write(w)
-	if err != nil {
-		req.Close(h.log)
-		h.putReq(req)
-		h.putRsp(rsp)
-		h.putPld(pld)
-		h.handleError(w, start, err)
-		h.sendEvent(ErrorEvent{Error: errors.E(op, err), start: start, elapsed: time.Since(start)})
-		return
-	}
-
-	h.sendLog(r, rsp, req, start)
-	h.putReq(req)
-	h.putRsp(rsp)
+	h.sendLog(r, status, req, start)
 	h.putPld(pld)
 	req.Close(h.log)
+	h.putReq(req)
 }
 
 // sendLog sends log event (access log or regular debug log)
-func (h *Handler) sendLog(r *http.Request, rsp *Response, req *Request, start time.Time) {
+func (h *Handler) sendLog(r *http.Request, status int, req *Request, start time.Time) {
 	if h.accessLogs {
 		body, _ := json.Marshal(r.Header)
 		reqLen := len(body) + int(r.ContentLength)
 
 		h.sendEvent(ResponseEvent{
-			Status:        strconv.Itoa(rsp.Status),
+			Status:        strconv.Itoa(status),
 			Method:        req.Method,
 			URI:           req.URI,
 			ReqRemoteAddr: req.RemoteAddr,
@@ -255,7 +240,7 @@ func (h *Handler) sendLog(r *http.Request, rsp *Response, req *Request, start ti
 		})
 	} else {
 		h.sendEvent(ResponseEvent{
-			Status:        strconv.Itoa(rsp.Status),
+			Status:        strconv.Itoa(status),
 			Method:        req.Method,
 			URI:           req.URI,
 			ReqRemoteAddr: req.RemoteAddr,
@@ -342,17 +327,6 @@ func (h *Handler) resolveIP(r *Request) {
 }
 
 func (h *Handler) putReq(req *Request) {
-	req.RemoteAddr = ""
-	req.Protocol = ""
-	req.Method = ""
-	req.URI = ""
-	req.Header = nil
-	req.Cookies = nil
-	req.RawQuery = ""
-	req.Parsed = false
-	req.Uploads = nil
-	req.Attributes = nil
-	req.body = nil
 	h.reqPool.Put(req)
 }
 
@@ -366,13 +340,15 @@ func (h *Handler) getReq(r *http.Request) *Request {
 	req.Cookies = make(map[string]string)
 	req.RawQuery = r.URL.RawQuery
 	req.Attributes = attributes.All(r)
+
+	req.Parsed = false
+	req.body = nil
 	return req
 }
 
 func (h *Handler) putRsp(rsp *Response) {
-	rsp.Body = nil
 	rsp.Headers = nil
-	rsp.Status = 0
+	rsp.Status = -1
 	h.respPool.Put(rsp)
 }
 

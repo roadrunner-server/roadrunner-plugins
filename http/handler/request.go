@@ -2,7 +2,7 @@ package handler
 
 import (
 	"fmt"
-	"io/ioutil"
+	"io"
 	"net"
 	"net/http"
 	"net/url"
@@ -83,7 +83,7 @@ func request(r *http.Request, req *Request, cfg *config.Uploads) error {
 
 	case contentStream:
 		var err error
-		req.body, err = ioutil.ReadAll(r.Body)
+		req.body, err = io.ReadAll(r.Body)
 		return err
 
 	case contentMultipart:

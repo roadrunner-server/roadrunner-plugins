@@ -24,6 +24,7 @@ require (
 	github.com/klauspost/compress v1.13.6
 	github.com/mholt/acmez v1.0.0
 	github.com/nats-io/nats.go v1.13.0
+	github.com/newrelic/go-agent/v3 v3.15.0
 	github.com/prometheus/client_golang v1.11.0
 	github.com/rabbitmq/amqp091-go v1.1.0
 	github.com/spf13/viper v1.9.0
@@ -38,7 +39,7 @@ require (
 	go.etcd.io/bbolt v1.3.6
 	go.uber.org/zap v1.19.1
 	golang.org/x/net v0.0.0-20211020060615-d418f374d309
-	golang.org/x/sys v0.0.0-20211020174200-9d6173849985
+	golang.org/x/sys v0.0.0-20211023085530-d6a326fbbf70
 	google.golang.org/grpc v1.41.0
 	google.golang.org/protobuf v1.27.1
 	gopkg.in/natefinch/lumberjack.v2 v2.0.0
