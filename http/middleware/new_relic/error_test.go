@@ -67,4 +67,15 @@ func TestError(t *testing.T) {
 		Attributes: nil,
 		Stack:      nil,
 	}, err)
+
+	target7 := []string{"message:что", "class:это", "attributes:за язык"}
+	err = handleErr(target7)
+	require.Equal(t, newrelic.Error{
+		Message: "что",
+		Class:   "это",
+		Attributes: map[string]interface{}{
+			"attributes": "за язык",
+		},
+		Stack: nil,
+	}, err)
 }
