@@ -15,6 +15,7 @@ const (
 	pluginName             string = "new_relic"
 	path                   string = "http.new_relic"
 	rrNewRelicKey          string = "Rr_newrelic"
+	rrNewRelicErr          string = "Rr_newrelic_error"
 	newRelicTransactionKey string = "transaction_name"
 )
 
@@ -74,13 +75,31 @@ func (p *Plugin) Middleware(next http.Handler) http.Handler {
 
 		// overwrite original rw, because we need to delete sensitive rr_newrelic headers
 		rrWriter := p.getWriter(w)
-
 		defer p.putWriter(rrWriter)
 
 		r = newrelic.RequestWithTransactionContext(r, txn)
 
 		next.ServeHTTP(rrWriter, r)
 
+		// handle error
+		if len(rrWriter.hdrToSend[rrNewRelicErr]) > 0 {
+			err := handleErr(rrWriter.hdrToSend[rrNewRelicErr])
+			txn.NoticeError(err)
+
+			// to be sure
+			delete(rrWriter.hdrToSend, rrNewRelicKey)
+			delete(rrWriter.hdrToSend, rrNewRelicErr)
+
+			for k := range rrWriter.hdrToSend {
+				for kk := range rrWriter.hdrToSend[k] {
+					w.Header().Add(k, rrWriter.hdrToSend[k][kk])
+				}
+			}
+
+			return
+		}
+
+		// no error, general case
 		hdr := rrWriter.hdrToSend[rrNewRelicKey]
 		if len(hdr) == 0 {
 			// to be sure
@@ -96,42 +115,18 @@ func (p *Plugin) Middleware(next http.Handler) http.Handler {
 		}
 
 		for i := 0; i < len(hdr); i++ {
-			// 58 according to the ASCII table is -> :
-			pos := bytes.IndexByte(utils.AsBytes(hdr[i]), 58)
+			key, value := split(utils.AsBytes(hdr[i]))
 
-			// not found
-			if pos == -1 {
+			if key == nil || value == nil {
 				continue
 			}
 
-			// remove spaces
-			trimmed := bytes.Trim(utils.AsBytes(hdr[i]), " ")
-
-			// ":foo" or ":"
-			if pos == 0 {
+			if bytes.Equal(key, utils.AsBytes(newRelicTransactionKey)) {
+				txn.SetName(utils.AsString(value))
 				continue
 			}
 
-			/*
-				we should split headers into 2 parts. Parts are separated by the colon (:)
-				"foo:bar"
-				we should not panic on cases like:
-				":foo"
-				"foo: bar"
-				:
-			*/
-
-			// handle case like this "bar:"
-			if len(trimmed) < pos+1 {
-				continue
-			}
-
-			if bytes.Equal(trimmed[:pos], utils.AsBytes(newRelicTransactionKey)) {
-				txn.SetName(utils.AsString(trimmed[pos+1:]))
-				continue
-			}
-
-			txn.AddAttribute(utils.AsString(trimmed[:pos]), utils.AsString(trimmed[pos+1:]))
+			txn.AddAttribute(utils.AsString(key), utils.AsString(value))
 		}
 
 		// delete sensitive information
