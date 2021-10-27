@@ -5,7 +5,7 @@ server:
 
 http:
   ssl:
-    address: :8893
+    address: :4455
     redirect: false
     key: "fixtures/test-certs/test.key"
     cert: "fixtures/test-certs/test.pem"

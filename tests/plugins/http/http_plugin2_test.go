@@ -192,9 +192,29 @@ func TestSSLNoHTTP(t *testing.T) {
 	}()
 
 	time.Sleep(time.Second * 1)
-	t.Run("SSLEcho", sslEcho)
+	t.Run("SSLEcho", sslEcho2)
 
 	stopCh <- struct{}{}
 	wg.Wait()
 	time.Sleep(time.Second)
+}
+
+func sslEcho2(t *testing.T) {
+	req, err := http.NewRequest("GET", "https://127.0.0.1:4455?hello=world", nil)
+	assert.NoError(t, err)
+
+	r, err := sslClient.Do(req)
+	assert.NoError(t, err)
+
+	b, err := ioutil.ReadAll(r.Body)
+	assert.NoError(t, err)
+
+	assert.NoError(t, err)
+	assert.Equal(t, 201, r.StatusCode)
+	assert.Equal(t, "WORLD", string(b))
+
+	err2 := r.Body.Close()
+	if err2 != nil {
+		t.Errorf("fail to close the Body: error %v", err2)
+	}
 }
