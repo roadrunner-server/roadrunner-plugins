@@ -19,9 +19,6 @@ import (
 
 // serveFCGI starts FastCGI server.
 func (p *Plugin) serveFCGI(errCh chan error) {
-	if p.fcgi == nil {
-		return
-	}
 	const op = errors.Op("serveFCGI")
 
 	if len(p.mdwr) > 0 {
