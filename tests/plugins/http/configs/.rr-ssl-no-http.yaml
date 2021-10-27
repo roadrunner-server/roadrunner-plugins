@@ -4,22 +4,18 @@ server:
   relay_timeout: "20s"
 
 http:
-  address: :8085
-  max_request_size: 1024
-  middleware: []
+  ssl:
+    address: :8893
+    redirect: false
+    key: "fixtures/test-certs/test.key"
+    cert: "fixtures/test-certs/test.pem"
+    root_ca: "fixtures/test-certs/ca.cert"
   pool:
     num_workers: 1
     max_jobs: 0
     allocate_timeout: 60s
     destroy_timeout: 60s
 
-  ssl:
-    address: :8893
-    redirect: false
-    cert: fixtures/server.crt
-    key: fixtures/server.key
-  fcgi:
-    address: tcp://0.0.0.0:16920
 logs:
   mode: development
   level: error
