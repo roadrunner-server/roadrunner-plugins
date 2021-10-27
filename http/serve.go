@@ -19,9 +19,6 @@ import (
 
 // serveFCGI starts FastCGI server.
 func (p *Plugin) serveFCGI(errCh chan error) {
-	if p.fcgi == nil {
-		return
-	}
 	const op = errors.Op("serveFCGI")
 
 	if len(p.mdwr) > 0 {
@@ -84,7 +81,11 @@ func (p *Plugin) appendRootCa() error {
 		return errors.E(op, errors.Str("could not append Certs from PEM"))
 	}
 
-	p.http.TLSConfig.RootCAs = rootCAs
+	if p.https == nil {
+		return errors.Str("https server is nil. This is the BUG, please, report to the https://github.com/spiral/roadrunner-plugins")
+	}
+
+	p.https.TLSConfig.RootCAs = rootCAs
 
 	return nil
 }

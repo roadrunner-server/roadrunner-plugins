@@ -8,9 +8,6 @@ import (
 )
 
 func (p *Plugin) serveHTTPS(errCh chan error) {
-	if p.https == nil {
-		return
-	}
 	const op = errors.Op("serveHTTPS")
 	if len(p.mdwr) > 0 {
 		applyMiddlewares(p.https, p.mdwr, p.cfg.Middleware, p.log)
