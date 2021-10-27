@@ -33,7 +33,6 @@ http:
     redirect: false
     cert: fixtures/server.crt
     key: fixtures/server.key
-  #    root_ca: root.crt
   fcgi:
     address: tcp://0.0.0.0:7921
   http2:

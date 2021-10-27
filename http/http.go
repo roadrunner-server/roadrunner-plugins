@@ -8,9 +8,6 @@ import (
 )
 
 func (p *Plugin) serveHTTP(errCh chan error) {
-	if p.http == nil {
-		return
-	}
 	const op = errors.Op("serveHTTP")
 
 	if len(p.mdwr) > 0 {
