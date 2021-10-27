@@ -2,16 +2,16 @@ rpc:
   listen: tcp://127.0.0.1:6002
 
 server:
-  command: "php ../../psr-worker-bench.php"
+  command: "php ../../psr-worker-tcp.php"
 
 tcp:
   servers:
     tcp_access_point_1:
       addr: tcp://127.0.0.1:7777
       delimiter: '\r\n'
-#    server2:
-#      addr: tcp://127.0.0.1:8889
-#      delimiter: '\n\r\.\n\r'
+    server2:
+      addr: tcp://127.0.0.1:8889
+      delimiter: '\n\r\.\n\r'
 
   pool:
     num_workers: 2

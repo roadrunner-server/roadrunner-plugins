@@ -6,6 +6,7 @@ import (
 	"errors"
 	"io"
 	"net"
+	"sync"
 
 	"github.com/google/uuid"
 	json "github.com/json-iterator/go"
@@ -18,24 +19,39 @@ import (
 	"github.com/spiral/roadrunner/v2/utils"
 )
 
-// {
-// "name": "server1",
-// "uuid": "foo"
-// }
-
 const (
 	pluginName string = "tcp"
 )
 
+/*
+	rsp.Context -> `WRITECLOSE` -> write back and close
+	---
+	rsp.Context -> `CLOSE` -> close connection w/o writing to it
+	---
+	rsp.Context -> WRITE -> conn.Write -> loop
+	---
+	rsp.Context -> CONTINUE -> w/o write loop
+*/
+
+var (
+	CLOSE      = []byte("CLOSE")
+	CONTINUE   = []byte("CONTINUE")
+	WRITECLOSE = []byte("WRITECLOSE")
+	WRITE      = []byte("WRITE")
+)
+
 type ServerInfo struct {
-	Name string `json:"name"`
-	UUID string `json:"uuid"`
+	RemoteAddr string `json:"remote_addr"`
+	Server     string `json:"server"`
+	UUID       string `json:"uuid"`
 }
 
 type Plugin struct {
-	cfg    *Config
-	log    logger.Logger
-	server server.Server
+	sync.RWMutex
+	cfg         *Config
+	log         logger.Logger
+	server      server.Server
+	connections sync.Map // uuid -> conn
 
 	wPool pool.Pool
 }
@@ -69,7 +85,7 @@ func (p *Plugin) Serve() chan error {
 
 	go func() {
 		for k := range p.cfg.Servers {
-			go func(addr string, delim []byte) {
+			go func(addr string, delim []byte, name string) {
 				// create a TCP listener
 				l, err := utils.CreateListener(addr)
 				if err != nil {
@@ -86,10 +102,10 @@ func (p *Plugin) Serve() chan error {
 					}
 
 					go func() {
-						p.handleConnection(conn, delim)
+						p.handleConnection(conn, delim, name)
 					}()
 				}
-			}(p.cfg.Servers[k].Addr, p.cfg.Servers[k].delimBytes)
+			}(p.cfg.Servers[k].Addr, p.cfg.Servers[k].delimBytes, k)
 		}
 	}()
 
@@ -106,13 +122,34 @@ func (p *Plugin) Name() string {
 	return pluginName
 }
 
-func (p *Plugin) handleConnection(conn net.Conn, delim []byte) {
+func (p *Plugin) Close(uuid string) error {
+	if c, ok := p.connections.LoadAndDelete(uuid); ok {
+		conn := c.(net.Conn)
+		if conn != nil {
+			return conn.Close()
+		}
+	}
+
+	return nil
+}
+
+func (p *Plugin) RPC() interface{} {
+	return &rpc{
+		p: p,
+	}
+}
+
+func (p *Plugin) handleConnection(conn net.Conn, delim []byte, serverName string) {
 	// generate id for the connection
 	id := uuid.NewString()
+	p.connections.Store(id, conn)
+	defer p.connections.Delete(id)
+
 	// todo(rustatian): TO sync.Pool
 	rbuf := make([]byte, 1024)
 	resbuf := make([]byte, 0, 1024)
 
+start:
 	for {
 		n, err := conn.Read(rbuf)
 		if err != nil {
@@ -145,14 +182,12 @@ func (p *Plugin) handleConnection(conn net.Conn, delim []byte) {
 			continue
 		}
 
-		rbuf = rbuf[:n]
-		// aaaaaaaa\n\r
 		/*
 			n -> aaaaaaaa
 			total -> aaaaaaaa -> \n\r
 		*/
-		if bytes.Equal(rbuf[n-len(delim):], delim) {
-			resbuf = append(resbuf, rbuf[:n-len(delim)]...)
+		if bytes.Equal(rbuf[:n][n-len(delim):], delim) {
+			resbuf = append(resbuf, rbuf[:n][:n-len(delim)]...)
 			break
 		}
 
@@ -161,8 +196,9 @@ func (p *Plugin) handleConnection(conn net.Conn, delim []byte) {
 
 	// TODO(rustatian): to sync.Pool
 	si := &ServerInfo{
-		Name: "Server1",
-		UUID: id,
+		RemoteAddr: conn.RemoteAddr().String(),
+		Server:     serverName,
+		UUID:       id,
 	}
 
 	pldCtx, err := json.Marshal(si)
@@ -181,9 +217,32 @@ func (p *Plugin) handleConnection(conn net.Conn, delim []byte) {
 		return
 	}
 
-	_, err = conn.Write(rsp.Body)
-	if err != nil {
-		p.log.Error("write response error", "error", err)
+	switch {
+	case bytes.Equal(rsp.Context, CONTINUE):
+		goto start
+	case bytes.Equal(rsp.Context, WRITE):
+		_, err = conn.Write(rsp.Body)
+		if err != nil {
+			p.log.Error("write response error", "error", err)
+			return
+		}
+		goto start
+	case bytes.Equal(rsp.Context, WRITECLOSE):
+		_, err = conn.Write(rsp.Body)
+		if err != nil {
+			p.log.Error("write response error", "error", err)
+			return
+		}
+		err = conn.Close()
+		if err != nil {
+			p.log.Error("close connection error", "error", err)
+		}
+		return
+	case bytes.Equal(rsp.Context, CLOSE):
+		err = conn.Close()
+		if err != nil {
+			p.log.Error("close connection error", "error", err)
+		}
 		return
 	}
 }
