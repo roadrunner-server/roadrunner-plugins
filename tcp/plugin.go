@@ -21,6 +21,7 @@ import (
 
 const (
 	pluginName string = "tcp"
+	RrMode     string = "RR_MODE"
 )
 
 /*
@@ -78,7 +79,7 @@ func (p *Plugin) Serve() chan error {
 	errCh := make(chan error, 1)
 
 	var err error
-	p.wPool, err = p.server.NewWorkerPool(context.Background(), p.cfg.Pool, map[string]string{})
+	p.wPool, err = p.server.NewWorkerPool(context.Background(), p.cfg.Pool, map[string]string{RrMode: pluginName})
 	if err != nil {
 		panic(err)
 	}

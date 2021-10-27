@@ -350,7 +350,6 @@ func TestDurabilityBeanstalk(t *testing.T) {
 
 	time.Sleep(time.Second * 3)
 	disableProxy("redial", t)
-	time.Sleep(time.Second * 3)
 
 	go func() {
 		time.Sleep(time.Second * 2)
@@ -360,6 +359,7 @@ func TestDurabilityBeanstalk(t *testing.T) {
 
 	time.Sleep(time.Second * 5)
 	enableProxy("redial", t)
+	time.Sleep(time.Second * 2)
 
 	t.Run("PushPipelineWhileRedialing-1", pushToPipe("test-1"))
 	t.Run("PushPipelineWhileRedialing-2", pushToPipe("test-2"))
