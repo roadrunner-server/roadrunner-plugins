@@ -259,17 +259,14 @@ func (p *Plugin) serve(errCh chan error) {
 	// start http, https and fcgi servers if requested in the config
 	if p.http != nil {
 		go p.serveHTTP(errCh)
-		return
 	}
 
 	if p.https != nil {
 		go p.serveHTTPS(errCh)
-		return
 	}
 
 	if p.fcgi != nil {
 		go p.serveFCGI(errCh)
-		return
 	}
 }
 
