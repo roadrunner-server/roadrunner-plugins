@@ -4,8 +4,10 @@
 
 ## 👀 New:
 
-- ✏️ **[BETA]** Support for the New Relic observability platform. Sample of the client library might be found [here](https://github.com/arku31/roadrunner-newrelic). (Thanks @arku31)   
-New Relic middleware is a part of the HTTP plugin, thus configuration should be inside it:
+- ✏️ **[BETA]** Support for the New Relic observability platform. Sample of the client library might be
+  found [here](https://github.com/arku31/roadrunner-newrelic). (Thanks @arku31)   
+  New Relic middleware is a part of the HTTP plugin, thus configuration should be inside it:
+
 ```yaml
 http:
   address: 127.0.0.1:15389
@@ -18,19 +20,22 @@ http:
     allocate_timeout: 60s
     destroy_timeout: 60s
 ```
+
 License key and application name could be set via environment variables: (leave `app_name` and `license_key` empty)
+
 - license_key: `NEW_RELIC_LICENSE_KEY`.
-- app_name: `NEW_RELIC_APP_NAME`.  
+- app_name: `NEW_RELIC_APP_NAME`.
 
-
-To set the New Relic attributes, the PHP worker should send headers values witing the `rr_newrelic` header key. Attributes should be separated by the `:`, for example `foo:bar`, where `foo` is a key and `bar` is a value.
-New Relic attributes sent from the worker will not appear in the HTTP response, they will be sent directly to the New Relic.
+To set the New Relic attributes, the PHP worker should send headers values witing the `rr_newrelic` header key.
+Attributes should be separated by the `:`, for example `foo:bar`, where `foo` is a key and `bar` is a value. New Relic
+attributes sent from the worker will not appear in the HTTP response, they will be sent directly to the New Relic.
 
 To see the sample of the PHP library, see the @arku31 implementation: https://github.com/arku31/roadrunner-newrelic
 
-The special key which PHP may set to overwrite the transaction name is: `transaction_name`.
-For example: `transaction_name:foo` means: set transaction name as `foo`.
-By default, `RequestURI` is used as the transaction name.   
+The special key which PHP may set to overwrite the transaction name is: `transaction_name`. For
+example: `transaction_name:foo` means: set transaction name as `foo`. By default, `RequestURI` is used as the
+transaction name.
+
 ```php
         $resp = new \Nyholm\Psr7\Response();
         $rrNewRelic = [
@@ -42,6 +47,11 @@ By default, `RequestURI` is used as the transaction name.
         $resp = $resp->withHeader('rr_newrelic', $rrNewRelic);
 ```
 
+## v2.5.2 (27.10.2021)
+
+## 🩹 Fixes:
+
+- 🐛 Fix: panic in the TLS layer. The `http` plugin used `http` server instead of `https` in the rootCA routine.
 
 ## v2.5.1 (22.10.2021)
 
@@ -61,9 +71,9 @@ By default, `RequestURI` is used as the transaction name.
 
 ```yaml
 broadcast:
-    default:
-        driver: memory
-        interval: 1
+  default:
+    driver: memory
+    interval: 1
 ```
 
 ### New style:
@@ -72,7 +82,7 @@ broadcast:
 broadcast:
   default:
     driver: memory
-     config: {} <--------------- NEW
+      config: { } <--------------- NEW
 ```
 
 ```yaml
@@ -86,8 +96,8 @@ kv:
   memcached-rr:
     driver: memcached
     config: <--------------- NEW
-       addr:
-         - "127.0.0.1:11211"
+      addr:
+        - "127.0.0.1:11211"
 
 broadcast:
   default:
@@ -100,8 +110,11 @@ broadcast:
 ## 👀 New:
 
 - ✏️ **[BETA]** GRPC plugin update to v2.
-- ✏️ [Roadrunner-plugins](https://github.com/spiral/roadrunner-plugins) repository. This is the new home for the roadrunner plugins with documentation, configuration samples, and common problems.
-- ✏️ **[BETA]** Let's Encrypt support. RR now can obtain an SSL certificate/PK for your domain automatically. Here is the new configuration:
+- ✏️ [Roadrunner-plugins](https://github.com/spiral/roadrunner-plugins) repository. This is the new home for the
+  roadrunner plugins with documentation, configuration samples, and common problems.
+- ✏️ **[BETA]** Let's Encrypt support. RR now can obtain an SSL certificate/PK for your domain automatically. Here is
+  the new configuration:
+
 ```yaml
     ssl:
       # Host and port to listen on (eg.: `127.0.0.1:443`).
@@ -154,23 +167,25 @@ broadcast:
 - ✏️ Add a new option to the `logs` plugin to configure the line ending. By default, used `\n`.
 
 **New option**:
+
 ```yaml
 # Logs plugin settings
 logs:
-    (....)
-    # Line ending
-    #
-    # Default: "\n".
-    line_ending: "\n"
+  (....)
+  # Line ending
+  #
+  # Default: "\n".
+  line_ending: "\n"
 ```
 
 - ✏️ HTTP [Access log support](https://github.com/spiral/roadrunner-plugins/issues/34) at the `Info` log level.
+
 ```yaml
 http:
   address: 127.0.0.1:55555
   max_request_size: 1024
   access_logs: true <-------- Access Logs ON/OFF
-  middleware: []
+  middleware: [ ]
 
   pool:
     num_workers: 2
@@ -178,13 +193,16 @@ http:
     allocate_timeout: 60s
     destroy_timeout: 60s
 ```
-- ✏️ HTTP middleware to handle `X-Sendfile` [header](https://github.com/spiral/roadrunner-plugins/issues/9).
-  Middleware reads the file in 10MB chunks. So, for example for the 5Gb file, only 10MB of RSS will be used. If the file size is smaller than 10MB, the middleware fits the buffer to the file size.
+
+- ✏️ HTTP middleware to handle `X-Sendfile` [header](https://github.com/spiral/roadrunner-plugins/issues/9). Middleware
+  reads the file in 10MB chunks. So, for example for the 5Gb file, only 10MB of RSS will be used. If the file size is
+  smaller than 10MB, the middleware fits the buffer to the file size.
+
 ```yaml
 http:
   address: 127.0.0.1:44444
   max_request_size: 1024
-  middleware: ["sendfile"] <----- NEW MIDDLEWARE
+  middleware: [ "sendfile" ] <----- NEW MIDDLEWARE
 
   pool:
     num_workers: 2
@@ -194,6 +212,7 @@ http:
 ```
 
 - ✏️ Service plugin now supports env variables passing to the script/executable/binary/any like in the `server` plugin:
+
 ```yaml
 service:
   some_service_1:
@@ -201,21 +220,25 @@ service:
     process_num: 1
     exec_timeout: 5s # s,m,h (seconds, minutes, hours)
     remain_after_exit: true
-    env:  <----------------- NEW
+    env: <----------------- NEW
       foo: "BAR"
     restart_sec: 1
 ```
 
 - ✏️ Server plugin can accept scripts (sh, bash, etc) in it's `command` configuration key:
+
 ```yaml
 server:
-    command: "./script.sh OR sh script.sh" <--- UPDATED
-    relay: "pipes"
-    relay_timeout: "20s"
+  command: "./script.sh OR sh script.sh" <--- UPDATED
+  relay: "pipes"
+  relay_timeout: "20s"
 ```
-The script should start a worker as the last command. For the `pipes`, scripts should not contain programs, which can close `stdin`, `stdout` or `stderr`.
+
+The script should start a worker as the last command. For the `pipes`, scripts should not contain programs, which can
+close `stdin`, `stdout` or `stderr`.
 
 - ✏️ Nats jobs driver support - [PR](https://github.com/spiral/roadrunner-plugins/pull/68).
+
 ```yaml
 nats:
   addr: "demo.nats.io"
@@ -243,13 +266,15 @@ jobs:
 
   consume: [ "test-1" ]
 ```
+
 - Driver uses NATS JetStream API and is not compatible with non-js API.
 
 
-- ✏️ Response API for the NATS, RabbitMQ, SQS and Beanstalk drivers. This means, that you'll be able to respond to a specified in the response queue.
-  Limitations:
-  - To send a response to the queue maintained by the RR, you should send it as a `Job` type. There are no limitations for the responses into the other queues (tubes, subjects).
-  - Driver uses the same endpoint (address) to send the response as specified in the configuration.
+- ✏️ Response API for the NATS, RabbitMQ, SQS and Beanstalk drivers. This means, that you'll be able to respond to a
+  specified in the response queue. Limitations:
+    - To send a response to the queue maintained by the RR, you should send it as a `Job` type. There are no limitations
+      for the responses into the other queues (tubes, subjects).
+    - Driver uses the same endpoint (address) to send the response as specified in the configuration.
 
 ## 🩹 Fixes:
 
@@ -272,7 +297,8 @@ jobs:
 ## 🩹 Fixes:
 
 - 🐛 Fix: bug with not-idempotent call to the `attributes.Init`.
-- 🐛 Fix: memory jobs driver behavior. Now memory driver starts consuming automatically if the user consumes the pipeline in the configuration.
+- 🐛 Fix: memory jobs driver behavior. Now memory driver starts consuming automatically if the user consumes the
+  pipeline in the configuration.
 
 ## v2.4.0 (02.09.2021)
 
@@ -282,16 +308,23 @@ jobs:
 
 ## 👀 New:
 
-- ✏️ Long-awaited, reworked `Jobs` plugin with pluggable drivers. Now you can allocate/destroy pipelines in the runtime. Drivers included in the initial release: `RabbitMQ (0-9-1)`, `SQS v2`, `beanstalk`, `memory` and local queue powered by the `boltdb`. [PR](https://github.com/spiral/roadrunner/pull/726)
-- ✏️ Support for the IPv6 (`tcp|http(s)|empty [::]:port`, `tcp|http(s)|empty [::1]:port`, `tcp|http(s)|empty :// [0:0:0:0:0:0:0:1]:port`) for RPC, HTTP and other plugins. [RFC](https://datatracker.ietf.org/doc/html/rfc2732#section-2)
+- ✏️ Long-awaited, reworked `Jobs` plugin with pluggable drivers. Now you can allocate/destroy pipelines in the runtime.
+  Drivers included in the initial release: `RabbitMQ (0-9-1)`, `SQS v2`, `beanstalk`, `memory` and local queue powered
+  by the `boltdb`. [PR](https://github.com/spiral/roadrunner/pull/726)
+- ✏️ Support for the IPv6 (`tcp|http(s)|empty [::]:port`, `tcp|http(s)|empty [::1]:port`
+  , `tcp|http(s)|empty :// [0:0:0:0:0:0:0:1]:port`) for RPC, HTTP and other
+  plugins. [RFC](https://datatracker.ietf.org/doc/html/rfc2732#section-2)
 - ✏️ Support for the Docker images via GitHub packages.
 - ✏️ Go 1.17 support for the all spiral packages.
 
 ## 🩹 Fixes:
 
-- 🐛 Fix: fixed bug with goroutines waiting on the internal worker's container channel, [issue](https://github.com/spiral/roadrunner/issues/750).
-- 🐛 Fix: RR become unresponsive when new workers failed to re-allocate, [issue](https://github.com/spiral/roadrunner/issues/772).
-- 🐛 Fix: add `debug` pool config key to the `.rr.yaml` configuration [reference](https://github.com/spiral/roadrunner-binary/issues/79).
+- 🐛 Fix: fixed bug with goroutines waiting on the internal worker's container
+  channel, [issue](https://github.com/spiral/roadrunner/issues/750).
+- 🐛 Fix: RR become unresponsive when new workers failed to
+  re-allocate, [issue](https://github.com/spiral/roadrunner/issues/772).
+- 🐛 Fix: add `debug` pool config key to the `.rr.yaml`
+  configuration [reference](https://github.com/spiral/roadrunner-binary/issues/79).
 
 ## 📦 Packages:
 
