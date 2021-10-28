@@ -21,7 +21,10 @@ import (
 const (
 	pluginName string = "tcp"
 	RrMode     string = "RR_MODE"
-	bufferSize int    = 1024 * 1024 * 1
+)
+
+var (
+	bufferSize int = 1024 * 1024 * 1
 )
 
 /*
@@ -110,6 +113,7 @@ func (p *Plugin) Init(log logger.Logger, cfg config.Configurer, server server.Se
 
 	p.log = log
 	p.server = server
+	bufferSize = p.cfg.ReadBufferSize
 	return nil
 }
 
@@ -296,7 +300,7 @@ start:
 				p.sendClose(serverName, id, conn.RemoteAddr().String())
 				break
 			}
-			p.log.Error("connection read error", "error", errR)
+			p.log.Warn("read error, connection closed", "error", errR)
 			_ = conn.Close()
 
 			p.sendClose(serverName, id, conn.RemoteAddr().String())
@@ -314,6 +318,11 @@ start:
 		/*
 			n -> aaaaaaaa
 			total -> aaaaaaaa -> \n\r
+		*/
+		// BCE ??
+		/*
+			check delimiter algo:
+			check the ending of the payload
 		*/
 		if bytes.Equal((*rbuf)[:n][n-len(delim):], delim) {
 			// write w/o delimiter

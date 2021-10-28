@@ -9,6 +9,7 @@ import (
 	"testing"
 	"time"
 
+	json "github.com/json-iterator/go"
 	endure "github.com/spiral/endure/pkg/container"
 	"github.com/spiral/roadrunner-plugins/v2/config"
 	"github.com/spiral/roadrunner-plugins/v2/logger"
@@ -88,9 +89,12 @@ func TestTCPInit(t *testing.T) {
 	n, err := c.Read(buf)
 	require.NoError(t, err)
 
-	require.Equal(t, []byte("{\"remote_addr\":null,\"server\":null,\"uuid\":null,\"body\":null}"), buf[:n])
+	var d map[string]interface{}
+	err = json.Unmarshal(buf[:n], &d)
+	require.NoError(t, err)
+
+	require.Equal(t, d["remote_addr"].(string), c.LocalAddr().String())
 
 	stopCh <- struct{}{}
 	wg.Wait()
-	time.Sleep(time.Second * 100)
 }
