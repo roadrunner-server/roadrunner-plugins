@@ -215,30 +215,7 @@ func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 // sendLog sends log event (access log or regular debug log)
 func (h *Handler) sendLog(r *http.Request, status int, req *Request, start time.Time) {
-	if h.accessLogs {
-		body, _ := json.Marshal(r.Header)
-		reqLen := len(body) + int(r.ContentLength)
-
-		h.sendEvent(ResponseEvent{
-			Status:        strconv.Itoa(status),
-			Method:        req.Method,
-			URI:           req.URI,
-			ReqRemoteAddr: req.RemoteAddr,
-			Query:         req.RawQuery,
-
-			ReqLen:    strconv.Itoa(reqLen),
-			BytesSent: strconv.Itoa(int(r.ContentLength)),
-			Host:      r.Host,
-			UserAgent: r.UserAgent(),
-			Referer:   r.Referer(),
-
-			// https://en.wikipedia.org/wiki/Common_Log_Format
-			TimeLocal: time.Now().Format("02/Jan/06:15:04:05 -0700"),
-
-			Start:   start,
-			Elapsed: time.Since(start),
-		})
-	} else {
+	if !h.accessLogs {
 		h.sendEvent(ResponseEvent{
 			Status:        strconv.Itoa(status),
 			Method:        req.Method,
@@ -247,7 +224,32 @@ func (h *Handler) sendLog(r *http.Request, status int, req *Request, start time.
 			Start:         start,
 			Elapsed:       time.Since(start),
 		})
+
+		return
 	}
+
+	body, _ := json.Marshal(r.Header)
+	reqLen := len(body) + int(r.ContentLength)
+
+	h.sendEvent(ResponseEvent{
+		Status:        strconv.Itoa(status),
+		Method:        req.Method,
+		URI:           req.URI,
+		ReqRemoteAddr: req.RemoteAddr,
+		Query:         req.RawQuery,
+
+		ReqLen:    strconv.Itoa(reqLen),
+		BytesSent: strconv.Itoa(int(r.ContentLength)),
+		Host:      r.Host,
+		UserAgent: r.UserAgent(),
+		Referer:   r.Referer(),
+
+		// https://en.wikipedia.org/wiki/Common_Log_Format
+		TimeLocal: time.Now().Format("02/Jan/06:15:04:05 -0700"),
+
+		Start:   start,
+		Elapsed: time.Since(start),
+	})
 }
 
 // handleError will handle internal RR errors and return 500

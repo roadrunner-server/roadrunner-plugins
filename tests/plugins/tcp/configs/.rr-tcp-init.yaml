@@ -8,10 +8,10 @@ tcp:
   servers:
     tcp_access_point_1:
       addr: tcp://127.0.0.1:7777
-      delimiter: '\r\n'
-    server2:
-      addr: tcp://127.0.0.1:8889
-      delimiter: '\n\r\.\n\r'
+      delimiter: "\n\r\n"
+#    server2:
+#      addr: tcp://127.0.0.1:8889
+#      delimiter: "\n\r\n\r"
 
   pool:
     num_workers: 2

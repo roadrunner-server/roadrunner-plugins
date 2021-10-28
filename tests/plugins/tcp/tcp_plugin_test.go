@@ -81,14 +81,16 @@ func TestTCPInit(t *testing.T) {
 	time.Sleep(time.Second * 3)
 	c, err := net.Dial("tcp", "127.0.0.1:7777")
 	require.NoError(t, err)
-	_, err = c.Write([]byte("hello\r\n"))
+	_, err = c.Write([]byte("\n\r\n"))
 	require.NoError(t, err)
 
 	buf := make([]byte, 1024)
-	_, err = c.Read(buf)
+	n, err := c.Read(buf)
 	require.NoError(t, err)
 
-	time.Sleep(time.Second * 100)
+	require.Equal(t, []byte("{\"remote_addr\":null,\"server\":null,\"uuid\":null,\"body\":null}"), buf[:n])
+
 	stopCh <- struct{}{}
 	wg.Wait()
+	time.Sleep(time.Second * 100)
 }

@@ -9,7 +9,6 @@ import (
 	"sync"
 
 	"github.com/google/uuid"
-	json "github.com/json-iterator/go"
 	rrErrors "github.com/spiral/errors"
 	"github.com/spiral/roadrunner-plugins/v2/config"
 	"github.com/spiral/roadrunner-plugins/v2/logger"
@@ -22,6 +21,7 @@ import (
 const (
 	pluginName string = "tcp"
 	RrMode     string = "RR_MODE"
+	bufferSize int    = 1024 * 1024 * 1
 )
 
 /*
@@ -41,10 +41,17 @@ var (
 	WRITE      = []byte("WRITE")
 )
 
+const (
+	EventConnected    string = "CONNECTED"
+	EventIncomingData string = "DATA"
+	EventClose        string = "CLOSE"
+)
+
 type ServerInfo struct {
 	RemoteAddr string `json:"remote_addr"`
 	Server     string `json:"server"`
 	UUID       string `json:"uuid"`
+	Event      string `json:"event"`
 }
 
 type Plugin struct {
@@ -55,6 +62,10 @@ type Plugin struct {
 	connections sync.Map // uuid -> conn
 
 	wPool pool.Pool
+
+	resBufPool   sync.Pool
+	readBufPool  sync.Pool
+	servInfoPool sync.Pool
 }
 
 func (p *Plugin) Init(log logger.Logger, cfg config.Configurer, server server.Server) error {
@@ -69,9 +80,36 @@ func (p *Plugin) Init(log logger.Logger, cfg config.Configurer, server server.Se
 		return rrErrors.E(op, err)
 	}
 
+	err = p.cfg.InitDefault()
+	if err != nil {
+		return err
+	}
+
+	// buffer sent to the user
+	p.resBufPool = sync.Pool{
+		New: func() interface{} {
+			buf := new(bytes.Buffer)
+			buf.Grow(bufferSize)
+			return buf
+		},
+	}
+
+	// cyclic buffer to read the data from the connection
+	p.readBufPool = sync.Pool{
+		New: func() interface{} {
+			buf := make([]byte, bufferSize)
+			return &buf
+		},
+	}
+
+	p.servInfoPool = sync.Pool{
+		New: func() interface{} {
+			return new(ServerInfo)
+		},
+	}
+
 	p.log = log
 	p.server = server
-
 	return nil
 }
 
@@ -81,39 +119,59 @@ func (p *Plugin) Serve() chan error {
 	var err error
 	p.wPool, err = p.server.NewWorkerPool(context.Background(), p.cfg.Pool, map[string]string{RrMode: pluginName})
 	if err != nil {
-		panic(err)
+		errCh <- err
+		return errCh
 	}
 
-	go func() {
-		for k := range p.cfg.Servers {
-			go func(addr string, delim []byte, name string) {
-				// create a TCP listener
-				l, err := utils.CreateListener(addr)
+	for k := range p.cfg.Servers {
+		go func(addr string, delim []byte, name string) {
+			// create a TCP listener
+			l, err := utils.CreateListener(addr)
+			if err != nil {
+				errCh <- err
+				return
+			}
+
+			for {
+				conn, err := l.Accept()
 				if err != nil {
-					errCh <- err
+					p.log.Warn("listener error, stopping", "error", err)
+					// just stop
 					return
 				}
 
-				for {
-					conn, err := l.Accept()
-					if err != nil {
-						p.log.Warn("listener error, stopping", "error", err)
-						// just stop
-						return
-					}
-
-					go func() {
-						p.handleConnection(conn, delim, name)
-					}()
-				}
-			}(p.cfg.Servers[k].Addr, p.cfg.Servers[k].delimBytes, k)
-		}
-	}()
+				go func() {
+					p.handleConnection(conn, delim, name)
+				}()
+			}
+		}(p.cfg.Servers[k].Addr, p.cfg.Servers[k].delimBytes, k)
+	}
 
 	return errCh
 }
 
 func (p *Plugin) Stop() error {
+	// close all connections
+	p.connections.Range(func(_, value interface{}) bool {
+		conn := value.(net.Conn)
+		if conn != nil {
+			_ = conn.Close()
+		}
+		return true
+	})
+	return nil
+}
+
+func (p *Plugin) Reset() error {
+	p.Lock()
+	defer p.Unlock()
+
+	var err error
+	p.wPool, err = p.server.NewWorkerPool(context.Background(), p.cfg.Pool, map[string]string{RrMode: pluginName})
+	if err != nil {
+		return err
+	}
+
 	return nil
 }
 
@@ -143,107 +201,196 @@ func (p *Plugin) RPC() interface{} {
 func (p *Plugin) handleConnection(conn net.Conn, delim []byte, serverName string) {
 	// generate id for the connection
 	id := uuid.NewString()
+	// store connection to close from outside
 	p.connections.Store(id, conn)
 	defer p.connections.Delete(id)
 
-	// todo(rustatian): TO sync.Pool
-	rbuf := make([]byte, 1024)
-	resbuf := make([]byte, 0, 1024)
-
-start:
-	for {
-		n, err := conn.Read(rbuf)
-		if err != nil {
-			if errors.Is(err, io.EOF) {
-				break
-			}
-			p.log.Error("read data error", "error", err)
-			break
-		}
-
-		if n < len(delim) {
-			p.log.Error("received small payload from the connection. less than delimiter")
-			panic("boom")
-		}
-
-		/*
-			rbuf -> 1024
-			10 bytes
-			rbuf = rbuf[:n]
-			n >= delim
-		*/
-
-		//
-		if n == len(delim) {
-			if bytes.Equal(rbuf[:n], delim) {
-				// end of the data
-				break
-			}
-			resbuf = append(resbuf, rbuf[:n]...)
-			continue
-		}
-
-		/*
-			n -> aaaaaaaa
-			total -> aaaaaaaa -> \n\r
-		*/
-		if bytes.Equal(rbuf[:n][n-len(delim):], delim) {
-			resbuf = append(resbuf, rbuf[:n][:n-len(delim)]...)
-			break
-		}
-
-		resbuf = append(resbuf, rbuf[:n]...)
-	}
-
-	// TODO(rustatian): to sync.Pool
-	si := &ServerInfo{
-		RemoteAddr: conn.RemoteAddr().String(),
-		Server:     serverName,
-		UUID:       id,
-	}
-
-	pldCtx, err := json.Marshal(si)
+	pldCtxConnected, err := p.generate(EventConnected, serverName, id, conn.RemoteAddr().String())
 	if err != nil {
-		panic(err)
+		p.log.Error("payload marshaling error", "error", err)
+		return
 	}
 
 	pld := &payload.Payload{
-		Context: pldCtx,
-		Body:    resbuf,
+		Context: pldCtxConnected,
 	}
 
+	// send connected
+	p.RLock()
 	rsp, err := p.wPool.Exec(pld)
+	p.RUnlock()
 	if err != nil {
 		p.log.Error("execute error", "error", err)
+		_ = conn.Close()
 		return
 	}
 
 	switch {
 	case bytes.Equal(rsp.Context, CONTINUE):
-		goto start
+		p.read(conn, delim, id, serverName)
+		return
 	case bytes.Equal(rsp.Context, WRITE):
 		_, err = conn.Write(rsp.Body)
 		if err != nil {
 			p.log.Error("write response error", "error", err)
+			_ = conn.Close()
+
+			p.sendClose(serverName, id, conn.RemoteAddr().String())
 			return
 		}
-		goto start
+
+		p.read(conn, delim, id, serverName)
+		return
 	case bytes.Equal(rsp.Context, WRITECLOSE):
 		_, err = conn.Write(rsp.Body)
 		if err != nil {
 			p.log.Error("write response error", "error", err)
+			_ = conn.Close()
+
+			p.sendClose(serverName, id, conn.RemoteAddr().String())
 			return
 		}
 		err = conn.Close()
 		if err != nil {
 			p.log.Error("close connection error", "error", err)
 		}
+
+		p.sendClose(serverName, id, conn.RemoteAddr().String())
 		return
 	case bytes.Equal(rsp.Context, CLOSE):
 		err = conn.Close()
 		if err != nil {
 			p.log.Error("close connection error", "error", err)
 		}
+
+		p.sendClose(serverName, id, conn.RemoteAddr().String())
+		return
+	default:
+		err = conn.Close()
+		if err != nil {
+			p.log.Error("close error", "error", err)
+		}
+
+		p.sendClose(serverName, id, conn.RemoteAddr().String())
+		return
+	}
+}
+
+func (p *Plugin) read(conn net.Conn, delim []byte, id, serverName string) {
+	rbuf := p.getReadBuf()
+	defer p.putReadBuf(rbuf)
+	resbuf := p.getResBuf()
+	defer p.putResBuf(resbuf)
+
+	pldCtxData, err := p.generate(EventIncomingData, serverName, id, conn.RemoteAddr().String())
+	if err != nil {
+		p.log.Error("generate payload error", "error", err)
+		return
+	}
+
+start:
+	for {
+		n, errR := conn.Read(*rbuf)
+		if errR != nil {
+			if errors.Is(errR, io.EOF) {
+				p.sendClose(serverName, id, conn.RemoteAddr().String())
+				break
+			}
+			p.log.Error("connection read error", "error", errR)
+			_ = conn.Close()
+
+			p.sendClose(serverName, id, conn.RemoteAddr().String())
+			return
+		}
+
+		if n < len(delim) {
+			p.log.Error("received small payload from the connection. less than delimiter")
+			_ = conn.Close()
+
+			p.sendClose(serverName, id, conn.RemoteAddr().String())
+			return
+		}
+
+		/*
+			n -> aaaaaaaa
+			total -> aaaaaaaa -> \n\r
+		*/
+		if bytes.Equal((*rbuf)[:n][n-len(delim):], delim) {
+			// write w/o delimiter
+			resbuf.Write((*rbuf)[:n])
+			break
+		}
+
+		resbuf.Write((*rbuf)[:n])
+	}
+
+	// connection closed
+	if resbuf.Len() == 0 {
+		return
+	}
+
+	pld := &payload.Payload{
+		Context: pldCtxData,
+		Body:    resbuf.Bytes(),
+	}
+
+	// reset protection
+	p.RLock()
+	rsp, err := p.wPool.Exec(pld)
+	p.RUnlock()
+	if err != nil {
+		p.log.Error("execute error", "error", err)
+		_ = conn.Close()
+		return
+	}
+
+	switch {
+	case bytes.Equal(rsp.Context, CONTINUE):
+		resbuf.Reset()
+		goto start
+	case bytes.Equal(rsp.Context, WRITE):
+		_, err = conn.Write(rsp.Body)
+		if err != nil {
+			p.log.Error("write response error", "error", err)
+			_ = conn.Close()
+
+			p.sendClose(serverName, id, conn.RemoteAddr().String())
+			return
+		}
+
+		resbuf.Reset()
+		goto start
+	case bytes.Equal(rsp.Context, WRITECLOSE):
+		_, err = conn.Write(rsp.Body)
+		if err != nil {
+			p.log.Error("write response error", "error", err)
+			_ = conn.Close()
+
+			p.sendClose(serverName, id, conn.RemoteAddr().String())
+			return
+		}
+		err = conn.Close()
+		if err != nil {
+			p.log.Error("close connection error", "error", err)
+		}
+
+		p.sendClose(serverName, id, conn.RemoteAddr().String())
+		return
+	case bytes.Equal(rsp.Context, CLOSE):
+		err = conn.Close()
+		if err != nil {
+			p.log.Error("close connection error", "error", err)
+		}
+
+		p.sendClose(serverName, id, conn.RemoteAddr().String())
+		return
+	default:
+		err = conn.Close()
+		if err != nil {
+			p.log.Error("close connection error", "error", err)
+		}
+
+		p.sendClose(serverName, id, conn.RemoteAddr().String())
 		return
 	}
 }

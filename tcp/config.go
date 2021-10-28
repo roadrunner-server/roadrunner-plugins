@@ -6,15 +6,15 @@ import (
 	"github.com/spiral/roadrunner/v2/utils"
 )
 
-type TCPServer struct {
+type Server struct {
 	Addr       string `mapstructure:"addr"`
 	Delimiter  string `mapstructure:"delimiter"`
 	delimBytes []byte
 }
 
 type Config struct {
-	Servers map[string]*TCPServer `mapstructure:"servers"`
-	Pool    *pool.Config          `mapstructure:"pool"`
+	Servers map[string]*Server `mapstructure:"servers"`
+	Pool    *pool.Config       `mapstructure:"pool"`
 }
 
 func (c *Config) InitDefault() error {
@@ -24,14 +24,19 @@ func (c *Config) InitDefault() error {
 
 	for k, v := range c.Servers {
 		if v.Delimiter == "" {
-			return errors.Errorf("no delimiter for the server: %s", k)
+			v.Delimiter = "\r\n"
+			v.delimBytes = []byte{'\r', '\n'}
 		}
 
 		if v.Addr == "" {
 			return errors.Errorf("empty address for the server: %s", k)
 		}
 
-		// delimiter bytes used here to compare with the connection data
+		// already written
+		if len(v.delimBytes) > 0 {
+			continue
+		}
+
 		v.delimBytes = utils.AsBytes(v.Delimiter)
 	}
 

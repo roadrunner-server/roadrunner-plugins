@@ -16,6 +16,7 @@ test_coverage:
 	go test -v -race -cover -tags=debug -coverpkg=./... -coverprofile=./coverage-ci/new_relic_mdw.out -covermode=atomic ./http/middleware/new_relic
 	go test -timeout 20m -v -race -cover -tags=debug -coverpkg=./... -coverprofile=./coverage-ci/jobs_core.out -covermode=atomic ./tests/plugins/jobs
 	go test -v -race -cover -tags=debug -coverpkg=./... -coverprofile=./coverage-ci/kv_plugin.out -covermode=atomic ./tests/plugins/kv
+	go test -v -race -cover -tags=debug -coverpkg=./... -coverprofile=./coverage-ci/tcp_plugin.out -covermode=atomic ./tests/plugins/tcp
 	go test -v -race -cover -tags=debug -coverpkg=./... -coverprofile=./coverage-ci/reload.out -covermode=atomic ./tests/plugins/reload
 	go test -v -race -cover -tags=debug -coverpkg=./... -coverprofile=./coverage-ci/grpc_codec.out -covermode=atomic ./grpc/codec
 	go test -v -race -cover -tags=debug -coverpkg=./... -coverprofile=./coverage-ci/grpc_parser.out -covermode=atomic ./grpc/parser
@@ -52,6 +53,7 @@ test: ## Run application tests
 	go test -v -race -tags=debug ./grpc/parser
 	go test -timeout 20m -v -race -tags=debug ./tests/plugins/jobs
 	go test -v -race -tags=debug ./tests/plugins/kv
+	go test -v -race -tags=debug ./tests/plugins/tcp
 	go test -v -race -tags=debug ./tests/plugins/broadcast
 	go test -v -race -tags=debug ./tests/plugins/websockets
 	go test -v -race -tags=debug ./tests/plugins/http
