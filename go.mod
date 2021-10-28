@@ -24,7 +24,7 @@ require (
 	github.com/klauspost/compress v1.13.6
 	github.com/mholt/acmez v1.0.0
 	github.com/nats-io/nats.go v1.13.0
-	github.com/newrelic/go-agent/v3 v3.15.0
+	github.com/newrelic/go-agent/v3 v3.15.1
 	github.com/prometheus/client_golang v1.11.0
 	github.com/rabbitmq/amqp091-go v1.1.0
 	github.com/spf13/viper v1.9.0
