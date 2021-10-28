@@ -21,7 +21,6 @@ while (true) {
             'body' => $request->body
         ]));
 
-        $tcpWorker->close();
     } catch (\Throwable $e) {
         $tcpWorker->respond("Something went wrong");
 

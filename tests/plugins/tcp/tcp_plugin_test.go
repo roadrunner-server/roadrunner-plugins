@@ -95,6 +95,38 @@ func TestTCPInit(t *testing.T) {
 
 	require.Equal(t, d["remote_addr"].(string), c.LocalAddr().String())
 
+	// ---
+
+	c, err = net.Dial("tcp", "127.0.0.1:8889")
+	require.NoError(t, err)
+	_, err = c.Write([]byte("helooooo\r\n"))
+	require.NoError(t, err)
+
+	buf = make([]byte, 1024)
+	n, err = c.Read(buf)
+	require.NoError(t, err)
+
+	err = json.Unmarshal(buf[:n], &d)
+	require.NoError(t, err)
+
+	require.Equal(t, d["remote_addr"].(string), c.LocalAddr().String())
+
+	// ---
+
+	c, err = net.Dial("tcp", "127.0.0.1:8810")
+	require.NoError(t, err)
+	_, err = c.Write([]byte("HEEEEEEEEEEEEEYYYYYYYYYYYYY\r\n"))
+	require.NoError(t, err)
+
+	buf = make([]byte, 1024)
+	n, err = c.Read(buf)
+	require.NoError(t, err)
+
+	err = json.Unmarshal(buf[:n], &d)
+	require.NoError(t, err)
+
+	require.Equal(t, d["remote_addr"].(string), c.LocalAddr().String())
+
 	stopCh <- struct{}{}
 	wg.Wait()
 }
