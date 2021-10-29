@@ -67,7 +67,7 @@ func TestRpcInit(t *testing.T) {
 	wg := &sync.WaitGroup{}
 	wg.Add(1)
 
-	tt := time.NewTimer(time.Second * 10)
+	tt := time.NewTimer(time.Second * 3)
 
 	go func() {
 		defer wg.Done()
@@ -76,14 +76,8 @@ func TestRpcInit(t *testing.T) {
 			select {
 			case e := <-ch:
 				// just stop, this is ok
-				if errors.Is(errors.Disabled, e.Error) {
-					return
-				}
-				assert.Fail(t, "error", e.Error.Error())
-				err = cont.Stop()
-				if err != nil {
-					assert.FailNow(t, "error", err.Error())
-				}
+				assert.Error(t, e.Error)
+				_ = cont.Stop()
 			case <-sig:
 				err = cont.Stop()
 				if err != nil {
@@ -91,12 +85,7 @@ func TestRpcInit(t *testing.T) {
 				}
 				return
 			case <-tt.C:
-				// timeout
-				err = cont.Stop()
-				if err != nil {
-					assert.FailNow(t, "error", err.Error())
-				}
-				assert.Fail(t, "timeout")
+				return
 			}
 		}
 	}()
