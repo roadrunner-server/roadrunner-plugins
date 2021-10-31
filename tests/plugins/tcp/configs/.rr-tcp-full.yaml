@@ -7,13 +7,13 @@ server:
 tcp:
   servers:
     tcp_access_point_1:
-      addr: tcp://127.0.0.1:7777
+      addr: tcp://127.0.0.1:7778
       delimiter: "\r\n"
     server2:
-      addr: tcp://127.0.0.1:8889
+      addr: tcp://127.0.0.1:8811
       read_buf_size: 10
     server3:
-      addr: tcp://127.0.0.1:8810
+      addr: tcp://127.0.0.1:8812
       delimiter: "\r\n"
       read_buf_size: 1
 

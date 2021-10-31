@@ -273,29 +273,86 @@ func TestTCPFull(t *testing.T) {
 		}
 	}()
 
-	time.Sleep(time.Second * 3)
-	c, err := net.Dial("tcp", "127.0.0.1:7777")
-	require.NoError(t, err)
+	waitCh := make(chan struct{}, 3)
 
-	buf := make([]byte, 1024)
-	n, err := c.Read(buf)
-	require.NoError(t, err)
+	go func() {
+		time.Sleep(time.Second * 3)
+		c, err := net.Dial("tcp", "127.0.0.1:7778")
+		require.NoError(t, err)
 
-	require.Equal(t, []byte("hello \r\n"), buf[:n])
+		buf := make([]byte, 1024)
+		n, err := c.Read(buf)
+		require.NoError(t, err)
 
-	_, err = c.Write([]byte("hello \r\n"))
-	require.NoError(t, err)
+		require.Equal(t, []byte("hello \r\n"), buf[:n])
 
-	n, err = c.Read(buf)
-	require.NoError(t, err)
+		_, err = c.Write([]byte("hello \r\n"))
+		require.NoError(t, err)
 
-	var d map[string]interface{}
-	err = json.Unmarshal(buf[:n], &d)
-	require.NoError(t, err)
+		n, err = c.Read(buf)
+		require.NoError(t, err)
 
-	require.Equal(t, d["remote_addr"].(string), c.LocalAddr().String())
+		var d map[string]interface{}
+		err = json.Unmarshal(buf[:n], &d)
+		require.NoError(t, err)
+
+		require.Equal(t, d["remote_addr"].(string), c.LocalAddr().String())
+		waitCh <- struct{}{}
+	}()
+	go func() {
+		time.Sleep(time.Second * 3)
+		c, err := net.Dial("tcp", "127.0.0.1:8811")
+		require.NoError(t, err)
+
+		buf := make([]byte, 1024)
+		n, err := c.Read(buf)
+		require.NoError(t, err)
+
+		require.Equal(t, []byte("hello \r\n"), buf[:n])
+
+		_, err = c.Write([]byte("hello \r\n"))
+		require.NoError(t, err)
+
+		n, err = c.Read(buf)
+		require.NoError(t, err)
+
+		var d map[string]interface{}
+		err = json.Unmarshal(buf[:n], &d)
+		require.NoError(t, err)
+
+		require.Equal(t, d["remote_addr"].(string), c.LocalAddr().String())
+		waitCh <- struct{}{}
+	}()
+	go func() {
+		time.Sleep(time.Second * 3)
+		c, err := net.Dial("tcp", "127.0.0.1:8812")
+		require.NoError(t, err)
+
+		buf := make([]byte, 1024)
+		n, err := c.Read(buf)
+		require.NoError(t, err)
+
+		require.Equal(t, []byte("hello \r\n"), buf[:n])
+
+		_, err = c.Write([]byte("hello \r\n"))
+		require.NoError(t, err)
+
+		n, err = c.Read(buf)
+		require.NoError(t, err)
+
+		var d map[string]interface{}
+		err = json.Unmarshal(buf[:n], &d)
+		require.NoError(t, err)
+
+		require.Equal(t, d["remote_addr"].(string), c.LocalAddr().String())
+		waitCh <- struct{}{}
+	}()
+
 	// ---
 
+	<-waitCh
+	<-waitCh
+	<-waitCh
 	stopCh <- struct{}{}
 	wg.Wait()
 }
