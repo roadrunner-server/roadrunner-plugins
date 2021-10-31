@@ -3,16 +3,14 @@ package tcp
 import (
 	"bytes"
 	"context"
-	"errors"
-	"io"
 	"net"
 	"sync"
 
-	"github.com/google/uuid"
 	rrErrors "github.com/spiral/errors"
 	"github.com/spiral/roadrunner-plugins/v2/config"
 	"github.com/spiral/roadrunner-plugins/v2/logger"
 	"github.com/spiral/roadrunner-plugins/v2/server"
+	"github.com/spiral/roadrunner-plugins/v2/tcp/handler"
 	"github.com/spiral/roadrunner/v2/payload"
 	"github.com/spiral/roadrunner/v2/pool"
 	"github.com/spiral/roadrunner/v2/utils"
@@ -26,26 +24,6 @@ const (
 var (
 	bufferSize int = 1024 * 1024 * 1
 )
-
-var (
-	CLOSE      = []byte("CLOSE")
-	CONTINUE   = []byte("CONTINUE")
-	WRITECLOSE = []byte("WRITECLOSE")
-	WRITE      = []byte("WRITE")
-)
-
-const (
-	EventConnected    string = "CONNECTED"
-	EventIncomingData string = "DATA"
-	EventClose        string = "CLOSE"
-)
-
-type ServerInfo struct {
-	RemoteAddr string `json:"remote_addr"`
-	Server     string `json:"server"`
-	UUID       string `json:"uuid"`
-	Event      string `json:"event"`
-}
 
 type Plugin struct {
 	sync.RWMutex
@@ -98,7 +76,7 @@ func (p *Plugin) Init(log logger.Logger, cfg config.Configurer, server server.Se
 
 	p.servInfoPool = sync.Pool{
 		New: func() interface{} {
-			return new(ServerInfo)
+			return new(handler.ServerInfo)
 		},
 	}
 
@@ -141,7 +119,12 @@ func (p *Plugin) Serve() chan error {
 					return
 				}
 
-				go p.handleConnection(conn, delim, name)
+				go func() {
+					h := handler.NewHandler(conn, delim, name, p.Exec, &p.pldPool, &p.servInfoPool, &p.readBufPool, &p.resBufPool, &p.connections, p.log)
+					h.Start()
+					// release resources
+					h.Release()
+				}()
 			}
 		}(p.cfg.Servers[k].Addr, p.cfg.Servers[k].delimBytes, k)
 	}
@@ -197,124 +180,14 @@ func (p *Plugin) RPC() interface{} {
 	}
 }
 
-func (p *Plugin) handleConnection(conn net.Conn, delim []byte, serverName string) {
-	// generate id for the connection
-	id := uuid.NewString()
-	// store connection to close from outside
-	p.connections.Store(id, conn)
-	defer p.connections.Delete(id)
-
-	pldCtxConnected, err := p.generate(EventConnected, serverName, id, conn.RemoteAddr().String())
-	if err != nil {
-		p.log.Error("payload marshaling error", "error", err)
-		return
-	}
-
-	pld := p.getPayload()
-	pld.Context = pldCtxConnected
-
-	// send connected
+func (p *Plugin) Exec(pld *payload.Payload) (*payload.Payload, error) {
 	p.RLock()
 	rsp, err := p.wPool.Exec(pld)
-	p.RUnlock()
 	if err != nil {
-		p.log.Error("execute error", "error", err)
-		_ = conn.Close()
-		p.putPayload(pld)
-		return
-	}
-	p.putPayload(pld)
-
-	// handleAndContinue return true if the RR needs to return from the loop, or false to continue
-	if p.handleAndContinue(rsp, conn, serverName, id) {
-		p.readLoop(conn, delim, id, serverName)
-	}
-}
-
-func (p *Plugin) readLoop(conn net.Conn, delim []byte, id, serverName string) {
-	rbuf := p.getReadBuf()
-	resbuf := p.getResBuf()
-	defer p.putReadBuf(rbuf)
-	defer p.putResBuf(resbuf)
-
-	pldCtxData, err := p.generate(EventIncomingData, serverName, id, conn.RemoteAddr().String())
-	if err != nil {
-		p.log.Error("generate payload error", "error", err)
-		return
-	}
-
-	// start read loop
-	for {
-		// read a data from the connection
-		for {
-			n, errR := conn.Read(*rbuf)
-			if errR != nil {
-				if errors.Is(errR, io.EOF) {
-					p.sendClose(serverName, id, conn.RemoteAddr().String())
-					break
-				}
-				p.log.Warn("readLoop error, connection closed", "error", errR)
-				_ = conn.Close()
-
-				p.sendClose(serverName, id, conn.RemoteAddr().String())
-				return
-			}
-
-			if n < len(delim) {
-				p.log.Error("received small payload from the connection. less than delimiter")
-				_ = conn.Close()
-
-				p.sendClose(serverName, id, conn.RemoteAddr().String())
-				return
-			}
-
-			/*
-				n -> aaaaaaaa
-				total -> aaaaaaaa -> \n\r
-			*/
-			// BCE ??
-			/*
-				check delimiter algo:
-				check the ending of the payload
-			*/
-			if bytes.Equal((*rbuf)[:n][n-len(delim):], delim) {
-				// write w/o delimiter
-				resbuf.Write((*rbuf)[:n])
-				break
-			}
-
-			resbuf.Write((*rbuf)[:n])
-		}
-
-		// connection closed
-		if resbuf.Len() == 0 {
-			return
-		}
-
-		pld := p.getPayload()
-		pld.Context = pldCtxData
-		pld.Body = resbuf.Bytes()
-
-		// reset protection
-		p.RLock()
-		rsp, err := p.wPool.Exec(pld)
 		p.RUnlock()
-		if err != nil {
-			p.log.Error("execute error", "error", err)
-			_ = conn.Close()
-			p.putPayload(pld)
-			return
-		}
-
-		// handleAndContinue return true if the RR needs to return from the loop, or false to continue
-		if p.handleAndContinue(rsp, conn, serverName, id) {
-			// reset the readLoop-buffer
-			resbuf.Reset()
-			p.putPayload(pld)
-			continue
-		}
-
-		p.putPayload(pld)
-		return
+		return nil, err
 	}
+
+	p.RUnlock()
+	return rsp, nil
 }

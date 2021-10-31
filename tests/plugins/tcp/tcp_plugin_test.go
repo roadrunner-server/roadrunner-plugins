@@ -286,7 +286,7 @@ func TestTCPFull(t *testing.T) {
 
 		require.Equal(t, []byte("hello \r\n"), buf[:n])
 
-		for i := 0; i < 10; i++ {
+		for i := 0; i < 100; i++ {
 			_, err = c.Write([]byte("foo \r\n"))
 			require.NoError(t, err)
 
@@ -313,7 +313,7 @@ func TestTCPFull(t *testing.T) {
 
 		require.Equal(t, []byte("hello \r\n"), buf[:n])
 
-		for i := 0; i < 10; i++ {
+		for i := 0; i < 100; i++ {
 			_, err = c.Write([]byte("bar \r\n"))
 			require.NoError(t, err)
 
@@ -340,7 +340,7 @@ func TestTCPFull(t *testing.T) {
 
 		require.Equal(t, []byte("hello \r\n"), buf[:n])
 
-		for i := 0; i < 10; i++ {
+		for i := 0; i < 100; i++ {
 			_, err = c.Write([]byte("baz \r\n"))
 			require.NoError(t, err)
 
