@@ -273,10 +273,10 @@ func TestTCPFull(t *testing.T) {
 		}
 	}()
 
+	time.Sleep(time.Second * 3)
 	waitCh := make(chan struct{}, 3)
 
 	go func() {
-		time.Sleep(time.Second * 3)
 		c, err := net.Dial("tcp", "127.0.0.1:7778")
 		require.NoError(t, err)
 
@@ -286,21 +286,24 @@ func TestTCPFull(t *testing.T) {
 
 		require.Equal(t, []byte("hello \r\n"), buf[:n])
 
-		_, err = c.Write([]byte("hello \r\n"))
-		require.NoError(t, err)
+		for i := 0; i < 10; i++ {
+			_, err = c.Write([]byte("foo \r\n"))
+			require.NoError(t, err)
 
-		n, err = c.Read(buf)
-		require.NoError(t, err)
+			n, err = c.Read(buf)
+			require.NoError(t, err)
 
-		var d map[string]interface{}
-		err = json.Unmarshal(buf[:n], &d)
-		require.NoError(t, err)
+			var d map[string]interface{}
+			err = json.Unmarshal(buf[:n], &d)
+			require.NoError(t, err)
 
-		require.Equal(t, d["remote_addr"].(string), c.LocalAddr().String())
+			require.Equal(t, d["remote_addr"].(string), "foo1")
+			require.Equal(t, d["body"].(string), "foo \r\n")
+		}
 		waitCh <- struct{}{}
 	}()
+
 	go func() {
-		time.Sleep(time.Second * 3)
 		c, err := net.Dial("tcp", "127.0.0.1:8811")
 		require.NoError(t, err)
 
@@ -310,21 +313,24 @@ func TestTCPFull(t *testing.T) {
 
 		require.Equal(t, []byte("hello \r\n"), buf[:n])
 
-		_, err = c.Write([]byte("hello \r\n"))
-		require.NoError(t, err)
+		for i := 0; i < 10; i++ {
+			_, err = c.Write([]byte("bar \r\n"))
+			require.NoError(t, err)
 
-		n, err = c.Read(buf)
-		require.NoError(t, err)
+			n, err = c.Read(buf)
+			require.NoError(t, err)
 
-		var d map[string]interface{}
-		err = json.Unmarshal(buf[:n], &d)
-		require.NoError(t, err)
+			var d map[string]interface{}
+			err = json.Unmarshal(buf[:n], &d)
+			require.NoError(t, err)
 
-		require.Equal(t, d["remote_addr"].(string), c.LocalAddr().String())
+			require.Equal(t, d["remote_addr"].(string), "foo2")
+			require.Equal(t, d["body"].(string), "bar \r\n")
+		}
 		waitCh <- struct{}{}
 	}()
+
 	go func() {
-		time.Sleep(time.Second * 3)
 		c, err := net.Dial("tcp", "127.0.0.1:8812")
 		require.NoError(t, err)
 
@@ -334,17 +340,20 @@ func TestTCPFull(t *testing.T) {
 
 		require.Equal(t, []byte("hello \r\n"), buf[:n])
 
-		_, err = c.Write([]byte("hello \r\n"))
-		require.NoError(t, err)
+		for i := 0; i < 10; i++ {
+			_, err = c.Write([]byte("baz \r\n"))
+			require.NoError(t, err)
 
-		n, err = c.Read(buf)
-		require.NoError(t, err)
+			n, err = c.Read(buf)
+			require.NoError(t, err)
 
-		var d map[string]interface{}
-		err = json.Unmarshal(buf[:n], &d)
-		require.NoError(t, err)
+			var d map[string]interface{}
+			err = json.Unmarshal(buf[:n], &d)
+			require.NoError(t, err)
 
-		require.Equal(t, d["remote_addr"].(string), c.LocalAddr().String())
+			require.Equal(t, d["remote_addr"].(string), "foo3")
+			require.Equal(t, d["body"].(string), "baz \r\n")
+		}
 		waitCh <- struct{}{}
 	}()
 

@@ -97,7 +97,7 @@ func (p *Plugin) Init(log logger.Logger, cfg config.Configurer, server server.Se
 		},
 	}
 
-	// cyclic buffer to read the data from the connection
+	// cyclic buffer to readLoop the data from the connection
 	p.readBufPool = sync.Pool{
 		New: func() interface{} {
 			buf := make([]byte, bufferSize)
@@ -144,9 +144,7 @@ func (p *Plugin) Serve() chan error {
 					return
 				}
 
-				go func() {
-					p.handleConnection(conn, delim, name)
-				}()
+				go p.handleConnection(conn, delim, name)
 			}
 		}(p.cfg.Servers[k].Addr, p.cfg.Servers[k].delimBytes, k)
 	}
@@ -229,58 +227,13 @@ func (p *Plugin) handleConnection(conn net.Conn, delim []byte, serverName string
 		return
 	}
 
-	switch {
-	case bytes.Equal(rsp.Context, CONTINUE):
-		p.read(conn, delim, id, serverName)
-		return
-	case bytes.Equal(rsp.Context, WRITE):
-		_, err = conn.Write(rsp.Body)
-		if err != nil {
-			p.log.Error("write response error", "error", err)
-			_ = conn.Close()
-
-			p.sendClose(serverName, id, conn.RemoteAddr().String())
-			return
-		}
-
-		p.read(conn, delim, id, serverName)
-		return
-	case bytes.Equal(rsp.Context, WRITECLOSE):
-		_, err = conn.Write(rsp.Body)
-		if err != nil {
-			p.log.Error("write response error", "error", err)
-			_ = conn.Close()
-
-			p.sendClose(serverName, id, conn.RemoteAddr().String())
-			return
-		}
-		err = conn.Close()
-		if err != nil {
-			p.log.Error("close connection error", "error", err)
-		}
-
-		p.sendClose(serverName, id, conn.RemoteAddr().String())
-		return
-	case bytes.Equal(rsp.Context, CLOSE):
-		err = conn.Close()
-		if err != nil {
-			p.log.Error("close connection error", "error", err)
-		}
-
-		p.sendClose(serverName, id, conn.RemoteAddr().String())
-		return
-	default:
-		err = conn.Close()
-		if err != nil {
-			p.log.Error("close error", "error", err)
-		}
-
-		p.sendClose(serverName, id, conn.RemoteAddr().String())
-		return
+	// handleAndContinue return true if the RR needs to return from the loop, or false to continue
+	if p.handleAndContinue(rsp, conn, serverName, id) {
+		p.readLoop(conn, delim, id, serverName)
 	}
 }
 
-func (p *Plugin) read(conn net.Conn, delim []byte, id, serverName string) {
+func (p *Plugin) readLoop(conn net.Conn, delim []byte, id, serverName string) {
 	rbuf := p.getReadBuf()
 	defer p.putReadBuf(rbuf)
 	resbuf := p.getResBuf()
@@ -292,114 +245,75 @@ func (p *Plugin) read(conn net.Conn, delim []byte, id, serverName string) {
 		return
 	}
 
-start:
+	// start readLoop loop
 	for {
-		n, errR := conn.Read(*rbuf)
-		if errR != nil {
-			if errors.Is(errR, io.EOF) {
+		// readLoop a data from the connection
+		for {
+			n, errR := conn.Read(*rbuf)
+			if errR != nil {
+				if errors.Is(errR, io.EOF) {
+					p.sendClose(serverName, id, conn.RemoteAddr().String())
+					break
+				}
+				p.log.Warn("readLoop error, connection closed", "error", errR)
+				_ = conn.Close()
+
 				p.sendClose(serverName, id, conn.RemoteAddr().String())
+				return
+			}
+
+			if n < len(delim) {
+				p.log.Error("received small payload from the connection. less than delimiter")
+				_ = conn.Close()
+
+				p.sendClose(serverName, id, conn.RemoteAddr().String())
+				return
+			}
+
+			/*
+				n -> aaaaaaaa
+				total -> aaaaaaaa -> \n\r
+			*/
+			// BCE ??
+			/*
+				check delimiter algo:
+				check the ending of the payload
+			*/
+			if bytes.Equal((*rbuf)[:n][n-len(delim):], delim) {
+				// write w/o delimiter
+				resbuf.Write((*rbuf)[:n])
 				break
 			}
-			p.log.Warn("read error, connection closed", "error", errR)
-			_ = conn.Close()
 
-			p.sendClose(serverName, id, conn.RemoteAddr().String())
-			return
-		}
-
-		if n < len(delim) {
-			p.log.Error("received small payload from the connection. less than delimiter")
-			_ = conn.Close()
-
-			p.sendClose(serverName, id, conn.RemoteAddr().String())
-			return
-		}
-
-		/*
-			n -> aaaaaaaa
-			total -> aaaaaaaa -> \n\r
-		*/
-		// BCE ??
-		/*
-			check delimiter algo:
-			check the ending of the payload
-		*/
-		if bytes.Equal((*rbuf)[:n][n-len(delim):], delim) {
-			// write w/o delimiter
 			resbuf.Write((*rbuf)[:n])
-			break
 		}
 
-		resbuf.Write((*rbuf)[:n])
-	}
-
-	// connection closed
-	if resbuf.Len() == 0 {
-		return
-	}
-
-	pld := &payload.Payload{
-		Context: pldCtxData,
-		Body:    resbuf.Bytes(),
-	}
-
-	// reset protection
-	p.RLock()
-	rsp, err := p.wPool.Exec(pld)
-	p.RUnlock()
-	if err != nil {
-		p.log.Error("execute error", "error", err)
-		_ = conn.Close()
-		return
-	}
-
-	switch {
-	case bytes.Equal(rsp.Context, CONTINUE):
-		resbuf.Reset()
-		goto start
-	case bytes.Equal(rsp.Context, WRITE):
-		_, err = conn.Write(rsp.Body)
-		if err != nil {
-			p.log.Error("write response error", "error", err)
-			_ = conn.Close()
-
-			p.sendClose(serverName, id, conn.RemoteAddr().String())
+		// connection closed
+		if resbuf.Len() == 0 {
 			return
 		}
 
-		resbuf.Reset()
-		goto start
-	case bytes.Equal(rsp.Context, WRITECLOSE):
-		_, err = conn.Write(rsp.Body)
-		if err != nil {
-			p.log.Error("write response error", "error", err)
-			_ = conn.Close()
+		pld := &payload.Payload{
+			Context: pldCtxData,
+			Body:    resbuf.Bytes(),
+		}
 
-			p.sendClose(serverName, id, conn.RemoteAddr().String())
+		// reset protection
+		p.RLock()
+		rsp, err := p.wPool.Exec(pld)
+		p.RUnlock()
+		if err != nil {
+			p.log.Error("execute error", "error", err)
+			_ = conn.Close()
 			return
 		}
-		err = conn.Close()
-		if err != nil {
-			p.log.Error("close connection error", "error", err)
-		}
 
-		p.sendClose(serverName, id, conn.RemoteAddr().String())
-		return
-	case bytes.Equal(rsp.Context, CLOSE):
-		err = conn.Close()
-		if err != nil {
-			p.log.Error("close connection error", "error", err)
+		// handleAndContinue return true if the RR needs to return from the loop, or false to continue
+		if p.handleAndContinue(rsp, conn, serverName, id) {
+			// reset the readLoop-buffer
+			resbuf.Reset()
+			continue
 		}
-
-		p.sendClose(serverName, id, conn.RemoteAddr().String())
-		return
-	default:
-		err = conn.Close()
-		if err != nil {
-			p.log.Error("close connection error", "error", err)
-		}
-
-		p.sendClose(serverName, id, conn.RemoteAddr().String())
 		return
 	}
 }

@@ -6,7 +6,7 @@ server:
 
 tcp:
   servers:
-    tcp_access_point_1:
+    server1:
       addr: tcp://127.0.0.1:7778
       delimiter: "\r\n"
     server2:
@@ -18,7 +18,7 @@ tcp:
       read_buf_size: 1
 
   pool:
-    num_workers: 2
+    num_workers: 5
     max_jobs: 0
     allocate_timeout: 60s
     destroy_timeout: 60s
