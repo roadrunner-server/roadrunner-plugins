@@ -89,11 +89,11 @@ func TestTCPInit(t *testing.T) {
 	n, err := c.Read(buf)
 	require.NoError(t, err)
 
-	var d map[string]interface{}
-	err = json.Unmarshal(buf[:n], &d)
+	var d1 map[string]interface{}
+	err = json.Unmarshal(buf[:n], &d1)
 	require.NoError(t, err)
 
-	require.Equal(t, d["remote_addr"].(string), c.LocalAddr().String())
+	require.Equal(t, d1["remote_addr"].(string), c.LocalAddr().String())
 
 	// ---
 
@@ -106,10 +106,11 @@ func TestTCPInit(t *testing.T) {
 	n, err = c.Read(buf)
 	require.NoError(t, err)
 
-	err = json.Unmarshal(buf[:n], &d)
+	var d2 map[string]interface{}
+	err = json.Unmarshal(buf[:n], &d2)
 	require.NoError(t, err)
 
-	require.Equal(t, d["remote_addr"].(string), c.LocalAddr().String())
+	require.Equal(t, d2["remote_addr"].(string), c.LocalAddr().String())
 
 	// ---
 
@@ -122,10 +123,11 @@ func TestTCPInit(t *testing.T) {
 	n, err = c.Read(buf)
 	require.NoError(t, err)
 
-	err = json.Unmarshal(buf[:n], &d)
+	var d3 map[string]interface{}
+	err = json.Unmarshal(buf[:n], &d3)
 	require.NoError(t, err)
 
-	require.Equal(t, d["remote_addr"].(string), c.LocalAddr().String())
+	require.Equal(t, d3["remote_addr"].(string), c.LocalAddr().String())
 
 	stopCh <- struct{}{}
 	wg.Wait()
