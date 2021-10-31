@@ -45,11 +45,9 @@ func NewHandler(conn net.Conn, delim []byte, serverName string, wPool func(*payl
 }
 
 func (h *handler) Start() {
-	// generate id for the connection
-	id := uuid.NewString()
 	// store connection to close from outside
-	h.connections.Store(id, h.conn)
-	defer h.connections.Delete(id)
+	h.connections.Store(h.uuid, h.conn)
+	defer h.connections.Delete(h.uuid)
 
 	pldCtxConnected, err := h.generate(EventConnected)
 	if err != nil {

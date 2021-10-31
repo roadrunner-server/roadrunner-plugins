@@ -4,6 +4,7 @@ type rpc struct {
 	p *Plugin
 }
 
-func (r *rpc) Close(uuid string, _ *bool) error {
+func (r *rpc) Close(uuid string, ret *bool) error {
+	*ret = true
 	return r.p.Close(uuid)
 }

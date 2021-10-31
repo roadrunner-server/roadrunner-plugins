@@ -2,6 +2,7 @@ package tcp
 
 import (
 	"net"
+	"net/rpc"
 	"os"
 	"os/signal"
 	"sync"
@@ -11,8 +12,10 @@ import (
 
 	json "github.com/json-iterator/go"
 	endure "github.com/spiral/endure/pkg/container"
+	goridgeRpc "github.com/spiral/goridge/v3/pkg/rpc"
 	"github.com/spiral/roadrunner-plugins/v2/config"
 	"github.com/spiral/roadrunner-plugins/v2/logger"
+	rpcPlugin "github.com/spiral/roadrunner-plugins/v2/rpc"
 	"github.com/spiral/roadrunner-plugins/v2/server"
 	"github.com/spiral/roadrunner-plugins/v2/tcp"
 	"github.com/stretchr/testify/assert"
@@ -131,6 +134,7 @@ func TestTCPInit(t *testing.T) {
 
 	stopCh <- struct{}{}
 	wg.Wait()
+	time.Sleep(time.Second)
 }
 
 func TestTCPEmptySend(t *testing.T) {
@@ -138,7 +142,7 @@ func TestTCPEmptySend(t *testing.T) {
 	assert.NoError(t, err)
 
 	cfg := &config.Viper{
-		Path:   "configs/.rr-tcp-init.yaml",
+		Path:   "configs/.rr-tcp-empty.yaml",
 		Prefix: "rr",
 	}
 
@@ -194,7 +198,7 @@ func TestTCPEmptySend(t *testing.T) {
 	}()
 
 	time.Sleep(time.Second * 3)
-	c, err := net.Dial("tcp", "127.0.0.1:7777")
+	c, err := net.Dial("tcp", "127.0.0.1:7779")
 	require.NoError(t, err)
 	_, err = c.Write([]byte(""))
 	require.NoError(t, err)
@@ -213,6 +217,92 @@ func TestTCPEmptySend(t *testing.T) {
 
 	stopCh <- struct{}{}
 	wg.Wait()
+	time.Sleep(time.Second)
+}
+
+func TestTCPConnClose(t *testing.T) {
+	cont, err := endure.NewContainer(nil, endure.SetLogLevel(endure.ErrorLevel))
+	assert.NoError(t, err)
+
+	cfg := &config.Viper{
+		Path:   "configs/.rr-tcp-close.yaml",
+		Prefix: "rr",
+	}
+
+	err = cont.RegisterAll(
+		cfg,
+		&rpcPlugin.Plugin{},
+		&logger.ZapLogger{},
+		&server.Plugin{},
+		&tcp.Plugin{},
+	)
+	assert.NoError(t, err)
+
+	err = cont.Init()
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	ch, err := cont.Serve()
+	assert.NoError(t, err)
+
+	sig := make(chan os.Signal, 1)
+	signal.Notify(sig, os.Interrupt, syscall.SIGINT, syscall.SIGTERM)
+
+	wg := &sync.WaitGroup{}
+	wg.Add(1)
+
+	stopCh := make(chan struct{}, 1)
+
+	go func() {
+		defer wg.Done()
+		for {
+			select {
+			case e := <-ch:
+				assert.Fail(t, "error", e.Error.Error())
+				err = cont.Stop()
+				if err != nil {
+					assert.FailNow(t, "error", err.Error())
+				}
+			case <-sig:
+				err = cont.Stop()
+				if err != nil {
+					assert.FailNow(t, "error", err.Error())
+				}
+				return
+			case <-stopCh:
+				// timeout
+				err = cont.Stop()
+				if err != nil {
+					assert.FailNow(t, "error", err.Error())
+				}
+				return
+			}
+		}
+	}()
+
+	time.Sleep(time.Second * 3)
+	c, err := net.Dial("tcp", "127.0.0.1:7788")
+	require.NoError(t, err)
+	_, err = c.Write([]byte("hello \r\n"))
+	require.NoError(t, err)
+
+	buf := make([]byte, 1024)
+	n, err := c.Read(buf)
+	require.NoError(t, err)
+
+	var d map[string]interface{}
+	err = json.Unmarshal(buf[:n], &d)
+	require.NoError(t, err)
+
+	require.NotEmpty(t, d["uuid"].(string))
+
+	t.Run("CloseConnection", closeConn(d["uuid"].(string)))
+	// ---
+
+	stopCh <- struct{}{}
+	wg.Wait()
+	time.Sleep(time.Second)
 }
 
 func TestTCPFull(t *testing.T) {
@@ -366,4 +456,17 @@ func TestTCPFull(t *testing.T) {
 	<-waitCh
 	stopCh <- struct{}{}
 	wg.Wait()
+	time.Sleep(time.Second)
+}
+
+func closeConn(uuid string) func(t *testing.T) {
+	return func(t *testing.T) {
+		conn, err := net.Dial("tcp", "127.0.0.1:6001")
+		require.NoError(t, err)
+		client := rpc.NewClientWithCodec(goridgeRpc.NewClientCodec(conn))
+		var ret bool
+		err = client.Call("tcp.Close", uuid, &ret)
+		require.NoError(t, err)
+		require.True(t, ret)
+	}
 }

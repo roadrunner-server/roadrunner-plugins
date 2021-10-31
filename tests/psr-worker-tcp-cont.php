@@ -24,6 +24,7 @@ while ($request = $tcpWorker->waitRequest()) {
                 // Send response to the TCP connection and wait for the next request
                 $tcpWorker->respond(json_encode([
                     'body' => $request->body,
+                    'uuid' => $request->connectionUuid,
                     'remote_addr' => "foo1",
                 ]));
             } elseif ($request->server === 'server2') {
