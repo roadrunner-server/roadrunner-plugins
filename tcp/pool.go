@@ -2,6 +2,8 @@ package tcp
 
 import (
 	"bytes"
+
+	"github.com/spiral/roadrunner/v2/payload"
 )
 
 func (p *Plugin) getServInfo(event, serverName, id, remoteAddr string) *ServerInfo {
@@ -36,4 +38,14 @@ func (p *Plugin) getResBuf() *bytes.Buffer {
 func (p *Plugin) putResBuf(buf *bytes.Buffer) {
 	buf.Reset()
 	p.resBufPool.Put(buf)
+}
+
+func (p *Plugin) getPayload() *payload.Payload {
+	return p.pldPool.Get().(*payload.Payload)
+}
+
+func (p *Plugin) putPayload(pld *payload.Payload) {
+	pld.Body = nil
+	pld.Context = nil
+	p.pldPool.Put(pld)
 }

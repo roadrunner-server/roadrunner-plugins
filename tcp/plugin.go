@@ -27,16 +27,6 @@ var (
 	bufferSize int = 1024 * 1024 * 1
 )
 
-/*
-	rsp.Context -> `WRITECLOSE` -> write back and close
-	---
-	rsp.Context -> `CLOSE` -> close connection w/o writing to it
-	---
-	rsp.Context -> WRITE -> conn.Write -> loop
-	---
-	rsp.Context -> CONTINUE -> w/o write loop
-*/
-
 var (
 	CLOSE      = []byte("CLOSE")
 	CONTINUE   = []byte("CONTINUE")
@@ -69,6 +59,7 @@ type Plugin struct {
 	resBufPool   sync.Pool
 	readBufPool  sync.Pool
 	servInfoPool sync.Pool
+	pldPool      sync.Pool
 }
 
 func (p *Plugin) Init(log logger.Logger, cfg config.Configurer, server server.Server) error {
@@ -108,6 +99,12 @@ func (p *Plugin) Init(log logger.Logger, cfg config.Configurer, server server.Se
 	p.servInfoPool = sync.Pool{
 		New: func() interface{} {
 			return new(ServerInfo)
+		},
+	}
+
+	p.pldPool = sync.Pool{
+		New: func() interface{} {
+			return new(payload.Payload)
 		},
 	}
 
@@ -213,9 +210,8 @@ func (p *Plugin) handleConnection(conn net.Conn, delim []byte, serverName string
 		return
 	}
 
-	pld := &payload.Payload{
-		Context: pldCtxConnected,
-	}
+	pld := p.getPayload()
+	pld.Context = pldCtxConnected
 
 	// send connected
 	p.RLock()
@@ -224,8 +220,10 @@ func (p *Plugin) handleConnection(conn net.Conn, delim []byte, serverName string
 	if err != nil {
 		p.log.Error("execute error", "error", err)
 		_ = conn.Close()
+		p.putPayload(pld)
 		return
 	}
+	p.putPayload(pld)
 
 	// handleAndContinue return true if the RR needs to return from the loop, or false to continue
 	if p.handleAndContinue(rsp, conn, serverName, id) {
@@ -235,8 +233,8 @@ func (p *Plugin) handleConnection(conn net.Conn, delim []byte, serverName string
 
 func (p *Plugin) readLoop(conn net.Conn, delim []byte, id, serverName string) {
 	rbuf := p.getReadBuf()
-	defer p.putReadBuf(rbuf)
 	resbuf := p.getResBuf()
+	defer p.putReadBuf(rbuf)
 	defer p.putResBuf(resbuf)
 
 	pldCtxData, err := p.generate(EventIncomingData, serverName, id, conn.RemoteAddr().String())
@@ -245,9 +243,9 @@ func (p *Plugin) readLoop(conn net.Conn, delim []byte, id, serverName string) {
 		return
 	}
 
-	// start readLoop loop
+	// start read loop
 	for {
-		// readLoop a data from the connection
+		// read a data from the connection
 		for {
 			n, errR := conn.Read(*rbuf)
 			if errR != nil {
@@ -293,10 +291,9 @@ func (p *Plugin) readLoop(conn net.Conn, delim []byte, id, serverName string) {
 			return
 		}
 
-		pld := &payload.Payload{
-			Context: pldCtxData,
-			Body:    resbuf.Bytes(),
-		}
+		pld := p.getPayload()
+		pld.Context = pldCtxData
+		pld.Body = resbuf.Bytes()
 
 		// reset protection
 		p.RLock()
@@ -305,6 +302,7 @@ func (p *Plugin) readLoop(conn net.Conn, delim []byte, id, serverName string) {
 		if err != nil {
 			p.log.Error("execute error", "error", err)
 			_ = conn.Close()
+			p.putPayload(pld)
 			return
 		}
 
@@ -312,8 +310,11 @@ func (p *Plugin) readLoop(conn net.Conn, delim []byte, id, serverName string) {
 		if p.handleAndContinue(rsp, conn, serverName, id) {
 			// reset the readLoop-buffer
 			resbuf.Reset()
+			p.putPayload(pld)
 			continue
 		}
+
+		p.putPayload(pld)
 		return
 	}
 }
