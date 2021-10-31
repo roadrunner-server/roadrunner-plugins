@@ -66,7 +66,7 @@ func (p *Plugin) Init(log logger.Logger, cfg config.Configurer, server server.Se
 		},
 	}
 
-	// cyclic buffer to readLoop the data from the connection
+	// cyclic buffer to read the data from the connection
 	p.readBufPool = sync.Pool{
 		New: func() interface{} {
 			buf := make([]byte, bufferSize)

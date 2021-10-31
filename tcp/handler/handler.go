@@ -103,7 +103,7 @@ func (h *handler) readLoop() {
 					h.sendClose()
 					break
 				}
-				h.log.Warn("readLoop error, connection closed", "error", errR)
+				h.log.Warn("read error, connection closed", "error", errR)
 				_ = h.conn.Close()
 
 				h.sendClose()
@@ -156,7 +156,7 @@ func (h *handler) readLoop() {
 
 		// handleAndContinue return true if the RR needs to return from the loop, or false to continue
 		if h.handleAndContinue(rsp) {
-			// reset the readLoop-buffer
+			// reset the read-buffer
 			resbuf.Reset()
 			h.putPayload(pld)
 			continue
