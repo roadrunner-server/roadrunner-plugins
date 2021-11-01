@@ -2,6 +2,7 @@ package tcp
 
 import (
 	"encoding/json"
+	"fmt"
 	"net"
 	"net/rpc"
 	"os"
@@ -128,11 +129,11 @@ func TestTCPInit(t *testing.T) {
 
 	var d3 map[string]interface{}
 	err = json.Unmarshal(buf[:n], &d3)
+	fmt.Println(d3)
 	require.NoError(t, err)
 
 	require.Equal(t, d3["remote_addr"].(string), c.LocalAddr().String())
 
-	time.Sleep(time.Second)
 	stopCh <- struct{}{}
 	wg.Wait()
 }
