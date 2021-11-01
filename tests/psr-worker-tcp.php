@@ -18,9 +18,9 @@ while (true) {
             'remote_addr' => $request->remoteAddr,
             'server' => $request->server,
             'uuid' => $request->connectionUuid,
-            'body' => $request->body
+            'body' => $request->body,
+            'event' => $request->event
         ]));
-
     } catch (\Throwable $e) {
         $tcpWorker->respond("Something went wrong");
 
