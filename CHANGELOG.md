@@ -47,6 +47,39 @@ transaction name.
         $resp = $resp->withHeader('rr_newrelic', $rrNewRelic);
 ```
 
+- ✏️ New plugin: `TCP`. The TCP plugin is used to handle raw TCP payload with a bi-directional [protocol](tcp/docs/tcp.md) between the RR server and PHP worker.
+
+PHP client library: https://github.com/spiral/roadrunner-tcp
+
+Configuration:
+```yaml
+rpc:
+  listen: tcp://127.0.0.1:6001
+
+server:
+  command: "php ../../psr-worker-tcp-cont.php"
+
+tcp:
+  servers:
+    server1:
+      addr: 127.0.0.1:7778
+      delimiter: "\r\n"
+    server2:
+      addr: 127.0.0.1:8811
+      read_buf_size: 10
+    server3:
+      addr: 127.0.0.1:8812
+      delimiter: "\r\n"
+      read_buf_size: 1
+
+  pool:
+    num_workers: 5
+    max_jobs: 0
+    allocate_timeout: 60s
+    destroy_timeout: 60s
+```
+
+
 ## v2.5.2 (27.10.2021)
 
 ## 🩹 Fixes:
