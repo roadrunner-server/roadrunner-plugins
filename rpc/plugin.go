@@ -29,18 +29,16 @@ type Plugin struct {
 // Init rpc service. Must return true if service is enabled.
 func (s *Plugin) Init(cfg config.Configurer, log logger.Logger) error {
 	const op = errors.Op("rpc_plugin_init")
-	if !cfg.Has(PluginName) {
-		return errors.E(op, errors.Disabled)
-	}
 
 	err := cfg.UnmarshalKey(PluginName, &s.cfg)
 	if err != nil {
 		return errors.E(op, errors.Disabled, err)
 	}
+
 	// Init defaults
 	s.cfg.InitDefaults()
 	// Init pluggable plugins map
-	s.plugins = make(map[string]RPCer, 5)
+	s.plugins = make(map[string]RPCer, 1)
 	// init logs
 	s.log = log
 

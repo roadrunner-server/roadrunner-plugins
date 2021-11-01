@@ -1,0 +1,24 @@
+rpc:
+  listen: tcp://127.0.0.1:6002
+
+server:
+  command: "php ../../psr-worker-tcp.php"
+
+tcp:
+  servers:
+    server1:
+      addr: tcp://127.0.0.1:7777
+      delimiter: "\r\n"
+    server2:
+      addr: tcp://127.0.0.1:8889
+      read_buf_size: 10
+    server3:
+      addr: tcp://127.0.0.1:8810
+      delimiter: "\r\n"
+      read_buf_size: 1
+
+  pool:
+    num_workers: 2
+    max_jobs: 0
+    allocate_timeout: 60s
+    destroy_timeout: 60s

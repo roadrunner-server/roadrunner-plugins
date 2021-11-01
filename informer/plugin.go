@@ -4,7 +4,6 @@ import (
 	"context"
 
 	endure "github.com/spiral/endure/pkg/container"
-	"github.com/spiral/roadrunner-plugins/v2/logger"
 	"github.com/spiral/roadrunner/v2/state/job"
 	"github.com/spiral/roadrunner/v2/state/process"
 )
@@ -12,19 +11,15 @@ import (
 const PluginName = "informer"
 
 type Plugin struct {
-	log logger.Logger
-
 	withJobs    map[string]JobsStat
 	withWorkers map[string]Informer
 	available   map[string]Availabler
 }
 
-func (p *Plugin) Init(log logger.Logger) error {
+func (p *Plugin) Init() error {
 	p.available = make(map[string]Availabler)
 	p.withWorkers = make(map[string]Informer)
 	p.withJobs = make(map[string]JobsStat)
-
-	p.log = log
 	return nil
 }
 
@@ -47,7 +42,6 @@ func (p *Plugin) Jobs(name string) []*job.State {
 
 	st, err := svc.JobsState(context.Background())
 	if err != nil {
-		p.log.Info("jobs stat", "error", err)
 		// skip errors here
 		return nil
 	}

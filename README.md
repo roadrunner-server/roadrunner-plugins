@@ -51,7 +51,6 @@ with much greater performance and flexibility.
 | ![](https://img.shields.io/badge/-SQS-blue)         | SQS driver for the jobs                                                                                                             | [Docs](sqs/docs/sqs_jobs.md)
 | ![](https://img.shields.io/badge/-NATS-blue)        | NATS jobs driver                                                                                                                    | [Docs](nats/docs/nats.md)     |
 
-
 | Plugin                                              | Description                                                                                                                         | Docs                          |
 | --------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------- | ----------------------------- |
 | ![](https://img.shields.io/badge/-KV-green)         | Provides key-value support for the RR2 via different drivers                                                                        |
@@ -75,6 +74,7 @@ with much greater performance and flexibility.
 | ![](https://img.shields.io/badge/-Service-green)    | Provides support for the external scripts, binaries which might be started like a service (behaves similar to the systemd services) |
 | ![](https://img.shields.io/badge/-Status-green)     | Provides support for the health and readiness checks                                                                                |
 | ![](https://img.shields.io/badge/-Websockets-green) | Provides support for the broadcasting events via websockets                                                                         |
+| ![](https://img.shields.io/badge/-TCP-green) | Provides support for the raw TCP payloads and TCP connections                                                                         | [Docs](tcp/docs/tcp.md)
 
 Legend:  
 `Green` - is a regular RR2 plugins.  

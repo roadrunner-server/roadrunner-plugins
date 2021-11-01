@@ -17,14 +17,14 @@ require (
 	github.com/fatih/color v1.13.0
 	github.com/go-redis/redis/v8 v8.11.4
 	github.com/gobwas/ws v1.1.0
-	github.com/gofiber/fiber/v2 v2.20.2
+	github.com/gofiber/fiber/v2 v2.21.0
 	github.com/golang/mock v1.6.0
 	github.com/google/uuid v1.3.0
 	github.com/json-iterator/go v1.1.12
 	github.com/klauspost/compress v1.13.6
 	github.com/mholt/acmez v1.0.0
 	github.com/nats-io/nats.go v1.13.0
-	github.com/newrelic/go-agent/v3 v3.15.0
+	github.com/newrelic/go-agent/v3 v3.15.1
 	github.com/prometheus/client_golang v1.11.0
 	github.com/rabbitmq/amqp091-go v1.1.0
 	github.com/spf13/viper v1.9.0
@@ -39,7 +39,7 @@ require (
 	go.etcd.io/bbolt v1.3.6
 	go.uber.org/zap v1.19.1
 	golang.org/x/net v0.0.0-20211020060615-d418f374d309
-	golang.org/x/sys v0.0.0-20211023085530-d6a326fbbf70
+	golang.org/x/sys v0.0.0-20211025201205-69cdffdb9359
 	google.golang.org/grpc v1.41.0
 	google.golang.org/protobuf v1.27.1
 	gopkg.in/natefinch/lumberjack.v2 v2.0.0
@@ -100,7 +100,7 @@ require (
 	golang.org/x/sync v0.0.0-20210220032951-036812b2e83c // indirect
 	golang.org/x/text v0.3.7 // indirect
 	golang.org/x/tools v0.1.7 // indirect
-	google.golang.org/genproto v0.0.0-20211021150943-2b146023228c // indirect
+	google.golang.org/genproto v0.0.0-20211028162531-8db9c33dc351 // indirect
 	gopkg.in/ini.v1 v1.63.2 // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect
 	gopkg.in/yaml.v3 v3.0.0-20210107192922-496545a6307b // indirect

@@ -1,20 +1,27 @@
 {
-    "minimum-stability": "dev",
-    "prefer-stable": true,
-    "require": {
-        "nyholm/psr7": "^1.4",
-        "spiral/roadrunner": "^2.0",
-        "spiral/roadrunner-http": "^2.0",
-        "temporal/sdk": ">=1.0",
-        "spiral/tokenizer": ">=2.7",
-        "spiral/roadrunner-metrics": "^2.0",
-        "spiral/roadrunner-grpc": "^2.0"
-    },
-    "autoload": {
-        "psr-4": {
-            "": "src"
-        }
-    },
-    "name": "test/test",
-    "description": "test"
+  "minimum-stability": "dev",
+  "prefer-stable": true,
+  "require": {
+    "nyholm/psr7": "^1.4",
+    "spiral/roadrunner": "^2.0",
+    "spiral/roadrunner-http": "^2.0",
+    "temporal/sdk": ">=1.0",
+    "spiral/tokenizer": ">=2.7",
+    "spiral/roadrunner-metrics": "^2.0",
+    "spiral/roadrunner-grpc": "^2.0",
+    "spiral/roadrunner-tcp": "*"
+  },
+  "autoload": {
+    "psr-4": {
+      "": "src"
+    }
+  },
+  "repositories": [
+    {
+      "type": "vcs",
+      "url": "https://github.com/spiral/roadrunner-tcp"
+    }
+  ],
+  "name": "test/test",
+  "description": "test"
 }

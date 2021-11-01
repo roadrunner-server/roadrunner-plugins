@@ -3,6 +3,7 @@ package proxy
 import (
 	"encoding/json"
 	"fmt"
+	"math"
 	"strconv"
 	"strings"
 	"sync"
@@ -229,7 +230,12 @@ func wrapError(err error) error {
 			return err
 		}
 
-		if phpCode, errConv := strconv.ParseUint(chunks[0], 10, 32); errConv == nil {
+		phpCode, errConv := strconv.ParseUint(chunks[0], 10, 32)
+		if errConv != nil {
+			return err
+		}
+
+		if phpCode > 0 && phpCode < math.MaxUint32 {
 			code = codes.Code(phpCode)
 		}
 

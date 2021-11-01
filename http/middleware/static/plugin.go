@@ -109,6 +109,12 @@ func (s *Plugin) Middleware(next http.Handler) http.Handler {
 		fPath := path.Clean(r.URL.Path)
 		ext := strings.ToLower(path.Ext(fPath))
 
+		// files w/o extensions are not allowed
+		if ext == "" {
+			next.ServeHTTP(w, r)
+			return
+		}
+
 		// check that file extension in the forbidden list
 		if _, ok := s.forbiddenExtensions[ext]; ok {
 			s.log.Debug("file extension is forbidden", "ext", ext)
@@ -151,7 +157,7 @@ func (s *Plugin) Middleware(next http.Handler) http.Handler {
 			return
 		}
 
-		// at high confidence there is should not be an error
+		// at high confidence here should not be an error
 		// because we stat-ed the path previously and know, that that is file (not a dir), and it exists
 		finfo, err := f.Stat()
 		if err != nil {
