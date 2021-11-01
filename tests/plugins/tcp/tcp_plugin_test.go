@@ -1,6 +1,8 @@
 package tcp
 
 import (
+	"encoding/json"
+	"fmt"
 	"net"
 	"net/rpc"
 	"os"
@@ -10,7 +12,6 @@ import (
 	"testing"
 	"time"
 
-	json "github.com/json-iterator/go"
 	endure "github.com/spiral/endure/pkg/container"
 	goridgeRpc "github.com/spiral/goridge/v3/pkg/rpc"
 	"github.com/spiral/roadrunner-plugins/v2/config"
@@ -128,6 +129,7 @@ func TestTCPInit(t *testing.T) {
 
 	var d3 map[string]interface{}
 	err = json.Unmarshal(buf[:n], &d3)
+	fmt.Println(d3)
 	require.NoError(t, err)
 
 	require.Equal(t, d3["remote_addr"].(string), c.LocalAddr().String())
