@@ -481,7 +481,7 @@ func TestReloadCopy100(t *testing.T) {
 	assert.NoError(t, freeResources(testCopyToDir))
 	assert.NoError(t, freeResources(dir1))
 
-	time.Sleep(time.Second * 3)
+	time.Sleep(time.Second * 5)
 
 	stopCh <- struct{}{}
 	wg.Wait()
@@ -589,12 +589,11 @@ func randomChangesInRecursiveDirs(t *testing.T) {
 		rSleep := rand.Int63n(100) //nolint:gosec
 		time.Sleep(time.Millisecond * time.Duration(rSleep))
 		rNum := rand.Int63n(int64(100)) //nolint:gosec
-		rDir := rand.Int63n(10)         //nolint:gosec
+		rDir := rand.Int63n(11)         //nolint:gosec
 		rExt := rand.Int63n(3)          //nolint:gosec
 		rName := rand.Int63n(3)         //nolint:gosec
 
-		err := ioutil.WriteFile(filepath.Join(dirs[rDir], filenames[rName]+strconv.Itoa(int(rNum))+ext[rExt]), []byte("Hello, Gophers!"), 0755) //nolint:gosec
-		assert.NoError(t, err)
+		_ = ioutil.WriteFile(filepath.Join(dirs[rDir], filenames[rName]+strconv.Itoa(int(rNum))+ext[rExt]), []byte("Hello, Gophers!"), 0755) //nolint:gosec
 	}
 }
 
