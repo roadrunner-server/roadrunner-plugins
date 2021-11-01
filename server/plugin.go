@@ -11,8 +11,6 @@ import (
 	"github.com/spiral/roadrunner-plugins/v2/config"
 	"github.com/spiral/roadrunner-plugins/v2/logger"
 
-	// core imports
-	"github.com/spiral/roadrunner/v2/events"
 	"github.com/spiral/roadrunner/v2/pool"
 	"github.com/spiral/roadrunner/v2/transport"
 	"github.com/spiral/roadrunner/v2/transport/pipe"
@@ -109,15 +107,12 @@ func (p *Plugin) CmdFactory(env Env) func() *exec.Cmd {
 }
 
 // NewWorker issues new standalone worker.
-func (p *Plugin) NewWorker(ctx context.Context, env Env, listeners ...events.Listener) (*worker.Process, error) {
+func (p *Plugin) NewWorker(ctx context.Context, env Env) (*worker.Process, error) {
 	const op = errors.Op("server_plugin_new_worker")
-
-	list := make([]events.Listener, 0, len(listeners))
-	list = append(list, p.collectWorkerEvents)
 
 	spawnCmd := p.CmdFactory(env)
 
-	w, err := p.factory.SpawnWorkerWithTimeout(ctx, spawnCmd(), list...)
+	w, err := p.factory.SpawnWorkerWithTimeout(ctx, spawnCmd())
 	if err != nil {
 		return nil, errors.E(op, err)
 	}
@@ -126,15 +121,10 @@ func (p *Plugin) NewWorker(ctx context.Context, env Env, listeners ...events.Lis
 }
 
 // NewWorkerPool issues new worker pool.
-func (p *Plugin) NewWorkerPool(ctx context.Context, opt *pool.Config, env Env, listeners ...events.Listener) (pool.Pool, error) {
+func (p *Plugin) NewWorkerPool(ctx context.Context, opt *pool.Config, env Env) (pool.Pool, error) {
 	spawnCmd := p.CmdFactory(env)
-	list := make([]events.Listener, 0, 2)
-	list = append(list, p.collectPoolEvents, p.collectWorkerEvents)
-	if len(listeners) != 0 {
-		list = append(list, listeners...)
-	}
 
-	pl, err := pool.Initialize(ctx, spawnCmd, p.factory, opt, pool.AddListeners(list...))
+	pl, err := pool.Initialize(ctx, spawnCmd, p.factory, opt)
 	if err != nil {
 		return nil, err
 	}
@@ -190,72 +180,72 @@ func (p *Plugin) setEnv(e Env) []string {
 	return env
 }
 
-func (p *Plugin) collectPoolEvents(event interface{}) {
-	if we, ok := event.(events.PoolEvent); ok {
-		switch we.Event {
-		case events.EventMaxMemory:
-			p.log.Warn("worker max memory reached", "pid", we.Payload.(worker.BaseProcess).Pid())
-			// debug case
-			p.log.Debug("debug", "worker", we.Payload.(worker.BaseProcess))
-		case events.EventNoFreeWorkers:
-			p.log.Warn("no free workers in the pool, consider increasing `pool.num_workers` property, or `pool.allocate_timeout`")
-			// show error only in the debug mode
-			if we.Payload != nil {
-				p.log.Debug("error", we.Payload.(error).Error())
-			}
-		case events.EventWorkerProcessExit:
-			p.log.Info("worker process exited")
-			p.log.Debug("debug", "error", we.Error)
-		case events.EventSupervisorError:
-			p.log.Error("pool supervisor error, turn on debug logger to see the error")
-			// debug
-			p.log.Debug("debug", "error", we.Payload.(error).Error())
-		case events.EventTTL:
-			p.log.Warn("worker TTL reached", "pid", we.Payload.(worker.BaseProcess).Pid())
-		case events.EventWorkerConstruct:
-			if _, ok := we.Payload.(error); ok {
-				p.log.Error("worker construction error", "error", we.Payload.(error).Error())
-				return
-			}
-			p.log.Debug("worker constructed", "pid", we.Payload.(worker.BaseProcess).Pid())
-		case events.EventWorkerDestruct:
-			p.log.Debug("worker destructed", "pid", we.Payload.(worker.BaseProcess).Pid())
-		case events.EventExecTTL:
-			p.log.Warn("worker execute timeout reached, consider increasing pool supervisor options")
-			// debug
-			p.log.Debug("debug", "error", we.Payload.(error).Error())
-		case events.EventIdleTTL:
-			p.log.Warn("worker idle timeout reached", "pid", we.Payload.(worker.BaseProcess).Pid())
-		case events.EventPoolRestart:
-			p.log.Warn("requested pool restart")
-		}
-	}
-}
-
-func (p *Plugin) collectWorkerEvents(event interface{}) {
-	if we, ok := event.(events.WorkerEvent); ok {
-		switch we.Event {
-		case events.EventWorkerError:
-			switch e := we.Payload.(type) { //nolint:gocritic
-			case error:
-				if errors.Is(errors.SoftJob, e) {
-					// get source error for the softjob error
-					p.log.Error(e.(*errors.Error).Err.Error())
-					return
-				}
-
-				// print full error for the other types of errors
-				p.log.Error(e.Error())
-				return
-			}
-			p.log.Error(we.Payload.(error).Error())
-		case events.EventWorkerLog:
-			p.log.Debug(utils.AsString(we.Payload.([]byte)))
-			// stderr event is INFO level
-		case events.EventWorkerStderr:
-			p.log.Info(utils.AsString(we.Payload.([]byte)))
-		case events.EventWorkerWaitExit:
-			p.log.Debug("worker process exited", "reason", we.Payload)
-		}
-	}
-}
+//func (p *Plugin) collectPoolEvents(event interface{}) {
+//	if we, ok := event.(events.PoolEvent); ok {
+//		switch we.Event {
+//		case events.EventMaxMemory:
+//			p.log.Warn("worker max memory reached", "pid", we.Payload.(worker.BaseProcess).Pid())
+//			// debug case
+//			p.log.Debug("debug", "worker", we.Payload.(worker.BaseProcess))
+//		case events.EventNoFreeWorkers:
+//			p.log.Warn("no free workers in the pool, consider increasing `pool.num_workers` property, or `pool.allocate_timeout`")
+//			// show error only in the debug mode
+//			if we.Payload != nil {
+//				p.log.Debug("error", we.Payload.(error).Error())
+//			}
+//		case events.EventWorkerProcessExit:
+//			p.log.Info("worker process exited")
+//			p.log.Debug("debug", "error", we.Error)
+//		case events.EventSupervisorError:
+//			p.log.Error("pool supervisor error, turn on debug logger to see the error")
+//			// debug
+//			p.log.Debug("debug", "error", we.Payload.(error).Error())
+//		case events.EventTTL:
+//			p.log.Warn("worker TTL reached", "pid", we.Payload.(worker.BaseProcess).Pid())
+//		case events.EventWorkerConstruct:
+//			if _, ok := we.Payload.(error); ok {
+//				p.log.Error("worker construction error", "error", we.Payload.(error).Error())
+//				return
+//			}
+//			p.log.Debug("worker constructed", "pid", we.Payload.(worker.BaseProcess).Pid())
+//		case events.EventWorkerDestruct:
+//			p.log.Debug("worker destructed", "pid", we.Payload.(worker.BaseProcess).Pid())
+//		case events.EventExecTTL:
+//			p.log.Warn("worker execute timeout reached, consider increasing pool supervisor options")
+//			// debug
+//			p.log.Debug("debug", "error", we.Payload.(error).Error())
+//		case events.EventIdleTTL:
+//			p.log.Warn("worker idle timeout reached", "pid", we.Payload.(worker.BaseProcess).Pid())
+//		case events.EventPoolRestart:
+//			p.log.Warn("requested pool restart")
+//		}
+//	}
+//}
+//
+//func (p *Plugin) collectWorkerEvents(event interface{}) {
+//	if we, ok := event.(events.WorkerEvent); ok {
+//		switch we.Event {
+//		case events.EventWorkerError:
+//			switch e := we.Payload.(type) { //nolint:gocritic
+//			case error:
+//				if errors.Is(errors.SoftJob, e) {
+//					// get source error for the softjob error
+//					p.log.Error(e.(*errors.Error).Err.Error())
+//					return
+//				}
+//
+//				// print full error for the other types of errors
+//				p.log.Error(e.Error())
+//				return
+//			}
+//			p.log.Error(we.Payload.(error).Error())
+//		case events.EventWorkerLog:
+//			p.log.Debug(utils.AsString(we.Payload.([]byte)))
+//			// stderr event is INFO level
+//		case events.EventWorkerStderr:
+//			p.log.Info(utils.AsString(we.Payload.([]byte)))
+//		case events.EventWorkerWaitExit:
+//			p.log.Debug("worker process exited", "reason", we.Payload)
+//		}
+//	}
+//}

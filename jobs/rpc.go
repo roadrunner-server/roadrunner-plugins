@@ -4,7 +4,7 @@ import (
 	"context"
 
 	"github.com/spiral/errors"
-	jobsv1beta "github.com/spiral/roadrunner-plugins/v2/internal/proto/jobs/v1beta"
+	jobsv1beta "github.com/spiral/roadrunner-plugins/v2/api/proto/jobs/v1beta"
 	"github.com/spiral/roadrunner-plugins/v2/jobs/job"
 	"github.com/spiral/roadrunner-plugins/v2/jobs/pipeline"
 	"github.com/spiral/roadrunner-plugins/v2/logger"

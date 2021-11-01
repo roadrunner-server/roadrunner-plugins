@@ -2,7 +2,6 @@ package http
 
 import (
 	"github.com/prometheus/client_golang/prometheus"
-	handler "github.com/spiral/roadrunner-plugins/v2/http/handler"
 )
 
 func (p *Plugin) MetricsCollector() []prometheus.Collector {
@@ -11,26 +10,27 @@ func (p *Plugin) MetricsCollector() []prometheus.Collector {
 	return []prometheus.Collector{p, p.requestsExporter.requestDuration, p.requestsExporter.requestCounter}
 }
 
-func (p *Plugin) metricsCallback(event interface{}) {
-	switch e := event.(type) {
-	case handler.ResponseEvent:
-		p.requestsExporter.requestCounter.With(prometheus.Labels{
-			"status": e.Status,
-		}).Inc()
-
-		p.requestsExporter.requestDuration.With(prometheus.Labels{
-			"status": e.Status,
-		}).Observe(e.Elapsed.Seconds())
-	case handler.ErrorEvent:
-		p.requestsExporter.requestCounter.With(prometheus.Labels{
-			"status": "500",
-		}).Inc()
-
-		p.requestsExporter.requestDuration.With(prometheus.Labels{
-			"status": "500",
-		}).Observe(e.Elapsed().Seconds())
-	}
-}
+//
+//func (p *Plugin) metricsCallback(event interface{}) {
+//	switch e := event.(type) {
+//	case handler.ResponseEvent:
+//		p.requestsExporter.requestCounter.With(prometheus.Labels{
+//			"status": e.Status,
+//		}).Inc()
+//
+//		p.requestsExporter.requestDuration.With(prometheus.Labels{
+//			"status": e.Status,
+//		}).Observe(e.Elapsed.Seconds())
+//	case handler.ErrorEvent:
+//		p.requestsExporter.requestCounter.With(prometheus.Labels{
+//			"status": "500",
+//		}).Inc()
+//
+//		p.requestsExporter.requestDuration.With(prometheus.Labels{
+//			"status": "500",
+//		}).Observe(e.Elapsed().Seconds())
+//	}
+//}
 
 type workersExporter struct {
 	wm            *prometheus.Desc

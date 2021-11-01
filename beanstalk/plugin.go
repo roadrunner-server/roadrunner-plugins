@@ -1,12 +1,11 @@
 package beanstalk
 
 import (
+	"github.com/spiral/roadrunner-plugins/v2/api/jobs"
 	"github.com/spiral/roadrunner-plugins/v2/beanstalk/beanstalkjobs"
 	cfgPlugin "github.com/spiral/roadrunner-plugins/v2/config"
-	"github.com/spiral/roadrunner-plugins/v2/internal/common/jobs"
 	"github.com/spiral/roadrunner-plugins/v2/jobs/pipeline"
 	"github.com/spiral/roadrunner-plugins/v2/logger"
-	"github.com/spiral/roadrunner/v2/events"
 	priorityqueue "github.com/spiral/roadrunner/v2/priority_queue"
 )
 
@@ -39,10 +38,10 @@ func (p *Plugin) Name() string {
 
 func (p *Plugin) Available() {}
 
-func (p *Plugin) ConsumerFromConfig(configKey string, eh events.Handler, pq priorityqueue.Queue) (jobs.Consumer, error) {
-	return beanstalkjobs.NewBeanstalkConsumer(configKey, p.log, p.cfg, eh, pq)
+func (p *Plugin) ConsumerFromConfig(configKey string, pq priorityqueue.Queue) (jobs.Consumer, error) {
+	return beanstalkjobs.NewBeanstalkConsumer(configKey, p.log, p.cfg, pq)
 }
 
-func (p *Plugin) ConsumerFromPipeline(pipe *pipeline.Pipeline, eh events.Handler, pq priorityqueue.Queue) (jobs.Consumer, error) {
-	return beanstalkjobs.FromPipeline(pipe, p.log, p.cfg, eh, pq)
+func (p *Plugin) ConsumerFromPipeline(pipe *pipeline.Pipeline, pq priorityqueue.Queue) (jobs.Consumer, error) {
+	return beanstalkjobs.FromPipeline(pipe, p.log, p.cfg, pq)
 }

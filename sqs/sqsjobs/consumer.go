@@ -15,13 +15,12 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/sqs/types"
 	"github.com/google/uuid"
 	"github.com/spiral/errors"
+	jobState "github.com/spiral/roadrunner-plugins/v2/api/jobs"
 	cfgPlugin "github.com/spiral/roadrunner-plugins/v2/config"
 	"github.com/spiral/roadrunner-plugins/v2/jobs/job"
 	"github.com/spiral/roadrunner-plugins/v2/jobs/pipeline"
 	"github.com/spiral/roadrunner-plugins/v2/logger"
-	"github.com/spiral/roadrunner/v2/events"
 	priorityqueue "github.com/spiral/roadrunner/v2/priority_queue"
-	jobState "github.com/spiral/roadrunner/v2/state/job"
 )
 
 const (
@@ -32,7 +31,6 @@ type consumer struct {
 	sync.Mutex
 	pq       priorityqueue.Queue
 	log      logger.Logger
-	eh       events.Handler
 	pipeline atomic.Value
 
 	// connection info
@@ -60,7 +58,7 @@ type consumer struct {
 	pauseCh chan struct{}
 }
 
-func NewSQSConsumer(configKey string, log logger.Logger, cfg cfgPlugin.Configurer, e events.Handler, pq priorityqueue.Queue) (*consumer, error) {
+func NewSQSConsumer(configKey string, log logger.Logger, cfg cfgPlugin.Configurer, pq priorityqueue.Queue) (*consumer, error) {
 	const op = errors.Op("new_sqs_consumer")
 
 	// if no such key - error
@@ -93,7 +91,6 @@ func NewSQSConsumer(configKey string, log logger.Logger, cfg cfgPlugin.Configure
 	jb := &consumer{
 		pq:                pq,
 		log:               log,
-		eh:                e,
 		messageGroupID:    uuid.NewString(),
 		attributes:        conf.Attributes,
 		tags:              conf.Tags,
@@ -144,7 +141,7 @@ func NewSQSConsumer(configKey string, log logger.Logger, cfg cfgPlugin.Configure
 	return jb, nil
 }
 
-func FromPipeline(pipe *pipeline.Pipeline, log logger.Logger, cfg cfgPlugin.Configurer, e events.Handler, pq priorityqueue.Queue) (*consumer, error) {
+func FromPipeline(pipe *pipeline.Pipeline, log logger.Logger, cfg cfgPlugin.Configurer, pq priorityqueue.Queue) (*consumer, error) {
 	const op = errors.Op("new_sqs_consumer")
 
 	// if no global section
@@ -176,7 +173,6 @@ func FromPipeline(pipe *pipeline.Pipeline, log logger.Logger, cfg cfgPlugin.Conf
 	jb := &consumer{
 		pq:                pq,
 		log:               log,
-		eh:                e,
 		messageGroupID:    uuid.NewString(),
 		attributes:        attr,
 		tags:              tg,
@@ -247,6 +243,7 @@ func (c *consumer) Push(ctx context.Context, jb *job.Job) error {
 	if err != nil {
 		return errors.E(op, err)
 	}
+
 	return nil
 }
 
@@ -315,14 +312,7 @@ func (c *consumer) Run(_ context.Context, p *pipeline.Pipeline) error {
 	// TODO(rustatian) context with cancel to cancel receive operation on stop
 	go c.listen(context.Background())
 
-	c.eh.Push(events.JobEvent{
-		Event:    events.EventPipeActive,
-		Driver:   pipe.Driver(),
-		Pipeline: pipe.Name(),
-		Start:    start,
-		Elapsed:  time.Since(start),
-	})
-
+	c.log.Debug("pipeline active", "driver", pipe.Driver(), "pipeline", pipe.Name(), "start", start, "elapsed", time.Since(start))
 	return nil
 }
 
@@ -333,13 +323,7 @@ func (c *consumer) Stop(context.Context) error {
 	}
 
 	pipe := c.pipeline.Load().(*pipeline.Pipeline)
-	c.eh.Push(events.JobEvent{
-		Event:    events.EventPipeStopped,
-		Driver:   pipe.Driver(),
-		Pipeline: pipe.Name(),
-		Start:    start,
-		Elapsed:  time.Since(start),
-	})
+	c.log.Debug("pipeline stopped", "driver", pipe.Driver(), "pipeline", pipe.Name(), "start", time.Now(), "elapsed", time.Since(start))
 	return nil
 }
 
@@ -363,14 +347,7 @@ func (c *consumer) Pause(_ context.Context, p string) {
 
 	// stop consume
 	c.pauseCh <- struct{}{}
-
-	c.eh.Push(events.JobEvent{
-		Event:    events.EventPipePaused,
-		Driver:   pipe.Driver(),
-		Pipeline: pipe.Name(),
-		Start:    start,
-		Elapsed:  time.Since(start),
-	})
+	c.log.Debug("pipeline paused", "driver", pipe.Driver(), "pipeline", pipe.Name(), "start", time.Now(), "elapsed", time.Since(start))
 }
 
 func (c *consumer) Resume(_ context.Context, p string) {
@@ -394,14 +371,7 @@ func (c *consumer) Resume(_ context.Context, p string) {
 
 	// increase num of listeners
 	atomic.AddUint32(&c.listeners, 1)
-
-	c.eh.Push(events.JobEvent{
-		Event:    events.EventPipeActive,
-		Driver:   pipe.Driver(),
-		Pipeline: pipe.Name(),
-		Start:    start,
-		Elapsed:  time.Since(start),
-	})
+	c.log.Debug("pipeline resumed", "driver", pipe.Driver(), "pipeline", pipe.Name(), "start", time.Now(), "elapsed", time.Since(start))
 }
 
 func (c *consumer) handleItem(ctx context.Context, msg *Item) error {

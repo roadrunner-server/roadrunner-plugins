@@ -3,7 +3,7 @@ package informer
 import (
 	"context"
 
-	"github.com/spiral/roadrunner/v2/state/job"
+	"github.com/spiral/roadrunner-plugins/v2/api/jobs"
 	"github.com/spiral/roadrunner/v2/state/process"
 )
 
@@ -22,7 +22,7 @@ type Informer interface {
 // JobsStat interface provide statistic for the jobs plugin
 type JobsStat interface {
 	// JobsState returns slice with the attached drivers information
-	JobsState(ctx context.Context) ([]*job.State, error)
+	JobsState(ctx context.Context) ([]*jobs.State, error)
 }
 
 // Statistic interfaces end ============

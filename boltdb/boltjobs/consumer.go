@@ -10,13 +10,12 @@ import (
 	"time"
 
 	"github.com/spiral/errors"
+	jobState "github.com/spiral/roadrunner-plugins/v2/api/jobs"
 	cfgPlugin "github.com/spiral/roadrunner-plugins/v2/config"
 	"github.com/spiral/roadrunner-plugins/v2/jobs/job"
 	"github.com/spiral/roadrunner-plugins/v2/jobs/pipeline"
 	"github.com/spiral/roadrunner-plugins/v2/logger"
-	"github.com/spiral/roadrunner/v2/events"
 	priorityqueue "github.com/spiral/roadrunner/v2/priority_queue"
-	jobState "github.com/spiral/roadrunner/v2/state/job"
 	"github.com/spiral/roadrunner/v2/utils"
 	bolt "go.etcd.io/bbolt"
 )
@@ -40,7 +39,6 @@ type consumer struct {
 
 	bPool    sync.Pool
 	log      logger.Logger
-	eh       events.Handler
 	pq       priorityqueue.Queue
 	pipeline atomic.Value
 	cond     *sync.Cond
@@ -52,7 +50,7 @@ type consumer struct {
 	stopCh chan struct{}
 }
 
-func NewBoltDBJobs(configKey string, log logger.Logger, cfg cfgPlugin.Configurer, e events.Handler, pq priorityqueue.Queue) (*consumer, error) {
+func NewBoltDBJobs(configKey string, log logger.Logger, cfg cfgPlugin.Configurer, pq priorityqueue.Queue) (*consumer, error) {
 	const op = errors.Op("init_boltdb_jobs")
 
 	if !cfg.Has(configKey) {
@@ -142,13 +140,12 @@ func NewBoltDBJobs(configKey string, log logger.Logger, cfg cfgPlugin.Configurer
 
 		db:     db,
 		log:    log,
-		eh:     e,
 		pq:     pq,
 		stopCh: make(chan struct{}, 2),
 	}, nil
 }
 
-func FromPipeline(pipeline *pipeline.Pipeline, log logger.Logger, cfg cfgPlugin.Configurer, e events.Handler, pq priorityqueue.Queue) (*consumer, error) {
+func FromPipeline(pipeline *pipeline.Pipeline, log logger.Logger, cfg cfgPlugin.Configurer, pq priorityqueue.Queue) (*consumer, error) {
 	const op = errors.Op("init_boltdb_jobs")
 
 	// if no global section
@@ -232,7 +229,6 @@ func FromPipeline(pipeline *pipeline.Pipeline, log logger.Logger, cfg cfgPlugin.
 
 		db:     db,
 		log:    log,
-		eh:     e,
 		pq:     pq,
 		stopCh: make(chan struct{}, 2),
 	}, nil
@@ -310,15 +306,7 @@ func (c *consumer) Run(_ context.Context, p *pipeline.Pipeline) error {
 
 	// increase number of listeners
 	atomic.AddUint32(&c.listeners, 1)
-
-	c.eh.Push(events.JobEvent{
-		Event:    events.EventPipeActive,
-		Driver:   pipe.Driver(),
-		Pipeline: pipe.Name(),
-		Start:    start,
-		Elapsed:  time.Since(start),
-	})
-
+	c.log.Debug("pipeline active", "driver", pipe.Driver(), "pipeline", pipe.Name(), "start", start, "elapsed", time.Since(start))
 	return nil
 }
 
@@ -330,13 +318,7 @@ func (c *consumer) Stop(_ context.Context) error {
 	}
 
 	pipe := c.pipeline.Load().(*pipeline.Pipeline)
-	c.eh.Push(events.JobEvent{
-		Event:    events.EventPipeStopped,
-		Driver:   pipe.Driver(),
-		Pipeline: pipe.Name(),
-		Start:    start,
-		Elapsed:  time.Since(start),
-	})
+	c.log.Debug("pipeline stopped", "driver", pipe.Driver(), "pipeline", pipe.Name(), "start", start, "elapsed", time.Since(start))
 	return c.db.Close()
 }
 
@@ -359,13 +341,7 @@ func (c *consumer) Pause(_ context.Context, p string) {
 
 	atomic.AddUint32(&c.listeners, ^uint32(0))
 
-	c.eh.Push(events.JobEvent{
-		Event:    events.EventPipePaused,
-		Driver:   pipe.Driver(),
-		Pipeline: pipe.Name(),
-		Start:    start,
-		Elapsed:  time.Since(start),
-	})
+	c.log.Debug("pipeline paused", "driver", pipe.Driver(), "pipeline", pipe.Name(), "start", start, "elapsed", time.Since(start))
 }
 
 func (c *consumer) Resume(_ context.Context, p string) {
@@ -389,13 +365,7 @@ func (c *consumer) Resume(_ context.Context, p string) {
 	// increase number of listeners
 	atomic.AddUint32(&c.listeners, 1)
 
-	c.eh.Push(events.JobEvent{
-		Event:    events.EventPipeActive,
-		Driver:   pipe.Driver(),
-		Pipeline: pipe.Name(),
-		Start:    start,
-		Elapsed:  time.Since(start),
-	})
+	c.log.Debug("pipeline resumed", "driver", pipe.Driver(), "pipeline", pipe.Name(), "start", start, "elapsed", time.Since(start))
 }
 
 func (c *consumer) State(_ context.Context) (*jobState.State, error) {

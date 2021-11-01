@@ -6,13 +6,12 @@ import (
 	"time"
 
 	"github.com/spiral/errors"
+	jobState "github.com/spiral/roadrunner-plugins/v2/api/jobs"
 	"github.com/spiral/roadrunner-plugins/v2/config"
 	"github.com/spiral/roadrunner-plugins/v2/jobs/job"
 	"github.com/spiral/roadrunner-plugins/v2/jobs/pipeline"
 	"github.com/spiral/roadrunner-plugins/v2/logger"
-	"github.com/spiral/roadrunner/v2/events"
 	priorityqueue "github.com/spiral/roadrunner/v2/priority_queue"
-	jobState "github.com/spiral/roadrunner/v2/state/job"
 	"github.com/spiral/roadrunner/v2/utils"
 )
 
@@ -28,7 +27,6 @@ type Config struct {
 type consumer struct {
 	cfg           *Config
 	log           logger.Logger
-	eh            events.Handler
 	pipeline      atomic.Value
 	pq            priorityqueue.Queue
 	localPrefetch chan *Item
@@ -43,13 +41,12 @@ type consumer struct {
 	stopCh    chan struct{}
 }
 
-func NewJobBroker(configKey string, log logger.Logger, cfg config.Configurer, eh events.Handler, pq priorityqueue.Queue) (*consumer, error) {
+func NewJobBroker(configKey string, log logger.Logger, cfg config.Configurer, pq priorityqueue.Queue) (*consumer, error) {
 	const op = errors.Op("new_ephemeral_pipeline")
 
 	jb := &consumer{
 		log:        log,
 		pq:         pq,
-		eh:         eh,
 		goroutines: 0,
 		active:     utils.Int64(0),
 		delayed:    utils.Int64(0),
@@ -75,11 +72,10 @@ func NewJobBroker(configKey string, log logger.Logger, cfg config.Configurer, eh
 	return jb, nil
 }
 
-func FromPipeline(pipeline *pipeline.Pipeline, log logger.Logger, eh events.Handler, pq priorityqueue.Queue) (*consumer, error) {
+func FromPipeline(pipeline *pipeline.Pipeline, log logger.Logger, pq priorityqueue.Queue) (*consumer, error) {
 	return &consumer{
 		log:           log,
 		pq:            pq,
-		eh:            eh,
 		localPrefetch: make(chan *Item, pipeline.Int(prefetch, 100_000)),
 		goroutines:    0,
 		active:        utils.Int64(0),
@@ -90,7 +86,6 @@ func FromPipeline(pipeline *pipeline.Pipeline, log logger.Logger, eh events.Hand
 
 func (c *consumer) Push(ctx context.Context, jb *job.Job) error {
 	const op = errors.Op("ephemeral_push")
-
 	// check if the pipeline registered
 	_, ok := c.pipeline.Load().(*pipeline.Pipeline)
 	if !ok {
@@ -124,12 +119,7 @@ func (c *consumer) Register(_ context.Context, pipeline *pipeline.Pipeline) erro
 
 func (c *consumer) Run(_ context.Context, pipe *pipeline.Pipeline) error {
 	const op = errors.Op("memory_jobs_run")
-	c.eh.Push(events.JobEvent{
-		Event:    events.EventPipeActive,
-		Driver:   pipe.Driver(),
-		Pipeline: pipe.Name(),
-		Start:    time.Now(),
-	})
+	c.log.Debug("pipeline active", "driver", pipe.Driver(), "pipeline", pipe.Name(), "start", time.Now())
 
 	l := atomic.LoadUint32(&c.listeners)
 	// listener already active
@@ -163,13 +153,7 @@ func (c *consumer) Pause(_ context.Context, p string) {
 	// stop the consumer
 	c.stopCh <- struct{}{}
 
-	c.eh.Push(events.JobEvent{
-		Event:    events.EventPipePaused,
-		Driver:   pipe.Driver(),
-		Pipeline: pipe.Name(),
-		Start:    start,
-		Elapsed:  time.Since(start),
-	})
+	c.log.Debug("pipeline paused", "driver", pipe.Driver(), "pipeline", pipe.Name(), "start", time.Now(), "elapsed", time.Since(start))
 }
 
 func (c *consumer) Resume(_ context.Context, p string) {
@@ -190,13 +174,7 @@ func (c *consumer) Resume(_ context.Context, p string) {
 	c.consume()
 
 	atomic.StoreUint32(&c.listeners, 1)
-	c.eh.Push(events.JobEvent{
-		Event:    events.EventPipeActive,
-		Pipeline: pipe.Name(),
-		Driver:   pipe.Driver(),
-		Start:    start,
-		Elapsed:  time.Since(start),
-	})
+	c.log.Debug("pipeline resumed", "driver", pipe.Driver(), "pipeline", pipe.Name(), "start", time.Now(), "elapsed", time.Since(start))
 }
 
 func (c *consumer) Stop(_ context.Context) error {
@@ -216,14 +194,7 @@ func (c *consumer) Stop(_ context.Context) error {
 
 	c.localPrefetch = nil
 
-	c.eh.Push(events.JobEvent{
-		Event:    events.EventPipeStopped,
-		Pipeline: pipe.Name(),
-		Driver:   pipe.Driver(),
-		Start:    start,
-		Elapsed:  time.Since(start),
-	})
-
+	c.log.Debug("pipeline stopped", "driver", pipe.Driver(), "pipeline", pipe.Name(), "start", time.Now(), "elapsed", time.Since(start))
 	return nil
 }
 

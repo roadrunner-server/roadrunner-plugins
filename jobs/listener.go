@@ -1,10 +1,10 @@
 package jobs
 
 import (
+	"sync/atomic"
 	"time"
 
-	"github.com/spiral/roadrunner-plugins/v2/internal/common/jobs"
-	"github.com/spiral/roadrunner/v2/events"
+	"github.com/spiral/roadrunner-plugins/v2/api/jobs"
 )
 
 func (p *Plugin) listener() { //nolint:gocognit
@@ -30,24 +30,12 @@ func (p *Plugin) listener() { //nolint:gocognit
 					*/
 
 					start := time.Now()
-					p.events.Push(events.JobEvent{
-						Event:   events.EventJobStart,
-						ID:      jb.ID(),
-						Start:   start,
-						Elapsed: 0,
-					})
+					p.log.Debug("job processing started", "ID", jb.ID(), "start", start)
 
 					ctx, err := jb.Context()
 					if err != nil {
-						p.events.Push(events.JobEvent{
-							Event:   events.EventJobError,
-							Error:   err,
-							ID:      jb.ID(),
-							Start:   start,
-							Elapsed: time.Since(start),
-						})
-
-						p.log.Error("job marshal context", "error", err)
+						atomic.AddUint64(p.metrics.jobsErr, 1)
+						p.log.Error("job marshal error", "error", err, "ID", jb.ID(), "start", start, "elapsed", time.Since(start))
 
 						errNack := jb.(jobs.Acknowledger).Nack()
 						if errNack != nil {
@@ -64,13 +52,8 @@ func (p *Plugin) listener() { //nolint:gocognit
 					resp, err := p.workersPool.Exec(exec)
 					p.RUnlock()
 					if err != nil {
-						p.events.Push(events.JobEvent{
-							Event:   events.EventJobError,
-							ID:      jb.ID(),
-							Error:   err,
-							Start:   start,
-							Elapsed: time.Since(start),
-						})
+						atomic.AddUint64(p.metrics.jobsErr, 1)
+						p.log.Error("job processed with errors", "error", err, "ID", jb.ID(), "start", start, "elapsed", time.Since(start))
 						if _, ok := jb.(jobs.Acknowledger); !ok {
 							p.log.Error("job execute failed, job is not a Acknowledger, skipping Ack/Nack")
 							p.putPayload(exec)
@@ -99,24 +82,15 @@ func (p *Plugin) listener() { //nolint:gocognit
 						p.putPayload(exec)
 						err = jb.(jobs.Acknowledger).Ack()
 						if err != nil {
-							p.events.Push(events.JobEvent{
-								Event:   events.EventJobError,
-								ID:      jb.ID(),
-								Error:   err,
-								Start:   start,
-								Elapsed: time.Since(start),
-							})
-							p.log.Error("acknowledge error, job might be missed", "error", err)
+							atomic.AddUint64(p.metrics.jobsErr, 1)
+							p.log.Error("acknowledge error, job might be missed", "error", err, "ID", jb.ID(), "start", start, "elapsed", time.Since(start))
 							jb = nil
 							continue
 						}
 
-						p.events.Push(events.JobEvent{
-							Event:   events.EventJobOK,
-							ID:      jb.ID(),
-							Start:   start,
-							Elapsed: time.Since(start),
-						})
+						p.log.Debug("job processed successfully", "error", err, "ID", jb.ID(), "start", start, "elapsed", time.Since(start))
+						// metrics
+						atomic.AddUint64(p.metrics.jobsOk, 1)
 
 						jb = nil
 						continue
@@ -125,13 +99,8 @@ func (p *Plugin) listener() { //nolint:gocognit
 					// handle the response protocol
 					err = p.respHandler.Handle(resp, jb.(jobs.Acknowledger))
 					if err != nil {
-						p.events.Push(events.JobEvent{
-							Event:   events.EventJobError,
-							ID:      jb.ID(),
-							Start:   start,
-							Error:   err,
-							Elapsed: time.Since(start),
-						})
+						atomic.AddUint64(p.metrics.jobsErr, 1)
+						p.log.Error("response handler error", "error", err, "ID", jb.ID(), "start", start, "elapsed", time.Since(start))
 						p.putPayload(exec)
 						errNack := jb.(jobs.Acknowledger).Nack()
 						if errNack != nil {
@@ -145,12 +114,10 @@ func (p *Plugin) listener() { //nolint:gocognit
 						continue
 					}
 
-					p.events.Push(events.JobEvent{
-						Event:   events.EventJobOK,
-						ID:      jb.ID(),
-						Start:   start,
-						Elapsed: time.Since(start),
-					})
+					// metrics
+					atomic.AddUint64(p.metrics.jobsOk, 1)
+
+					p.log.Debug("job processed successfully", "error", err, "ID", jb.ID(), "start", start, "elapsed", time.Since(start))
 
 					// return payload
 					p.putPayload(exec)

@@ -11,13 +11,12 @@ import (
 
 	"github.com/beanstalkd/go-beanstalk"
 	"github.com/spiral/errors"
+	jobState "github.com/spiral/roadrunner-plugins/v2/api/jobs"
 	cfgPlugin "github.com/spiral/roadrunner-plugins/v2/config"
 	"github.com/spiral/roadrunner-plugins/v2/jobs/job"
 	"github.com/spiral/roadrunner-plugins/v2/jobs/pipeline"
 	"github.com/spiral/roadrunner-plugins/v2/logger"
-	"github.com/spiral/roadrunner/v2/events"
 	priorityqueue "github.com/spiral/roadrunner/v2/priority_queue"
-	jobState "github.com/spiral/roadrunner/v2/state/job"
 	"github.com/spiral/roadrunner/v2/utils"
 )
 
@@ -27,7 +26,6 @@ const (
 
 type consumer struct {
 	log logger.Logger
-	eh  events.Handler
 	pq  priorityqueue.Queue
 
 	pipeline  atomic.Value
@@ -49,7 +47,7 @@ type consumer struct {
 	requeueCh chan *Item
 }
 
-func NewBeanstalkConsumer(configKey string, log logger.Logger, cfg cfgPlugin.Configurer, e events.Handler, pq priorityqueue.Queue) (*consumer, error) {
+func NewBeanstalkConsumer(configKey string, log logger.Logger, cfg cfgPlugin.Configurer, pq priorityqueue.Queue) (*consumer, error) {
 	const op = errors.Op("new_beanstalk_consumer")
 
 	// PARSE CONFIGURATION -------
@@ -91,7 +89,6 @@ func NewBeanstalkConsumer(configKey string, log logger.Logger, cfg cfgPlugin.Con
 	jc := &consumer{
 		pq:             pq,
 		log:            log,
-		eh:             e,
 		pool:           cPool,
 		network:        dsn[0],
 		addr:           dsn[1],
@@ -110,7 +107,7 @@ func NewBeanstalkConsumer(configKey string, log logger.Logger, cfg cfgPlugin.Con
 	return jc, nil
 }
 
-func FromPipeline(pipe *pipeline.Pipeline, log logger.Logger, cfg cfgPlugin.Configurer, e events.Handler, pq priorityqueue.Queue) (*consumer, error) {
+func FromPipeline(pipe *pipeline.Pipeline, log logger.Logger, cfg cfgPlugin.Configurer, pq priorityqueue.Queue) (*consumer, error) {
 	const op = errors.Op("new_beanstalk_consumer")
 
 	// PARSE CONFIGURATION -------
@@ -142,7 +139,6 @@ func FromPipeline(pipe *pipeline.Pipeline, log logger.Logger, cfg cfgPlugin.Conf
 	jc := &consumer{
 		pq:             pq,
 		log:            log,
-		eh:             e,
 		pool:           cPool,
 		network:        dsn[0],
 		addr:           dsn[1],
@@ -236,14 +232,7 @@ func (c *consumer) Run(_ context.Context, p *pipeline.Pipeline) error {
 
 	go c.listen()
 
-	c.eh.Push(events.JobEvent{
-		Event:    events.EventPipeActive,
-		Driver:   pipe.Driver(),
-		Pipeline: pipe.Name(),
-		Start:    start,
-		Elapsed:  time.Since(start),
-	})
-
+	c.log.Debug("pipeline started", "driver", pipe.Driver(), "pipeline", pipe.Name(), "start", start, "elapsed", time.Since(start))
 	return nil
 }
 
@@ -258,14 +247,7 @@ func (c *consumer) Stop(context.Context) error {
 	// release associated resources
 	c.pool.Stop()
 
-	c.eh.Push(events.JobEvent{
-		Event:    events.EventPipeStopped,
-		Driver:   pipe.Driver(),
-		Pipeline: pipe.Name(),
-		Start:    start,
-		Elapsed:  time.Since(start),
-	})
-
+	c.log.Debug("pipeline stopped", "driver", pipe.Driver(), "pipeline", pipe.Name(), "start", start, "elapsed", time.Since(start))
 	return nil
 }
 
@@ -289,13 +271,7 @@ func (c *consumer) Pause(_ context.Context, p string) {
 
 	c.stopCh <- struct{}{}
 
-	c.eh.Push(events.JobEvent{
-		Event:    events.EventPipePaused,
-		Driver:   pipe.Driver(),
-		Pipeline: pipe.Name(),
-		Start:    start,
-		Elapsed:  time.Since(start),
-	})
+	c.log.Debug("pipeline paused", "driver", pipe.Driver(), "pipeline", pipe.Name(), "start", start, "elapsed", time.Since(start))
 }
 
 func (c *consumer) Resume(_ context.Context, p string) {
@@ -320,13 +296,7 @@ func (c *consumer) Resume(_ context.Context, p string) {
 	// increase num of listeners
 	atomic.AddUint32(&c.listeners, 1)
 
-	c.eh.Push(events.JobEvent{
-		Event:    events.EventPipeActive,
-		Driver:   pipe.Driver(),
-		Pipeline: pipe.Name(),
-		Start:    start,
-		Elapsed:  time.Since(start),
-	})
+	c.log.Debug("pipeline resumed", "driver", pipe.Driver(), "pipeline", pipe.Name(), "start", start, "elapsed", time.Since(start))
 }
 
 func (c *consumer) handleItem(ctx context.Context, item *Item) error {

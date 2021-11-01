@@ -2,7 +2,6 @@ package http
 
 import (
 	"context"
-	"fmt"
 	"log"
 	"net/http"
 	"sync"
@@ -17,6 +16,7 @@ import (
 	"github.com/spiral/roadrunner-plugins/v2/logger"
 	"github.com/spiral/roadrunner-plugins/v2/server"
 	"github.com/spiral/roadrunner-plugins/v2/status"
+	"github.com/spiral/roadrunner/v2/events"
 	"github.com/spiral/roadrunner/v2/pool"
 	"github.com/spiral/roadrunner/v2/state/process"
 	"github.com/spiral/roadrunner/v2/worker"
@@ -56,6 +56,10 @@ type Plugin struct {
 
 	// middlewares to chain
 	mdwr middleware
+
+	// events bus
+	events   events.EventBus
+	eventsID string
 
 	// Pool which attached to all servers
 	pool pool.Pool
@@ -113,35 +117,36 @@ func (p *Plugin) Init(cfg config.Configurer, rrLogger logger.Logger, server serv
 	// initialize requests exporter
 	p.requestsExporter = newRequestsExporter()
 	p.server = server
+	p.events, p.eventsID = events.Bus()
 
 	return nil
 }
 
-func (p *Plugin) logCallback(event interface{}) {
-	if ev, ok := event.(handler.ResponseEvent); ok {
-		if p.cfg.AccessLogs {
-			p.log.Info(
-				"",
-				"method", ev.Method,
-				"remote_addr", ev.ReqRemoteAddr,
-				"bytes_sent", ev.BytesSent,
-				"http_host", ev.Host,
-				"request", ev.Query,
-				"time_local", ev.TimeLocal,
-				"request_length", ev.ReqLen,
-				"request_time", ev.Elapsed.Seconds(),
-				"status", ev.Status,
-				"http_user_agent", ev.UserAgent,
-				"http_referer", ev.Referer,
-			)
-		} else {
-			p.log.Debug(fmt.Sprintf("%s %s %s", ev.Status, ev.Method, ev.URI),
-				"remote", ev.ReqRemoteAddr,
-				"elapsed", ev.Elapsed.String(),
-			)
-		}
-	}
-}
+//func (p *Plugin) logCallback(event interface{}) {
+//	if ev, ok := event.(handler.ResponseEvent); ok {
+//		if p.cfg.AccessLogs {
+//			p.log.Info(
+//				"",
+//				"method", ev.Method,
+//				"remote_addr", ev.ReqRemoteAddr,
+//				"bytes_sent", ev.BytesSent,
+//				"http_host", ev.Host,
+//				"request", ev.Query,
+//				"time_local", ev.TimeLocal,
+//				"request_length", ev.ReqLen,
+//				"request_time", ev.Elapsed.Seconds(),
+//				"status", ev.Status,
+//				"http_user_agent", ev.UserAgent,
+//				"http_referer", ev.Referer,
+//			)
+//		} else {
+//			p.log.Debug(fmt.Sprintf("%s %s %s", ev.Status, ev.Method, ev.URI),
+//				"remote", ev.ReqRemoteAddr,
+//				"elapsed", ev.Elapsed.String(),
+//			)
+//		}
+//	}
+//}
 
 // Serve serves the svc.
 func (p *Plugin) Serve() chan error {
@@ -186,7 +191,7 @@ func (p *Plugin) serve(errCh chan error) {
 		return
 	}
 
-	p.handler.AddListener(p.logCallback, p.metricsCallback)
+	//p.handler.AddListener(p.logCallback, p.metricsCallback)
 
 	if p.cfg.EnableHTTP() {
 		if p.cfg.EnableH2C() {
@@ -402,7 +407,7 @@ func (p *Plugin) Reset() error {
 	}
 
 	p.log.Info("HTTP handler listeners successfully re-added")
-	p.handler.AddListener(p.logCallback, p.metricsCallback)
+	//p.handler.AddListener(p.logCallback, p.metricsCallback)
 
 	p.log.Info("HTTP plugin successfully restarted")
 	return nil

@@ -7,7 +7,6 @@ import (
 	amqp "github.com/rabbitmq/amqp091-go"
 	"github.com/spiral/errors"
 	"github.com/spiral/roadrunner-plugins/v2/jobs/pipeline"
-	"github.com/spiral/roadrunner/v2/events"
 )
 
 // redialer used to redial to the rabbitmq in case of the connection interrupts
@@ -30,13 +29,7 @@ func (c *consumer) redialer() { //nolint:gocognit
 				t := time.Now().UTC()
 				pipe := c.pipeline.Load().(*pipeline.Pipeline)
 
-				c.eh.Push(events.JobEvent{
-					Event:    events.EventPipeError,
-					Pipeline: pipe.Name(),
-					Driver:   pipe.Driver(),
-					Error:    err,
-					Start:    time.Now().UTC(),
-				})
+				c.log.Error("pipeline connection closed, redialing", "error", err, "pipeline", pipe.Name(), "driver", pipe.Driver(), "start", t)
 
 				expb := backoff.NewExponentialBackOff()
 				// set the retry timeout (minutes)
@@ -102,14 +95,7 @@ func (c *consumer) redialer() { //nolint:gocognit
 					return
 				}
 
-				c.eh.Push(events.JobEvent{
-					Event:    events.EventPipeActive,
-					Pipeline: pipe.Name(),
-					Driver:   pipe.Driver(),
-					Start:    t,
-					Elapsed:  time.Since(t),
-				})
-
+				c.log.Info("pipeline redialed successfully", "pipeline", pipe.Name(), "driver", pipe.Driver(), "start", t, "elapsed", time.Since(t))
 				c.Unlock()
 
 			case <-c.stopCh:
