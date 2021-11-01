@@ -2,7 +2,6 @@ package handler
 
 import (
 	json "github.com/json-iterator/go"
-	"github.com/spiral/roadrunner/v2/payload"
 )
 
 func (h *handler) generate(event string) ([]byte, error) {
@@ -23,9 +22,8 @@ func (h *handler) sendClose() {
 		h.log.Error("payload marshaling error", "error", err)
 		return
 	}
-	pld := &payload.Payload{
-		Context: c,
-	}
-
+	pld := h.getPayload()
+	pld.Context = c
 	_, _ = h.wPool(pld)
+	h.putPayload(pld)
 }

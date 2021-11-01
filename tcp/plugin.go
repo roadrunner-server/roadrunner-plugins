@@ -6,6 +6,7 @@ import (
 	"net"
 	"sync"
 
+	"github.com/google/uuid"
 	rrErrors "github.com/spiral/errors"
 	"github.com/spiral/roadrunner-plugins/v2/config"
 	"github.com/spiral/roadrunner-plugins/v2/logger"
@@ -21,10 +22,6 @@ const (
 	RrMode     string = "RR_MODE"
 )
 
-var (
-	bufferSize int = 1024 * 1024 * 1
-)
-
 type Plugin struct {
 	sync.RWMutex
 	cfg         *Config
@@ -32,7 +29,8 @@ type Plugin struct {
 	server      server.Server
 	connections sync.Map // uuid -> conn
 
-	wPool pool.Pool
+	wPool     pool.Pool
+	listeners sync.Map // server -> listener
 
 	resBufPool   sync.Pool
 	readBufPool  sync.Pool
@@ -61,7 +59,7 @@ func (p *Plugin) Init(log logger.Logger, cfg config.Configurer, server server.Se
 	p.resBufPool = sync.Pool{
 		New: func() interface{} {
 			buf := new(bytes.Buffer)
-			buf.Grow(bufferSize)
+			buf.Grow(p.cfg.ReadBufferSize)
 			return buf
 		},
 	}
@@ -69,7 +67,7 @@ func (p *Plugin) Init(log logger.Logger, cfg config.Configurer, server server.Se
 	// cyclic buffer to read the data from the connection
 	p.readBufPool = sync.Pool{
 		New: func() interface{} {
-			buf := make([]byte, bufferSize)
+			buf := make([]byte, p.cfg.ReadBufferSize)
 			return &buf
 		},
 	}
@@ -88,7 +86,6 @@ func (p *Plugin) Init(log logger.Logger, cfg config.Configurer, server server.Se
 
 	p.log = log
 	p.server = server
-	bufferSize = p.cfg.ReadBufferSize
 	return nil
 }
 
@@ -111,10 +108,12 @@ func (p *Plugin) Serve() chan error {
 				return
 			}
 
+			p.listeners.Store(uuid.NewString(), l)
+
 			for {
 				conn, err := l.Accept()
 				if err != nil {
-					p.log.Warn("listener error, stopping", "error", err)
+					p.log.Warn("connection accept failed", "error", err)
 					// just stop
 					return
 				}
@@ -141,6 +140,13 @@ func (p *Plugin) Stop() error {
 		}
 		return true
 	})
+
+	// then close all listeners
+	p.listeners.Range(func(_, value interface{}) bool {
+		_ = value.(net.Listener).Close()
+		return true
+	})
+
 	return nil
 }
 

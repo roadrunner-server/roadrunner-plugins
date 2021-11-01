@@ -82,7 +82,7 @@ func TestTCPInit(t *testing.T) {
 		}
 	}()
 
-	time.Sleep(time.Second * 3)
+	time.Sleep(time.Second * 1)
 	c, err := net.Dial("tcp", "127.0.0.1:7777")
 	require.NoError(t, err)
 	_, err = c.Write([]byte("\n\r\n"))
@@ -134,7 +134,6 @@ func TestTCPInit(t *testing.T) {
 
 	stopCh <- struct{}{}
 	wg.Wait()
-	time.Sleep(time.Second)
 }
 
 func TestTCPEmptySend(t *testing.T) {
@@ -197,7 +196,7 @@ func TestTCPEmptySend(t *testing.T) {
 		}
 	}()
 
-	time.Sleep(time.Second * 3)
+	time.Sleep(time.Second * 1)
 	c, err := net.Dial("tcp", "127.0.0.1:7779")
 	require.NoError(t, err)
 	_, err = c.Write([]byte(""))
@@ -217,7 +216,6 @@ func TestTCPEmptySend(t *testing.T) {
 
 	stopCh <- struct{}{}
 	wg.Wait()
-	time.Sleep(time.Second)
 }
 
 func TestTCPConnClose(t *testing.T) {
@@ -281,7 +279,7 @@ func TestTCPConnClose(t *testing.T) {
 		}
 	}()
 
-	time.Sleep(time.Second * 3)
+	time.Sleep(time.Second * 1)
 	c, err := net.Dial("tcp", "127.0.0.1:7788")
 	require.NoError(t, err)
 	_, err = c.Write([]byte("hello \r\n"))
@@ -302,7 +300,6 @@ func TestTCPConnClose(t *testing.T) {
 
 	stopCh <- struct{}{}
 	wg.Wait()
-	time.Sleep(time.Second)
 }
 
 func TestTCPFull(t *testing.T) {
@@ -365,7 +362,7 @@ func TestTCPFull(t *testing.T) {
 		}
 	}()
 
-	time.Sleep(time.Second * 3)
+	time.Sleep(time.Second * 1)
 	waitCh := make(chan struct{}, 3)
 
 	go func() {
@@ -456,7 +453,6 @@ func TestTCPFull(t *testing.T) {
 	<-waitCh
 	stopCh <- struct{}{}
 	wg.Wait()
-	time.Sleep(time.Second)
 }
 
 func closeConn(uuid string) func(t *testing.T) {

@@ -200,7 +200,9 @@ func (p *Plugin) collectPoolEvents(event interface{}) {
 		case events.EventNoFreeWorkers:
 			p.log.Warn("no free workers in the pool, consider increasing `pool.num_workers` property, or `pool.allocate_timeout`")
 			// show error only in the debug mode
-			p.log.Debug("error", we.Payload.(error).Error())
+			if we.Payload != nil {
+				p.log.Debug("error", we.Payload.(error).Error())
+			}
 		case events.EventWorkerProcessExit:
 			p.log.Info("worker process exited")
 			p.log.Debug("debug", "error", we.Error)

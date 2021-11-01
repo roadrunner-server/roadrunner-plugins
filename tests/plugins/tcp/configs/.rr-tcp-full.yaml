@@ -1,5 +1,5 @@
 rpc:
-  listen: tcp://127.0.0.1:6002
+  listen: tcp://127.0.0.1:6001
 
 server:
   command: "php ../../psr-worker-tcp-cont.php"
@@ -7,13 +7,13 @@ server:
 tcp:
   servers:
     server1:
-      addr: tcp://127.0.0.1:7778
+      addr: 127.0.0.1:7778
       delimiter: "\r\n"
     server2:
-      addr: tcp://127.0.0.1:8811
+      addr: 127.0.0.1:8811
       read_buf_size: 10
     server3:
-      addr: tcp://127.0.0.1:8812
+      addr: 127.0.0.1:8812
       delimiter: "\r\n"
       read_buf_size: 1
 
