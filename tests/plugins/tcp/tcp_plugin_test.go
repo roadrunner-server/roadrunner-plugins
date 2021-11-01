@@ -132,6 +132,7 @@ func TestTCPInit(t *testing.T) {
 
 	require.Equal(t, d3["remote_addr"].(string), c.LocalAddr().String())
 
+	time.Sleep(time.Second)
 	stopCh <- struct{}{}
 	wg.Wait()
 }
