@@ -41,7 +41,7 @@ type consumer struct {
 	stopCh    chan struct{}
 }
 
-func NewJobBroker(configKey string, log logger.Logger, cfg config.Configurer, pq priorityqueue.Queue) (*consumer, error) {
+func FromConfig(configKey string, log logger.Logger, cfg config.Configurer, pq priorityqueue.Queue) (*consumer, error) {
 	const op = errors.Op("new_ephemeral_pipeline")
 
 	jb := &consumer{
@@ -119,7 +119,7 @@ func (c *consumer) Register(_ context.Context, pipeline *pipeline.Pipeline) erro
 
 func (c *consumer) Run(_ context.Context, pipe *pipeline.Pipeline) error {
 	const op = errors.Op("memory_jobs_run")
-	c.log.Debug("pipeline active", "driver", pipe.Driver(), "pipeline", pipe.Name(), "start", time.Now())
+	t := time.Now()
 
 	l := atomic.LoadUint32(&c.listeners)
 	// listener already active
@@ -131,6 +131,7 @@ func (c *consumer) Run(_ context.Context, pipe *pipeline.Pipeline) error {
 	c.consume()
 	atomic.StoreUint32(&c.listeners, 1)
 
+	c.log.Debug("pipeline active", "driver", pipe.Driver(), "pipeline", pipe.Name(), "start", time.Now(), "elapsed", time.Since(t))
 	return nil
 }
 

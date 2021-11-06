@@ -29,21 +29,23 @@ require (
 	github.com/rabbitmq/amqp091-go v1.1.0
 	github.com/spf13/viper v1.9.0
 	// spiral
-	github.com/spiral/endure v1.0.6
+	github.com/spiral/endure v1.0.7
 	github.com/spiral/errors v1.0.12
 	github.com/spiral/goridge/v3 v3.2.3
-	github.com/spiral/roadrunner/v2 v2.6.0-alpha.3
+	github.com/spiral/roadrunner/v2 v2.6.0-alpha.4
 	// spiral
 	github.com/stretchr/testify v1.7.0
 	github.com/yookoala/gofast v0.6.0
 	go.etcd.io/bbolt v1.3.6
 	go.uber.org/zap v1.19.1
-	golang.org/x/net v0.0.0-20211020060615-d418f374d309
-	golang.org/x/sys v0.0.0-20211031064116-611d5d643895
+	golang.org/x/net v0.0.0-20211101193420-4a448f8816b3
+	golang.org/x/sys v0.0.0-20211102061401-a2f17f7b995c
 	google.golang.org/grpc v1.41.0
 	google.golang.org/protobuf v1.27.1
 	gopkg.in/natefinch/lumberjack.v2 v2.0.0
 )
+
+replace github.com/spiral/roadrunner/v2 => ../roadrunner
 
 require (
 	github.com/StackExchange/wmi v1.2.1 // indirect
@@ -101,7 +103,7 @@ require (
 	golang.org/x/sync v0.0.0-20210220032951-036812b2e83c // indirect
 	golang.org/x/text v0.3.7 // indirect
 	golang.org/x/tools v0.1.7 // indirect
-	google.golang.org/genproto v0.0.0-20211028162531-8db9c33dc351 // indirect
+	google.golang.org/genproto v0.0.0-20211101144312-62acf1d99145 // indirect
 	gopkg.in/ini.v1 v1.63.2 // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect
 	gopkg.in/yaml.v3 v3.0.0-20210107192922-496545a6307b // indirect

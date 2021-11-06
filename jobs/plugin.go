@@ -182,12 +182,17 @@ func (p *Plugin) Serve() chan error {
 		return errCh
 	}
 
-	var err error
-	p.workersPool, err = p.server.NewWorkerPool(context.Background(), p.cfg.Pool, map[string]string{RrMode: RrModeJobs})
-	if err != nil {
-		errCh <- err
-		return errCh
-	}
+	go func() {
+		p.Lock()
+		var err error
+		p.workersPool, err = p.server.NewWorkerPool(context.Background(), p.cfg.Pool, map[string]string{RrMode: RrModeJobs})
+		if err != nil {
+			p.Unlock()
+			errCh <- err
+			return
+		}
+		p.Unlock()
+	}()
 
 	// start listening
 	p.listener()
@@ -220,9 +225,11 @@ func (p *Plugin) Stop() error {
 		return true
 	})
 
-	p.Lock()
-	p.workersPool.Destroy(context.Background())
-	p.Unlock()
+	if p.workersPool != nil {
+		p.Lock()
+		p.workersPool.Destroy(context.Background())
+		p.Unlock()
+	}
 
 	return nil
 }

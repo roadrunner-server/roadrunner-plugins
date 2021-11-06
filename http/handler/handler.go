@@ -140,12 +140,12 @@ func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			if err != nil {
 				// if got an error while parsing -> assign 500 code to the writer and return
 				http.Error(w, "", 500)
-				//h.sendEvent(ErrorEvent{Error: errors.E(op, errors.Str("error while parsing value from the `content-length` header")), start: start, elapsed: time.Since(start)})
+				h.log.Error("error while parsing value from the content-length header", "start", start, "elapsed", time.Since(start))
 				return
 			}
 
 			if size > int64(h.maxRequestSize) {
-				//h.sendEvent(ErrorEvent{Error: errors.E(op, errors.Str("request body max size is exceeded")), start: start, elapsed: time.Since(start)})
+				h.log.Error("request body max size is exceeded", "allowed_size", h.maxRequestSize, "actual_size", size, "start", start, "elapsed", time.Since(start))
 				http.Error(w, errors.E(op, errors.Str("request body max size is exceeded")).Error(), http.StatusBadRequest)
 				return
 			}
@@ -160,13 +160,13 @@ func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		// in this case we just report about error
 		if err == errEPIPE {
 			h.putReq(req)
-			//h.sendEvent(ErrorEvent{Error: err, start: start, elapsed: time.Since(start)})
+			h.log.Error("write response error", "error", err, "start", start, "elapsed", time.Since(start))
 			return
 		}
 
 		h.putReq(req)
 		http.Error(w, errors.E(op, err).Error(), 500)
-		//h.sendEvent(ErrorEvent{Error: errors.E(op, err), start: start, elapsed: time.Since(start)})
+		h.log.Error("request forming error", "error", err, "start", start, "elapsed", time.Since(start))
 		return
 	}
 
@@ -182,7 +182,7 @@ func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		h.putReq(req)
 		h.putPld(pld)
 		h.handleError(w, start, err)
-		//h.sendEvent(ErrorEvent{Error: errors.E(op, err), start: start, elapsed: time.Since(start)})
+		h.log.Error("payload forming error", "error", err, "start", start, "elapsed", time.Since(start))
 		return
 	}
 
@@ -192,7 +192,7 @@ func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		h.putReq(req)
 		h.putPld(pld)
 		h.handleError(w, start, err)
-		//h.sendEvent(ErrorEvent{Error: errors.E(op, err), start: start, elapsed: time.Since(start)})
+		h.log.Error("execute error", "error", err, "start", start, "elapsed", time.Since(start))
 		return
 	}
 
@@ -202,21 +202,17 @@ func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		h.putReq(req)
 		h.putPld(pld)
 		h.handleError(w, start, err)
-		//h.events.Send(events.NewEvent())
-		//h.sendEvent(ErrorEvent{Error: errors.E(op, err), start: start, elapsed: time.Since(start)})
+		h.log.Error("write response error", "error", err, "start", start, "elapsed", time.Since(start))
 		return
 	}
 
 	if !h.accessLogs {
-		h.log.Debug("http response", "status", status, "method", req.Method, "URI", req.URI, "remote_address", req.RemoteAddr, "start", start, "elapsed", time.Since(start))
+		h.log.Info("http request processed", "status", status, "method", req.Method, "URI", req.URI, "remote_address", req.RemoteAddr, "start", start, "elapsed", time.Since(start))
 	} else {
 		body, _ := json.Marshal(r.Header)
 		reqLen := len(body) + int(r.ContentLength)
 
-		h.log.Info("http access log", "status", status, "method", req.Method, "URI", req.URI,
-			"remote_address", req.RemoteAddr, "query", req.RawQuery, "request_length", reqLen, "bytes_sent", r.ContentLength,
-			"host", r.Host, "user_agent", r.UserAgent(), "referer", r.Referer(),
-			"time_local", time.Now().Format("02/Jan/06:15:04:05 -0700"), "start", start, "elapsed", time.Since(start))
+		h.log.Info("http access log", "status", status, "method", req.Method, "URI", req.URI, "remote_address", req.RemoteAddr, "query", req.RawQuery, "request_length", reqLen, "bytes_sent", r.ContentLength, "host", r.Host, "user_agent", r.UserAgent(), "referer", r.Referer(), "time_local", time.Now().Format("02/Jan/06:15:04:05 -0700"), "request_time", time.Now(), "start", start, "elapsed", time.Since(start))
 	}
 
 	h.putPld(pld)
@@ -244,7 +240,6 @@ func (h *Handler) handleError(w http.ResponseWriter, start time.Time, err error)
 		errors.Is(errors.Network, err) {
 		// write an internal server error
 		w.WriteHeader(int(h.internalHTTPCode))
-		//h.sendEvent(ErrorEvent{Error: errors.E(op, err), start: start, elapsed: time.Since(start)})
 	}
 }
 

@@ -16,6 +16,7 @@ func (p *Plugin) listener() { //nolint:gocognit
 					p.log.Debug("------> job poller stopped <------")
 					return
 				default:
+					start := time.Now()
 					// get prioritized JOB from the queue
 					jb := p.queue.ExtractMin()
 
@@ -29,8 +30,7 @@ func (p *Plugin) listener() { //nolint:gocognit
 						5. Pipeline name
 					*/
 
-					start := time.Now()
-					p.log.Debug("job processing started", "ID", jb.ID(), "start", start)
+					p.log.Debug("job processing started", "ID", jb.ID(), "start", start, "elapsed", time.Since(start))
 
 					ctx, err := jb.Context()
 					if err != nil {
@@ -88,7 +88,7 @@ func (p *Plugin) listener() { //nolint:gocognit
 							continue
 						}
 
-						p.log.Debug("job processed successfully", "error", err, "ID", jb.ID(), "start", start, "elapsed", time.Since(start))
+						p.log.Debug("job processed successfully", "ID", jb.ID(), "start", start, "elapsed", time.Since(start))
 						// metrics
 						atomic.AddUint64(p.metrics.jobsOk, 1)
 
@@ -117,7 +117,7 @@ func (p *Plugin) listener() { //nolint:gocognit
 					// metrics
 					atomic.AddUint64(p.metrics.jobsOk, 1)
 
-					p.log.Debug("job processed successfully", "error", err, "ID", jb.ID(), "start", start, "elapsed", time.Since(start))
+					p.log.Debug("job processed successfully", "ID", jb.ID(), "start", start, "elapsed", time.Since(start))
 
 					// return payload
 					p.putPayload(exec)

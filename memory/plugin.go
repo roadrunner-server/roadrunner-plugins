@@ -50,7 +50,7 @@ func (p *Plugin) KvFromConfig(key string) (kv.Storage, error) {
 
 // ConsumerFromConfig creates new ephemeral consumer from the configuration
 func (p *Plugin) ConsumerFromConfig(configKey string, pq priorityqueue.Queue) (jobs.Consumer, error) {
-	return memoryjobs.NewJobBroker(configKey, p.log, p.cfg, pq)
+	return memoryjobs.FromConfig(configKey, p.log, p.cfg, pq)
 }
 
 // ConsumerFromPipeline creates new ephemeral consumer from the provided pipeline

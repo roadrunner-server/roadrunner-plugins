@@ -1,20 +1,19 @@
 rpc:
-  listen: tcp://127.0.0.1:6001
+  listen: tcp://127.0.0.1:7098
 
 server:
-  command: "php ../../psr-worker-bench.php"
+  command: "php ../../sleep.php"
   relay: "pipes"
   relay_timeout: "20s"
 
 http:
-  address: 127.0.0.1:58332
+  address: 127.0.0.1:22334
   max_request_size: 1024
-  access_logs: true
   pool:
     num_workers: 2
     max_jobs: 0
     allocate_timeout: 60s
     destroy_timeout: 60s
 logs:
-  mode: production
-  level: info
+  mode: development
+  level: error

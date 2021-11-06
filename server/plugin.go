@@ -10,6 +10,7 @@ import (
 	"github.com/spiral/errors"
 	"github.com/spiral/roadrunner-plugins/v2/config"
 	"github.com/spiral/roadrunner-plugins/v2/logger"
+	"github.com/spiral/roadrunner/v2/events"
 
 	"github.com/spiral/roadrunner/v2/pool"
 	"github.com/spiral/roadrunner/v2/transport"
@@ -33,6 +34,7 @@ type Plugin struct {
 	cfg     Config
 	log     logger.Logger
 	factory transport.Factory
+	stopCh  chan struct{}
 }
 
 // Init application provider.
@@ -46,12 +48,14 @@ func (p *Plugin) Init(cfg config.Configurer, log logger.Logger) error {
 		return errors.E(op, errors.Init, err)
 	}
 	p.cfg.InitDefaults()
-	p.log = log
 
 	p.factory, err = p.initFactory()
 	if err != nil {
 		return errors.E(op, err)
 	}
+
+	p.log = log
+	p.stopCh = make(chan struct{})
 
 	return nil
 }
@@ -66,7 +70,39 @@ func (p *Plugin) Available() {}
 
 // Serve (Start) server plugin (just a mock here to satisfy interface)
 func (p *Plugin) Serve() chan error {
-	return make(chan error, 1)
+	errCh := make(chan error, 1)
+	go func() {
+		eb, id := events.Bus()
+
+		eventsCh := make(chan events.Event, 10)
+		err := eb.SubscribeP(id, "pool.*", eventsCh)
+		if err != nil {
+			errCh <- err
+			return
+		}
+
+		err = eb.SubscribeP(id, "worker.*", eventsCh)
+		if err != nil {
+			errCh <- err
+			return
+		}
+		err = eb.SubscribeP(id, "worker_watcher.*", eventsCh)
+		if err != nil {
+			errCh <- err
+			return
+		}
+
+		for {
+			select {
+			case event := <-eventsCh:
+				p.log.Info("event", "type", event.Type().String(), "message", event.Message(), "plugin", event.Plugin())
+			case <-p.stopCh:
+				return
+			}
+		}
+	}()
+
+	return errCh
 }
 
 // Stop used to close chosen in config factory
@@ -74,6 +110,8 @@ func (p *Plugin) Stop() error {
 	if p.factory == nil {
 		return nil
 	}
+
+	p.stopCh <- struct{}{}
 
 	return p.factory.Close()
 }

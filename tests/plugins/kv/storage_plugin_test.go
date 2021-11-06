@@ -1300,7 +1300,7 @@ func TestRedisNoConfig(t *testing.T) {
 
 	mockLogger.EXPECT().Debug("worker destructed", "pid", gomock.Any()).AnyTimes()
 	mockLogger.EXPECT().Debug("worker constructed", "pid", gomock.Any()).AnyTimes()
-	mockLogger.EXPECT().Debug("Started RPC service", "address", "tcp://127.0.0.1:6001", "plugins", []string{"kv"}).AnyTimes()
+	mockLogger.EXPECT().Debug("RPC plugin started", "address", "tcp://127.0.0.1:6001", "plugins", []string{"kv"}).AnyTimes()
 
 	mockLogger.EXPECT().Error(`can't find local or global configuration, this section will be skipped`, "local: ", "kv.redis-rr.config", "global: ", "redis-rr").Times(1)
 
