@@ -8,7 +8,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/config v1.9.0
 	github.com/aws/aws-sdk-go-v2/credentials v1.5.0
 	github.com/aws/aws-sdk-go-v2/service/sqs v1.10.0
-	github.com/aws/smithy-go v1.8.1
+	github.com/aws/smithy-go v1.9.0
 	github.com/beanstalkd/go-beanstalk v0.1.0
 	github.com/bradfitz/gomemcache v0.0.0-20190913173617-a41fca850d0b
 	github.com/caddyserver/certmagic v0.15.1
