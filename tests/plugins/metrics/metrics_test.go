@@ -108,10 +108,11 @@ func TestMetricsIssue571(t *testing.T) {
 	controller := gomock.NewController(t)
 	mockLogger := mocks.NewMockLogger(controller)
 
-	mockLogger.EXPECT().Debug("worker destructed", "pid", gomock.Any()).AnyTimes()
-	mockLogger.EXPECT().Debug("worker constructed", "pid", gomock.Any()).AnyTimes()
-	mockLogger.EXPECT().Debug("RPC plugin started", "address", "tcp://127.0.0.1:6001", "plugins", []string{"metrics"}).MinTimes(1)
-	mockLogger.EXPECT().Debug("200 GET http://127.0.0.1:56444/", "remote", gomock.Any(), "elapsed", gomock.Any()).MinTimes(1)
+	mockLogger.EXPECT().Info("event", "type", "EventWorkerConstruct", "message", gomock.Any(), "plugin", "pool").AnyTimes()
+	mockLogger.EXPECT().Debug("RPC plugin started", "address", "tcp://127.0.0.1:6001", "plugins", gomock.Any()).Times(1)
+
+	mockLogger.EXPECT().Info("http request processed", "status", 200, "method", "GET", "URI", "http://127.0.0.1:56444/", "remote_address", "127.0.0.1", "start", gomock.Any(), "elapsed", gomock.Any()).MinTimes(1)
+
 	mockLogger.EXPECT().Info("declaring new metric", "name", "test", "type", gomock.Any(), "namespace", gomock.Any()).MinTimes(1)
 	mockLogger.EXPECT().Info("metric successfully added", "name", "test", "type", gomock.Any(), "namespace", gomock.Any()).MinTimes(1)
 	mockLogger.EXPECT().Info("metric successfully added", "name", "test", "labels", []string{}, "value", gomock.Any()).MinTimes(1)
@@ -311,9 +312,9 @@ func TestMetricsDifferentRPCCalls(t *testing.T) {
 	controller := gomock.NewController(t)
 	mockLogger := mocks.NewMockLogger(controller)
 
-	mockLogger.EXPECT().Debug("worker destructed", "pid", gomock.Any()).AnyTimes()
-	mockLogger.EXPECT().Debug("worker constructed", "pid", gomock.Any()).AnyTimes()
-	mockLogger.EXPECT().Debug("RPC plugin started", "address", "tcp://127.0.0.1:6001", "plugins", []string{"metrics"}).MinTimes(1)
+	mockLogger.EXPECT().Info("event", "type", "EventWorkerConstruct", "message", gomock.Any(), "plugin", "pool").AnyTimes()
+	mockLogger.EXPECT().Debug("RPC plugin started", "address", "tcp://127.0.0.1:6001", "plugins", gomock.Any()).Times(1)
+
 	mockLogger.EXPECT().Debug("http server is running", "address", gomock.Any()).AnyTimes()
 
 	mockLogger.EXPECT().Info("adding metric", "name", "counter_CounterMetric", "value", gomock.Any(), "labels", []string{"type2", "section2"}).MinTimes(1)
@@ -967,20 +968,12 @@ func TestHTTPMetrics(t *testing.T) {
 	cfg.Prefix = "rr"
 	cfg.Path = "configs/.rr-http-metrics.yaml"
 
-	controller := gomock.NewController(t)
-	mockLogger := mocks.NewMockLogger(controller)
-
-	mockLogger.EXPECT().Debug("worker destructed", "pid", gomock.Any()).AnyTimes()
-	mockLogger.EXPECT().Debug("worker constructed", "pid", gomock.Any()).AnyTimes()
-	mockLogger.EXPECT().Debug("200 GET http://127.0.0.1:13223/", "remote", gomock.Any(), "elapsed", gomock.Any()).MinTimes(1)
-	mockLogger.EXPECT().Debug("http server is running", "address", gomock.Any()).AnyTimes()
-
 	err = cont.RegisterAll(
 		cfg,
 		&metrics.Plugin{},
 		&server.Plugin{},
 		&httpPlugin.Plugin{},
-		mockLogger,
+		&logger.ZapLogger{},
 	)
 	assert.NoError(t, err)
 
@@ -1032,8 +1025,8 @@ func TestHTTPMetrics(t *testing.T) {
 	assert.NoError(t, err)
 	assert.Contains(t, genericOut, `rr_http_request_duration_seconds_bucket`)
 	assert.Contains(t, genericOut, `rr_http_request_duration_seconds_sum{status="200"}`)
-	assert.Contains(t, genericOut, `rr_http_request_duration_seconds_count{status="200"} 2`)
-	assert.Contains(t, genericOut, `rr_http_request_total{status="200"} 2`)
+	assert.Contains(t, genericOut, `rr_http_request_duration_seconds_count{status="200"}`)
+	assert.Contains(t, genericOut, `rr_http_request_total{status="200"}`)
 	assert.Contains(t, genericOut, "rr_http_workers_memory_bytes")
 
 	close(sig)

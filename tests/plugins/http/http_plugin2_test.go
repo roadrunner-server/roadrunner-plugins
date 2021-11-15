@@ -294,6 +294,7 @@ func TestHTTPResetForced(t *testing.T) {
 		r, err := client.Do(req)
 		require.NoError(t, err)
 		_, _ = ioutil.ReadAll(r.Body)
+		_ = r.Body.Close()
 	}()
 
 	go func() {
@@ -306,6 +307,7 @@ func TestHTTPResetForced(t *testing.T) {
 		r, err := client.Do(req)
 		require.NoError(t, err)
 		_, _ = ioutil.ReadAll(r.Body)
+		_ = r.Body.Close()
 	}()
 
 	time.Sleep(time.Second * 2)

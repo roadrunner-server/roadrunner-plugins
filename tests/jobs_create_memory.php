@@ -2,6 +2,8 @@
 
 use Spiral\RoadRunner\Jobs\Jobs;
 use Spiral\RoadRunner\Jobs\Queue\MemoryCreateInfo;
+use Spiral\RoadRunner\Jobs\Consumer;
+use Spiral\RoadRunner\Jobs\Task\ReceivedTaskInterface;
 
 require __DIR__ . "/vendor/autoload.php";
 
@@ -21,4 +23,9 @@ $queue = $jobs->create(new MemoryCreateInfo(
 
 $queue->resume();
 
-do {} while (true);
+
+$consumer = new Consumer();
+while ($task = $consumer->waitTask()) {
+    var_dump($task);
+    $task->complete();
+}

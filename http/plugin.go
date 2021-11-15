@@ -4,10 +4,12 @@ import (
 	"context"
 	"log"
 	"net/http"
+	"strconv"
 	"sync"
 	"time"
 
 	"github.com/mholt/acmez"
+	"github.com/prometheus/client_golang/prometheus"
 	endure "github.com/spiral/endure/pkg/container"
 	"github.com/spiral/errors"
 	"github.com/spiral/roadrunner-plugins/v2/config"
@@ -63,14 +65,14 @@ type Plugin struct {
 	eventsID string
 
 	// Pool which attached to all servers
-	pool pool.Pool
+	pool        pool.Pool
+	writersPool sync.Pool
 
 	// servers RR handler
 	handler *handler.Handler
 
 	// metrics
-	workersExporter  *workersExporter
-	requestsExporter *requestsExporter
+	statsExporter *statsExporter
 
 	// servers
 	http  *http.Server
@@ -113,12 +115,18 @@ func (p *Plugin) Init(cfg config.Configurer, rrLogger logger.Logger, server serv
 	}
 	p.cfg.Env[RrMode] = "http"
 
-	// initialize workersExporter
-	p.workersExporter = newWorkersExporter()
-	p.requestsExporter = newRequestsExporter()
+	// initialize statsExporter
+	p.statsExporter = newWorkersExporter(p)
 
 	p.server = server
 	p.events, p.eventsID = events.Bus()
+	p.writersPool = sync.Pool{
+		New: func() interface{} {
+			wr := new(writer)
+			wr.code = -1
+			return wr
+		},
+	}
 
 	return nil
 }
@@ -165,8 +173,6 @@ func (p *Plugin) serve(errCh chan error) {
 		errCh <- err
 		return
 	}
-
-	//p.handler.AddListener(p.logCallback, p.metricsCallback)
 
 	if p.cfg.EnableHTTP() {
 		if p.cfg.EnableH2C() {
@@ -286,20 +292,33 @@ func (p *Plugin) Stop() error {
 
 // ServeHTTP handles connection using set of middleware and pool PSR-7 server.
 func (p *Plugin) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	tt := time.Now()
+	wr := p.getWriter(w)
+
 	defer func() {
 		err := r.Body.Close()
 		if err != nil {
 			p.log.Error("body close", "error", err)
 		}
+
+		requestCounter.With(prometheus.Labels{
+			"status": strconv.Itoa(wr.code),
+		}).Inc()
+
+		requestDuration.With(prometheus.Labels{
+			"status": strconv.Itoa(wr.code),
+		}).Observe(time.Since(tt).Seconds())
+
+		p.putWriter(wr)
 	}()
 
 	if headerContainsUpgrade(r) {
-		http.Error(w, "server does not support upgrade header", http.StatusInternalServerError)
+		http.Error(wr, "server does not support upgrade header", http.StatusInternalServerError)
 		return
 	}
 
 	if p.https != nil && r.TLS == nil && p.cfg.SSLConfig.Redirect {
-		p.redirect(w, r)
+		p.redirect(wr, r)
 		return
 	}
 
@@ -310,7 +329,7 @@ func (p *Plugin) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	r = attributes.Init(r)
 	// protect the case, when user sendEvent Reset, and we are replacing handler with pool
 	p.mu.RLock()
-	p.handler.ServeHTTP(w, r)
+	p.handler.ServeHTTP(wr, r)
 	p.mu.RUnlock()
 }
 
@@ -385,7 +404,6 @@ func (p *Plugin) Reset() error {
 	}
 
 	p.log.Info("HTTP handler listeners successfully re-added")
-	//p.handler.AddListener(p.logCallback, p.metricsCallback)
 
 	p.log.Info("HTTP plugin successfully restarted")
 	return nil

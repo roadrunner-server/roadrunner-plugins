@@ -104,6 +104,7 @@ func (p *Plugin) Serve() chan error {
 	}
 
 	go func() {
+		p.log.Info("GRPC server started", "address", p.config.Listen)
 		err = p.server.Serve(l)
 		if err != nil {
 			// skip errors when stopping the server

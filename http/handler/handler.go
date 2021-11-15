@@ -23,41 +23,6 @@ const (
 	ContentLen string = "Content-Length"
 )
 
-// ErrorEvent represents singular http error event.
-type ErrorEvent struct {
-	// Error - associated error, if any.
-	Error error
-
-	// event timings
-	start   time.Time
-	elapsed time.Duration
-}
-
-// Elapsed returns duration of the invocation.
-func (e *ErrorEvent) Elapsed() time.Duration {
-	return e.elapsed
-}
-
-// ResponseEvent represents singular http response event.
-type ResponseEvent struct {
-	Method        string
-	URI           string
-	ReqRemoteAddr string
-	BytesSent     string
-	Host          string
-	TimeLocal     string
-	ReqLen        string
-	ReqTime       string
-	Status        string
-	UserAgent     string
-	Referer       string
-	Query         string
-
-	// event timings
-	Start   time.Time
-	Elapsed time.Duration
-}
-
 // Handler serves http connections to underlying PHP application using PSR-7 protocol. Context will include request headers,
 // parsed files and query, payload will include parsed form dataTree (if any).
 type Handler struct {
@@ -66,7 +31,6 @@ type Handler struct {
 	trusted        config.Cidrs
 	log            logger.Logger
 	pool           pool.Pool
-	mul            sync.Mutex
 
 	events   events.EventBus
 	eventsID string
@@ -226,7 +190,6 @@ func (h *Handler) Dispose() {
 
 // handleError will handle internal RR errors and return 500
 func (h *Handler) handleError(w http.ResponseWriter, start time.Time, err error) {
-	const op = errors.Op("handle_error")
 	// internal error types, user should not see them
 	if errors.Is(errors.SoftJob, err) ||
 		errors.Is(errors.WatcherStopped, err) ||

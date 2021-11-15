@@ -225,11 +225,11 @@ func (p *Plugin) Stop() error {
 		return true
 	})
 
+	p.Lock()
 	if p.workersPool != nil {
-		p.Lock()
 		p.workersPool.Destroy(context.Background())
-		p.Unlock()
 	}
+	p.Unlock()
 
 	return nil
 }
@@ -540,33 +540,6 @@ func (p *Plugin) RPC() interface{} {
 		p:   p,
 	}
 }
-
-//func (p *Plugin) collectJobsEvents(event interface{}) {
-//	if jev, ok := event.(events.JobEvent); ok {
-//		switch jev.Event {
-//		case events.EventPipePaused:
-//			p.log.Debug("pipeline paused", "pipeline", jev.Pipeline, "driver", jev.Driver, "start", jev.Start.UTC(), "elapsed", jev.Elapsed)
-//		case events.EventJobStart:
-//			p.log.Debug("job processing started", "start", jev.Start.UTC(), "elapsed", jev.Elapsed)
-//		case events.EventJobOK:
-//			p.log.Debug("job processed without errors", "ID", jev.ID, "start", jev.Start.UTC(), "elapsed", jev.Elapsed)
-//		case events.EventPushOK:
-//			p.log.Debug("job pushed to the queue", "start", jev.Start.UTC(), "elapsed", jev.Elapsed)
-//		case events.EventPushError:
-//			p.log.Error("job push error, job might be lost", "error", jev.Error, "pipeline", jev.Pipeline, "ID", jev.ID, "driver", jev.Driver, "start", jev.Start.UTC(), "elapsed", jev.Elapsed)
-//		case events.EventJobError:
-//			p.log.Error("job processed with errors", "error", jev.Error, "ID", jev.ID, "start", jev.Start.UTC(), "elapsed", jev.Elapsed)
-//		case events.EventPipeActive:
-//			p.log.Debug("pipeline active", "pipeline", jev.Pipeline, "start", jev.Start.UTC(), "elapsed", jev.Elapsed)
-//		case events.EventPipeStopped:
-//			p.log.Debug("pipeline stopped", "pipeline", jev.Pipeline, "start", jev.Start.UTC(), "elapsed", jev.Elapsed)
-//		case events.EventPipeError:
-//			p.log.Error("pipeline error", "pipeline", jev.Pipeline, "error", jev.Error, "start", jev.Start.UTC(), "elapsed", jev.Elapsed)
-//		case events.EventDriverReady:
-//			p.log.Debug("driver ready", "pipeline", jev.Pipeline, "start", jev.Start.UTC(), "elapsed", jev.Elapsed)
-//		}
-//	}
-//}
 
 func (p *Plugin) getPayload(body, context []byte) *payload.Payload {
 	pld := p.pldPool.Get().(*payload.Payload)
