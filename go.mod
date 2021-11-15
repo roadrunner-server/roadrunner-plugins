@@ -32,7 +32,7 @@ require (
 	github.com/spiral/endure v1.0.8
 	github.com/spiral/errors v1.0.12
 	github.com/spiral/goridge/v3 v3.2.3
-	github.com/spiral/roadrunner/v2 v2.6.0-alpha.4
+	github.com/spiral/roadrunner/v2 v2.6.0-alpha.5
 	// spiral
 	github.com/stretchr/testify v1.7.0
 	github.com/yookoala/gofast v0.6.0
@@ -44,8 +44,6 @@ require (
 	google.golang.org/protobuf v1.27.1
 	gopkg.in/natefinch/lumberjack.v2 v2.0.0
 )
-
-replace github.com/spiral/roadrunner/v2 => ../roadrunner
 
 require (
 	github.com/StackExchange/wmi v1.2.1 // indirect
