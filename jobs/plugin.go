@@ -192,10 +192,10 @@ func (p *Plugin) Serve() chan error {
 			return
 		}
 		p.Unlock()
-	}()
 
-	// start listening
-	p.listener()
+		// start listening
+		p.listener()
+	}()
 
 	return errCh
 }
