@@ -95,6 +95,7 @@ func TestTCPInit(t *testing.T) {
 
 	var d1 map[string]interface{}
 	err = json.Unmarshal(buf[:n], &d1)
+	fmt.Println(d1)
 	require.NoError(t, err)
 
 	require.Equal(t, d1["remote_addr"].(string), c.LocalAddr().String())
@@ -112,6 +113,7 @@ func TestTCPInit(t *testing.T) {
 
 	var d2 map[string]interface{}
 	err = json.Unmarshal(buf[:n], &d2)
+	fmt.Println(d2)
 	require.NoError(t, err)
 
 	require.Equal(t, d2["remote_addr"].(string), c.LocalAddr().String())

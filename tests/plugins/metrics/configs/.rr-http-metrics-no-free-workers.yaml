@@ -1,0 +1,21 @@
+rpc:
+  listen: tcp://127.0.0.1:6001
+
+server:
+  command: "php ../../sleep.php"
+  relay: "pipes"
+
+http:
+  address: 127.0.0.1:15442
+  max_request_size: 1024
+  middleware: [ "http_metrics" ]
+  pool:
+    allocate_timeout: 1s
+    num_workers: 1
+
+metrics:
+  address: 127.0.0.1:2113
+
+logs:
+  mode: development
+  level: debug
