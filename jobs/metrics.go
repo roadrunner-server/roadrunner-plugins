@@ -5,7 +5,6 @@ import (
 
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/spiral/roadrunner-plugins/v2/informer"
-	"github.com/spiral/roadrunner/v2/events"
 )
 
 func (p *Plugin) MetricsCollector() []prometheus.Collector {
@@ -21,10 +20,10 @@ const (
 type statsExporter struct {
 	workers       informer.Informer
 	workersMemory uint64
-	jobsOk        uint64
-	pushOk        uint64
-	jobsErr       uint64
-	pushErr       uint64
+	jobsOk        *uint64
+	pushOk        *uint64
+	jobsErr       *uint64
+	pushErr       *uint64
 }
 
 var (
@@ -35,32 +34,14 @@ var (
 	jobsOk  = prometheus.NewDesc(prometheus.BuildFQName(namespace, "", "jobs_ok"), "Number of successfully processed jobs.", nil, nil)
 )
 
-func newStatsExporter(stats informer.Informer) *statsExporter {
+func newStatsExporter(stats informer.Informer, jobsOk, pushOk, jobsErr, pushErr *uint64) *statsExporter {
 	return &statsExporter{
 		workers:       stats,
 		workersMemory: 0,
-		jobsOk:        0,
-		pushOk:        0,
-		jobsErr:       0,
-		pushErr:       0,
-	}
-}
-
-func (se *statsExporter) metricsCallback(event interface{}) {
-	if jev, ok := event.(events.JobEvent); ok {
-		switch jev.Event {
-		case events.EventJobOK:
-			atomic.AddUint64(&se.jobsOk, 1)
-		case events.EventPushOK:
-			atomic.AddUint64(&se.pushOk, 1)
-		case events.EventPushError:
-			atomic.AddUint64(&se.pushErr, 1)
-		case events.EventJobError:
-			atomic.AddUint64(&se.jobsErr, 1)
-		case events.EventDriverReady, events.EventJobStart,
-			events.EventPipeActive, events.EventPipeError,
-			events.EventPipePaused, events.EventPipeStopped:
-		}
+		jobsOk:        jobsOk,
+		pushOk:        pushOk,
+		jobsErr:       jobsErr,
+		pushErr:       pushErr,
 	}
 }
 
@@ -88,8 +69,8 @@ func (se *statsExporter) Collect(ch chan<- prometheus.Metric) {
 	// send the values to the prometheus
 	ch <- prometheus.MustNewConstMetric(worker, prometheus.GaugeValue, float64(cum))
 	// send the values to the prometheus
-	ch <- prometheus.MustNewConstMetric(jobsOk, prometheus.GaugeValue, float64(atomic.LoadUint64(&se.jobsOk)))
-	ch <- prometheus.MustNewConstMetric(jobsErr, prometheus.GaugeValue, float64(atomic.LoadUint64(&se.jobsErr)))
-	ch <- prometheus.MustNewConstMetric(pushOk, prometheus.GaugeValue, float64(atomic.LoadUint64(&se.pushOk)))
-	ch <- prometheus.MustNewConstMetric(pushErr, prometheus.GaugeValue, float64(atomic.LoadUint64(&se.pushErr)))
+	ch <- prometheus.MustNewConstMetric(jobsOk, prometheus.GaugeValue, float64(atomic.LoadUint64(se.jobsOk)))
+	ch <- prometheus.MustNewConstMetric(jobsErr, prometheus.GaugeValue, float64(atomic.LoadUint64(se.jobsErr)))
+	ch <- prometheus.MustNewConstMetric(pushOk, prometheus.GaugeValue, float64(atomic.LoadUint64(se.pushOk)))
+	ch <- prometheus.MustNewConstMetric(pushErr, prometheus.GaugeValue, float64(atomic.LoadUint64(se.pushErr)))
 }

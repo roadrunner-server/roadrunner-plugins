@@ -4,23 +4,23 @@ import (
 	"context"
 	"fmt"
 	"sync"
+	"sync/atomic"
 	"time"
 
 	endure "github.com/spiral/endure/pkg/container"
 	"github.com/spiral/errors"
+	"github.com/spiral/roadrunner-plugins/v2/api/jobs"
 	"github.com/spiral/roadrunner-plugins/v2/config"
-	"github.com/spiral/roadrunner-plugins/v2/internal/common/jobs"
 	"github.com/spiral/roadrunner-plugins/v2/jobs/job"
 	"github.com/spiral/roadrunner-plugins/v2/jobs/pipeline"
 	rh "github.com/spiral/roadrunner-plugins/v2/jobs/protocol"
 	"github.com/spiral/roadrunner-plugins/v2/logger"
 	"github.com/spiral/roadrunner-plugins/v2/server"
-	"github.com/spiral/roadrunner/v2/events"
 	"github.com/spiral/roadrunner/v2/payload"
 	"github.com/spiral/roadrunner/v2/pool"
 	pq "github.com/spiral/roadrunner/v2/priority_queue"
-	jobState "github.com/spiral/roadrunner/v2/state/job"
 	"github.com/spiral/roadrunner/v2/state/process"
+	"github.com/spiral/roadrunner/v2/utils"
 )
 
 const (
@@ -31,6 +31,10 @@ const (
 	PluginName string = "jobs"
 	pipelines  string = "pipelines"
 )
+
+type metrics struct {
+	jobsOk, pushOk, jobsErr, pushErr *uint64
+}
 
 type Plugin struct {
 	sync.RWMutex
@@ -44,8 +48,7 @@ type Plugin struct {
 	jobConstructors map[string]jobs.Constructor
 	consumers       sync.Map // map[string]jobs.Consumer
 
-	// events handler
-	events events.Handler
+	metrics *metrics
 
 	// priority queue implementation
 	queue pq.Queue
@@ -80,9 +83,6 @@ func (p *Plugin) Init(cfg config.Configurer, log logger.Logger, server server.Se
 
 	p.server = server
 
-	p.events = events.NewEventsHandler()
-	p.events.AddListener(p.collectJobsEvents)
-
 	p.jobConstructors = make(map[string]jobs.Constructor)
 	p.consume = make(map[string]struct{})
 	p.stopCh = make(chan struct{}, 1)
@@ -106,10 +106,15 @@ func (p *Plugin) Init(cfg config.Configurer, log logger.Logger, server server.Se
 	// initialize priority queue
 	p.queue = pq.NewBinHeap(p.cfg.PipelineSize)
 	p.log = log
+	p.metrics = &metrics{
+		jobsOk:  utils.Uint64(0),
+		pushOk:  utils.Uint64(0),
+		jobsErr: utils.Uint64(0),
+		pushErr: utils.Uint64(0),
+	}
 
 	// metrics
-	p.statsExporter = newStatsExporter(p)
-	p.events.AddListener(p.statsExporter.metricsCallback)
+	p.statsExporter = newStatsExporter(p, p.metrics.jobsOk, p.metrics.pushOk, p.metrics.jobsErr, p.metrics.pushErr)
 	p.respHandler = rh.NewResponseHandler(log)
 
 	return nil
@@ -137,7 +142,7 @@ func (p *Plugin) Serve() chan error {
 			configKey := fmt.Sprintf("%s.%s.%s", PluginName, pipelines, name)
 
 			// init the driver
-			initializedDriver, err := p.jobConstructors[dr].ConsumerFromConfig(configKey, p.events, p.queue)
+			initializedDriver, err := p.jobConstructors[dr].ConsumerFromConfig(configKey, p.queue)
 			if err != nil {
 				errCh <- errors.E(op, err)
 				return false
@@ -168,14 +173,7 @@ func (p *Plugin) Serve() chan error {
 			return true
 		}
 
-		p.events.Push(events.JobEvent{
-			Event:    events.EventDriverReady,
-			Pipeline: pipe.Name(),
-			Driver:   pipe.Driver(),
-			Start:    t,
-			Elapsed:  t.Sub(t),
-		})
-
+		p.log.Debug("driver ready", "pipeline", pipe.Name(), "driver", pipe.Driver(), "start", t, "elapsed", time.Since(t))
 		return true
 	})
 
@@ -184,15 +182,20 @@ func (p *Plugin) Serve() chan error {
 		return errCh
 	}
 
-	var err error
-	p.workersPool, err = p.server.NewWorkerPool(context.Background(), p.cfg.Pool, map[string]string{RrMode: RrModeJobs})
-	if err != nil {
-		errCh <- err
-		return errCh
-	}
+	go func() {
+		p.Lock()
+		var err error
+		p.workersPool, err = p.server.NewWorkerPool(context.Background(), p.cfg.Pool, map[string]string{RrMode: RrModeJobs})
+		if err != nil {
+			p.Unlock()
+			errCh <- err
+			return
+		}
+		p.Unlock()
 
-	// start listening
-	p.listener()
+		// start listening
+		p.listener()
+	}()
 
 	return errCh
 }
@@ -223,7 +226,9 @@ func (p *Plugin) Stop() error {
 	})
 
 	p.Lock()
-	p.workersPool.Destroy(context.Background())
+	if p.workersPool != nil {
+		p.workersPool.Destroy(context.Background())
+	}
 	p.Unlock()
 
 	return nil
@@ -259,15 +264,15 @@ func (p *Plugin) Workers() []*process.State {
 	return ps
 }
 
-func (p *Plugin) JobsState(ctx context.Context) ([]*jobState.State, error) {
+func (p *Plugin) JobsState(ctx context.Context) ([]*jobs.State, error) {
 	const op = errors.Op("jobs_plugin_drivers_state")
-	jst := make([]*jobState.State, 0, 2)
+	jst := make([]*jobs.State, 0, 2)
 	var err error
 	p.consumers.Range(func(key, value interface{}) bool {
 		consumer := value.(jobs.Consumer)
 		newCtx, cancel := context.WithTimeout(ctx, time.Second*time.Duration(p.cfg.Timeout))
 
-		var state *jobState.State
+		var state *jobs.State
 		state, err = consumer.State(newCtx)
 		if err != nil {
 			cancel()
@@ -301,7 +306,7 @@ func (p *Plugin) Reset() error {
 	p.workersPool = nil
 
 	var err error
-	p.workersPool, err = p.server.NewWorkerPool(context.Background(), p.cfg.Pool, map[string]string{RrMode: RrModeJobs}, p.collectJobsEvents, p.statsExporter.metricsCallback)
+	p.workersPool, err = p.server.NewWorkerPool(context.Background(), p.cfg.Pool, map[string]string{RrMode: RrModeJobs})
 	if err != nil {
 		return errors.E(op, err)
 	}
@@ -339,27 +344,13 @@ func (p *Plugin) Push(j *job.Job) error {
 
 	err := d.(jobs.Consumer).Push(ctx, j)
 	if err != nil {
-		p.events.Push(events.JobEvent{
-			Event:    events.EventPushError,
-			ID:       j.Ident,
-			Pipeline: ppl.Name(),
-			Driver:   ppl.Driver(),
-			Error:    err,
-			Start:    start,
-			Elapsed:  time.Since(start),
-		})
+		atomic.AddUint64(p.metrics.pushErr, 1)
+		p.log.Error("job push error", "error", err, "ID", j.Ident, "pipeline", ppl.Name(), "driver", ppl.Driver(), "start", start, "elapsed", time.Since(start))
 		return errors.E(op, err)
 	}
 
-	p.events.Push(events.JobEvent{
-		Event:    events.EventPushOK,
-		ID:       j.Ident,
-		Pipeline: ppl.Name(),
-		Driver:   ppl.Driver(),
-		Error:    err,
-		Start:    start,
-		Elapsed:  time.Since(start),
-	})
+	atomic.AddUint64(p.metrics.pushOk, 1)
+	p.log.Debug("job pushed successfully", "ID", j.Ident, "pipeline", ppl.Name(), "driver", ppl.Driver(), "start", start, "elapsed", time.Since(start))
 
 	return nil
 }
@@ -391,15 +382,8 @@ func (p *Plugin) PushBatch(j []*job.Job) error {
 		err := d.(jobs.Consumer).Push(ctx, j[i])
 		if err != nil {
 			cancel()
-			p.events.Push(events.JobEvent{
-				Event:    events.EventPushError,
-				ID:       j[i].Ident,
-				Pipeline: ppl.Name(),
-				Driver:   ppl.Driver(),
-				Start:    start,
-				Elapsed:  time.Since(start),
-				Error:    err,
-			})
+			atomic.AddUint64(p.metrics.pushErr, 1)
+			p.log.Error("job push batch error", "error", err, "ID", j[i].Ident, "pipeline", ppl.Name(), "driver", ppl.Driver(), "start", start, "elapsed", time.Since(start))
 			return errors.E(op, err)
 		}
 
@@ -472,7 +456,7 @@ func (p *Plugin) Declare(pipeline *pipeline.Pipeline) error {
 	// we need here to initialize these drivers for the pipelines
 	if _, ok := p.jobConstructors[dr]; ok {
 		// init the driver from pipeline
-		initializedDriver, err := p.jobConstructors[dr].ConsumerFromPipeline(pipeline, p.events, p.queue)
+		initializedDriver, err := p.jobConstructors[dr].ConsumerFromPipeline(pipeline, p.queue)
 		if err != nil {
 			return errors.E(op, err)
 		}
@@ -554,33 +538,6 @@ func (p *Plugin) RPC() interface{} {
 	return &rpc{
 		log: p.log,
 		p:   p,
-	}
-}
-
-func (p *Plugin) collectJobsEvents(event interface{}) {
-	if jev, ok := event.(events.JobEvent); ok {
-		switch jev.Event {
-		case events.EventPipePaused:
-			p.log.Debug("pipeline paused", "pipeline", jev.Pipeline, "driver", jev.Driver, "start", jev.Start.UTC(), "elapsed", jev.Elapsed)
-		case events.EventJobStart:
-			p.log.Debug("job processing started", "start", jev.Start.UTC(), "elapsed", jev.Elapsed)
-		case events.EventJobOK:
-			p.log.Debug("job processed without errors", "ID", jev.ID, "start", jev.Start.UTC(), "elapsed", jev.Elapsed)
-		case events.EventPushOK:
-			p.log.Debug("job pushed to the queue", "start", jev.Start.UTC(), "elapsed", jev.Elapsed)
-		case events.EventPushError:
-			p.log.Error("job push error, job might be lost", "error", jev.Error, "pipeline", jev.Pipeline, "ID", jev.ID, "driver", jev.Driver, "start", jev.Start.UTC(), "elapsed", jev.Elapsed)
-		case events.EventJobError:
-			p.log.Error("job processed with errors", "error", jev.Error, "ID", jev.ID, "start", jev.Start.UTC(), "elapsed", jev.Elapsed)
-		case events.EventPipeActive:
-			p.log.Debug("pipeline active", "pipeline", jev.Pipeline, "start", jev.Start.UTC(), "elapsed", jev.Elapsed)
-		case events.EventPipeStopped:
-			p.log.Debug("pipeline stopped", "pipeline", jev.Pipeline, "start", jev.Start.UTC(), "elapsed", jev.Elapsed)
-		case events.EventPipeError:
-			p.log.Error("pipeline error", "pipeline", jev.Pipeline, "error", jev.Error, "start", jev.Start.UTC(), "elapsed", jev.Elapsed)
-		case events.EventDriverReady:
-			p.log.Debug("driver ready", "pipeline", jev.Pipeline, "start", jev.Start.UTC(), "elapsed", jev.Elapsed)
-		}
 	}
 }
 

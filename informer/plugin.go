@@ -4,7 +4,7 @@ import (
 	"context"
 
 	endure "github.com/spiral/endure/pkg/container"
-	"github.com/spiral/roadrunner/v2/state/job"
+	"github.com/spiral/roadrunner-plugins/v2/api/jobs"
 	"github.com/spiral/roadrunner/v2/state/process"
 )
 
@@ -34,7 +34,7 @@ func (p *Plugin) Workers(name string) []*process.State {
 }
 
 // Jobs provides information about jobs for the registered plugin using jobs
-func (p *Plugin) Jobs(name string) []*job.State {
+func (p *Plugin) Jobs(name string) []*jobs.State {
 	svc, ok := p.withJobs[name]
 	if !ok {
 		return nil

@@ -10,13 +10,12 @@ import (
 	"github.com/google/uuid"
 	amqp "github.com/rabbitmq/amqp091-go"
 	"github.com/spiral/errors"
+	jobState "github.com/spiral/roadrunner-plugins/v2/api/jobs"
 	cfgPlugin "github.com/spiral/roadrunner-plugins/v2/config"
 	"github.com/spiral/roadrunner-plugins/v2/jobs/job"
 	"github.com/spiral/roadrunner-plugins/v2/jobs/pipeline"
 	"github.com/spiral/roadrunner-plugins/v2/logger"
-	"github.com/spiral/roadrunner/v2/events"
 	priorityqueue "github.com/spiral/roadrunner/v2/priority_queue"
-	jobState "github.com/spiral/roadrunner/v2/state/job"
 	"github.com/spiral/roadrunner/v2/utils"
 )
 
@@ -28,7 +27,6 @@ type consumer struct {
 	sync.Mutex
 	log logger.Logger
 	pq  priorityqueue.Queue
-	eh  events.Handler
 
 	pipeline atomic.Value
 
@@ -62,7 +60,7 @@ type consumer struct {
 }
 
 // NewAMQPConsumer initializes rabbitmq pipeline
-func NewAMQPConsumer(configKey string, log logger.Logger, cfg cfgPlugin.Configurer, e events.Handler, pq priorityqueue.Queue) (*consumer, error) {
+func NewAMQPConsumer(configKey string, log logger.Logger, cfg cfgPlugin.Configurer, pq priorityqueue.Queue) (*consumer, error) {
 	const op = errors.Op("new_amqp_consumer")
 	// we need to obtain two parts of the amqp information here.
 	// firs part - address to connect, it is located in the global section under the amqp pluginName
@@ -96,7 +94,6 @@ func NewAMQPConsumer(configKey string, log logger.Logger, cfg cfgPlugin.Configur
 	jb := &consumer{
 		log:       log,
 		pq:        pq,
-		eh:        e,
 		consumeID: uuid.NewString(),
 		stopCh:    make(chan struct{}),
 		// TODO to config
@@ -141,7 +138,7 @@ func NewAMQPConsumer(configKey string, log logger.Logger, cfg cfgPlugin.Configur
 	return jb, nil
 }
 
-func FromPipeline(pipeline *pipeline.Pipeline, log logger.Logger, cfg cfgPlugin.Configurer, e events.Handler, pq priorityqueue.Queue) (*consumer, error) {
+func FromPipeline(pipeline *pipeline.Pipeline, log logger.Logger, cfg cfgPlugin.Configurer, pq priorityqueue.Queue) (*consumer, error) {
 	const op = errors.Op("new_amqp_consumer_from_pipeline")
 	// we need to obtain two parts of the amqp information here.
 	// firs part - address to connect, it is located in the global section under the amqp pluginName
@@ -163,7 +160,6 @@ func FromPipeline(pipeline *pipeline.Pipeline, log logger.Logger, cfg cfgPlugin.
 
 	jb := &consumer{
 		log:          log,
-		eh:           e,
 		pq:           pq,
 		consumeID:    uuid.NewString(),
 		stopCh:       make(chan struct{}),
@@ -277,15 +273,7 @@ func (c *consumer) Run(_ context.Context, p *pipeline.Pipeline) error {
 	c.listener(deliv)
 
 	atomic.StoreUint32(&c.listeners, 1)
-
-	c.eh.Push(events.JobEvent{
-		Event:    events.EventPipeActive,
-		Driver:   pipe.Driver(),
-		Pipeline: pipe.Name(),
-		Start:    start,
-		Elapsed:  time.Since(start),
-	})
-
+	c.log.Debug("pipeline active", "driver", pipe.Driver(), "pipeline", pipe.Name(), "start", start, "elapsed", time.Since(start))
 	return nil
 }
 
@@ -349,13 +337,7 @@ func (c *consumer) Pause(_ context.Context, p string) {
 		return
 	}
 
-	c.eh.Push(events.JobEvent{
-		Event:    events.EventPipePaused,
-		Driver:   pipe.Driver(),
-		Pipeline: pipe.Name(),
-		Start:    start,
-		Elapsed:  time.Since(start),
-	})
+	c.log.Debug("pipeline paused", "driver", pipe.Driver(), "pipeline", pipe.Name(), "start", start, "elapsed", time.Since(start))
 }
 
 func (c *consumer) Resume(_ context.Context, p string) {
@@ -409,14 +391,7 @@ func (c *consumer) Resume(_ context.Context, p string) {
 
 	// increase number of listeners
 	atomic.AddUint32(&c.listeners, 1)
-
-	c.eh.Push(events.JobEvent{
-		Event:    events.EventPipeActive,
-		Driver:   pipe.Driver(),
-		Pipeline: pipe.Name(),
-		Start:    start,
-		Elapsed:  time.Since(start),
-	})
+	c.log.Debug("pipeline resumed", "driver", pipe.Driver(), "pipeline", pipe.Name(), "start", start, "elapsed", time.Since(start))
 }
 
 func (c *consumer) Stop(context.Context) error {
@@ -424,15 +399,7 @@ func (c *consumer) Stop(context.Context) error {
 	c.stopCh <- struct{}{}
 
 	pipe := c.pipeline.Load().(*pipeline.Pipeline)
-
-	c.eh.Push(events.JobEvent{
-		Event:    events.EventPipeStopped,
-		Driver:   pipe.Driver(),
-		Pipeline: pipe.Name(),
-		Start:    start,
-		Elapsed:  time.Since(start),
-	})
-
+	c.log.Debug("pipeline stopped", "driver", pipe.Driver(), "pipeline", pipe.Name(), "start", start, "elapsed", time.Since(start))
 	return nil
 }
 

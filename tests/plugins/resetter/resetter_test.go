@@ -35,13 +35,8 @@ func TestResetterInit(t *testing.T) {
 	controller := gomock.NewController(t)
 	mockLogger := mocks.NewMockLogger(controller)
 
-	mockLogger.EXPECT().Debug("worker destructed", "pid", gomock.Any()).AnyTimes()
-	mockLogger.EXPECT().Debug("worker constructed", "pid", gomock.Any()).AnyTimes()
-	mockLogger.EXPECT().Debug("Started RPC service", "address", "tcp://127.0.0.1:6001", "plugins", []string{"resetter"}).MinTimes(1)
-
-	mockLogger.EXPECT().Error(gomock.Any(), gomock.Any(), gomock.Any()).AnyTimes()
-
-	mockLogger.EXPECT().Warn("listener accept error, connection closed", "error", gomock.Any()).AnyTimes()
+	mockLogger.EXPECT().Info("event", "type", "EventWorkerConstruct", "message", gomock.Any(), "plugin", "pool").AnyTimes()
+	mockLogger.EXPECT().Debug("RPC plugin started", "address", "tcp://127.0.0.1:6001", "plugins", gomock.Any()).Times(1)
 
 	err = cont.RegisterAll(
 		cfg,

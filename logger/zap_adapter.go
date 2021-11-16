@@ -4,7 +4,6 @@ import (
 	"fmt"
 
 	"go.uber.org/zap"
-	core "go.uber.org/zap/zapcore"
 )
 
 type ZapAdapter struct {
@@ -16,46 +15,6 @@ func NewZapAdapter(zapLogger *zap.Logger) *ZapAdapter {
 	return &ZapAdapter{
 		zl: zapLogger.WithOptions(zap.AddCallerSkip(1)),
 	}
-}
-
-func separateFields(keyVals []interface{}) ([]zap.Field, []interface{}) {
-	var fields []zap.Field
-	var pairedKeyVals []interface{}
-
-	for key := range keyVals {
-		switch value := keyVals[key].(type) {
-		case zap.Field:
-			fields = append(fields, value)
-		case core.ObjectMarshaler:
-			fields = append(fields, zap.Inline(value))
-		default:
-			pairedKeyVals = append(pairedKeyVals, value)
-		}
-	}
-	return fields, pairedKeyVals
-}
-
-func (log *ZapAdapter) fields(keyvals []interface{}) []zap.Field {
-	// separate any zap fields from other structs
-	zapFields, keyvals := separateFields(keyvals)
-
-	// we should have even number of keys and values
-	if len(keyvals)%2 != 0 {
-		return []zap.Field{zap.Error(fmt.Errorf("odd number of keyvals pairs: %v", keyvals))}
-	}
-
-	fields := make([]zap.Field, 0, len(keyvals)/2+len(zapFields))
-	for i := 0; i < len(keyvals); i += 2 {
-		key, ok := keyvals[i].(string)
-		if !ok {
-			key = fmt.Sprintf("%v", keyvals[i])
-		}
-		fields = append(fields, zap.Any(key, keyvals[i+1]))
-	}
-	// add all the fields
-	fields = append(fields, zapFields...)
-
-	return fields
 }
 
 func (log *ZapAdapter) Debug(msg string, keyvals ...interface{}) {
@@ -76,4 +35,25 @@ func (log *ZapAdapter) Error(msg string, keyvals ...interface{}) {
 
 func (log *ZapAdapter) With(keyvals ...interface{}) Logger {
 	return NewZapAdapter(log.zl.With(log.fields(keyvals)...))
+}
+
+func (log *ZapAdapter) fields(keyvals []interface{}) []zap.Field {
+	// we should have even number of keys and values
+	if len(keyvals)%2 != 0 {
+		return []zap.Field{zap.Error(fmt.Errorf("odd number of keyvals pairs: %v", keyvals))}
+	}
+
+	zf := make([]zap.Field, len(keyvals)/2)
+	j := 0
+	for i := 0; i < len(keyvals); i += 2 {
+		key, ok := keyvals[i].(string)
+		if !ok {
+			key = fmt.Sprintf("%v", keyvals[i])
+		}
+
+		zf[j] = zap.Any(key, keyvals[i+1])
+		j++
+	}
+
+	return zf
 }

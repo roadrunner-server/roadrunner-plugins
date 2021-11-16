@@ -23,41 +23,6 @@ const (
 	ContentLen string = "Content-Length"
 )
 
-// ErrorEvent represents singular http error event.
-type ErrorEvent struct {
-	// Error - associated error, if any.
-	Error error
-
-	// event timings
-	start   time.Time
-	elapsed time.Duration
-}
-
-// Elapsed returns duration of the invocation.
-func (e *ErrorEvent) Elapsed() time.Duration {
-	return e.elapsed
-}
-
-// ResponseEvent represents singular http response event.
-type ResponseEvent struct {
-	Method        string
-	URI           string
-	ReqRemoteAddr string
-	BytesSent     string
-	Host          string
-	TimeLocal     string
-	ReqLen        string
-	ReqTime       string
-	Status        string
-	UserAgent     string
-	Referer       string
-	Query         string
-
-	// event timings
-	Start   time.Time
-	Elapsed time.Duration
-}
-
 // Handler serves http connections to underlying PHP application using PSR-7 protocol. Context will include request headers,
 // parsed files and query, payload will include parsed form dataTree (if any).
 type Handler struct {
@@ -66,8 +31,9 @@ type Handler struct {
 	trusted        config.Cidrs
 	log            logger.Logger
 	pool           pool.Pool
-	mul            sync.Mutex
-	lsn            []events.Listener
+
+	events   events.EventBus
+	eventsID string
 
 	accessLogs       bool
 	internalHTTPCode uint64
@@ -83,12 +49,17 @@ func NewHandler(maxReqSize uint64, internalHTTPCode uint64, uploads *config.Uplo
 	if pool == nil {
 		return nil, errors.E(errors.Str("pool should be initialized"))
 	}
+
+	eb, id := events.Bus()
+
 	return &Handler{
 		maxRequestSize:   maxReqSize * MB,
 		uploads:          uploads,
 		pool:             pool,
 		log:              log,
 		trusted:          trusted,
+		events:           eb,
+		eventsID:         id,
 		internalHTTPCode: internalHTTPCode,
 		accessLogs:       accessLogs,
 		reqPool: sync.Pool{
@@ -119,14 +90,6 @@ func NewHandler(maxReqSize uint64, internalHTTPCode uint64, uploads *config.Uplo
 	}, nil
 }
 
-// AddListener attaches handler event controller.
-func (h *Handler) AddListener(l ...events.Listener) {
-	h.mul.Lock()
-	defer h.mul.Unlock()
-
-	h.lsn = l
-}
-
 // ServeHTTP transform original request to the PSR-7 passed then to the underlying application. Attempts to serve static files first if enabled.
 func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	const op = errors.Op("serve_http")
@@ -141,12 +104,12 @@ func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			if err != nil {
 				// if got an error while parsing -> assign 500 code to the writer and return
 				http.Error(w, "", 500)
-				h.sendEvent(ErrorEvent{Error: errors.E(op, errors.Str("error while parsing value from the `content-length` header")), start: start, elapsed: time.Since(start)})
+				h.log.Error("error while parsing value from the content-length header", "start", start, "elapsed", time.Since(start))
 				return
 			}
 
 			if size > int64(h.maxRequestSize) {
-				h.sendEvent(ErrorEvent{Error: errors.E(op, errors.Str("request body max size is exceeded")), start: start, elapsed: time.Since(start)})
+				h.log.Error("request body max size is exceeded", "allowed_size", h.maxRequestSize, "actual_size", size, "start", start, "elapsed", time.Since(start))
 				http.Error(w, errors.E(op, errors.Str("request body max size is exceeded")).Error(), http.StatusBadRequest)
 				return
 			}
@@ -161,13 +124,13 @@ func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		// in this case we just report about error
 		if err == errEPIPE {
 			h.putReq(req)
-			h.sendEvent(ErrorEvent{Error: err, start: start, elapsed: time.Since(start)})
+			h.log.Error("write response error", "error", err, "start", start, "elapsed", time.Since(start))
 			return
 		}
 
 		h.putReq(req)
 		http.Error(w, errors.E(op, err).Error(), 500)
-		h.sendEvent(ErrorEvent{Error: errors.E(op, err), start: start, elapsed: time.Since(start)})
+		h.log.Error("request forming error", "error", err, "start", start, "elapsed", time.Since(start))
 		return
 	}
 
@@ -183,7 +146,7 @@ func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		h.putReq(req)
 		h.putPld(pld)
 		h.handleError(w, start, err)
-		h.sendEvent(ErrorEvent{Error: errors.E(op, err), start: start, elapsed: time.Since(start)})
+		h.log.Error("payload forming error", "error", err, "start", start, "elapsed", time.Since(start))
 		return
 	}
 
@@ -193,7 +156,7 @@ func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		h.putReq(req)
 		h.putPld(pld)
 		h.handleError(w, start, err)
-		h.sendEvent(ErrorEvent{Error: errors.E(op, err), start: start, elapsed: time.Since(start)})
+		h.log.Error("execute error", "error", err, "start", start, "elapsed", time.Since(start))
 		return
 	}
 
@@ -203,58 +166,30 @@ func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		h.putReq(req)
 		h.putPld(pld)
 		h.handleError(w, start, err)
-		h.sendEvent(ErrorEvent{Error: errors.E(op, err), start: start, elapsed: time.Since(start)})
+		h.log.Error("write response error", "error", err, "start", start, "elapsed", time.Since(start))
 		return
 	}
 
-	h.sendLog(r, status, req, start)
+	if !h.accessLogs {
+		h.log.Info("http request processed", "status", status, "method", req.Method, "URI", req.URI, "remote_address", req.RemoteAddr, "start", start, "elapsed", time.Since(start))
+	} else {
+		body, _ := json.Marshal(r.Header)
+		reqLen := len(body) + int(r.ContentLength)
+
+		h.log.Info("http access log", "status", status, "method", req.Method, "URI", req.URI, "remote_address", req.RemoteAddr, "query", req.RawQuery, "request_length", reqLen, "bytes_sent", r.ContentLength, "host", r.Host, "user_agent", r.UserAgent(), "referer", r.Referer(), "time_local", time.Now().Format("02/Jan/06:15:04:05 -0700"), "request_time", time.Now(), "start", start, "elapsed", time.Since(start))
+	}
+
 	h.putPld(pld)
 	req.Close(h.log)
 	h.putReq(req)
 }
 
-// sendLog sends log event (access log or regular debug log)
-func (h *Handler) sendLog(r *http.Request, status int, req *Request, start time.Time) {
-	if !h.accessLogs {
-		h.sendEvent(ResponseEvent{
-			Status:        strconv.Itoa(status),
-			Method:        req.Method,
-			URI:           req.URI,
-			ReqRemoteAddr: req.RemoteAddr,
-			Start:         start,
-			Elapsed:       time.Since(start),
-		})
-
-		return
-	}
-
-	body, _ := json.Marshal(r.Header)
-	reqLen := len(body) + int(r.ContentLength)
-
-	h.sendEvent(ResponseEvent{
-		Status:        strconv.Itoa(status),
-		Method:        req.Method,
-		URI:           req.URI,
-		ReqRemoteAddr: req.RemoteAddr,
-		Query:         req.RawQuery,
-
-		ReqLen:    strconv.Itoa(reqLen),
-		BytesSent: strconv.Itoa(int(r.ContentLength)),
-		Host:      r.Host,
-		UserAgent: r.UserAgent(),
-		Referer:   r.Referer(),
-
-		// https://en.wikipedia.org/wiki/Common_Log_Format
-		TimeLocal: time.Now().Format("02/Jan/06:15:04:05 -0700"),
-
-		Start:   start,
-		Elapsed: time.Since(start),
-	})
+func (h *Handler) Dispose() {
+	h.events.Unsubscribe(h.eventsID)
 }
 
 // handleError will handle internal RR errors and return 500
 func (h *Handler) handleError(w http.ResponseWriter, start time.Time, err error) {
-	const op = errors.Op("handle_error")
 	// internal error types, user should not see them
 	if errors.Is(errors.SoftJob, err) ||
 		errors.Is(errors.WatcherStopped, err) ||
@@ -268,21 +203,6 @@ func (h *Handler) handleError(w http.ResponseWriter, start time.Time, err error)
 		errors.Is(errors.Network, err) {
 		// write an internal server error
 		w.WriteHeader(int(h.internalHTTPCode))
-		h.sendEvent(ErrorEvent{Error: errors.E(op, err), start: start, elapsed: time.Since(start)})
-	}
-}
-
-// sendEvent invokes event handler if any.
-func (h *Handler) sendEvent(event interface{}) {
-	if h.lsn != nil {
-		for i := range h.lsn {
-			// do not block the pipeline
-			// TODO not a good approach, redesign event bus
-			i := i
-			go func() {
-				h.lsn[i](event)
-			}()
-		}
 	}
 }
 

@@ -5,7 +5,7 @@ import (
 
 	json "github.com/json-iterator/go"
 	"github.com/spiral/errors"
-	"github.com/spiral/roadrunner-plugins/v2/internal/common/jobs"
+	"github.com/spiral/roadrunner-plugins/v2/api/jobs"
 	"github.com/spiral/roadrunner-plugins/v2/logger"
 	"github.com/spiral/roadrunner/v2/payload"
 )

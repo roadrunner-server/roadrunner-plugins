@@ -2,8 +2,8 @@ package broadcast
 
 import (
 	"github.com/spiral/errors"
-	"github.com/spiral/roadrunner-plugins/v2/internal/common/pubsub"
-	websocketsv1 "github.com/spiral/roadrunner-plugins/v2/internal/proto/websockets/v1beta"
+	websocketsv1 "github.com/spiral/roadrunner-plugins/v2/api/proto/websockets/v1beta"
+	"github.com/spiral/roadrunner-plugins/v2/api/pubsub"
 	"github.com/spiral/roadrunner-plugins/v2/logger"
 )
 

@@ -15,10 +15,10 @@ import (
 	"github.com/golang/mock/gomock"
 	endure "github.com/spiral/endure/pkg/container"
 	goridgeRpc "github.com/spiral/goridge/v3/pkg/rpc"
+	websocketsv1 "github.com/spiral/roadrunner-plugins/v2/api/proto/websockets/v1beta"
 	"github.com/spiral/roadrunner-plugins/v2/broadcast"
 	"github.com/spiral/roadrunner-plugins/v2/config"
 	httpPlugin "github.com/spiral/roadrunner-plugins/v2/http"
-	websocketsv1 "github.com/spiral/roadrunner-plugins/v2/internal/proto/websockets/v1beta"
 	"github.com/spiral/roadrunner-plugins/v2/logger"
 	"github.com/spiral/roadrunner-plugins/v2/memory"
 	"github.com/spiral/roadrunner-plugins/v2/redis"
@@ -152,7 +152,7 @@ func TestBroadcastNoConfig(t *testing.T) {
 
 	mockLogger.EXPECT().Debug("worker destructed", "pid", gomock.Any()).AnyTimes()
 	mockLogger.EXPECT().Debug("worker constructed", "pid", gomock.Any()).AnyTimes()
-	mockLogger.EXPECT().Debug("Started RPC service", "address", "tcp://127.0.0.1:6001", "plugins", []string{}).MinTimes(1)
+	mockLogger.EXPECT().Debug("RPC plugin started", "address", "tcp://127.0.0.1:6001", "plugins", []string{}).MinTimes(1)
 	mockLogger.EXPECT().Debug("http server is running", "address", gomock.Any()).AnyTimes()
 
 	err = cont.RegisterAll(
@@ -195,9 +195,9 @@ func TestBroadcastSameSubscriber(t *testing.T) {
 	controller := gomock.NewController(t)
 	mockLogger := mocks.NewMockLogger(controller)
 
-	mockLogger.EXPECT().Debug("worker destructed", "pid", gomock.Any()).AnyTimes()
-	mockLogger.EXPECT().Debug("worker constructed", "pid", gomock.Any()).AnyTimes()
-	mockLogger.EXPECT().Debug("Started RPC service", "address", "tcp://127.0.0.1:6002", "plugins", []string{"broadcast"}).AnyTimes()
+	mockLogger.EXPECT().Info("event", "type", "EventWorkerConstruct", "message", gomock.Any(), "plugin", "pool").AnyTimes()
+	mockLogger.EXPECT().Debug("RPC plugin started", "address", "tcp://127.0.0.1:6002", "plugins", gomock.Any()).Times(1)
+
 	mockLogger.EXPECT().Debug("message published", "msg", gomock.Any()).AnyTimes()
 	mockLogger.EXPECT().Debug("http server is running", "address", gomock.Any()).AnyTimes()
 
@@ -317,9 +317,9 @@ func TestBroadcastSameSubscriberGlobal(t *testing.T) {
 	controller := gomock.NewController(t)
 	mockLogger := mocks.NewMockLogger(controller)
 
-	mockLogger.EXPECT().Debug("worker destructed", "pid", gomock.Any()).AnyTimes()
-	mockLogger.EXPECT().Debug("worker constructed", "pid", gomock.Any()).AnyTimes()
-	mockLogger.EXPECT().Debug("Started RPC service", "address", "tcp://127.0.0.1:6003", "plugins", []string{"broadcast"}).AnyTimes()
+	mockLogger.EXPECT().Info("event", "type", "EventWorkerConstruct", "message", gomock.Any(), "plugin", "pool").AnyTimes()
+	mockLogger.EXPECT().Debug("RPC plugin started", "address", "tcp://127.0.0.1:6003", "plugins", gomock.Any()).Times(1)
+
 	mockLogger.EXPECT().Debug("message published", "msg", gomock.Any()).AnyTimes()
 	mockLogger.EXPECT().Debug("http server is running", "address", gomock.Any()).AnyTimes()
 

@@ -9,13 +9,12 @@ import (
 	json "github.com/json-iterator/go"
 	"github.com/nats-io/nats.go"
 	"github.com/spiral/errors"
+	jobState "github.com/spiral/roadrunner-plugins/v2/api/jobs"
 	cfgPlugin "github.com/spiral/roadrunner-plugins/v2/config"
 	"github.com/spiral/roadrunner-plugins/v2/jobs/job"
 	"github.com/spiral/roadrunner-plugins/v2/jobs/pipeline"
 	"github.com/spiral/roadrunner-plugins/v2/logger"
-	"github.com/spiral/roadrunner/v2/events"
 	priorityqueue "github.com/spiral/roadrunner/v2/priority_queue"
-	jobState "github.com/spiral/roadrunner/v2/state/job"
 )
 
 const (
@@ -27,7 +26,6 @@ type consumer struct {
 	// system
 	sync.RWMutex
 	log       logger.Logger
-	eh        events.Handler
 	queue     priorityqueue.Queue
 	listeners uint32
 	pipeline  atomic.Value
@@ -49,7 +47,7 @@ type consumer struct {
 	deleteStreamOnStop bool
 }
 
-func FromConfig(configKey string, e events.Handler, log logger.Logger, cfg cfgPlugin.Configurer, queue priorityqueue.Queue) (*consumer, error) {
+func FromConfig(configKey string, log logger.Logger, cfg cfgPlugin.Configurer, queue priorityqueue.Queue) (*consumer, error) {
 	const op = errors.Op("new_nats_consumer")
 
 	if !cfg.Has(configKey) {
@@ -114,7 +112,6 @@ func FromConfig(configKey string, e events.Handler, log logger.Logger, cfg cfgPl
 
 	cs := &consumer{
 		log:    log,
-		eh:     e,
 		stopCh: make(chan struct{}),
 		queue:  queue,
 
@@ -133,7 +130,7 @@ func FromConfig(configKey string, e events.Handler, log logger.Logger, cfg cfgPl
 	return cs, nil
 }
 
-func FromPipeline(pipe *pipeline.Pipeline, e events.Handler, log logger.Logger, cfg cfgPlugin.Configurer, queue priorityqueue.Queue) (*consumer, error) {
+func FromPipeline(pipe *pipeline.Pipeline, log logger.Logger, cfg cfgPlugin.Configurer, queue priorityqueue.Queue) (*consumer, error) {
 	const op = errors.Op("new_nats_consumer")
 
 	// if no global section -- error
@@ -189,7 +186,6 @@ func FromPipeline(pipe *pipeline.Pipeline, e events.Handler, log logger.Logger, 
 
 	cs := &consumer{
 		log:    log,
-		eh:     e,
 		queue:  queue,
 		stopCh: make(chan struct{}),
 
@@ -251,14 +247,7 @@ func (c *consumer) Run(_ context.Context, p *pipeline.Pipeline) error {
 
 	go c.listenerStart()
 
-	c.eh.Push(events.JobEvent{
-		Event:    events.EventPipeActive,
-		Driver:   pipe.Driver(),
-		Pipeline: pipe.Name(),
-		Start:    start,
-		Elapsed:  time.Since(start),
-	})
-
+	c.log.Debug("pipeline started", "driver", pipe.Driver(), "pipeline", pipe.Name(), "start", start, "elapsed", time.Since(start))
 	return nil
 }
 
@@ -290,13 +279,7 @@ func (c *consumer) Pause(_ context.Context, p string) {
 	c.stopCh <- struct{}{}
 	c.sub = nil
 
-	c.eh.Push(events.JobEvent{
-		Event:    events.EventPipePaused,
-		Driver:   pipe.Driver(),
-		Pipeline: pipe.Name(),
-		Start:    start,
-		Elapsed:  time.Since(start),
-	})
+	c.log.Debug("pipeline paused", "driver", pipe.Driver(), "pipeline", pipe.Name(), "start", start, "elapsed", time.Since(start))
 }
 
 func (c *consumer) Resume(_ context.Context, p string) {
@@ -323,13 +306,7 @@ func (c *consumer) Resume(_ context.Context, p string) {
 
 	atomic.AddUint32(&c.listeners, 1)
 
-	c.eh.Push(events.JobEvent{
-		Event:    events.EventPipeActive,
-		Driver:   pipe.Driver(),
-		Pipeline: pipe.Name(),
-		Start:    start,
-		Elapsed:  time.Since(start),
-	})
+	c.log.Debug("pipeline resumed", "driver", pipe.Driver(), "pipeline", pipe.Name(), "start", start, "elapsed", time.Since(start))
 }
 
 func (c *consumer) State(_ context.Context) (*jobState.State, error) {
@@ -387,13 +364,7 @@ func (c *consumer) Stop(_ context.Context) error {
 
 	c.conn.Close()
 	c.msgCh = nil
-	c.eh.Push(events.JobEvent{
-		Event:    events.EventPipeStopped,
-		Driver:   pipe.Driver(),
-		Pipeline: pipe.Name(),
-		Start:    start,
-		Elapsed:  time.Since(start),
-	})
+	c.log.Debug("pipeline stopped", "driver", pipe.Driver(), "pipeline", pipe.Name(), "start", start, "elapsed", time.Since(start))
 
 	return nil
 }

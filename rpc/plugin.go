@@ -30,6 +30,10 @@ type Plugin struct {
 func (s *Plugin) Init(cfg config.Configurer, log logger.Logger) error {
 	const op = errors.Op("rpc_plugin_init")
 
+	if !cfg.Has(PluginName) {
+		return errors.E(op, errors.Disabled)
+	}
+
 	err := cfg.UnmarshalKey(PluginName, &s.cfg)
 	if err != nil {
 		return errors.E(op, errors.Disabled, err)
@@ -80,7 +84,7 @@ func (s *Plugin) Serve() chan error {
 		return errCh
 	}
 
-	s.log.Debug("Started RPC service", "address", s.cfg.Listen, "plugins", plugins)
+	s.log.Debug("RPC plugin started", "address", s.cfg.Listen, "plugins", plugins)
 
 	go func() {
 		for {

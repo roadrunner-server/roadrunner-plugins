@@ -23,7 +23,7 @@ jobs:
       fail-fast: true
       matrix:
         php: ["7.4", "8.0", "8.1"]
-        go: ["1.17.2"]
+        go: ["1.17.3"]
         os: ["ubuntu-latest"]
     steps:
       - name: Set up Go ${{ matrix.go }}
@@ -67,7 +67,7 @@ jobs:
       - name: Install protoc
         uses: arduino/setup-protoc@v1
         with:
-          version: '3.18'
+          version: '3.x'
 
       - name: Run golang tests with coverage
         run: make test_coverage

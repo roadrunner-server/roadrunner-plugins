@@ -124,22 +124,24 @@ func TestHTTPAccessLogs(t *testing.T) {
 	controller := gomock.NewController(t)
 	mockLogger := mocks.NewMockLogger(controller)
 
-	mockLogger.EXPECT().Debug("worker constructed", "pid", gomock.Any()).MinTimes(1)
-	mockLogger.EXPECT().Debug("http server is running", "address", gomock.Any()).AnyTimes()
+	mockLogger.EXPECT().Info("event", "type", "EventWorkerConstruct", "message", gomock.Any(), "plugin", "pool").AnyTimes()
+	mockLogger.EXPECT().Debug("http server is running", "address", gomock.Any()).Times(1)
 	mockLogger.EXPECT().Info(
 		gomock.Any(),
-		"method", "GET",
-		"remote_addr", "127.0.0.1",
-		"bytes_sent", "0",
-		"http_host", "127.0.0.1:58332",
-		"request", "hello=world",
-		"time_local", gomock.Any(),
+		"status", gomock.Any(),
+		"method", gomock.Any(),
+		"URI", gomock.Any(),
+		"remote_address", gomock.Any(),
+		"query", gomock.Any(),
 		"request_length", gomock.Any(),
+		"bytes_sent", gomock.Any(),
+		"host", gomock.Any(),
+		"user_agent", "Go-http-client/1.1",
+		"referer", gomock.Any(),
+		"time_local", gomock.Any(),
 		"request_time", gomock.Any(),
-		"status", "201",
-		"http_user_agent", "Go-http-client/1.1",
-		"http_referer", "",
-	).AnyTimes()
+		"start", gomock.Any(),
+		"elapsed", gomock.Any()).MinTimes(1)
 
 	err = cont.RegisterAll(
 		cfg,
@@ -201,15 +203,16 @@ func TestHTTPAccessLogs(t *testing.T) {
 }
 
 func echoAccessLogs(t *testing.T) {
-	req, err := http.NewRequest("GET", "http://127.0.0.1:58332?hello=world", nil)
+	req, err := http.NewRequest("GET", "http://127.0.0.1:58332", nil)
 	assert.NoError(t, err)
 
 	r, err := http.DefaultClient.Do(req)
+	require.NoError(t, err)
+	require.NotNil(t, r)
+	b, err := io.ReadAll(r.Body)
 	assert.NoError(t, err)
-	b, err := ioutil.ReadAll(r.Body)
-	assert.NoError(t, err)
-	assert.Equal(t, 201, r.StatusCode)
-	assert.Equal(t, "WORLD", string(b))
+	assert.Equal(t, 200, r.StatusCode)
+	assert.Equal(t, "hello world", string(b))
 
 	err = r.Body.Close()
 	assert.NoError(t, err)
@@ -944,9 +947,8 @@ func TestH2CUpgrade(t *testing.T) {
 	controller := gomock.NewController(t)
 	mockLogger := mocks.NewMockLogger(controller)
 
-	mockLogger.EXPECT().Debug("Started RPC service", "address", "tcp://127.0.0.1:6001", "plugins", gomock.Any()).Times(1)
+	mockLogger.EXPECT().Info("event", "type", "EventWorkerConstruct", "message", gomock.Any(), "plugin", "pool").AnyTimes()
 	mockLogger.EXPECT().Error("server internal error", "message", gomock.Any()).MinTimes(1)
-	mockLogger.EXPECT().Debug("worker constructed", "pid", gomock.Any()).MinTimes(1)
 	mockLogger.EXPECT().Debug("http server is running", "address", gomock.Any()).AnyTimes()
 
 	err = cont.RegisterAll(
@@ -1266,10 +1268,9 @@ logs:
 	mockLogger := mocks.NewMockLogger(controller)
 
 	mockLogger.EXPECT().Debug(gomock.Any()).AnyTimes()
-	mockLogger.EXPECT().Debug("worker constructed", "pid", gomock.Any()).MinTimes(1)
-	mockLogger.EXPECT().Debug("201 GET http://127.0.0.1:34999/?hello=world", "remote", "127.0.0.1", "elapsed", gomock.Any()).MinTimes(1)
-	mockLogger.EXPECT().Info("WORLD\n").MinTimes(1)
-	mockLogger.EXPECT().Error(gomock.Any(), gomock.Any(), gomock.Any()).AnyTimes() // placeholder for the workerlogerror
+	mockLogger.EXPECT().Info("event", "type", "EventWorkerConstruct", "message", gomock.Any(), "plugin", "pool").Times(2)
+	mockLogger.EXPECT().Info("http request processed", "status", 201, "method", "GET", "URI", "http://127.0.0.1:34999/?hello=world", "remote_address", "127.0.0.1", "start", gomock.Any(), "elapsed", gomock.Any()).MinTimes(1)
+	mockLogger.EXPECT().Info("event", "type", "EventWorkerStderr", "message", "WORLD\n", "plugin", "worker").MinTimes(1)
 	mockLogger.EXPECT().Debug("http server is running", "address", gomock.Any()).AnyTimes()
 
 	err = cont.RegisterAll(
@@ -2222,11 +2223,12 @@ func TestStaticFilesForbid(t *testing.T) {
 	controller := gomock.NewController(t)
 	mockLogger := mocks.NewMockLogger(controller)
 
-	mockLogger.EXPECT().Debug("worker destructed", "pid", gomock.Any()).AnyTimes()
-	mockLogger.EXPECT().Debug("worker constructed", "pid", gomock.Any()).AnyTimes()
-	mockLogger.EXPECT().Debug("201 GET http://127.0.0.1:34653/http?hello=world", "remote", "127.0.0.1", "elapsed", gomock.Any()).MinTimes(1)
-	mockLogger.EXPECT().Debug("201 GET http://127.0.0.1:34653/client.XXX?hello=world", "remote", "127.0.0.1", "elapsed", gomock.Any()).MinTimes(1)
-	mockLogger.EXPECT().Debug("201 GET http://127.0.0.1:34653/client.php?hello=world", "remote", "127.0.0.1", "elapsed", gomock.Any()).MinTimes(1)
+	mockLogger.EXPECT().Info("event", "type", "EventWorkerConstruct", "message", gomock.Any(), "plugin", "pool").AnyTimes()
+
+	mockLogger.EXPECT().Info("http request processed", "status", 201, "method", "GET", "URI", "http://127.0.0.1:34653/http?hello=world", "remote_address", "127.0.0.1", "start", gomock.Any(), "elapsed", gomock.Any()).MinTimes(1)
+	mockLogger.EXPECT().Info("http request processed", "status", 201, "method", "GET", "URI", "http://127.0.0.1:34653/client.XXX?hello=world", "remote_address", "127.0.0.1", "start", gomock.Any(), "elapsed", gomock.Any()).MinTimes(1)
+	mockLogger.EXPECT().Info("http request processed", "status", 201, "method", "GET", "URI", "http://127.0.0.1:34653/client.php?hello=world", "remote_address", "127.0.0.1", "start", gomock.Any(), "elapsed", gomock.Any()).MinTimes(1)
+
 	mockLogger.EXPECT().Error("file open error", "error", gomock.Any()).AnyTimes()
 	mockLogger.EXPECT().Debug("no such file or directory", "error", gomock.Any()).AnyTimes()
 	mockLogger.EXPECT().Debug("possible path to dir provided").AnyTimes()
@@ -2397,10 +2399,9 @@ func TestHTTPIPv6Long(t *testing.T) {
 
 	controller := gomock.NewController(t)
 	mockLogger := mocks.NewMockLogger(controller)
-	mockLogger.EXPECT().Debug("worker destructed", "pid", gomock.Any()).AnyTimes()
-	mockLogger.EXPECT().Debug("worker constructed", "pid", gomock.Any()).AnyTimes()
-	mockLogger.EXPECT().Debug("Started RPC service", "address", "tcp://[0:0:0:0:0:0:0:1]:6005", "plugins", gomock.Any()).Times(1)
-	mockLogger.EXPECT().Debug("201 GET http://[0:0:0:0:0:0:0:1]:10684/?hello=world", "remote", "::1", "elapsed", gomock.Any()).Times(1)
+	mockLogger.EXPECT().Info("event", "type", "EventWorkerConstruct", "message", gomock.Any(), "plugin", "pool").AnyTimes()
+	mockLogger.EXPECT().Debug("RPC plugin started", "address", "tcp://[0:0:0:0:0:0:0:1]:6005", "plugins", gomock.Any()).Times(1)
+	mockLogger.EXPECT().Info("http request processed", "status", 201, "method", "GET", "URI", "http://[0:0:0:0:0:0:0:1]:10684/?hello=world", "remote_address", "::1", "start", gomock.Any(), "elapsed", gomock.Any()).MinTimes(1)
 	mockLogger.EXPECT().Debug("http server is running", "address", gomock.Any()).AnyTimes()
 
 	err = cont.RegisterAll(
@@ -2474,10 +2475,10 @@ func TestHTTPIPv6Short(t *testing.T) {
 
 	controller := gomock.NewController(t)
 	mockLogger := mocks.NewMockLogger(controller)
-	mockLogger.EXPECT().Debug("worker destructed", "pid", gomock.Any()).AnyTimes()
-	mockLogger.EXPECT().Debug("worker constructed", "pid", gomock.Any()).AnyTimes()
-	mockLogger.EXPECT().Debug("Started RPC service", "address", "tcp://[::1]:6003", "plugins", gomock.Any()).Times(1)
-	mockLogger.EXPECT().Debug("201 GET http://[::1]:10784/?hello=world", "remote", "::1", "elapsed", gomock.Any()).Times(1)
+
+	mockLogger.EXPECT().Info("event", "type", "EventWorkerConstruct", "message", gomock.Any(), "plugin", "pool").AnyTimes()
+	mockLogger.EXPECT().Debug("RPC plugin started", "address", "tcp://[::1]:6003", "plugins", gomock.Any()).Times(1)
+	mockLogger.EXPECT().Info("http request processed", "status", 201, "method", "GET", "URI", "http://[::1]:10784/?hello=world", "remote_address", "::1", "start", gomock.Any(), "elapsed", gomock.Any()).MinTimes(1)
 	mockLogger.EXPECT().Debug("http server is running", "address", gomock.Any()).AnyTimes()
 
 	err = cont.RegisterAll(

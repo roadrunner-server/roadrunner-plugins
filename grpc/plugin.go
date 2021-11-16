@@ -10,7 +10,6 @@ import (
 	"github.com/spiral/roadrunner-plugins/v2/grpc/proxy"
 	"github.com/spiral/roadrunner-plugins/v2/logger"
 	"github.com/spiral/roadrunner-plugins/v2/server"
-	"github.com/spiral/roadrunner/v2/events"
 	"github.com/spiral/roadrunner/v2/pool"
 	"github.com/spiral/roadrunner/v2/state/process"
 	"github.com/spiral/roadrunner/v2/utils"
@@ -33,9 +32,7 @@ type Plugin struct {
 	rrServer  server.Server
 	proxyList []*proxy.Proxy
 
-	// events handler
-	events events.Handler
-	log    logger.Logger
+	log logger.Logger
 }
 
 func (p *Plugin) Init(cfg config.Configurer, log logger.Logger, server server.Server) error {
@@ -61,8 +58,6 @@ func (p *Plugin) Init(cfg config.Configurer, log logger.Logger, server server.Se
 
 	p.opts = make([]grpc.ServerOption, 0)
 	p.services = make([]func(server *grpc.Server), 0)
-	p.events = events.NewEventsHandler()
-	p.events.AddListener(p.collectGRPCEvents)
 	p.rrServer = server
 	p.proxyList = make([]*proxy.Proxy, 0, 1)
 
@@ -90,7 +85,7 @@ func (p *Plugin) Serve() chan error {
 		AllocateTimeout: p.config.GrpcPool.AllocateTimeout,
 		DestroyTimeout:  p.config.GrpcPool.DestroyTimeout,
 		Supervisor:      p.config.GrpcPool.Supervisor,
-	}, p.config.Env, p.collectGRPCEvents)
+	}, p.config.Env)
 	if err != nil {
 		errCh <- errors.E(op, err)
 		return errCh
@@ -109,6 +104,7 @@ func (p *Plugin) Serve() chan error {
 	}
 
 	go func() {
+		p.log.Info("GRPC server started", "address", p.config.Listen)
 		err = p.server.Serve(l)
 		if err != nil {
 			// skip errors when stopping the server
@@ -157,7 +153,7 @@ func (p *Plugin) Reset() error {
 		AllocateTimeout: p.config.GrpcPool.AllocateTimeout,
 		DestroyTimeout:  p.config.GrpcPool.DestroyTimeout,
 		Supervisor:      p.config.GrpcPool.Supervisor,
-	}, p.config.Env, p.collectGRPCEvents)
+	}, p.config.Env)
 	if err != nil {
 		return errors.E(op, err)
 	}
@@ -186,15 +182,4 @@ func (p *Plugin) Workers() []*process.State {
 	}
 
 	return ps
-}
-
-func (p *Plugin) collectGRPCEvents(event interface{}) {
-	if gev, ok := event.(events.GRPCEvent); ok {
-		switch gev.Event {
-		case events.EventUnaryCallOk:
-			p.log.Info("method called", "method", gev.Info.FullMethod, "started", gev.Start, "elapsed", gev.Elapsed)
-		case events.EventUnaryCallErr:
-			p.log.Info("method call finished with error", "error", gev.Error, "method", gev.Info.FullMethod, "started", gev.Start, "elapsed", gev.Elapsed)
-		}
-	}
 }

@@ -92,9 +92,7 @@ func TestLoggerRawErr(t *testing.T) {
 	controller := gomock.NewController(t)
 	mockLogger := mocks.NewMockLogger(controller)
 
-	mockLogger.EXPECT().Debug("worker destructed", "pid", gomock.Any()).AnyTimes()
-	mockLogger.EXPECT().Info("{\"field\": \"value\"}\n").MinTimes(1)
-	mockLogger.EXPECT().Debug("worker constructed", "pid", gomock.Any()).MinTimes(1)
+	mockLogger.EXPECT().Info("event", "type", "EventWorkerConstruct", "message", gomock.Any(), "plugin", "pool").AnyTimes()
 	mockLogger.EXPECT().Debug("http server is running", "address", gomock.Any()).AnyTimes()
 
 	err = cont.RegisterAll(
@@ -421,8 +419,8 @@ func TestMarshalObjectLogging(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	assert.Contains(t, string(f), "Example marshaller error")
-	assert.Equal(t, 4, strings.Count(string(f), "Example marshaller error"))
+	assert.Contains(t, string(f), "Example field error")
+	assert.Equal(t, 4, strings.Count(string(f), "Example field error"))
 
 	stopCh <- struct{}{}
 	wg.Wait()

@@ -12,7 +12,6 @@ import (
 	"github.com/spiral/errors"
 	"github.com/spiral/roadrunner-plugins/v2/grpc/parser"
 	"github.com/spiral/roadrunner-plugins/v2/grpc/proxy"
-	"github.com/spiral/roadrunner/v2/events"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
 	"google.golang.org/grpc/keepalive"
@@ -57,24 +56,12 @@ func (p *Plugin) interceptor(ctx context.Context, req interface{}, info *grpc.Un
 	start := time.Now()
 	resp, err := handler(ctx, req)
 	if err != nil {
-		p.events.Push(events.GRPCEvent{
-			Event:   events.EventUnaryCallErr,
-			Info:    info,
-			Error:   err,
-			Start:   start,
-			Elapsed: time.Since(start),
-		})
+		p.log.Error("method call finished with error", "error", err, "method", info.FullMethod, "start", start, "elapsed", time.Since(start))
 
 		return nil, err
 	}
 
-	p.events.Push(events.GRPCEvent{
-		Event:   events.EventUnaryCallOk,
-		Info:    info,
-		Start:   start,
-		Elapsed: time.Since(start),
-	})
-
+	p.log.Error("method called successfully", "method", info.FullMethod, "start", start, "elapsed", time.Since(start))
 	return resp, nil
 }
 

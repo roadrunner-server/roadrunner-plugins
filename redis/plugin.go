@@ -4,9 +4,9 @@ import (
 	"sync"
 
 	"github.com/spiral/errors"
+	"github.com/spiral/roadrunner-plugins/v2/api/kv"
+	"github.com/spiral/roadrunner-plugins/v2/api/pubsub"
 	"github.com/spiral/roadrunner-plugins/v2/config"
-	"github.com/spiral/roadrunner-plugins/v2/internal/common/kv"
-	"github.com/spiral/roadrunner-plugins/v2/internal/common/pubsub"
 	"github.com/spiral/roadrunner-plugins/v2/logger"
 	redis_kv "github.com/spiral/roadrunner-plugins/v2/redis/kv"
 	redis_pubsub "github.com/spiral/roadrunner-plugins/v2/redis/pubsub"

@@ -2,14 +2,13 @@ package boltdb
 
 import (
 	"github.com/spiral/errors"
+	"github.com/spiral/roadrunner-plugins/v2/api/jobs"
+	"github.com/spiral/roadrunner-plugins/v2/api/kv"
 	"github.com/spiral/roadrunner-plugins/v2/boltdb/boltjobs"
 	"github.com/spiral/roadrunner-plugins/v2/boltdb/boltkv"
 	"github.com/spiral/roadrunner-plugins/v2/config"
-	"github.com/spiral/roadrunner-plugins/v2/internal/common/jobs"
-	"github.com/spiral/roadrunner-plugins/v2/internal/common/kv"
 	"github.com/spiral/roadrunner-plugins/v2/jobs/pipeline"
 	"github.com/spiral/roadrunner-plugins/v2/logger"
-	"github.com/spiral/roadrunner/v2/events"
 	priorityqueue "github.com/spiral/roadrunner/v2/priority_queue"
 )
 
@@ -49,10 +48,10 @@ func (p *Plugin) KvFromConfig(key string) (kv.Storage, error) {
 
 // JOBS bbolt implementation
 
-func (p *Plugin) ConsumerFromConfig(configKey string, e events.Handler, queue priorityqueue.Queue) (jobs.Consumer, error) {
-	return boltjobs.NewBoltDBJobs(configKey, p.log, p.cfg, e, queue)
+func (p *Plugin) ConsumerFromConfig(configKey string, queue priorityqueue.Queue) (jobs.Consumer, error) {
+	return boltjobs.NewBoltDBJobs(configKey, p.log, p.cfg, queue)
 }
 
-func (p *Plugin) ConsumerFromPipeline(pipe *pipeline.Pipeline, e events.Handler, queue priorityqueue.Queue) (jobs.Consumer, error) {
-	return boltjobs.FromPipeline(pipe, p.log, p.cfg, e, queue)
+func (p *Plugin) ConsumerFromPipeline(pipe *pipeline.Pipeline, queue priorityqueue.Queue) (jobs.Consumer, error) {
+	return boltjobs.FromPipeline(pipe, p.log, p.cfg, queue)
 }

@@ -1,7 +1,7 @@
 package informer
 
 import (
-	"github.com/spiral/roadrunner/v2/state/job"
+	"github.com/spiral/roadrunner-plugins/v2/api/jobs"
 	"github.com/spiral/roadrunner/v2/state/process"
 )
 
@@ -39,7 +39,7 @@ func (rpc *rpc) Workers(service string, list *WorkerList) error {
 	return nil
 }
 
-func (rpc *rpc) Jobs(service string, out *[]*job.State) error {
+func (rpc *rpc) Jobs(service string, out *[]*jobs.State) error {
 	*out = rpc.srv.Jobs(service)
 	return nil
 }

@@ -5,7 +5,7 @@ import (
 	"sync"
 
 	"github.com/spiral/errors"
-	"github.com/spiral/roadrunner-plugins/v2/internal/common/pubsub"
+	"github.com/spiral/roadrunner-plugins/v2/api/pubsub"
 	"github.com/spiral/roadrunner-plugins/v2/logger"
 	"github.com/spiral/roadrunner/v2/bst"
 )

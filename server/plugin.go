@@ -6,13 +6,13 @@ import (
 	"os"
 	"os/exec"
 	"strings"
+	"sync"
 
 	"github.com/spiral/errors"
 	"github.com/spiral/roadrunner-plugins/v2/config"
 	"github.com/spiral/roadrunner-plugins/v2/logger"
-
-	// core imports
 	"github.com/spiral/roadrunner/v2/events"
+
 	"github.com/spiral/roadrunner/v2/pool"
 	"github.com/spiral/roadrunner/v2/transport"
 	"github.com/spiral/roadrunner/v2/transport/pipe"
@@ -23,18 +23,24 @@ import (
 
 const (
 	// PluginName for the server
-	PluginName = "server"
+	PluginName string = "server"
 	// RrRelay env variable key (internal)
-	RrRelay = "RR_RELAY"
+	RrRelay string = "RR_RELAY"
 	// RrRPC env variable key (internal) if the RPC presents
-	RrRPC = "RR_RPC"
+	RrRPC string = "RR_RPC"
+
+	PoolEvents    string = "pool.*"
+	WorkerEvents  string = "worker.*"
+	WatcherEvents string = "worker_watcher.*"
 )
 
 // Plugin manages worker
 type Plugin struct {
+	sync.Mutex
 	cfg     Config
 	log     logger.Logger
 	factory transport.Factory
+	stopCh  chan struct{}
 }
 
 // Init application provider.
@@ -48,12 +54,14 @@ func (p *Plugin) Init(cfg config.Configurer, log logger.Logger) error {
 		return errors.E(op, errors.Init, err)
 	}
 	p.cfg.InitDefaults()
-	p.log = log
 
 	p.factory, err = p.initFactory()
 	if err != nil {
 		return errors.E(op, err)
 	}
+
+	p.log = log
+	p.stopCh = make(chan struct{})
 
 	return nil
 }
@@ -68,7 +76,39 @@ func (p *Plugin) Available() {}
 
 // Serve (Start) server plugin (just a mock here to satisfy interface)
 func (p *Plugin) Serve() chan error {
-	return make(chan error, 1)
+	errCh := make(chan error, 1)
+	go func() {
+		eb, id := events.Bus()
+
+		eventsCh := make(chan events.Event, 10)
+		err := eb.SubscribeP(id, PoolEvents, eventsCh)
+		if err != nil {
+			errCh <- err
+			return
+		}
+
+		err = eb.SubscribeP(id, WorkerEvents, eventsCh)
+		if err != nil {
+			errCh <- err
+			return
+		}
+		err = eb.SubscribeP(id, WatcherEvents, eventsCh)
+		if err != nil {
+			errCh <- err
+			return
+		}
+
+		for {
+			select {
+			case event := <-eventsCh:
+				p.log.Info("event", "type", event.Type().String(), "message", event.Message(), "plugin", event.Plugin())
+			case <-p.stopCh:
+				return
+			}
+		}
+	}()
+
+	return errCh
 }
 
 // Stop used to close chosen in config factory
@@ -76,6 +116,8 @@ func (p *Plugin) Stop() error {
 	if p.factory == nil {
 		return nil
 	}
+
+	p.stopCh <- struct{}{}
 
 	return p.factory.Close()
 }
@@ -109,15 +151,12 @@ func (p *Plugin) CmdFactory(env Env) func() *exec.Cmd {
 }
 
 // NewWorker issues new standalone worker.
-func (p *Plugin) NewWorker(ctx context.Context, env Env, listeners ...events.Listener) (*worker.Process, error) {
+func (p *Plugin) NewWorker(ctx context.Context, env Env) (*worker.Process, error) {
 	const op = errors.Op("server_plugin_new_worker")
-
-	list := make([]events.Listener, 0, len(listeners))
-	list = append(list, p.collectWorkerEvents)
 
 	spawnCmd := p.CmdFactory(env)
 
-	w, err := p.factory.SpawnWorkerWithTimeout(ctx, spawnCmd(), list...)
+	w, err := p.factory.SpawnWorkerWithTimeout(ctx, spawnCmd())
 	if err != nil {
 		return nil, errors.E(op, err)
 	}
@@ -126,20 +165,10 @@ func (p *Plugin) NewWorker(ctx context.Context, env Env, listeners ...events.Lis
 }
 
 // NewWorkerPool issues new worker pool.
-func (p *Plugin) NewWorkerPool(ctx context.Context, opt *pool.Config, env Env, listeners ...events.Listener) (pool.Pool, error) {
-	spawnCmd := p.CmdFactory(env)
-	list := make([]events.Listener, 0, 2)
-	list = append(list, p.collectPoolEvents, p.collectWorkerEvents)
-	if len(listeners) != 0 {
-		list = append(list, listeners...)
-	}
-
-	pl, err := pool.Initialize(ctx, spawnCmd, p.factory, opt, pool.AddListeners(list...))
-	if err != nil {
-		return nil, err
-	}
-
-	return pl, nil
+func (p *Plugin) NewWorkerPool(ctx context.Context, opt *pool.Config, env Env) (pool.Pool, error) {
+	p.Lock()
+	defer p.Unlock()
+	return pool.Initialize(ctx, p.CmdFactory(env), p.factory, opt)
 }
 
 // creates relay and worker factory.
@@ -188,74 +217,4 @@ func (p *Plugin) setEnv(e Env) []string {
 	}
 
 	return env
-}
-
-func (p *Plugin) collectPoolEvents(event interface{}) {
-	if we, ok := event.(events.PoolEvent); ok {
-		switch we.Event {
-		case events.EventMaxMemory:
-			p.log.Warn("worker max memory reached", "pid", we.Payload.(worker.BaseProcess).Pid())
-			// debug case
-			p.log.Debug("debug", "worker", we.Payload.(worker.BaseProcess))
-		case events.EventNoFreeWorkers:
-			p.log.Warn("no free workers in the pool, consider increasing `pool.num_workers` property, or `pool.allocate_timeout`")
-			// show error only in the debug mode
-			if we.Payload != nil {
-				p.log.Debug("error", we.Payload.(error).Error())
-			}
-		case events.EventWorkerProcessExit:
-			p.log.Info("worker process exited")
-			p.log.Debug("debug", "error", we.Error)
-		case events.EventSupervisorError:
-			p.log.Error("pool supervisor error, turn on debug logger to see the error")
-			// debug
-			p.log.Debug("debug", "error", we.Payload.(error).Error())
-		case events.EventTTL:
-			p.log.Warn("worker TTL reached", "pid", we.Payload.(worker.BaseProcess).Pid())
-		case events.EventWorkerConstruct:
-			if _, ok := we.Payload.(error); ok {
-				p.log.Error("worker construction error", "error", we.Payload.(error).Error())
-				return
-			}
-			p.log.Debug("worker constructed", "pid", we.Payload.(worker.BaseProcess).Pid())
-		case events.EventWorkerDestruct:
-			p.log.Debug("worker destructed", "pid", we.Payload.(worker.BaseProcess).Pid())
-		case events.EventExecTTL:
-			p.log.Warn("worker execute timeout reached, consider increasing pool supervisor options")
-			// debug
-			p.log.Debug("debug", "error", we.Payload.(error).Error())
-		case events.EventIdleTTL:
-			p.log.Warn("worker idle timeout reached", "pid", we.Payload.(worker.BaseProcess).Pid())
-		case events.EventPoolRestart:
-			p.log.Warn("requested pool restart")
-		}
-	}
-}
-
-func (p *Plugin) collectWorkerEvents(event interface{}) {
-	if we, ok := event.(events.WorkerEvent); ok {
-		switch we.Event {
-		case events.EventWorkerError:
-			switch e := we.Payload.(type) { //nolint:gocritic
-			case error:
-				if errors.Is(errors.SoftJob, e) {
-					// get source error for the softjob error
-					p.log.Error(e.(*errors.Error).Err.Error())
-					return
-				}
-
-				// print full error for the other types of errors
-				p.log.Error(e.Error())
-				return
-			}
-			p.log.Error(we.Payload.(error).Error())
-		case events.EventWorkerLog:
-			p.log.Debug(utils.AsString(we.Payload.([]byte)))
-			// stderr event is INFO level
-		case events.EventWorkerStderr:
-			p.log.Info(utils.AsString(we.Payload.([]byte)))
-		case events.EventWorkerWaitExit:
-			p.log.Debug("worker process exited", "reason", we.Payload)
-		}
-	}
 }

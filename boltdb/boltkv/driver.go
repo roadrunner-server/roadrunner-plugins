@@ -9,8 +9,8 @@ import (
 	"time"
 
 	"github.com/spiral/errors"
+	kvv1 "github.com/spiral/roadrunner-plugins/v2/api/proto/kv/v1beta"
 	"github.com/spiral/roadrunner-plugins/v2/config"
-	kvv1 "github.com/spiral/roadrunner-plugins/v2/internal/proto/kv/v1beta"
 	"github.com/spiral/roadrunner-plugins/v2/logger"
 	"github.com/spiral/roadrunner/v2/utils"
 	bolt "go.etcd.io/bbolt"

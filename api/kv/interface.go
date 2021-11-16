@@ -1,6 +1,6 @@
 package kv
 
-import kvv1 "github.com/spiral/roadrunner-plugins/v2/internal/proto/kv/v1beta"
+import kvv1 "github.com/spiral/roadrunner-plugins/v2/api/proto/kv/v1beta"
 
 // Storage represents single abstract storage.
 type Storage interface {

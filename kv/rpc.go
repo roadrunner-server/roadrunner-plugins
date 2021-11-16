@@ -2,8 +2,8 @@ package kv
 
 import (
 	"github.com/spiral/errors"
-	"github.com/spiral/roadrunner-plugins/v2/internal/common/kv"
-	kvv1 "github.com/spiral/roadrunner-plugins/v2/internal/proto/kv/v1beta"
+	"github.com/spiral/roadrunner-plugins/v2/api/kv"
+	kvv1 "github.com/spiral/roadrunner-plugins/v2/api/proto/kv/v1beta"
 	"github.com/spiral/roadrunner-plugins/v2/logger"
 )
 

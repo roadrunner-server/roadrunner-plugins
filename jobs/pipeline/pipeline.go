@@ -12,6 +12,7 @@ const (
 	priority string = "priority"
 	driver   string = "driver"
 	name     string = "name"
+	queue    string = "queue"
 )
 
 // With pipeline value
@@ -21,7 +22,14 @@ func (p *Pipeline) With(name string, value interface{}) {
 
 // Name returns pipeline name.
 func (p Pipeline) Name() string {
-	return p.String(name, "")
+	// https://github.com/spiral/roadrunner-jobs/blob/master/src/Queue/CreateInfo.php#L81
+	// In the PHP client library used the wrong key name
+	// should be "name" instead of "queue"
+	if p.String(name, "") != "" {
+		return p.String(name, "")
+	}
+
+	return p.String(queue, "")
 }
 
 // Driver associated with the pipeline.
