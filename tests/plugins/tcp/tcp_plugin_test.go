@@ -102,6 +102,7 @@ func TestTCPInit(t *testing.T) {
 
 	// ---
 
+	time.Sleep(time.Second * 1)
 	c, err = net.Dial("tcp", "127.0.0.1:8889")
 	require.NoError(t, err)
 	_, err = c.Write([]byte("helooooo\r\n"))
@@ -120,6 +121,7 @@ func TestTCPInit(t *testing.T) {
 
 	// ---
 
+	time.Sleep(time.Second * 1)
 	c, err = net.Dial("tcp", "127.0.0.1:8810")
 	require.NoError(t, err)
 	_, err = c.Write([]byte("HEEEEEEEEEEEEEYYYYYYYYYYYYY\r\n"))
