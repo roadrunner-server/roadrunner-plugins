@@ -111,6 +111,7 @@ func TestMemoryInit(t *testing.T) {
 }
 
 func TestMemoryCreate(t *testing.T) {
+	t.Skip("not for the CI")
 	cont, err := endure.NewContainer(nil, endure.SetLogLevel(endure.ErrorLevel))
 	assert.NoError(t, err)
 

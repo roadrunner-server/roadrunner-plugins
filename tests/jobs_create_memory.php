@@ -23,9 +23,7 @@ $queue = $jobs->create(new MemoryCreateInfo(
 
 $queue->resume();
 
-
 $consumer = new Consumer();
 while ($task = $consumer->waitTask()) {
-    var_dump($task);
     $task->complete();
 }
