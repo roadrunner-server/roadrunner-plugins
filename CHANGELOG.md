@@ -79,6 +79,20 @@ tcp:
     destroy_timeout: 60s
 ```
 
+- ✏️ New HTTP middleware: `http_metrics`. 
+```yaml
+http:
+  address: 127.0.0.1:15389
+  middleware: [ "http_metrics" ]
+  pool:
+    num_workers: 10
+    allocate_timeout: 60s
+    destroy_timeout: 60s
+```
+All old and new http metrics will be available after the middleware is activated. Be careful, this middleware may slow down your requests. New metrics:
+
+  - `rr_http_requests_queue_sum` - number of queued requests.
+  - `rr_http_no_free_workers_total` - number of the occurrences of the `NoFreeWorkers` errors.
 
 ## v2.5.2 (27.10.2021)
 

@@ -17,6 +17,7 @@ import (
 	goridgeRpc "github.com/spiral/goridge/v3/pkg/rpc"
 	"github.com/spiral/roadrunner-plugins/v2/config"
 	httpPlugin "github.com/spiral/roadrunner-plugins/v2/http"
+	"github.com/spiral/roadrunner-plugins/v2/http/middleware/prometheus"
 	"github.com/spiral/roadrunner-plugins/v2/logger"
 	"github.com/spiral/roadrunner-plugins/v2/metrics"
 	rpcPlugin "github.com/spiral/roadrunner-plugins/v2/rpc"
@@ -28,6 +29,7 @@ import (
 const dialAddr = "127.0.0.1:6001"
 const dialNetwork = "tcp"
 const getAddr = "http://127.0.0.1:2112/metrics"
+const getAddr2 = "http://127.0.0.1:2113/metrics"
 const getIPV6Addr = "http://[::1]:2112/metrics"
 
 func TestMetricsInit(t *testing.T) {
@@ -974,6 +976,7 @@ func TestHTTPMetrics(t *testing.T) {
 		&server.Plugin{},
 		&httpPlugin.Plugin{},
 		&logger.ZapLogger{},
+		&prometheus.Plugin{},
 	)
 	assert.NoError(t, err)
 
@@ -1018,8 +1021,8 @@ func TestHTTPMetrics(t *testing.T) {
 	}()
 
 	time.Sleep(time.Second * 2)
-	t.Run("req1", echoHTTP)
-	t.Run("req2", echoHTTP)
+	t.Run("req1", echoHTTP("13223"))
+	t.Run("req2", echoHTTP("13223"))
 
 	genericOut, err := get()
 	assert.NoError(t, err)
@@ -1032,23 +1035,120 @@ func TestHTTPMetrics(t *testing.T) {
 	close(sig)
 }
 
-func echoHTTP(t *testing.T) {
-	req, err := http.NewRequest("GET", "http://127.0.0.1:13223", nil)
+func echoHTTP(port string) func(t *testing.T) {
+	return func(t *testing.T) {
+		req, err := http.NewRequest("GET", "http://127.0.0.1:"+port, nil)
+		assert.NoError(t, err)
+
+		r, err := http.DefaultClient.Do(req)
+		assert.NoError(t, err)
+		_, err = ioutil.ReadAll(r.Body)
+		assert.NoError(t, err)
+
+		err = r.Body.Close()
+		assert.NoError(t, err)
+	}
+}
+
+func TestHTTPMetricsNoFreeWorkers(t *testing.T) {
+	cont, err := endure.NewContainer(nil, endure.SetLogLevel(endure.ErrorLevel))
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	cfg := &config.Viper{}
+	cfg.Prefix = "rr"
+	cfg.Path = "configs/.rr-http-metrics-no-free-workers.yaml"
+
+	err = cont.RegisterAll(
+		cfg,
+		&metrics.Plugin{},
+		&server.Plugin{},
+		&httpPlugin.Plugin{},
+		&logger.ZapLogger{},
+		&prometheus.Plugin{},
+	)
 	assert.NoError(t, err)
 
-	r, err := http.DefaultClient.Do(req)
-	assert.NoError(t, err)
-	_, err = ioutil.ReadAll(r.Body)
-	assert.NoError(t, err)
-	assert.Equal(t, 200, r.StatusCode)
+	err = cont.Init()
+	if err != nil {
+		t.Fatal(err)
+	}
 
-	err = r.Body.Close()
+	ch, err := cont.Serve()
 	assert.NoError(t, err)
+
+	sig := make(chan os.Signal, 1)
+	signal.Notify(sig, os.Interrupt, syscall.SIGINT, syscall.SIGTERM)
+
+	tt := time.NewTimer(time.Minute * 3)
+
+	go func() {
+		defer tt.Stop()
+		for {
+			select {
+			case e := <-ch:
+				assert.Fail(t, "error", e.Error.Error())
+				err = cont.Stop()
+				if err != nil {
+					assert.FailNow(t, "error", err.Error())
+				}
+			case <-sig:
+				err = cont.Stop()
+				if err != nil {
+					assert.FailNow(t, "error", err.Error())
+				}
+				return
+			case <-tt.C:
+				// timeout
+				err = cont.Stop()
+				if err != nil {
+					assert.FailNow(t, "error", err.Error())
+				}
+				return
+			}
+		}
+	}()
+
+	time.Sleep(time.Second * 2)
+	go func() {
+		t.Run("req_slow", echoHTTP("15442"))
+	}()
+	time.Sleep(time.Second * 2)
+	t.Run("req2", echoHTTP("15442"))
+
+	genericOut, err := get2()
+	assert.NoError(t, err)
+	assert.Contains(t, genericOut, `rr_http_requests_queue_sum`)
+	assert.Contains(t, genericOut, `rr_http_requests_queue_count`)
+	assert.Contains(t, genericOut, `rr_http_no_free_workers_total 1`)
+
+	close(sig)
 }
 
 // get request and return body
 func get() (string, error) {
 	r, err := http.Get(getAddr)
+	if err != nil {
+		return "", err
+	}
+
+	b, err := ioutil.ReadAll(r.Body)
+	if err != nil {
+		return "", err
+	}
+
+	err = r.Body.Close()
+	if err != nil {
+		return "", err
+	}
+	// unsafe
+	return string(b), err
+}
+
+// get request and return body
+func get2() (string, error) {
+	r, err := http.Get(getAddr2)
 	if err != nil {
 		return "", err
 	}

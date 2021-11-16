@@ -6,6 +6,7 @@ run:
     - .github
     - .git
     - tests/mocks
+    - tests/plugins
   modules-download-mode: readonly
   allow-parallel-runners: true
 

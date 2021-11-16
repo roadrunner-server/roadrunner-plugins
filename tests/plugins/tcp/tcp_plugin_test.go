@@ -95,12 +95,14 @@ func TestTCPInit(t *testing.T) {
 
 	var d1 map[string]interface{}
 	err = json.Unmarshal(buf[:n], &d1)
+	fmt.Println(d1)
 	require.NoError(t, err)
 
 	require.Equal(t, d1["remote_addr"].(string), c.LocalAddr().String())
 
 	// ---
 
+	time.Sleep(time.Second * 1)
 	c, err = net.Dial("tcp", "127.0.0.1:8889")
 	require.NoError(t, err)
 	_, err = c.Write([]byte("helooooo\r\n"))
@@ -112,12 +114,14 @@ func TestTCPInit(t *testing.T) {
 
 	var d2 map[string]interface{}
 	err = json.Unmarshal(buf[:n], &d2)
+	fmt.Println(d2)
 	require.NoError(t, err)
 
 	require.Equal(t, d2["remote_addr"].(string), c.LocalAddr().String())
 
 	// ---
 
+	time.Sleep(time.Second * 1)
 	c, err = net.Dial("tcp", "127.0.0.1:8810")
 	require.NoError(t, err)
 	_, err = c.Write([]byte("HEEEEEEEEEEEEEYYYYYYYYYYYYY\r\n"))
