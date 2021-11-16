@@ -17,6 +17,7 @@ import (
 	goridgeRpc "github.com/spiral/goridge/v3/pkg/rpc"
 	"github.com/spiral/roadrunner-plugins/v2/config"
 	httpPlugin "github.com/spiral/roadrunner-plugins/v2/http"
+	"github.com/spiral/roadrunner-plugins/v2/http/middleware/prometheus"
 	"github.com/spiral/roadrunner-plugins/v2/logger"
 	"github.com/spiral/roadrunner-plugins/v2/metrics"
 	rpcPlugin "github.com/spiral/roadrunner-plugins/v2/rpc"
@@ -974,6 +975,7 @@ func TestHTTPMetrics(t *testing.T) {
 		&server.Plugin{},
 		&httpPlugin.Plugin{},
 		&logger.ZapLogger{},
+		&prometheus.Plugin{},
 	)
 	assert.NoError(t, err)
 

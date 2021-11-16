@@ -1,4 +1,4 @@
-package http
+package prometheus
 
 import (
 	"net/http"
@@ -20,16 +20,4 @@ func (w *writer) Write(b []byte) (int, error) {
 
 func (w *writer) Header() http.Header {
 	return w.w.Header()
-}
-
-func (p *Plugin) getWriter(w http.ResponseWriter) *writer {
-	wr := p.writersPool.Get().(*writer)
-	wr.w = w
-	return wr
-}
-
-func (p *Plugin) putWriter(w *writer) {
-	w.code = -1
-	w.w = nil
-	p.writersPool.Put(w)
 }

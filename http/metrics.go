@@ -6,29 +6,10 @@ import (
 )
 
 func (p *Plugin) MetricsCollector() []prometheus.Collector {
-	return []prometheus.Collector{p.statsExporter, requestCounter, requestDuration}
+	return []prometheus.Collector{p.statsExporter}
 }
 
-const (
-	namespace string = "rr_http"
-)
-
 var (
-	requestCounter = prometheus.NewCounterVec(prometheus.CounterOpts{
-		Namespace: namespace,
-		Name:      "request_total",
-		Help:      "Total number of handled http requests after server restart.",
-	}, []string{"status"})
-
-	requestDuration = prometheus.NewHistogramVec(
-		prometheus.HistogramOpts{
-			Namespace: namespace,
-			Name:      "request_duration_seconds",
-			Help:      "HTTP request duration.",
-		},
-		[]string{"status"},
-	)
-
 	workersMemory = prometheus.NewDesc("rr_http_workers_memory_bytes", "Memory usage by HTTP workers.", nil, nil)
 )
 
