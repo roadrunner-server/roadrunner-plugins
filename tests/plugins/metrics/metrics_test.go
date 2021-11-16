@@ -1111,7 +1111,9 @@ func TestHTTPMetricsNoFreeWorkers(t *testing.T) {
 	}()
 
 	time.Sleep(time.Second * 2)
-	go t.Run("req1", echoHTTP("15442"))
+	go func() {
+		t.Run("req_slow", echoHTTP("15442"))
+	}()
 	time.Sleep(time.Second * 2)
 	t.Run("req2", echoHTTP("15442"))
 
