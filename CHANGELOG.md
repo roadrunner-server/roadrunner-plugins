@@ -26,7 +26,7 @@ License key and application name could be set via environment variables: (leave 
 - license_key: `NEW_RELIC_LICENSE_KEY`.
 - app_name: `NEW_RELIC_APP_NAME`.
 
-To set the New Relic attributes, the PHP worker should send headers values witing the `rr_newrelic` header key.
+To set the New Relic attributes, the PHP worker should send headers values withing the `rr_newrelic` header key.
 Attributes should be separated by the `:`, for example `foo:bar`, where `foo` is a key and `bar` is a value. New Relic
 attributes sent from the worker will not appear in the HTTP response, they will be sent directly to the New Relic.
 
@@ -93,6 +93,10 @@ All old and new http metrics will be available after the middleware is activated
 
   - `rr_http_requests_queue_sum` - number of queued requests.
   - `rr_http_no_free_workers_total` - number of the occurrences of the `NoFreeWorkers` errors.
+
+## 🩹 Fixes:
+
+- 🐛 Fix: GRPC server will show message when started.
 
 ## v2.5.2 (27.10.2021)
 
