@@ -290,8 +290,8 @@ func (p *Plugin) AddMiddleware(name endure.Named, m Middleware) {
 ```golang
 // Collects collecting http middlewares
 func (p *Plugin) Collects() []interface{} {
-return []interface{}{
-// Endure will analyze the arguments of this function.
+	return []interface{}{
+		// Endure will analyze the arguments of this function.
 		p.AddMiddleware,
 	}
 }
