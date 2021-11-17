@@ -134,18 +134,6 @@ func (s *Plugin) Middleware(next http.Handler) http.Handler {
 			// file extension allowed
 		}
 
-		if s.cfg.Static.Request != nil {
-			for k, v := range s.cfg.Static.Request {
-				r.Header.Add(k, v)
-			}
-		}
-
-		if s.cfg.Static.Response != nil {
-			for k, v := range s.cfg.Static.Response {
-				w.Header().Set(k, v)
-			}
-		}
-
 		// ok, file is not in the forbidden list
 		// Stat it and get file info
 		f, err := s.root.Open(fPath)
@@ -186,6 +174,18 @@ func (s *Plugin) Middleware(next http.Handler) http.Handler {
 		// set etag
 		if s.cfg.Static.CalculateEtag {
 			SetEtag(s.cfg.Static.Weak, f, finfo.Name(), w)
+		}
+
+		if s.cfg.Static.Request != nil {
+			for k, v := range s.cfg.Static.Request {
+				r.Header.Add(k, v)
+			}
+		}
+
+		if s.cfg.Static.Response != nil {
+			for k, v := range s.cfg.Static.Response {
+				w.Header().Set(k, v)
+			}
 		}
 
 		// we passed all checks - serve the file
