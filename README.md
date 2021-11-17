@@ -231,28 +231,28 @@ root. The RR2 will continue to work after this error type if at least one plugin
 Create `Serve` and `Stop` method in your structure to let RoadRunner start and stop your service.
 
 ```go
-type Plugin struct {}
+type Plugin struct{}
 
 func (s *Plugin) Serve() chan error {
-const op = errors.Op("custom_plugin_serve")
-errCh := make(chan error, 1)
+	const op = errors.Op("custom_plugin_serve")
+	errCh := make(chan error, 1)
 
-err := s.DoSomeWork()
-if err != nil {
-// notify endure, that the error occured
-errCh <- errors.E(op, err)
-return errCh
-}
-return nil
+	err := s.DoSomeWork()
+	if err != nil {
+		// notify endure, that the error occured
+		errCh <- errors.E(op, err)
+		return errCh
+	}
+	return nil
 }
 
 func (s *Plugin) Stop() error {
-return s.stopServing()
+	return s.stopServing()
 }
 
 // You may start some listener here
 func (s *Plugin) DoSomeWork() error {
-return nil
+	return nil
 }
 ```
 
@@ -272,7 +272,7 @@ Steps (sample based on the actual `http` plugin and `Middleware` interface):
 ```go
 // Middleware interface
 type Middleware interface {
-Middleware(f http.Handler) http.HandlerFunc
+	Middleware(f http.Handler) http.HandlerFunc
 }
 ```
 
@@ -281,7 +281,7 @@ Middleware(f http.Handler) http.HandlerFunc
 ```go
 // Collects collecting http middlewares
 func (p *Plugin) AddMiddleware(name endure.Named, m Middleware) {
-p.mdwr[name.Name()] = m
+	p.mdwr[name.Name()] = m
 }
 ```
 
@@ -292,8 +292,8 @@ p.mdwr[name.Name()] = m
 func (p *Plugin) Collects() []interface{} {
 return []interface{}{
 // Endure will analyze the arguments of this function.
-p.AddMiddleware,
-}
+		p.AddMiddleware,
+	}
 }
 ```
 
@@ -308,7 +308,7 @@ automatically get the structure and expose RPC method under the `PluginName` nam
 
 ```go
 func (p *Plugin) Name() string {
-return PluginName
+	return PluginName
 }
 ```
 
@@ -332,8 +332,8 @@ type rpc struct {
 
 ```go
 func (s *rpc) Hello(input string, output *string) error {
-*output = input
-return nil
+	*output = input
+	return nil
 }
 ```
 
@@ -342,7 +342,7 @@ return nil
 ```go
 // RPCService returns associated rpc service.
 func (p *Plugin) RPC() interface{} {
-return &rpc{srv: p, log: p.log}
+	return &rpc{srv: p, log: p.log}
 }
 ```
 
