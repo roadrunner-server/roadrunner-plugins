@@ -6,7 +6,7 @@ server:
 http:
   address: 127.0.0.1:34653
   max_request_size: 1024
-  middleware: ["gzip"]
+  middleware: [ "static","gzip" ]
   trusted_subnets:
     [
       "10.0.0.0/8",
