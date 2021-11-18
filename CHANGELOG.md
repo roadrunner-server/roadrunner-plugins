@@ -97,6 +97,7 @@ All old and new http metrics will be available after the middleware is activated
 ## 🩹 Fixes:
 
 - 🐛 Fix: GRPC server will show message when started.
+- 🐛 Fix: Static plugin headers were added to all requests. [BUG](https://github.com/spiral/roadrunner-plugins/issues/115)
 
 ## v2.5.2 (27.10.2021)
 
