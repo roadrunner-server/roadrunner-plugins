@@ -1815,6 +1815,7 @@ func TestStaticEtagPlugin(t *testing.T) {
 
 	time.Sleep(time.Second)
 	t.Run("ServeSampleEtag", serveStaticSampleEtag)
+	t.Run("NoStaticHeaders", noStaticHeaders)
 
 	stopCh <- struct{}{}
 	wg.Wait()
@@ -1847,6 +1848,18 @@ func serveStaticSampleEtag(t *testing.T) {
 	assert.Nil(t, err)
 	assert.Equal(t, http.StatusNotModified, resp.StatusCode)
 	_ = resp.Body.Close()
+}
+
+// regular request should not contain static headers
+func noStaticHeaders(t *testing.T) {
+	// OK 200 response
+	_, r, err := get("http://127.0.0.1:21603")
+	assert.NoError(t, err)
+	assert.NotContains(t, r.Header["input"], "custom-header")
+	assert.NotContains(t, r.Header["output"], "output-header")
+	assert.Equal(t, r.StatusCode, http.StatusOK)
+
+	_ = r.Body.Close()
 }
 
 func TestStaticPluginSecurity(t *testing.T) {

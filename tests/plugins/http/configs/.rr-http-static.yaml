@@ -16,9 +16,9 @@ http:
     calculate_etag: true
     weak: false
     request:
-      "input": "custom-header"
+      input: "custom-header"
     response:
-      "output": "output-header"
+      output: "output-header"
   pool:
     num_workers: 2
     max_jobs: 0
