@@ -1,4 +1,4 @@
-package static
+package fileserver
 
 import (
 	"sync"
@@ -13,8 +13,7 @@ import (
 )
 
 const (
-	pluginName string = "static_advanced"
-	plugin     string = "static"
+	pluginName string = "fileserver"
 )
 
 type Plugin struct {
@@ -26,13 +25,13 @@ type Plugin struct {
 }
 
 func (p *Plugin) Init(cfg config.Configurer, log logger.Logger) error {
-	const op = errors.Op("static_adv_init")
+	const op = errors.Op("file_server_init")
 
-	if !cfg.Has(plugin) {
+	if !cfg.Has(pluginName) {
 		return errors.E(op, errors.Disabled)
 	}
 
-	err := cfg.UnmarshalKey(plugin, &p.config)
+	err := cfg.UnmarshalKey(pluginName, &p.config)
 	if err != nil {
 		return errors.E(op, err)
 	}

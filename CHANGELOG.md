@@ -6,7 +6,7 @@
 
 - ✏️ **[BETA]** Support for the New Relic observability platform. Sample of the client library might be
   found [here](https://github.com/arku31/roadrunner-newrelic). (Thanks @arku31)   
-  New Relic middleware is a part of the HTTP plugin, thus configuration should be inside it:
+New Relic middleware is a part of the HTTP plugin, thus configuration should be inside it:
 
 ```yaml
 http:
@@ -47,6 +47,8 @@ transaction name.
         $resp = $resp->withHeader('rr_newrelic', $rrNewRelic);
 ```
 
+---
+
 - ✏️ New plugin: `TCP`. The TCP plugin is used to handle raw TCP payload with a bi-directional [protocol](tcp/docs/tcp.md) between the RR server and PHP worker.
 
 PHP client library: https://github.com/spiral/roadrunner-tcp
@@ -79,6 +81,8 @@ tcp:
     destroy_timeout: 60s
 ```
 
+---
+
 - ✏️ New HTTP middleware: `http_metrics`. 
 ```yaml
 http:
@@ -91,9 +95,75 @@ http:
 ```
 All old and new http metrics will be available after the middleware is activated. Be careful, this middleware may slow down your requests. New metrics:
 
-  - `rr_http_requests_queue_sum` - number of queued requests.
-  - `rr_http_no_free_workers_total` - number of the occurrences of the `NoFreeWorkers` errors.
+    - `rr_http_requests_queue_sum` - number of queued requests.
+    - `rr_http_no_free_workers_total` - number of the occurrences of the `NoFreeWorkers` errors.  
+  
 
+-----
+  
+- ✏️ New file server to serve static files. It works on a different address, so it doesn't affect the HTTP performance. It uses advanced configuration specific for the static file servers. It can handle any number of directories with its own HTTP prefixes.
+Config:
+
+```yaml
+fileserver:
+  # File server address
+  #
+  # Error on empty
+  address: 127.0.0.1:10101
+  # Etag calculation. Request body CRC32.
+  #
+  # Default: false
+  calculate_etag: true
+
+  # Weak etag calculation
+  #
+  # Default: false
+  weak: false
+
+  # Enable body streaming for the files more than 4KB
+  #
+  # Default: false
+  stream_request_body: true
+
+  serve:
+    # HTTP prefix
+    #
+    # Error on empty
+  - prefix: "/foo"
+
+    # Directory to serve
+    #
+    # Default: "."
+    root: "../../../tests"
+
+    # When set to true, the server tries minimizing CPU usage by caching compressed files
+    #
+    # Default: false
+    compress: false
+
+    # Expiration duration for inactive file handlers. Units: seconds.
+    #
+    # Default: 10, use a negative value to disable it.
+    cache_duration: 10
+
+    # The value for the Cache-Control HTTP-header. Units: seconds
+    #
+    # Default: 10 seconds
+    max_age: 10
+
+    # Enable range requests
+    # https://developer.mozilla.org/en-US/docs/Web/HTTP/Range_requests
+    #
+    # Default: false
+    bytes_range: true
+
+  - prefix: "/foo/bar"
+    root: "../../../tests"
+    compress: false
+    cache_duration: 10s
+    max_age: 10
+    bytes_range: true
+```
 ## 🩹 Fixes:
 
 - 🐛 Fix: GRPC server will show message when started.

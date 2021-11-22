@@ -1,4 +1,4 @@
-package static
+package fileserver
 
 import (
 	"github.com/spiral/errors"

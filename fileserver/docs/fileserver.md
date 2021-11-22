@@ -1,22 +1,8 @@
-server:
-  command: "php ../../http/client.php pid pipes"
-  relay: "pipes"
-  relay_timeout: "20s"
+### File server plugin
 
-http:
-  address: 127.0.0.1:21603
-  max_request_size: 1024
-  middleware: [ "static","gzip" ]
-  uploads:
-    forbid: [ ".php", ".exe", ".bat" ]
+### Configuration
 
-  pool:
-    num_workers: 2
-    max_jobs: 0
-    allocate_timeout: 60s
-    destroy_timeout: 60s
-
-
+```yaml
 fileserver:
   # File server address
   #
@@ -32,7 +18,7 @@ fileserver:
   # Default: false
   weak: false
 
-  # Enable body streaming for the files more than 4KB
+  # Enable body streaming for files more than 4KB
   #
   # Default: false
   stream_request_body: true
@@ -72,10 +58,41 @@ fileserver:
     - prefix: "/foo/bar"
       root: "../../../tests"
       compress: false
-      cache_duration: 10
+      cache_duration: 10s
       max_age: 10
       bytes_range: true
 
-logs:
-  mode: development
-  level: error
+```
+
+### PHP Worker
+
+```php
+<?php
+/**
+ * @var Goridge\RelayInterface $relay
+ */
+use Spiral\Goridge;
+use Spiral\RoadRunner;
+
+ini_set('display_errors', 'stderr');
+require __DIR__ . "/vendor/autoload.php";
+
+$worker = RoadRunner\Worker::create();
+$psr7 = new RoadRunner\Http\PSR7Worker(
+    $worker,
+    new \Nyholm\Psr7\Factory\Psr17Factory(),
+    new \Nyholm\Psr7\Factory\Psr17Factory(),
+    new \Nyholm\Psr7\Factory\Psr17Factory()
+);
+
+while ($req = $psr7->waitRequest()) {
+    try {
+        $resp = new \Nyholm\Psr7\Response();
+        $resp->getBody()->write("hello world");
+
+        $psr7->respond($resp);
+    } catch (\Throwable $e) {
+        $psr7->getWorker()->error((string)$e);
+    }
+}
+```

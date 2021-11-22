@@ -14,12 +14,12 @@ import (
 
 	endure "github.com/spiral/endure/pkg/container"
 	"github.com/spiral/roadrunner-plugins/v2/config"
+	"github.com/spiral/roadrunner-plugins/v2/fileserver"
 	httpPlugin "github.com/spiral/roadrunner-plugins/v2/http"
 	"github.com/spiral/roadrunner-plugins/v2/logger"
 	"github.com/spiral/roadrunner-plugins/v2/resetter"
 	rpcPlugin "github.com/spiral/roadrunner-plugins/v2/rpc"
 	"github.com/spiral/roadrunner-plugins/v2/server"
-	"github.com/spiral/roadrunner-plugins/v2/static"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -320,8 +320,8 @@ func TestHTTPResetForced(t *testing.T) {
 	wg.Wait()
 }
 
-func TestStaticNew(t *testing.T) {
-	cont, err := endure.NewContainer(nil, endure.SetLogLevel(endure.ErrorLevel), endure.GracefulShutdownTimeout(time.Second * 30))
+func TestFileServer(t *testing.T) {
+	cont, err := endure.NewContainer(nil, endure.SetLogLevel(endure.ErrorLevel), endure.GracefulShutdownTimeout(time.Second*30))
 	assert.NoError(t, err)
 
 	cfg := &config.Viper{
@@ -332,7 +332,7 @@ func TestStaticNew(t *testing.T) {
 	err = cont.RegisterAll(
 		cfg,
 		&logger.ZapLogger{},
-		&static.Plugin{},
+		&fileserver.Plugin{},
 	)
 	assert.NoError(t, err)
 
