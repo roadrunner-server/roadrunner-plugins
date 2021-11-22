@@ -1,0 +1,43 @@
+server:
+  command: "php ../../http/client.php pid pipes"
+  relay: "pipes"
+  relay_timeout: "20s"
+
+http:
+  address: 127.0.0.1:21603
+  max_request_size: 1024
+  middleware: [ "static","gzip" ]
+  uploads:
+    forbid: [ ".php", ".exe", ".bat" ]
+
+  pool:
+    num_workers: 2
+    max_jobs: 0
+    allocate_timeout: 60s
+    destroy_timeout: 60s
+
+
+static:
+  address: 127.0.0.1:10101
+  calculate_etag: true
+  weak: false
+  stream_request_body: true
+
+  serve:
+  - prefix: "/foo"
+    root: "../../../tests"
+    compress: false
+    cache_duration: 10s
+    max_age: 10
+    bytes_range: true
+
+  - prefix: "/foo/bar"
+    root: "../../../tests"
+    compress: false
+    cache_duration: 10s
+    max_age: 10
+    bytes_range: true
+
+logs:
+  mode: development
+  level: error
