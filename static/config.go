@@ -1,8 +1,6 @@
 package static
 
 import (
-	"time"
-
 	"github.com/spiral/errors"
 )
 
@@ -31,16 +29,34 @@ type Cfg struct {
 	// Default - "."
 	Root string `mapstructure:"root"`
 
-	BytesRange    bool          `mapstructure:"bytes_range"`
-	Compress      bool          `mapstructure:"compress"`
-	CacheDuration time.Duration `mapstructure:"cache_duration"`
-	MaxAge        int           `mapstructure:"max_age"`
+	BytesRange    bool `mapstructure:"bytes_range"`
+	Compress      bool `mapstructure:"compress"`
+	CacheDuration int  `mapstructure:"cache_duration"`
+	MaxAge        int  `mapstructure:"max_age"`
 }
 
 func (c *Config) Valid() error {
 	const op = errors.Op("static_validation")
 	if c.Address == "" {
 		return errors.E(op, errors.Str("empty address"))
+	}
+
+	if c.Configuration == nil {
+		return errors.E(op, errors.Str("no configuration to serve"))
+	}
+
+	for i := 0; i < len(c.Configuration); i++ {
+		if c.Configuration[i].Prefix == "" {
+			return errors.E(op, errors.Str("empty prefix"))
+		}
+
+		if c.Configuration[i].Root == "" {
+			c.Configuration[i].Root = "."
+		}
+
+		if c.Configuration[i].CacheDuration == 0 {
+			c.Configuration[i].CacheDuration = 10
+		}
 	}
 
 	return nil

@@ -73,7 +73,7 @@ func (p *Plugin) Serve() chan error {
 			Compress:      p.config.Configuration[i].Compress,
 			ByteRange:     p.config.Configuration[i].BytesRange,
 			Browse:        false,
-			CacheDuration: p.config.Configuration[i].CacheDuration,
+			CacheDuration: time.Second * time.Duration(p.config.Configuration[i].CacheDuration),
 			MaxAge:        p.config.Configuration[i].MaxAge,
 		})
 	}
@@ -84,9 +84,9 @@ func (p *Plugin) Serve() chan error {
 		return errCh
 	}
 
-	p.Unlock()
-
 	go func() {
+		p.Unlock()
+		p.log.Info("file server started", "address", p.config.Address)
 		err = p.app.Listener(ln)
 		if err != nil {
 			errCh <- err
