@@ -1,6 +1,7 @@
 package static
 
 import (
+	"fmt"
 	"net/http"
 	"path"
 	"strings"
@@ -40,17 +41,15 @@ func (s *Plugin) Init(cfg config.Configurer, log logger.Logger) error {
 		return errors.E(op, errors.Disabled)
 	}
 
-	err := cfg.UnmarshalKey(RootPluginName, &s.cfg)
-	if err != nil {
-		return errors.E(op, errors.Disabled, err)
-	}
-
-	if s.cfg.Static == nil {
+	// http.static
+	if !cfg.Has(fmt.Sprintf("%s.%s", RootPluginName, PluginName)) {
 		return errors.E(op, errors.Disabled)
 	}
 
-	s.log = log
-	s.root = http.Dir(s.cfg.Static.Dir)
+	err := cfg.UnmarshalKey(fmt.Sprintf("%s.%s", RootPluginName, PluginName), &s.cfg)
+	if err != nil {
+		return errors.E(op, errors.Disabled, err)
+	}
 
 	err = s.cfg.Valid()
 	if err != nil {
@@ -58,25 +57,28 @@ func (s *Plugin) Init(cfg config.Configurer, log logger.Logger) error {
 	}
 
 	// create 2 hashmaps with the allowed and forbidden file extensions
-	s.allowedExtensions = make(map[string]struct{}, len(s.cfg.Static.Allow))
-	s.forbiddenExtensions = make(map[string]struct{}, len(s.cfg.Static.Forbid))
+	s.allowedExtensions = make(map[string]struct{}, len(s.cfg.Allow))
+	s.forbiddenExtensions = make(map[string]struct{}, len(s.cfg.Forbid))
+
+	s.log = log
+	s.root = http.Dir(s.cfg.Dir)
 
 	// init forbidden
-	for i := 0; i < len(s.cfg.Static.Forbid); i++ {
+	for i := 0; i < len(s.cfg.Forbid); i++ {
 		// skip empty lines
-		if s.cfg.Static.Forbid[i] == "" {
+		if s.cfg.Forbid[i] == "" {
 			continue
 		}
-		s.forbiddenExtensions[s.cfg.Static.Forbid[i]] = struct{}{}
+		s.forbiddenExtensions[s.cfg.Forbid[i]] = struct{}{}
 	}
 
 	// init allowed
-	for i := 0; i < len(s.cfg.Static.Allow); i++ {
+	for i := 0; i < len(s.cfg.Allow); i++ {
 		// skip empty lines
-		if s.cfg.Static.Allow[i] == "" {
+		if s.cfg.Allow[i] == "" {
 			continue
 		}
-		s.allowedExtensions[s.cfg.Static.Allow[i]] = struct{}{}
+		s.allowedExtensions[s.cfg.Allow[i]] = struct{}{}
 	}
 
 	// check if any forbidden items presented in the allowed
@@ -172,18 +174,18 @@ func (s *Plugin) Middleware(next http.Handler) http.Handler {
 		}
 
 		// set etag
-		if s.cfg.Static.CalculateEtag {
-			SetEtag(s.cfg.Static.Weak, f, finfo.Name(), w)
+		if s.cfg.CalculateEtag {
+			SetEtag(s.cfg.Weak, f, finfo.Name(), w)
 		}
 
-		if s.cfg.Static.Request != nil {
-			for k, v := range s.cfg.Static.Request {
+		if s.cfg.Request != nil {
+			for k, v := range s.cfg.Request {
 				r.Header.Add(k, v)
 			}
 		}
 
-		if s.cfg.Static.Response != nil {
-			for k, v := range s.cfg.Static.Response {
+		if s.cfg.Response != nil {
+			for k, v := range s.cfg.Response {
 				w.Header().Set(k, v)
 			}
 		}

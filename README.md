@@ -75,6 +75,7 @@ with much greater performance and flexibility.
 | ![](https://img.shields.io/badge/-Status-green)     | Provides support for the health and readiness checks                                                                                |
 | ![](https://img.shields.io/badge/-Websockets-green) | Provides support for the broadcasting events via websockets                                                                         |
 | ![](https://img.shields.io/badge/-TCP-green) | Provides support for the raw TCP payloads and TCP connections                                                                         | [Docs](tcp/docs/tcp.md)
+| ![](https://img.shields.io/badge/-Fileserver-green) | File server to handle static files                                                                         | [Docs](fileserver/docs/fileserver.md)
 
 Legend:  
 `Green` - is a regular RR2 plugins.  
