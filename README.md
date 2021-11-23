@@ -69,9 +69,9 @@ with much greater performance and flexibility.
 | ![](https://img.shields.io/badge/-Metrics-green)    | Provides support for the metrics via [Prometheus](https://prometheus.io/)                                                           |
 | ![](https://img.shields.io/badge/-Reload-green)     | Reloads workers on the file changes. Use only for the development                                                                   |
 | ![](https://img.shields.io/badge/-Resetter-green)   | Provides support for the `./rr reset` command. Reloads workers pools                                                                |
-| ![](https://img.shields.io/badge/-RPC-green)        | Provides support for the RPC across all plugins. Collects `RPC() interface{}` methods and exposes them via RPC                      |
+| ![](https://img.shields.io/badge/-RPC-green)        | Provides support for the RPC across all plugins. Collects `RPC() interface{}` methods and exposes them via RPC                      | 
 | ![](https://img.shields.io/badge/-Server-green)     | Provides support for the command. Prepare PHP processes                                                                             | [Docs](server/docs/server.md) |
-| ![](https://img.shields.io/badge/-Service-green)    | Provides support for the external scripts, binaries which might be started like a service (behaves similar to the systemd services) |
+| ![](https://img.shields.io/badge/-Service-green)    | Provides support for the external scripts, binaries which might be started like a service (behaves similar to the systemd services) | [Docs](service/docs/service.md)
 | ![](https://img.shields.io/badge/-Status-green)     | Provides support for the health and readiness checks                                                                                |
 | ![](https://img.shields.io/badge/-Websockets-green) | Provides support for the broadcasting events via websockets                                                                         |
 | ![](https://img.shields.io/badge/-TCP-green) | Provides support for the raw TCP payloads and TCP connections                                                                         | [Docs](tcp/docs/tcp.md)
