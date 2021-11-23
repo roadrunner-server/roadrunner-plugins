@@ -1,3 +1,6 @@
+### Service plugin
+- `Since RR v2.0.5`
+
 ### Configuration
 
 ```yaml
@@ -12,25 +15,10 @@ service:
     # Default: none, required.
     command: php tests/plugins/service/test_files/loop.php
 
-    # Console output
-    #
-    # Default: stderr. Available options: stderr, stdout
-    output: "stderr"
-
     # Endings for the stderr/stdout output
     #
     # Default: "\n". Available options: any.
     line_ending: "\n"
-
-    # Color for regular output
-    #
-    # Default: none. Available options: white, red, green, yellow, blue, magenta
-    color: "green"
-
-    # Color for the process errors
-    #
-    # Default: none. Available options: white, red, green, yellow, blue, magenta
-    err_color: "red"
 
     # Number of copies (processes) to start per command.
     #
@@ -51,6 +39,13 @@ service:
     #
     # Default: 30
     restart_sec: 1
+    
+    # Environment variables to pass to the process
+    #
+    # Default: empty
+    env:
+       - "FOO": "BAR"
+       - "FOO2": "BAZ"
 
   # User defined service name
   #
@@ -61,25 +56,11 @@ service:
     # Default: none, required.
     command: "./some_executable"
 
-    # Console output
-    #
-    # Default: stderr. Available options: stderr, stdout
-    output: "stderr"
-
     # Endings for the stderr/stdout output
     #
     # Default: "\n". Available options: any.
    
     line_ending: "\n"
-    # Color for regular output
-    #
-    # Default: none. Available options: white, red, green, yellow, blue, magenta
-    color: "green"
-
-    # Color for the process errors
-    #
-    # Default: none. Available options: white, red, green, yellow, blue, magenta
-    err_color: "red"
 
     # Number of copies (processes) to start per command.
     #

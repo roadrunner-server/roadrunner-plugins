@@ -24,10 +24,17 @@ import (
 const (
 	// PluginName for the server
 	PluginName string = "server"
+
+	// RPCPluginName is the name of the RPC plugin, should be in sync with rpc/config.go
+	RPCPluginName string = "rpc"
+
 	// RrRelay env variable key (internal)
 	RrRelay string = "RR_RELAY"
+
 	// RrRPC env variable key (internal) if the RPC presents
 	RrRPC string = "RR_RPC"
+
+	// Event types
 
 	PoolEvents    string = "pool.*"
 	WorkerEvents  string = "worker.*"
@@ -37,7 +44,10 @@ const (
 // Plugin manages worker
 type Plugin struct {
 	sync.Mutex
-	cfg     Config
+
+	cfg    *Config
+	rpcCfg *RPCConfig
+
 	log     logger.Logger
 	factory transport.Factory
 	stopCh  chan struct{}
@@ -49,11 +59,21 @@ func (p *Plugin) Init(cfg config.Configurer, log logger.Logger) error {
 	if !cfg.Has(PluginName) {
 		return errors.E(op, errors.Disabled)
 	}
-	err := cfg.Unmarshal(&p.cfg)
+
+	err := cfg.UnmarshalKey(PluginName, &p.cfg)
 	if err != nil {
 		return errors.E(op, errors.Init, err)
 	}
-	p.cfg.InitDefaults()
+
+	err = cfg.UnmarshalKey(RPCPluginName, &p.rpcCfg)
+	if err != nil {
+		return errors.E(op, errors.Init, err)
+	}
+
+	err = p.cfg.InitDefaults()
+	if err != nil {
+		return errors.E(op, errors.Init, err)
+	}
 
 	p.factory, err = p.initFactory()
 	if err != nil {
@@ -77,36 +97,15 @@ func (p *Plugin) Available() {}
 // Serve (Start) server plugin (just a mock here to satisfy interface)
 func (p *Plugin) Serve() chan error {
 	errCh := make(chan error, 1)
-	go func() {
-		eb, id := events.Bus()
 
-		eventsCh := make(chan events.Event, 10)
-		err := eb.SubscribeP(id, PoolEvents, eventsCh)
-		if err != nil {
-			errCh <- err
-			return
-		}
+	go p.startEventsBus(errCh)
 
-		err = eb.SubscribeP(id, WorkerEvents, eventsCh)
+	if p.cfg.OnInit != nil {
+		err := p.runOnInitCommand()
 		if err != nil {
-			errCh <- err
-			return
+			p.log.Error("on_init finished with errors, RR continues to run", "error", err)
 		}
-		err = eb.SubscribeP(id, WatcherEvents, eventsCh)
-		if err != nil {
-			errCh <- err
-			return
-		}
-
-		for {
-			select {
-			case event := <-eventsCh:
-				p.log.Info("event", "type", event.Type().String(), "message", event.Message(), "plugin", event.Plugin())
-			case <-p.stopCh:
-				return
-			}
-		}
-	}()
+	}
 
 	return errCh
 }
@@ -127,7 +126,7 @@ func (p *Plugin) CmdFactory(env Env) func() *exec.Cmd {
 	return func() *exec.Cmd {
 		var cmdArgs []string
 		// create command according to the config
-		cmdArgs = append(cmdArgs, strings.Split(p.cfg.Server.Command, " ")...)
+		cmdArgs = append(cmdArgs, strings.Split(p.cfg.Command, " ")...)
 		var cmd *exec.Cmd
 		if len(cmdArgs) == 1 {
 			cmd = exec.Command(cmdArgs[0]) //nolint:gosec
@@ -138,8 +137,8 @@ func (p *Plugin) CmdFactory(env Env) func() *exec.Cmd {
 		utils.IsolateProcess(cmd)
 		// if user is not empty, and OS is linux or macos
 		// execute php worker from that particular user
-		if p.cfg.Server.User != "" {
-			err := utils.ExecuteFromUser(cmd, p.cfg.Server.User)
+		if p.cfg.User != "" {
+			err := utils.ExecuteFromUser(cmd, p.cfg.User)
 			if err != nil {
 				return nil
 			}
@@ -174,16 +173,16 @@ func (p *Plugin) NewWorkerPool(ctx context.Context, opt *pool.Config, env Env) (
 // creates relay and worker factory.
 func (p *Plugin) initFactory() (transport.Factory, error) {
 	const op = errors.Op("server_plugin_init_factory")
-	if p.cfg.Server.Relay == "" || p.cfg.Server.Relay == "pipes" {
+	if p.cfg.Relay == "" || p.cfg.Relay == "pipes" {
 		return pipe.NewPipeFactory(), nil
 	}
 
-	dsn := strings.Split(p.cfg.Server.Relay, "://")
+	dsn := strings.Split(p.cfg.Relay, "://")
 	if len(dsn) != 2 {
 		return nil, errors.E(op, errors.Network, errors.Str("invalid DSN (tcp://:6001, unix://file.sock)"))
 	}
 
-	lsn, err := utils.CreateListener(p.cfg.Server.Relay)
+	lsn, err := utils.CreateListener(p.cfg.Relay)
 	if err != nil {
 		return nil, errors.E(op, errors.Network, err)
 	}
@@ -191,30 +190,62 @@ func (p *Plugin) initFactory() (transport.Factory, error) {
 	switch dsn[0] {
 	// sockets group
 	case "unix":
-		return socket.NewSocketServer(lsn, p.cfg.Server.RelayTimeout), nil
+		return socket.NewSocketServer(lsn, p.cfg.RelayTimeout), nil
 	case "tcp":
-		return socket.NewSocketServer(lsn, p.cfg.Server.RelayTimeout), nil
+		return socket.NewSocketServer(lsn, p.cfg.RelayTimeout), nil
 	default:
 		return nil, errors.E(op, errors.Network, errors.Str("invalid DSN (tcp://:6001, unix://file.sock)"))
 	}
 }
 
 func (p *Plugin) setEnv(e Env) []string {
-	env := append(os.Environ(), fmt.Sprintf(RrRelay+"=%s", p.cfg.Server.Relay))
+	env := append(os.Environ(), fmt.Sprintf(RrRelay+"=%s", p.cfg.Relay))
 	for k, v := range e {
 		env = append(env, fmt.Sprintf("%s=%s", strings.ToUpper(k), v))
 	}
 
-	if p.cfg.RPC != nil && p.cfg.RPC.Listen != "" {
-		env = append(env, fmt.Sprintf("%s=%s", RrRPC, p.cfg.RPC.Listen))
+	if p.rpcCfg != nil && p.rpcCfg.Listen != "" {
+		env = append(env, fmt.Sprintf("%s=%s", RrRPC, p.rpcCfg.Listen))
 	}
 
 	// set env variables from the config
-	if len(p.cfg.Server.Env) > 0 {
-		for k, v := range p.cfg.Server.Env {
+	if len(p.cfg.Env) > 0 {
+		for k, v := range p.cfg.Env {
 			env = append(env, fmt.Sprintf("%s=%s", strings.ToUpper(k), v))
 		}
 	}
 
 	return env
+}
+
+func (p *Plugin) startEventsBus(errCh chan<- error) {
+	eb, id := events.Bus()
+	eventsCh := make(chan events.Event, 10)
+
+	err := eb.SubscribeP(id, PoolEvents, eventsCh)
+	if err != nil {
+		errCh <- err
+		return
+	}
+
+	err = eb.SubscribeP(id, WorkerEvents, eventsCh)
+	if err != nil {
+		errCh <- err
+		return
+	}
+	err = eb.SubscribeP(id, WatcherEvents, eventsCh)
+	if err != nil {
+		errCh <- err
+		return
+	}
+
+	for {
+		select {
+		case event := <-eventsCh:
+			p.log.Info("event", "type", event.Type().String(), "message", event.Message(), "plugin", event.Plugin())
+		case <-p.stopCh:
+			eb.Unsubscribe(id)
+			return
+		}
+	}
 }

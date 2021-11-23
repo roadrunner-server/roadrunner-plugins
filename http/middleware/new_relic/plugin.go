@@ -157,5 +157,10 @@ func (p *Plugin) getWriter(w http.ResponseWriter) *writer {
 func (p *Plugin) putWriter(w *writer) {
 	w.code = -1
 	w.w = nil
+
+	for k := range w.hdrToSend {
+		delete(w.hdrToSend, k)
+	}
+
 	p.writersPool.Put(w)
 }
