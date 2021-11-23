@@ -192,6 +192,23 @@ server:
   # ..REGULAR SERVER OPTIONS...
 ```
 
+---
+
+- ✏️ **[BETA]** GRPC can handle multiply proto files.  
+Config:
+```yaml
+# GRPC service configuration
+grpc:
+    # Proto files to use
+    #
+    # This option is required. At least one proto file must be specified.
+    proto:
+        - "first.proto"
+        - "second.proto"
+        
+## ... OTHER REGULAR GRPC OPTIONS ...
+```
+
 ## 🩹 Fixes:
 
 - 🐛 Fix: GRPC server will show message when started.
