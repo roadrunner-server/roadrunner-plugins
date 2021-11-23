@@ -55,6 +55,10 @@ func (f *Foo3) Serve() chan error {
 		return errCh
 	}
 
+	go func() {
+		_ = w.Wait()
+	}()
+
 	// test that our worker is functional
 	sw := worker.From(w)
 

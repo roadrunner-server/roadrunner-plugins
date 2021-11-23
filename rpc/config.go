@@ -10,8 +10,8 @@ import (
 
 // Config defines RPC service config.
 type Config struct {
-	// Listen string
-	Listen string
+	// Listen address string
+	Listen string `mapstructure:"listen"`
 }
 
 // InitDefaults allows to init blank config with pre-defined set of default values.
