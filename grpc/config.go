@@ -62,14 +62,14 @@ func (c *Config) InitDefaults() error { //nolint:gocognit
 		return errors.E(op, errors.Errorf("mailformed grpc address, provided: %s", c.Listen))
 	}
 
-	for _, pf := range c.Proto {
-		if pf == "" {
+	for i := 0; i < len(c.Proto); i++ {
+		if c.Proto[i] == "" {
 			continue
 		}
 
-		if _, err := os.Stat(pf); err != nil {
+		if _, err := os.Stat(c.Proto[i]); err != nil {
 			if os.IsNotExist(err) {
-				return errors.E(op, errors.Errorf("proto file '%s' does not exists", pf))
+				return errors.E(op, errors.Errorf("proto file '%s' does not exists", c.Proto[i]))
 			}
 
 			return errors.E(op, err)

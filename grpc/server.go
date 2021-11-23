@@ -26,19 +26,19 @@ func (p *Plugin) createGRPCserver() (*grpc.Server, error) {
 
 	server := grpc.NewServer(opts...)
 
-	for _, pf := range p.config.Proto {
-		if pf == "" {
+	for i := 0; i < len(p.config.Proto); i++ {
+		if p.config.Proto[i] == "" {
 			continue
 		}
 
 		// php proxy services
-		services, err := parser.File(pf, path.Dir(pf))
+		services, err := parser.File(p.config.Proto[i], path.Dir(p.config.Proto[i]))
 		if err != nil {
 			return nil, err
 		}
 
 		for _, service := range services {
-			px := proxy.NewProxy(fmt.Sprintf("%s.%s", service.Package, service.Name), pf, p.gPool, p.mu)
+			px := proxy.NewProxy(fmt.Sprintf("%s.%s", service.Package, service.Name), p.config.Proto[i], p.gPool, p.mu)
 			for _, m := range service.Methods {
 				px.RegisterMethod(m.Name)
 			}
