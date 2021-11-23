@@ -41,7 +41,7 @@ test_coverage:
 	docker-compose -f tests/env/docker-compose.yaml down
 
 test: ## Run application tests
-	docker compose -f tests/env/docker-compose.yaml up -d --remove-orphans
+	docker-compose -f tests/env/docker-compose.yaml up -d --remove-orphans
 	sleep 10
 	go test -v -race -tags=debug ./jobs/pipeline
 	go test -v -race -tags=debug ./http/config
