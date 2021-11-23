@@ -97,6 +97,100 @@ func TestGrpcInit(t *testing.T) {
 	wg.Wait()
 }
 
+// test panics -> https://github.com/grpc/grpc-go/blob/master/server.go#L644
+func TestGrpcInitDuplicate(t *testing.T) {
+	cont, err := endure.NewContainer(nil, endure.SetLogLevel(endure.ErrorLevel))
+	assert.NoError(t, err)
+
+	cfg := &config.Viper{
+		Path:   "configs/.rr-grpc-init-duplicate.yaml",
+		Prefix: "rr",
+	}
+
+	err = cont.RegisterAll(
+		cfg,
+		&grpcPlugin.Plugin{},
+		&rpcPlugin.Plugin{},
+		&logger.ZapLogger{},
+		&server.Plugin{},
+	)
+	assert.NoError(t, err)
+
+	err = cont.Init()
+	assert.NoError(t, err)
+
+	_, err = cont.Serve()
+	assert.NoError(t, err)
+}
+
+// different services, same methods inside
+func TestGrpcInitDup2(t *testing.T) {
+	cont, err := endure.NewContainer(nil, endure.SetLogLevel(endure.ErrorLevel))
+	assert.NoError(t, err)
+
+	cfg := &config.Viper{
+		Path:   "configs/.rr-grpc-init-duplicate-2.yaml",
+		Prefix: "rr",
+	}
+
+	err = cont.RegisterAll(
+		cfg,
+		&grpcPlugin.Plugin{},
+		&rpcPlugin.Plugin{},
+		&logger.ZapLogger{},
+		&server.Plugin{},
+	)
+	assert.NoError(t, err)
+
+	err = cont.Init()
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	ch, err := cont.Serve()
+	assert.NoError(t, err)
+
+	sig := make(chan os.Signal, 1)
+	signal.Notify(sig, os.Interrupt, syscall.SIGINT, syscall.SIGTERM)
+
+	wg := &sync.WaitGroup{}
+	wg.Add(1)
+
+	stopCh := make(chan struct{}, 1)
+
+	go func() {
+		defer wg.Done()
+		for {
+			select {
+			case e := <-ch:
+				assert.Fail(t, "error", e.Error.Error())
+				err = cont.Stop()
+				if err != nil {
+					assert.FailNow(t, "error", err.Error())
+				}
+			case <-sig:
+				err = cont.Stop()
+				if err != nil {
+					assert.FailNow(t, "error", err.Error())
+				}
+				return
+			case <-stopCh:
+				// timeout
+				err = cont.Stop()
+				if err != nil {
+					assert.FailNow(t, "error", err.Error())
+				}
+				return
+			}
+		}
+	}()
+
+	time.Sleep(time.Second * 2)
+	stopCh <- struct{}{}
+
+	wg.Wait()
+}
+
 func TestGrpcInitMultiple(t *testing.T) {
 	cont, err := endure.NewContainer(nil, endure.SetLogLevel(endure.ErrorLevel))
 	assert.NoError(t, err)

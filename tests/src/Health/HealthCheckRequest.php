@@ -16,7 +16,7 @@ class HealthCheckRequest extends \Google\Protobuf\Internal\Message
     /**
      * Generated from protobuf field <code>string service = 1;</code>
      */
-    private $service = '';
+    protected $service = '';
 
     /**
      * Constructor.

@@ -16,7 +16,7 @@ class HealthCheckResponse extends \Google\Protobuf\Internal\Message
     /**
      * Generated from protobuf field <code>.grpc.health.v1.HealthCheckResponse.ServingStatus status = 1;</code>
      */
-    private $status = 0;
+    protected $status = 0;
 
     /**
      * Constructor.
@@ -48,7 +48,7 @@ class HealthCheckResponse extends \Google\Protobuf\Internal\Message
      */
     public function setStatus($var)
     {
-        GPBUtil::checkEnum($var, \Health\HealthCheckResponse_ServingStatus::class);
+        GPBUtil::checkEnum($var, \Health\HealthCheckResponse\ServingStatus::class);
         $this->status = $var;
 
         return $this;

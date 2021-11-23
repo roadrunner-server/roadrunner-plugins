@@ -9,6 +9,7 @@ message HealthCheckRequest {
   string service = 1;
 }
 
+// https://github.com/grpc/grpc/blob/master/doc/health-checking.md
 message HealthCheckResponse {
   enum ServingStatus {
     UNKNOWN = 0;

@@ -4,7 +4,7 @@
 
 namespace Health;
 
-use Spiral\GRPC;
+use Spiral\RoadRunner\GRPC;
 
 interface HealthInterface extends GRPC\ServiceInterface
 {

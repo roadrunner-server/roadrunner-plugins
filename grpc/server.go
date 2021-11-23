@@ -65,7 +65,7 @@ func (p *Plugin) interceptor(ctx context.Context, req interface{}, info *grpc.Un
 		return nil, err
 	}
 
-	p.log.Error("method called successfully", "method", info.FullMethod, "start", start, "elapsed", time.Since(start))
+	p.log.Debug("method called successfully", "method", info.FullMethod, "start", start, "elapsed", time.Since(start))
 	return resp, nil
 }
 
