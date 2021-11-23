@@ -93,8 +93,9 @@ func (p *Process) createProcess() {
 		p.command = exec.Command(cmdArgs[0], cmdArgs[1:]...) //nolint:gosec
 	}
 	p.command.Env = p.setEnv(p.env)
-	// redirect stderr into the Write function of the process.go
+	// redirect stderr and stdout into the Write function of the process.go
 	p.command.Stderr = p
+	p.command.Stdout = p
 }
 
 // wait process for exit
