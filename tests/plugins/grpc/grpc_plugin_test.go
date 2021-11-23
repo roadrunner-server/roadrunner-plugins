@@ -4,7 +4,6 @@ import (
 	"context"
 	"crypto/tls"
 	"crypto/x509"
-	"github.com/spiral/roadrunner-plugins/v2/tests/plugins/grpc/proto/health"
 	"net"
 	"net/rpc"
 	"os"
@@ -14,6 +13,8 @@ import (
 	"syscall"
 	"testing"
 	"time"
+
+	"github.com/spiral/roadrunner-plugins/v2/tests/plugins/grpc/proto/health"
 
 	endure "github.com/spiral/endure/pkg/container"
 	goridgeRpc "github.com/spiral/goridge/v3/pkg/rpc"
@@ -99,6 +100,7 @@ func TestGrpcInit(t *testing.T) {
 
 // test panics -> https://github.com/grpc/grpc-go/blob/master/server.go#L644
 func TestGrpcInitDuplicate(t *testing.T) {
+	t.Skip("test panics, use locally")
 	cont, err := endure.NewContainer(nil, endure.SetLogLevel(endure.ErrorLevel))
 	assert.NoError(t, err)
 
