@@ -1,0 +1,15 @@
+server:
+  on_init:
+    command: "php ../../loop.php"
+    exec_timeout: 1ns
+
+  command: "php socket.php"
+  env:
+    - RR_CONFIG: "/some/place/on/the/C134"
+    - RR_CONFIG2: "C138"
+  relay: "unix://unix.sock"
+  relay_timeout: "20s"
+
+logs:
+  mode: development
+  level: info

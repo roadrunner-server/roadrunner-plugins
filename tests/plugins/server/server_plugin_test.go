@@ -4,13 +4,16 @@ import (
 	"os"
 	"os/signal"
 	"sync"
+	"syscall"
 	"testing"
 	"time"
 
+	"github.com/golang/mock/gomock"
 	endure "github.com/spiral/endure/pkg/container"
 	"github.com/spiral/roadrunner-plugins/v2/config"
 	"github.com/spiral/roadrunner-plugins/v2/logger"
 	"github.com/spiral/roadrunner-plugins/v2/server"
+	"github.com/spiral/roadrunner-plugins/v2/tests/mocks"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -140,6 +143,244 @@ func TestAppSockets(t *testing.T) {
 			return
 		}
 	}
+}
+
+func TestAppTCPOnInit(t *testing.T) {
+	container, err := endure.NewContainer(nil, endure.RetryOnFail(true), endure.SetLogLevel(endure.ErrorLevel))
+	if err != nil {
+		t.Fatal(err)
+	}
+	// config plugin
+	vp := &config.Viper{}
+	vp.Path = "configs/.rr-tcp-on-init.yaml"
+	vp.Prefix = "rr"
+	err = container.Register(vp)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	controller := gomock.NewController(t)
+	mockLogger := mocks.NewMockLogger(controller)
+
+	// process interrupt error
+	mockLogger.EXPECT().Info("event", "type", "EventWorkerConstruct", "message", gomock.Any(), "plugin", "pool").AnyTimes()
+	mockLogger.EXPECT().Info("The number is: 0\n").Times(1)
+	mockLogger.EXPECT().Info("The number is: 1\n").Times(1)
+	mockLogger.EXPECT().Info("The number is: 2\n").Times(1)
+	mockLogger.EXPECT().Info("The number is: 3\n").Times(1)
+	mockLogger.EXPECT().Info("The number is: 4\n").Times(1)
+	mockLogger.EXPECT().Info("The number is: 5\n").Times(1)
+
+	err = container.RegisterAll(
+		mockLogger,
+		&server.Plugin{},
+		&Foo2{},
+	)
+
+	err = container.Init()
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	ch, err := container.Serve()
+	assert.NoError(t, err)
+
+	sig := make(chan os.Signal, 1)
+	signal.Notify(sig, os.Interrupt, syscall.SIGINT, syscall.SIGTERM)
+
+	wg := &sync.WaitGroup{}
+	wg.Add(1)
+
+	stopCh := make(chan struct{}, 1)
+
+	go func() {
+		defer wg.Done()
+		for {
+			select {
+			case e := <-ch:
+				assert.Fail(t, "error", e.Error.Error())
+				err = container.Stop()
+				if err != nil {
+					assert.FailNow(t, "error", err.Error())
+				}
+				return
+			case <-sig:
+				err = container.Stop()
+				if err != nil {
+					assert.FailNow(t, "error", err.Error())
+				}
+				return
+			case <-stopCh:
+				// timeout
+				err = container.Stop()
+				if err != nil {
+					assert.FailNow(t, "error", err.Error())
+				}
+				return
+			}
+		}
+	}()
+
+	time.Sleep(time.Second * 10)
+	stopCh <- struct{}{}
+	wg.Wait()
+}
+
+func TestAppSocketsOnInit(t *testing.T) {
+	container, err := endure.NewContainer(nil, endure.RetryOnFail(true), endure.SetLogLevel(endure.ErrorLevel))
+	if err != nil {
+		t.Fatal(err)
+	}
+	// config plugin
+	vp := &config.Viper{}
+	vp.Path = "configs/.rr-sockets-on-init.yaml"
+	vp.Prefix = "rr"
+	err = container.Register(vp)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	controller := gomock.NewController(t)
+	mockLogger := mocks.NewMockLogger(controller)
+
+	// process interrupt error
+	mockLogger.EXPECT().Info("event", "type", "EventWorkerConstruct", "message", gomock.Any(), "plugin", "pool").AnyTimes()
+	mockLogger.EXPECT().Info("The number is: 0\n").Times(1)
+	mockLogger.EXPECT().Info("The number is: 1\n").Times(1)
+	mockLogger.EXPECT().Info("The number is: 2\n").Times(1)
+	mockLogger.EXPECT().Info("The number is: 3\n").Times(1)
+	mockLogger.EXPECT().Info("The number is: 4\n").Times(1)
+	mockLogger.EXPECT().Info("The number is: 5\n").Times(1)
+
+	err = container.RegisterAll(
+		mockLogger,
+		&server.Plugin{},
+		&Foo2{},
+	)
+
+	err = container.Init()
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	ch, err := container.Serve()
+	assert.NoError(t, err)
+
+	sig := make(chan os.Signal, 1)
+	signal.Notify(sig, os.Interrupt, syscall.SIGINT, syscall.SIGTERM)
+
+	wg := &sync.WaitGroup{}
+	wg.Add(1)
+
+	stopCh := make(chan struct{}, 1)
+
+	go func() {
+		defer wg.Done()
+		for {
+			select {
+			case e := <-ch:
+				assert.Fail(t, "error", e.Error.Error())
+				err = container.Stop()
+				if err != nil {
+					assert.FailNow(t, "error", err.Error())
+				}
+				return
+			case <-sig:
+				err = container.Stop()
+				if err != nil {
+					assert.FailNow(t, "error", err.Error())
+				}
+				return
+			case <-stopCh:
+				// timeout
+				err = container.Stop()
+				if err != nil {
+					assert.FailNow(t, "error", err.Error())
+				}
+				return
+			}
+		}
+	}()
+
+	time.Sleep(time.Second * 10)
+	stopCh <- struct{}{}
+	wg.Wait()
+}
+
+func TestAppSocketsOnInitFastClose(t *testing.T) {
+	container, err := endure.NewContainer(nil, endure.RetryOnFail(true), endure.SetLogLevel(endure.ErrorLevel))
+	if err != nil {
+		t.Fatal(err)
+	}
+	// config plugin
+	vp := &config.Viper{}
+	vp.Path = "configs/.rr-sockets-on-init-fast-close.yaml"
+	vp.Prefix = "rr"
+	err = container.Register(vp)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	controller := gomock.NewController(t)
+	mockLogger := mocks.NewMockLogger(controller)
+
+	// process interrupt error
+	mockLogger.EXPECT().Info("event", "type", "EventWorkerConstruct", "message", gomock.Any(), "plugin", "pool").AnyTimes()
+	mockLogger.EXPECT().Error("process wait", "error", gomock.Any()).Times(1)
+
+	err = container.RegisterAll(
+		mockLogger,
+		&server.Plugin{},
+		&Foo2{},
+	)
+
+	err = container.Init()
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	ch, err := container.Serve()
+	assert.NoError(t, err)
+
+	sig := make(chan os.Signal, 1)
+	signal.Notify(sig, os.Interrupt, syscall.SIGINT, syscall.SIGTERM)
+
+	wg := &sync.WaitGroup{}
+	wg.Add(1)
+
+	stopCh := make(chan struct{}, 1)
+
+	go func() {
+		defer wg.Done()
+		for {
+			select {
+			case e := <-ch:
+				assert.Fail(t, "error", e.Error.Error())
+				err = container.Stop()
+				if err != nil {
+					assert.FailNow(t, "error", err.Error())
+				}
+				return
+			case <-sig:
+				err = container.Stop()
+				if err != nil {
+					assert.FailNow(t, "error", err.Error())
+				}
+				return
+			case <-stopCh:
+				// timeout
+				err = container.Stop()
+				if err != nil {
+					assert.FailNow(t, "error", err.Error())
+				}
+				return
+			}
+		}
+	}()
+
+	time.Sleep(time.Second * 10)
+	stopCh <- struct{}{}
+	wg.Wait()
 }
 
 func TestAppTCP(t *testing.T) {
@@ -286,6 +527,44 @@ func TestAppWrongCommand(t *testing.T) {
 	// config plugin
 	vp := &config.Viper{}
 	vp.Path = "configs/.rr-wrong-command.yaml"
+	vp.Prefix = "rr"
+	err = container.Register(vp)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	err = container.Register(&server.Plugin{})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	err = container.Register(&Foo3{})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	err = container.Register(&logger.ZapLogger{})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	err = container.Init()
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	_, err = container.Serve()
+	assert.Error(t, err)
+}
+
+func TestAppWrongCommandOnInit(t *testing.T) {
+	container, err := endure.NewContainer(nil, endure.RetryOnFail(true), endure.SetLogLevel(endure.ErrorLevel))
+	if err != nil {
+		t.Fatal(err)
+	}
+	// config plugin
+	vp := &config.Viper{}
+	vp.Path = "configs/.rr-wrong-command-on-init.yaml"
 	vp.Prefix = "rr"
 	err = container.Register(vp)
 	if err != nil {

@@ -32,7 +32,7 @@ require (
 	github.com/spiral/endure v1.0.8
 	github.com/spiral/errors v1.0.12
 	github.com/spiral/goridge/v3 v3.2.3
-	github.com/spiral/roadrunner/v2 v2.6.0-alpha.5
+	github.com/spiral/roadrunner/v2 v2.6.0-beta.1
 	// spiral
 	github.com/stretchr/testify v1.7.0
 	github.com/yookoala/gofast v0.6.0
@@ -68,7 +68,7 @@ require (
 	github.com/klauspost/cpuid/v2 v2.0.9 // indirect
 	github.com/libdns/libdns v0.2.1 // indirect
 	github.com/magiconair/properties v1.8.5 // indirect
-	github.com/mattn/go-colorable v0.1.11 // indirect
+	github.com/mattn/go-colorable v0.1.12 // indirect
 	github.com/mattn/go-isatty v0.0.14 // indirect
 	github.com/matttproud/golang_protobuf_extensions v1.0.1 // indirect
 	github.com/miekg/dns v1.1.43 // indirect
