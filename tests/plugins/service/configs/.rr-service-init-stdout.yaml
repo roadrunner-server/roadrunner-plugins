@@ -5,8 +5,6 @@ service:
     exec_timeout: 5s # s,m,h (seconds, minutes, hours)
     remain_after_exit: true
     restart_sec: 1
-
-endure:
-  grace_period: 120s
-  print_graph: false
-  log_level: error
+    env:
+      - "FOO": "BAR"
+      - "FOO2": "BAZ"

@@ -266,11 +266,9 @@ func TestServiceError(t *testing.T) {
 	controller := gomock.NewController(t)
 	mockLogger := mocks.NewMockLogger(controller)
 
-	mockLogger.EXPECT().Debug("worker destructed", "pid", gomock.Any()).AnyTimes()
-	mockLogger.EXPECT().Debug("worker constructed", "pid", gomock.Any()).AnyTimes()
-
 	// process interrupt error
-	mockLogger.EXPECT().Error("process wait error", gomock.Any()).MinTimes(2)
+	mockLogger.EXPECT().Error("process wait error", gomock.Any()).MinTimes(1)
+	mockLogger.EXPECT().Info("Could not open input file: test_files/loopo.php\n").MinTimes(1)
 
 	err = cont.RegisterAll(
 		cfg,

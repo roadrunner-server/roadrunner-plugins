@@ -36,6 +36,13 @@ service:
     #
     # Default: 30
     restart_sec: 1
+    
+    # Environment variables to pass to the process
+    #
+    # Default: empty
+    env:
+       - "FOO": "BAR"
+       - "FOO2": "BAZ"
 
   # User defined service name
   #
