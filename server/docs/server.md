@@ -7,6 +7,24 @@
 ```yaml
 # Application server settings (docs: https://roadrunner.dev/docs/php-worker)
 server:
+  on_init:
+    # Command to execute before the main server's command
+    #
+    # This option is required if using on_init
+    command: "any php or script here"
+    
+    # Script execute timeout
+    #
+    # Default: 60s [60m, 60h], if used w/o units its means - NANOSECONDS.
+    exec_timeout: 20s
+    
+    # Environment variables for the worker processes.
+    #
+    # Default: <empty map>
+    env:
+      - SOME_KEY: "SOME_VALUE"
+      - SOME_KEY2: "SOME_VALUE2" 
+
   # Worker starting command, with any required arguments.
   #
   # This option is required.
