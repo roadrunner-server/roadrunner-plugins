@@ -13,7 +13,7 @@ logs:
 # GRPC service configuration
 grpc:
   # socket to listen
-  listen: "tcp://localhost:9002"
+  listen: "tcp://127.0.0.1:9002"
 
   tls:
     key: "configs/test-certs/test.key"

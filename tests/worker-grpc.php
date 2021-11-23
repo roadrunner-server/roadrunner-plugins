@@ -5,6 +5,7 @@
  */
 
 use Service\EchoInterface;
+use Health\HealthInterface;
 use Spiral\RoadRunner\GRPC\Server;
 use Spiral\RoadRunner\Worker;
 
@@ -15,5 +16,6 @@ $server = new Server(null, [
 ]);
 
 $server->registerService(EchoInterface::class, new EchoService());
+$server->registerService(HealthInterface::class, new HealthService());
 
 $server->serve(Worker::create());

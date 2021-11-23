@@ -22,8 +22,8 @@ const (
 )
 
 type Config struct {
-	Listen string `mapstructure:"listen"`
-	Proto  string `mapstructure:"proto"`
+	Listen string   `mapstructure:"listen"`
+	Proto  []string `mapstructure:"proto"`
 
 	TLS *TLS `mapstructure:"tls"`
 
@@ -62,10 +62,14 @@ func (c *Config) InitDefaults() error { //nolint:gocognit
 		return errors.E(op, errors.Errorf("mailformed grpc address, provided: %s", c.Listen))
 	}
 
-	if c.Proto != "" {
-		if _, err := os.Stat(c.Proto); err != nil {
+	for i := 0; i < len(c.Proto); i++ {
+		if c.Proto[i] == "" {
+			continue
+		}
+
+		if _, err := os.Stat(c.Proto[i]); err != nil {
 			if os.IsNotExist(err) {
-				return errors.E(op, errors.Errorf("proto file '%s' does not exists", c.Proto))
+				return errors.E(op, errors.Errorf("proto file '%s' does not exists", c.Proto[i]))
 			}
 
 			return errors.E(op, err)

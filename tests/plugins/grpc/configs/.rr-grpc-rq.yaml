@@ -13,7 +13,7 @@ logs:
 # GRPC service configuration
 grpc:
   # socket to listen
-  listen: "tcp://localhost:9001"
+  listen: "tcp://127.0.0.1:9001"
 
   # proto root file
   proto: "proto/service/service.proto"

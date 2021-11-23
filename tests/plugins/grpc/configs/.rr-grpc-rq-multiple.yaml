@@ -13,16 +13,12 @@ logs:
 # GRPC service configuration
 grpc:
   # socket to listen
-  listen: "tcp://127.0.0.1:9003"
-
-  tls:
-    key: "configs/test-certs/test.key"
-    cert: "configs/test-certs/test.pem"
-    root_ca: "configs/test-certs/ca.cert"
-    client_auth_type: "require_and_verify_client_cert"
+  listen: "tcp://127.0.0.1:9001"
 
   # proto root file
-  proto: "proto/service/service.proto"
+  proto:
+      - "proto/service/service.proto"
+      - "proto/health/health.proto"
 
   # max send limit (MB)
   max_send_msg_size: 50

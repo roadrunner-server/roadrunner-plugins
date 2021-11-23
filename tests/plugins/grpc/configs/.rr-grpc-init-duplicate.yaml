@@ -12,7 +12,9 @@ grpc:
     listen: "tcp://127.0.0.1:9001"
 
     # proto root file
-    proto: "proto/test/test.proto"
+    proto:
+        - "proto/test/test.proto"
+        - "proto/test/test.proto"
 
     # max send limit (MB)
     max_send_msg_size: 50

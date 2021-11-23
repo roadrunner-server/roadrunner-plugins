@@ -26,15 +26,19 @@ func (p *Plugin) createGRPCserver() (*grpc.Server, error) {
 
 	server := grpc.NewServer(opts...)
 
-	if p.config.Proto != "" {
+	for i := 0; i < len(p.config.Proto); i++ {
+		if p.config.Proto[i] == "" {
+			continue
+		}
+
 		// php proxy services
-		services, err := parser.File(p.config.Proto, path.Dir(p.config.Proto))
+		services, err := parser.File(p.config.Proto[i], path.Dir(p.config.Proto[i]))
 		if err != nil {
 			return nil, err
 		}
 
 		for _, service := range services {
-			px := proxy.NewProxy(fmt.Sprintf("%s.%s", service.Package, service.Name), p.config.Proto, p.gPool, p.mu)
+			px := proxy.NewProxy(fmt.Sprintf("%s.%s", service.Package, service.Name), p.config.Proto[i], p.gPool, p.mu)
 			for _, m := range service.Methods {
 				px.RegisterMethod(m.Name)
 			}
@@ -61,7 +65,7 @@ func (p *Plugin) interceptor(ctx context.Context, req interface{}, info *grpc.Un
 		return nil, err
 	}
 
-	p.log.Error("method called successfully", "method", info.FullMethod, "start", start, "elapsed", time.Since(start))
+	p.log.Debug("method called successfully", "method", info.FullMethod, "start", start, "elapsed", time.Since(start))
 	return resp, nil
 }
 
