@@ -172,3 +172,4 @@ message DetailsMessageForException {
 Test certificates (including `root ca`) located [here](../../tests/plugins/grpc/configs/test-certs).
 
 ## Common issues:
+1. Registering two services with the same name is not allowed. GRPC server will panic after that.
