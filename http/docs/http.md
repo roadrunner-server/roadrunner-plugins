@@ -39,6 +39,9 @@ uploads:
     - .exe
     - .bat
     - .sh
+  allow:
+    - .html
+    - .foo
 headers:
   cors:
     allowed_origin: '*'

@@ -11,8 +11,8 @@ New Relic middleware is a part of the HTTP plugin, thus configuration should be 
 ```yaml
 http:
   address: 127.0.0.1:15389
-  middleware: [ "new_relic" ]
-  new_relic:
+  middleware: [ "new_relic" ] <------- NEW
+  new_relic: <---------- NEW
     app_name: "app"
     license_key: "key"
   pool:
@@ -87,7 +87,7 @@ tcp:
 ```yaml
 http:
   address: 127.0.0.1:15389
-  middleware: [ "http_metrics" ]
+  middleware: [ "http_metrics" ] <------- NEW
   pool:
     num_workers: 10
     allocate_timeout: 60s
@@ -165,13 +165,13 @@ fileserver:
     bytes_range: true
 ```
 
-- ✏️ `on_init` option for the `server` plugin. `on_init` code executed before the regular command and can be used to warm up the application for example. Failed `on_init` command doesn't affect the main command, so, the RR will continue to run.
+- ✏️ `on_init` option for the `server` plugin. `on_init` code executed before the regular command and can be used to warm up the application for example. Failed `on_init` command doesn't affect the main command, so, the RR will continue to run. Thanks (@OO00O0O)
 
 Config:
 ```yaml
 # Application server settings (docs: https://roadrunner.dev/docs/php-worker)
 server:
-  on_init:
+  on_init: <----------- NEW
     # Command to execute before the main server's command
     #
     # This option is required if using on_init
@@ -207,6 +207,37 @@ grpc:
         - "second.proto"
         
 ## ... OTHER REGULAR GRPC OPTIONS ...
+```
+
+---
+
+- ✏️ New `allow` configuration option for the `http.uploads` and multipart requests. The new option allows you to filter upload extensions knowing only allowed. Now, there is no need to have a looong list with all possible extensions to forbid. [FR](https://github.com/spiral/roadrunner-plugins/issues/123) (Thanks @rjd22)  
+`http.uploads.forbid` has a higher priority, so, if you have duplicates in the `http.uploads.allow` and `http.uploads.forbid` the duplicated extension will be forbidden.
+Config:
+
+```yaml
+http:
+  address: 127.0.0.1:18903
+  max_request_size: 1024
+  middleware: ["pluginMiddleware", "pluginMiddleware2"]
+  uploads:
+    forbid: [".php", ".exe", ".bat"]
+    allow: [".html", ".aaa" ] <------------- NEW
+  trusted_subnets:
+    [
+      "10.0.0.0/8",
+      "127.0.0.0/8",
+      "172.16.0.0/12",
+      "192.168.0.0/16",
+      "::1/128",
+      "fc00::/7",
+      "fe80::/10",
+    ]
+  pool:
+    num_workers: 2
+    max_jobs: 0
+    allocate_timeout: 60s
+    destroy_timeout: 60s
 ```
 
 ## 🩹 Fixes:

@@ -1,7 +1,9 @@
 package handler
 
 import (
-	"github.com/spiral/roadrunner-plugins/v2/http/config"
+	"path"
+	"strings"
+
 	"github.com/spiral/roadrunner-plugins/v2/logger"
 
 	"io"
@@ -26,13 +28,12 @@ const (
 
 	// UploadErrorExtension - forbidden file extension.
 	UploadErrorExtension = 8
+
+	pattern = "upload"
 )
 
 // Uploads tree manages uploaded files tree and temporary files.
 type Uploads struct {
-	// associated temp directory and forbidden extensions.
-	cfg *config.Uploads
-
 	// pre processed data tree for Uploads.
 	tree fileTree
 
@@ -40,24 +41,24 @@ type Uploads struct {
 	list []*FileUpload
 }
 
-// MarshalJSON marshal tree tree into JSON.
+// MarshalJSON marshal tree into JSON.
 func (u *Uploads) MarshalJSON() ([]byte, error) {
 	return json.Marshal(u.tree)
 }
 
 // Open moves all uploaded files to temp directory, return error in case of issue with temp directory. File errors
 // will be handled individually.
-func (u *Uploads) Open(log logger.Logger) {
+func (u *Uploads) Open(log logger.Logger, dir string, forbid, allow map[string]struct{}) {
 	var wg sync.WaitGroup
-	for _, f := range u.list {
+	for i := 0; i < len(u.list); i++ {
 		wg.Add(1)
 		go func(f *FileUpload) {
 			defer wg.Done()
-			err := f.Open(u.cfg)
+			err := f.Open(dir, forbid, allow)
 			if err != nil && log != nil {
 				log.Error("error opening the file", "err", err)
 			}
-		}(f)
+		}(u.list[i])
 	}
 
 	wg.Wait()
@@ -113,10 +114,20 @@ func NewUpload(f *multipart.FileHeader) *FileUpload {
 // STACK
 // DEFER FILE CLOSE (2)
 // DEFER TMP CLOSE  (1)
-func (f *FileUpload) Open(cfg *config.Uploads) (err error) {
-	if cfg.Forbids(f.Name) {
+func (f *FileUpload) Open(dir string, forbid, allow map[string]struct{}) error {
+	ext := strings.ToLower(path.Ext(f.Name))
+
+	if _, ok := forbid[ext]; ok {
 		f.Error = UploadErrorExtension
 		return nil
+	}
+
+	// if allow is empty, all extensions (except forbidden) are allowed
+	if len(allow) > 0 {
+		if _, ok := allow[ext]; !ok {
+			f.Error = UploadErrorExtension
+			return nil
+		}
 	}
 
 	file, err := f.header.Open()
@@ -130,7 +141,7 @@ func (f *FileUpload) Open(cfg *config.Uploads) (err error) {
 		err = file.Close()
 	}()
 
-	tmp, err := ioutil.TempFile(cfg.TmpDir(), "upload")
+	tmp, err := ioutil.TempFile(dir, pattern)
 	if err != nil {
 		// most likely cause of this issue is missing tmp dir
 		f.Error = UploadErrorNoTmpDir
@@ -147,7 +158,7 @@ func (f *FileUpload) Open(cfg *config.Uploads) (err error) {
 		f.Error = UploadErrorCantWrite
 	}
 
-	return err
+	return nil
 }
 
 // exists if file exists.
