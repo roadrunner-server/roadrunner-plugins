@@ -519,8 +519,7 @@ func reloadMoveSupport(t *testing.T) {
 		}
 
 		// move file
-		err := os.Rename(filepath.Join(dirs[rDir], "file_"+strconv.Itoa(int(rNum))+ext[rExt]), filepath.Join(dirs[rDir+1], "file_"+strconv.Itoa(int(rNum))+ext[rExt]))
-		assert.NoError(t, err)
+		_ = os.Rename(filepath.Join(dirs[rDir], "file_"+strconv.Itoa(int(rNum))+ext[rExt]), filepath.Join(dirs[rDir+1], "file_"+strconv.Itoa(int(rNum))+ext[rExt]))
 	}
 }
 
