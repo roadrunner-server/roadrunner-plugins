@@ -38,8 +38,8 @@ require (
 	github.com/yookoala/gofast v0.6.0
 	go.etcd.io/bbolt v1.3.6
 	go.uber.org/zap v1.19.1
-	golang.org/x/net v0.0.0-20211118161319-6a13c67c3ce4
-	golang.org/x/sys v0.0.0-20211117180635-dee7805ff2e1
+	golang.org/x/net v0.0.0-20211123203042-d83791d6bcd9
+	golang.org/x/sys v0.0.0-20211123173158-ef496fb156ab
 	google.golang.org/grpc v1.42.0
 	google.golang.org/protobuf v1.27.1
 	gopkg.in/natefinch/lumberjack.v2 v2.0.0
