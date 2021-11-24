@@ -2,45 +2,52 @@ package config
 
 import (
 	"os"
-	"path"
-	"strings"
 )
 
 // Uploads describes file location and controls access to them.
 type Uploads struct {
 	// Dir contains name of directory to control access to.
-	Dir string
+	Dir string `mapstructure:"dir"`
 
 	// Forbid specifies list of file extensions which are forbidden for access.
 	// Example: .php, .exe, .bat, .htaccess and etc.
-	Forbid []string
+	Forbid []string `mapstructure:"forbid"`
+
+	// Allowed files
+	Allow []string `mapstructure:"allow"`
+
+	// internal
+	Forbidden map[string]struct{} `mapstructure:"-"`
+	Allowed   map[string]struct{} `mapstructure:"-"`
 }
 
 // InitDefaults sets missing values to their default values.
 func (cfg *Uploads) InitDefaults() error {
-	cfg.Forbid = []string{".php", ".exe", ".bat"}
-	cfg.Dir = os.TempDir()
+	if len(cfg.Forbid) == 0 {
+		cfg.Forbid = []string{".php", ".exe", ".bat"}
+	}
+
+	if cfg.Dir == "" {
+		cfg.Dir = os.TempDir()
+	}
+
+	cfg.Forbidden = make(map[string]struct{})
+	cfg.Allowed = make(map[string]struct{})
+
+	for i := 0; i < len(cfg.Forbid); i++ {
+		cfg.Forbidden[cfg.Forbid[i]] = struct{}{}
+	}
+
+	for i := 0; i < len(cfg.Allow); i++ {
+		cfg.Allowed[cfg.Allow[i]] = struct{}{}
+	}
+
+	for k := range cfg.Forbidden {
+		delete(cfg.Allowed, k)
+	}
+
+	cfg.Forbid = nil
+	cfg.Allow = nil
+
 	return nil
-}
-
-// TmpDir returns temporary directory.
-func (cfg *Uploads) TmpDir() string {
-	if cfg.Dir != "" {
-		return cfg.Dir
-	}
-
-	return os.TempDir()
-}
-
-// Forbids must return true if file extension is not allowed for the upload.
-func (cfg *Uploads) Forbids(filename string) bool {
-	ext := strings.ToLower(path.Ext(filename))
-
-	for _, v := range cfg.Forbid {
-		if ext == v {
-			return true
-		}
-	}
-
-	return false
 }

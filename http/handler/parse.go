@@ -2,8 +2,6 @@ package handler
 
 import (
 	"net/http"
-
-	"github.com/spiral/roadrunner-plugins/v2/http/config"
 )
 
 // MaxLevel defines maximum tree depth for incoming request data and files.
@@ -62,9 +60,8 @@ func (d dataTree) mount(i []string, v []string) {
 }
 
 // parse incoming dataTree request into JSON (including contentMultipart form dataTree)
-func parseUploads(r *http.Request, cfg *config.Uploads) *Uploads {
+func parseUploads(r *http.Request) *Uploads {
 	u := &Uploads{
-		cfg:  cfg,
 		tree: make(fileTree),
 		list: make([]*FileUpload, 0),
 	}

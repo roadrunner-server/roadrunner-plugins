@@ -16,7 +16,6 @@ import (
 	"time"
 
 	j "github.com/json-iterator/go"
-	"github.com/spiral/roadrunner-plugins/v2/http/config"
 	handler "github.com/spiral/roadrunner-plugins/v2/http/handler"
 	poolImpl "github.com/spiral/roadrunner/v2/pool"
 	"github.com/spiral/roadrunner/v2/transport/pipe"
@@ -40,10 +39,7 @@ func TestHandler_Upload_File(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	h, err := handler.NewHandler(1024, 500, &config.Uploads{
-		Dir:    os.TempDir(),
-		Forbid: []string{},
-	}, nil, pool, &mockLog{}, false)
+	h, err := handler.NewHandler(1024, 500, os.TempDir(), map[string]struct{}{".go":{}}, map[string]struct{}{}, nil, pool, &mockLog{}, false)
 	assert.NoError(t, err)
 
 	hs := &http.Server{Addr: ":9021", Handler: h}
@@ -123,10 +119,8 @@ func TestHandler_Upload_NestedFile(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	h, err := handler.NewHandler(1024, 500, &config.Uploads{
-		Dir:    os.TempDir(),
-		Forbid: []string{},
-	}, nil, pool, &mockLog{}, false)
+	h, err := handler.NewHandler(1024, 500, os.TempDir(), map[string]struct{}{".go":{}}, map[string]struct{}{}, nil, pool, &mockLog{}, false)
+
 	assert.NoError(t, err)
 
 	hs := &http.Server{Addr: ":9022", Handler: h}
@@ -206,10 +200,7 @@ func TestHandler_Upload_File_NoTmpDir(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	h, err := handler.NewHandler(1024, 500, &config.Uploads{
-		Dir:    "-------",
-		Forbid: []string{},
-	}, nil, pool, &mockLog{}, false)
+	h, err := handler.NewHandler(1024, 500, "--------", map[string]struct{}{".go": {}}, map[string]struct{}{}, nil, pool, &mockLog{}, false)
 	assert.NoError(t, err)
 
 	hs := &http.Server{Addr: ":9023", Handler: h}
@@ -289,10 +280,7 @@ func TestHandler_Upload_File_Forbids(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	h, err := handler.NewHandler(1024, 500, &config.Uploads{
-		Dir:    os.TempDir(),
-		Forbid: []string{".go"},
-	}, nil, pool, &mockLog{}, false)
+	h, err := handler.NewHandler(1024, 500, os.TempDir(), map[string]struct{}{}, map[string]struct{}{".go": {}}, nil, pool, &mockLog{}, false)
 	assert.NoError(t, err)
 
 	hs := &http.Server{Addr: ":9024", Handler: h}

@@ -23,11 +23,17 @@ const (
 	ContentLen string = "Content-Length"
 )
 
+type uploads struct {
+	dir    string
+	allow  map[string]struct{}
+	forbid map[string]struct{}
+}
+
 // Handler serves http connections to underlying PHP application using PSR-7 protocol. Context will include request headers,
 // parsed files and query, payload will include parsed form dataTree (if any).
 type Handler struct {
 	maxRequestSize uint64
-	uploads        *config.Uploads
+	uploads        *uploads
 	trusted        config.Cidrs
 	log            logger.Logger
 	pool           pool.Pool
@@ -45,7 +51,7 @@ type Handler struct {
 }
 
 // NewHandler return handle interface implementation
-func NewHandler(maxReqSize uint64, internalHTTPCode uint64, uploads *config.Uploads, trusted config.Cidrs, pool pool.Pool, log logger.Logger, accessLogs bool) (*Handler, error) {
+func NewHandler(maxReqSize uint64, internalHTTPCode uint64, dir string, allow, forbid map[string]struct{}, trusted config.Cidrs, pool pool.Pool, log logger.Logger, accessLogs bool) (*Handler, error) {
 	if pool == nil {
 		return nil, errors.E(errors.Str("pool should be initialized"))
 	}
@@ -53,8 +59,12 @@ func NewHandler(maxReqSize uint64, internalHTTPCode uint64, uploads *config.Uplo
 	eb, id := events.Bus()
 
 	return &Handler{
-		maxRequestSize:   maxReqSize * MB,
-		uploads:          uploads,
+		maxRequestSize: maxReqSize * MB,
+		uploads: &uploads{
+			dir:    dir,
+			allow:  allow,
+			forbid: forbid,
+		},
 		pool:             pool,
 		log:              log,
 		trusted:          trusted,
@@ -118,7 +128,7 @@ func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 	req := h.getReq(r)
 
-	err := request(r, req, h.uploads)
+	err := request(r, req)
 	if err != nil {
 		// if pipe is broken, there is no sense to write the header
 		// in this case we just report about error
@@ -136,7 +146,7 @@ func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 	// proxy IP resolution
 	h.resolveIP(req)
-	req.Open(h.log)
+	req.Open(h.log, h.uploads.dir, h.uploads.forbid, h.uploads.allow)
 	// get payload from the pool
 	pld := h.getPld()
 

@@ -10,7 +10,6 @@ import (
 
 	j "github.com/json-iterator/go"
 	"github.com/spiral/errors"
-	"github.com/spiral/roadrunner-plugins/v2/http/config"
 	"github.com/spiral/roadrunner-plugins/v2/logger"
 	"github.com/spiral/roadrunner/v2/payload"
 )
@@ -70,7 +69,7 @@ func FetchIP(pair string) string {
 	return addr
 }
 
-func request(r *http.Request, req *Request, cfg *config.Uploads) error {
+func request(r *http.Request, req *Request) error {
 	for _, c := range r.Cookies() {
 		if v, err := url.QueryUnescape(c.Value); err == nil {
 			req.Cookies[c.Name] = v
@@ -91,7 +90,7 @@ func request(r *http.Request, req *Request, cfg *config.Uploads) error {
 			return err
 		}
 
-		req.Uploads = parseUploads(r, cfg)
+		req.Uploads = parseUploads(r)
 		fallthrough
 	case contentFormData:
 		if err := r.ParseForm(); err != nil {
@@ -106,12 +105,12 @@ func request(r *http.Request, req *Request, cfg *config.Uploads) error {
 }
 
 // Open moves all uploaded files to temporary directory so it can be given to php later.
-func (r *Request) Open(log logger.Logger) {
+func (r *Request) Open(log logger.Logger, dir string, forbid, allow map[string]struct{}) {
 	if r.Uploads == nil {
 		return
 	}
 
-	r.Uploads.Open(log)
+	r.Uploads.Open(log, dir, forbid, allow)
 }
 
 // Close clears all temp file uploads
