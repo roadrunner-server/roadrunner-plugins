@@ -347,6 +347,86 @@ func TestHandler_Upload_File_Forbids(t *testing.T) {
 	assert.Equal(t, `{"upload":`+fs+`}`, string(b))
 }
 
+func TestHandler_Upload_File_NotAllowed(t *testing.T) {
+	pool, err := poolImpl.Initialize(context.Background(),
+		func() *exec.Cmd { return exec.Command("php", "../../http/client.php", "upload", "pipes") },
+		pipe.NewPipeFactory(),
+		&poolImpl.Config{
+			NumWorkers:      1,
+			AllocateTimeout: time.Second * 1000,
+			DestroyTimeout:  time.Second * 1000,
+		})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	h, err := handler.NewHandler(1024, 500, os.TempDir(), map[string]struct{}{".php": {}}, map[string]struct{}{}, nil, pool, &mockLog{}, false)
+	assert.NoError(t, err)
+
+	hs := &http.Server{Addr: ":9024", Handler: h}
+	defer func() {
+		errS := hs.Shutdown(context.Background())
+		if errS != nil {
+			t.Errorf("error during the shutdown: error %v", err)
+		}
+	}()
+
+	go func() {
+		err = hs.ListenAndServe()
+		if err != nil && err != http.ErrServerClosed {
+			t.Errorf("error listening the interface: error %v", err)
+		}
+	}()
+	time.Sleep(time.Millisecond * 10)
+
+	var mb bytes.Buffer
+	w := multipart.NewWriter(&mb)
+
+	f := mustOpen(testFile)
+	defer func() {
+		errC := hs.Close()
+		if errC != nil {
+			t.Errorf("failed to close a file: error %v", errC)
+		}
+	}()
+	fw, err := w.CreateFormFile("upload", f.Name())
+	assert.NotNil(t, fw)
+	assert.NoError(t, err)
+	_, err = io.Copy(fw, f)
+	if err != nil {
+		t.Errorf("error copying the file: error %v", err)
+	}
+
+	err = w.Close()
+	if err != nil {
+		t.Errorf("error closing the file: error %v", err)
+	}
+
+	req, err := http.NewRequest("POST", "http://127.0.0.1"+hs.Addr, &mb)
+	assert.NoError(t, err)
+
+	req.Header.Set("Content-Type", w.FormDataContentType())
+
+	r, err := http.DefaultClient.Do(req)
+	assert.NoError(t, err)
+	defer func() {
+		errC := r.Body.Close()
+		if errC != nil {
+			t.Errorf("error closing the Body: error %v", errC)
+		}
+	}()
+
+	b, err := ioutil.ReadAll(r.Body)
+	assert.NoError(t, err)
+
+	assert.NoError(t, err)
+	assert.Equal(t, 200, r.StatusCode)
+
+	fs := fileString(testFile, 8, "application/octet-stream")
+
+	assert.Equal(t, `{"upload":`+fs+`}`, string(b))
+}
+
 func Test_FileExists(t *testing.T) {
 	assert.True(t, exists(testFile))
 	assert.False(t, exists("uploads_test."))
