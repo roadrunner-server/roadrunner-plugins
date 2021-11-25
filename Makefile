@@ -14,6 +14,7 @@ test_coverage:
 	go test -v -race -cover -tags=debug -coverpkg=./... -coverprofile=./coverage-ci/struct_jobs.out -covermode=atomic ./jobs/job
 	go test -v -race -cover -tags=debug -coverpkg=./... -coverprofile=./coverage-ci/pipeline_jobs.out -covermode=atomic ./jobs/pipeline
 	go test -v -race -cover -tags=debug -coverpkg=./... -coverprofile=./coverage-ci/new_relic_mdw.out -covermode=atomic ./http/middleware/new_relic
+	go test -v -race -cover -tags=debug -coverpkg=./... -coverprofile=./coverage-ci/service.out -covermode=atomic ./tests/plugins/service
 	go test -timeout 20m -v -race -cover -tags=debug -coverpkg=./... -coverprofile=./coverage-ci/jobs_core.out -covermode=atomic ./tests/plugins/jobs
 	go test -v -race -cover -tags=debug -coverpkg=./... -coverprofile=./coverage-ci/kv_plugin.out -covermode=atomic ./tests/plugins/kv
 	go test -v -race -cover -tags=debug -coverpkg=./... -coverprofile=./coverage-ci/tcp_plugin.out -covermode=atomic ./tests/plugins/tcp
@@ -26,7 +27,6 @@ test_coverage:
 	go test -v -race -cover -tags=debug -coverpkg=./... -coverprofile=./coverage-ci/grpc_plugin.out -covermode=atomic ./tests/plugins/grpc
 	go test -v -race -cover -tags=debug -coverpkg=./... -coverprofile=./coverage-ci/informer.out -covermode=atomic ./tests/plugins/informer
 	go test -v -race -cover -tags=debug -coverpkg=./... -coverprofile=./coverage-ci/server.out -covermode=atomic ./tests/plugins/server
-	go test -v -race -cover -tags=debug -coverpkg=./... -coverprofile=./coverage-ci/service.out -covermode=atomic ./tests/plugins/service
 	go test -v -race -cover -tags=debug -coverpkg=./... -coverprofile=./coverage-ci/status.out -covermode=atomic ./tests/plugins/status
 	go test -v -race -cover -tags=debug -coverpkg=./... -coverprofile=./coverage-ci/config.out -covermode=atomic ./tests/plugins/config
 	go test -v -race -cover -tags=debug -coverpkg=./... -coverprofile=./coverage-ci/gzip.out -covermode=atomic ./tests/plugins/gzip
