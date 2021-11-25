@@ -53,7 +53,6 @@ func TestReloadInit(t *testing.T) {
 	mockLogger.EXPECT().Debug("file was added to watcher", "path", gomock.Any(), "name", "file.txt", "size", gomock.Any()).MinTimes(1)
 	mockLogger.EXPECT().Info("HTTP plugin got restart request. Restarting...").MinTimes(1)
 	mockLogger.EXPECT().Info("HTTP workers Pool successfully restarted").MinTimes(1)
-	mockLogger.EXPECT().Info("HTTP handler listeners successfully re-added").MinTimes(1)
 	mockLogger.EXPECT().Info("HTTP plugin successfully restarted").MinTimes(1)
 	mockLogger.EXPECT().Error(gomock.Any(), gomock.Any(), gomock.Any()).AnyTimes() // placeholder for the workerlogerror
 	mockLogger.EXPECT().Debug("http server is running", "address", gomock.Any()).AnyTimes()
@@ -151,7 +150,6 @@ func TestReloadHugeNumberOfFiles(t *testing.T) {
 	mockLogger.EXPECT().Debug("file was added to watcher", "path", gomock.Any(), "name", gomock.Any(), "size", gomock.Any()).MinTimes(1)
 	mockLogger.EXPECT().Info("HTTP plugin got restart request. Restarting...").MinTimes(1)
 	mockLogger.EXPECT().Info("HTTP workers Pool successfully restarted").MinTimes(1)
-	mockLogger.EXPECT().Info("HTTP handler listeners successfully re-added").MinTimes(1)
 	mockLogger.EXPECT().Info("HTTP plugin successfully restarted").MinTimes(1)
 	mockLogger.EXPECT().Error(gomock.Any(), gomock.Any(), gomock.Any()).AnyTimes() // placeholder for the workerlogerror
 	mockLogger.EXPECT().Debug("http server is running", "address", gomock.Any()).AnyTimes()
@@ -262,7 +260,6 @@ func TestReloadFilterFileExt(t *testing.T) {
 	mockLogger.EXPECT().Debug("file added to the list of removed files", "path", gomock.Any(), "name", gomock.Any(), "size", gomock.Any()).AnyTimes()
 	mockLogger.EXPECT().Info("HTTP plugin got restart request. Restarting...").MinTimes(1)
 	mockLogger.EXPECT().Info("HTTP workers Pool successfully restarted").MinTimes(1)
-	mockLogger.EXPECT().Info("HTTP handler listeners successfully re-added").MinTimes(1)
 	mockLogger.EXPECT().Info("HTTP plugin successfully restarted").MinTimes(1)
 	mockLogger.EXPECT().Error(gomock.Any(), gomock.Any(), gomock.Any()).AnyTimes() // placeholder for the workerlogerror
 	mockLogger.EXPECT().Debug("http server is running", "address", gomock.Any()).AnyTimes()
@@ -395,7 +392,6 @@ func TestReloadCopy100(t *testing.T) {
 	mockLogger.EXPECT().Debug("file was updated", "path", gomock.Any(), "name", gomock.Any(), "size", gomock.Any()).MinTimes(1)
 	mockLogger.EXPECT().Info("HTTP plugin got restart request. Restarting...").AnyTimes()
 	mockLogger.EXPECT().Info("HTTP workers Pool successfully restarted").MinTimes(1)
-	mockLogger.EXPECT().Info("HTTP handler listeners successfully re-added").MinTimes(1)
 	mockLogger.EXPECT().Info("HTTP plugin successfully restarted").MinTimes(1)
 	mockLogger.EXPECT().Error(gomock.Any(), gomock.Any(), gomock.Any()).AnyTimes() // placeholder for the workerlogerror
 	mockLogger.EXPECT().Debug("http server is running", "address", gomock.Any()).AnyTimes()
@@ -684,7 +680,6 @@ func TestReloadNoRecursion(t *testing.T) {
 	mockLogger.EXPECT().Debug("file added to the list of removed files", "path", gomock.Any(), "name", gomock.Any(), "size", gomock.Any()).MinTimes(1)
 	mockLogger.EXPECT().Info("HTTP plugin got restart request. Restarting...").MinTimes(1)
 	mockLogger.EXPECT().Info("HTTP workers Pool successfully restarted").MinTimes(1)
-	mockLogger.EXPECT().Info("HTTP handler listeners successfully re-added").MinTimes(1)
 	mockLogger.EXPECT().Info("HTTP plugin successfully restarted").MinTimes(1)
 	mockLogger.EXPECT().Error(gomock.Any(), gomock.Any(), gomock.Any()).AnyTimes() // placeholder for the workerlogerror
 	mockLogger.EXPECT().Debug("http server is running", "address", gomock.Any()).AnyTimes()

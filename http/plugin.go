@@ -384,8 +384,6 @@ func (p *Plugin) Reset() error {
 		return errors.E(op, err)
 	}
 
-	p.log.Info("HTTP handler listeners successfully re-added")
-
 	p.log.Info("HTTP plugin successfully restarted")
 	return nil
 }
