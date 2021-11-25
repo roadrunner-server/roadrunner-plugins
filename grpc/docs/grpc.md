@@ -2,6 +2,12 @@
 
 [Roadrunner GRPC](https://github.com/spiral/roadrunner-grpc)
 
+### Compiling proto sample:
+```
+protoc --plugin=protoc-gen-php-grpc --php-grpc_out=<OUTPUT DIRECTORY> simple.proto
+```
+
+
 ## Configuration
 
 ```yaml
