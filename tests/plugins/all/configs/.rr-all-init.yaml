@@ -2,7 +2,7 @@ rpc:
   listen: tcp://127.0.0.1:6001
 
 server:
-  command: "php ../../psr-worker.php"
+  command: "php ../../jobs_ok.php"
   relay: pipes
   relay_timeout: 60s
 
@@ -12,25 +12,6 @@ logs:
   encoding: console
   output: stderr
   err_output: stderr
-  channels:
-    http:
-      mode: development
-      level: panic
-      encoding: console
-      output: stdout
-      err_output: stderr
-    server:
-      mode: production
-      level: info
-      encoding: json
-      output: stdout
-      err_output: stdout
-    rpc:
-      mode: raw
-      level: debug
-      encoding: console
-      output: stderr
-      err_output: stdout
 
 kv:
   boltdb-south:
@@ -54,29 +35,10 @@ kv:
     config:
       interval: 1
 
-service:
-  some_service_1:
-    command: php ../../plugins/service/test_files/loop.php
-    process_num: 1
-    exec_timeout: 0
-    remain_after_exit: true
-    restart_sec: 1
-
 http:
   address: 127.0.0.1:47474
   max_request_size: 256
   middleware: [ "headers", "gzip", "sendfile" ]
-  trusted_subnets:
-    [
-        "10.0.0.0/8",
-        "127.0.0.0/8",
-        "172.16.0.0/12",
-        "192.168.0.0/16",
-        "::1/128",
-        "fc00::/7",
-        "fe80::/10",
-    ]
-
   uploads:
     dir: "/tmp"
     forbid: [ ".php", ".exe", ".bat", ".sh" ]
@@ -113,7 +75,7 @@ http:
     destroy_timeout: 60s
     supervisor:
       watch_tick: 1s
-      ttl: 0s
+      ttl: 60s
       idle_ttl: 10s
       max_worker_memory: 128
       exec_ttl: 60s
@@ -271,6 +233,19 @@ grpc:
     max_jobs: 0
     allocate_timeout: 60s
     destroy_timeout: 60
+
+tcp:
+  servers:
+    server1:
+      addr: tcp://127.0.0.1:7777
+      delimiter: "\r\n"
+    server2:
+      addr: tcp://127.0.0.1:8889
+      read_buf_size: 10
+    server3:
+      addr: tcp://127.0.0.1:8810
+      delimiter: "\r\n"
+      read_buf_size: 1
 
 endure:
   grace_period: 120s

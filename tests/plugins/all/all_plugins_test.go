@@ -18,6 +18,7 @@ import (
 	httpPlugin "github.com/spiral/roadrunner-plugins/v2/http"
 	"github.com/spiral/roadrunner-plugins/v2/http/middleware/gzip"
 	"github.com/spiral/roadrunner-plugins/v2/http/middleware/headers"
+	"github.com/spiral/roadrunner-plugins/v2/http/middleware/send"
 	"github.com/spiral/roadrunner-plugins/v2/http/middleware/static"
 	"github.com/spiral/roadrunner-plugins/v2/informer"
 	"github.com/spiral/roadrunner-plugins/v2/jobs"
@@ -34,13 +35,14 @@ import (
 	"github.com/spiral/roadrunner-plugins/v2/service"
 	"github.com/spiral/roadrunner-plugins/v2/sqs"
 	"github.com/spiral/roadrunner-plugins/v2/status"
+	"github.com/spiral/roadrunner-plugins/v2/tcp"
 	"github.com/spiral/roadrunner-plugins/v2/websockets"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
 func TestAllPluginsInit(t *testing.T) {
-	cont, err := endure.NewContainer(nil, endure.SetLogLevel(endure.DebugLevel), endure.GracefulShutdownTimeout(time.Second*30))
+	cont, err := endure.NewContainer(nil, endure.SetLogLevel(endure.ErrorLevel), endure.GracefulShutdownTimeout(time.Second*30))
 	assert.NoError(t, err)
 
 	cfg := &config.Viper{
@@ -55,11 +57,13 @@ func TestAllPluginsInit(t *testing.T) {
 		&httpPlugin.Plugin{},
 		&reload.Plugin{},
 		&informer.Plugin{},
+		&send.Plugin{},
 		&resetter.Plugin{},
 		&rpcPlugin.Plugin{},
 		&server.Plugin{},
 		&service.Plugin{},
 		&jobs.Plugin{},
+		&tcp.Plugin{},
 		&amqp.Plugin{},
 		&sqs.Plugin{},
 		&beanstalk.Plugin{},
@@ -124,7 +128,7 @@ func TestAllPluginsInit(t *testing.T) {
 		}
 	}()
 
-	time.Sleep(time.Second * 5)
+	time.Sleep(time.Second * 500)
 
 	stopCh <- struct{}{}
 
