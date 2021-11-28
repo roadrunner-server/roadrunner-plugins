@@ -8,7 +8,7 @@ server:
 
 logs:
   mode: development
-  level: debug
+  level: info
   encoding: console
   output: stderr
   err_output: stderr

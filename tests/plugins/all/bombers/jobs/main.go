@@ -1,7 +1,6 @@
 package main
 
 import (
-	"crypto/rand"
 	"log"
 	rand2 "math/rand"
 	"net"
@@ -9,12 +8,10 @@ import (
 	"os"
 	"path"
 	"sync"
-	"time"
 
 	"github.com/google/uuid"
 	goridgeRpc "github.com/spiral/goridge/v3/pkg/rpc"
 	jobsv1beta "github.com/spiral/roadrunner-plugins/v2/api/proto/jobs/v1beta"
-	"github.com/spiral/roadrunner/v2/utils"
 )
 
 const (
@@ -28,48 +25,50 @@ const (
 
 func main() {
 	wg := &sync.WaitGroup{}
-	wg.Add(3)
+	wg.Add(33)
 
-	//go func() {
-	//	conn, err := net.Dial("tcp", "127.0.0.1:6001")
-	//	if err != nil {
-	//		log.Fatal(err)
-	//	}
-	//	client := rpc.NewClientWithCodec(goridgeRpc.NewClientCodec(conn))
-	//	for i := 0; i < 10; i++ {
-	//		go func() {
-	//			for j := 0; j < 1000; j++ {
-	//				n := uuid.NewString()
-	//				declareAMQPPipe(client, n)
-	//				startPipelines(client, n)
-	//				push100(client, n)
-	//				pausePipelines(client, n)
-	//				destroyPipelines(client, n)
-	//			}
-	//			wg.Done()
-	//		}()
-	//	}
-	//}()
-	//go func() {
-	//	conn, err := net.Dial("tcp", "127.0.0.1:6001")
-	//	if err != nil {
-	//		log.Fatal(err)
-	//	}
-	//	client := rpc.NewClientWithCodec(goridgeRpc.NewClientCodec(conn))
-	//	for i := 0; i < 5; i++ {
-	//		go func() {
-	//			for j := 0; j < 1000; j++ {
-	//				n := uuid.NewString()
-	//				declareBeanstalkPipe(client, n)
-	//				startPipelines(client, n)
-	//				push100(client, n)
-	//				pausePipelines(client, n)
-	//				destroyPipelines(client, n)
-	//			}
-	//			wg.Done()
-	//		}()
-	//	}
-	//}()
+	go func() {
+		conn, err := net.Dial("tcp", "127.0.0.1:6001")
+		if err != nil {
+			log.Fatal(err)
+		}
+		client := rpc.NewClientWithCodec(goridgeRpc.NewClientCodec(conn))
+		for i := 0; i < 10; i++ {
+			go func() {
+				for j := 0; j < 1000; j++ {
+					n := uuid.NewString()
+					declareAMQPPipe(client, n)
+					startPipelines(client, n)
+					push100(client, n)
+					pausePipelines(client, n)
+					destroyPipelines(client, n)
+				}
+				wg.Done()
+			}()
+		}
+	}()
+
+	go func() {
+		conn, err := net.Dial("tcp", "127.0.0.1:6001")
+		if err != nil {
+			log.Fatal(err)
+		}
+		client := rpc.NewClientWithCodec(goridgeRpc.NewClientCodec(conn))
+		for i := 0; i < 5; i++ {
+			go func() {
+				for j := 0; j < 1000; j++ {
+					n := uuid.NewString()
+					declareBeanstalkPipe(client, n)
+					startPipelines(client, n)
+					push100(client, n)
+					pausePipelines(client, n)
+					destroyPipelines(client, n)
+				}
+				wg.Done()
+			}()
+		}
+	}()
+
 	go func() {
 		conn, err := net.Dial("tcp", "127.0.0.1:6001")
 		if err != nil {
@@ -83,9 +82,7 @@ func main() {
 					declareBoltDBPipe(client, n, n)
 					startPipelines(client, n)
 					push100(client, n)
-					time.Sleep(time.Second)
 					pausePipelines(client, n)
-					time.Sleep(time.Second)
 					destroyPipelines(client, n)
 					cur, err := os.Getwd()
 					if err != nil {
@@ -97,46 +94,48 @@ func main() {
 			}()
 		}
 	}()
-	//go func() {
-	//	conn, err := net.Dial("tcp", "127.0.0.1:6001")
-	//	if err != nil {
-	//		log.Fatal(err)
-	//	}
-	//	client := rpc.NewClientWithCodec(goridgeRpc.NewClientCodec(conn))
-	//	for i := 0; i < 10; i++ {
-	//		go func() {
-	//			for j := 0; j < 1000; j++ {
-	//				n := uuid.NewString()
-	//				declareMemoryPipe(client, n)
-	//				startPipelines(client, n)
-	//				push100(client, n)
-	//				pausePipelines(client, n)
-	//				destroyPipelines(client, n)
-	//			}
-	//			wg.Done()
-	//		}()
-	//	}
-	//}()
-	//go func() {
-	//	conn, err := net.Dial("tcp", "127.0.0.1:6001")
-	//	if err != nil {
-	//		log.Fatal(err)
-	//	}
-	//	client := rpc.NewClientWithCodec(goridgeRpc.NewClientCodec(conn))
-	//	for i := 0; i < 5; i++ {
-	//		go func() {
-	//			for j := 0; j < 1000; j++ {
-	//				n := uuid.NewString()
-	//				declareSQSPipe(client, n)
-	//				startPipelines(client, n)
-	//				push100(client, n)
-	//				pausePipelines(client, n)
-	//				destroyPipelines(client, n)
-	//			}
-	//			wg.Done()
-	//		}()
-	//	}
-	//}()
+
+	go func() {
+		conn, err := net.Dial("tcp", "127.0.0.1:6001")
+		if err != nil {
+			log.Fatal(err)
+		}
+		client := rpc.NewClientWithCodec(goridgeRpc.NewClientCodec(conn))
+		for i := 0; i < 10; i++ {
+			go func() {
+				for j := 0; j < 1000; j++ {
+					n := uuid.NewString()
+					declareMemoryPipe(client, n)
+					startPipelines(client, n)
+					push100(client, n)
+					pausePipelines(client, n)
+					destroyPipelines(client, n)
+				}
+				wg.Done()
+			}()
+		}
+	}()
+
+	go func() {
+		conn, err := net.Dial("tcp", "127.0.0.1:6001")
+		if err != nil {
+			log.Fatal(err)
+		}
+		client := rpc.NewClientWithCodec(goridgeRpc.NewClientCodec(conn))
+		for i := 0; i < 5; i++ {
+			go func() {
+				for j := 0; j < 1000; j++ {
+					n := uuid.NewString()
+					declareSQSPipe(client, n)
+					startPipelines(client, n)
+					push100(client, n)
+					pausePipelines(client, n)
+					destroyPipelines(client, n)
+				}
+				wg.Done()
+			}()
+		}
+	}()
 
 	wg.Wait()
 
@@ -154,16 +153,11 @@ func main() {
 
 func push100(client *rpc.Client, pipe string) {
 	for j := 0; j < 100; j++ {
-		tmp := make([]byte, 1024)
-		_, err := rand.Read(tmp)
-		if err != nil {
-			panic(err)
-		}
 		payloads := &jobsv1beta.PushRequest{
 			Job: &jobsv1beta.Job{
 				Job:     "Some/Super/PHP/Class",
 				Id:      uuid.NewString(),
-				Payload: utils.AsString(tmp),
+				Payload: "Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since the 1500s, when an unknown printer took a galley of type and scrambled it to make a type specimen book. It has survived not only five centuries, but also the leap into electronic typesetting, remaining essentially unchanged. It was popularised in the 1960s with the release of Letraset sheets containing Lorem Ipsum passages, and more recently with desktop publishing software like Aldus PageMaker including versions of Lorem Ipsum.",
 				Headers: map[string]*jobsv1beta.HeaderValue{"test": {Value: []string{"hello"}}},
 				Options: &jobsv1beta.Options{
 					Priority: int64(rand2.Intn(100) + 1),
@@ -173,9 +167,9 @@ func push100(client *rpc.Client, pipe string) {
 		}
 
 		resp := jobsv1beta.Empty{}
-		err = client.Call(push, payloads, &resp)
+		err := client.Call(push, payloads, &resp)
 		if err != nil {
-			log.Fatal(err)
+			log.Println(err)
 		}
 	}
 }
@@ -190,7 +184,7 @@ func startPipelines(client *rpc.Client, pipes ...string) {
 	er := &jobsv1beta.Empty{}
 	err := client.Call(resume, pipe, er)
 	if err != nil {
-		log.Fatal(err)
+		log.Println(err)
 	}
 }
 
@@ -204,7 +198,7 @@ func pausePipelines(client *rpc.Client, pipes ...string) {
 	er := &jobsv1beta.Empty{}
 	err := client.Call(pause, pipe, er)
 	if err != nil {
-		log.Fatal(err)
+		log.Println(err)
 	}
 }
 
@@ -218,7 +212,7 @@ func destroyPipelines(client *rpc.Client, pipes ...string) {
 	er := &jobsv1beta.Empty{}
 	err := client.Call(destroy, pipe, er)
 	if err != nil {
-		log.Fatal(err)
+		log.Println(err)
 	}
 }
 
@@ -227,7 +221,7 @@ func list(client *rpc.Client) []string {
 	er := &jobsv1beta.Empty{}
 	err := client.Call("jobs.List", er, resp)
 	if err != nil {
-		log.Fatal(err)
+		log.Println(err)
 	}
 
 	l := make([]string, len(resp.GetPipelines()))
@@ -253,7 +247,7 @@ func declareSQSPipe(client *rpc.Client, n string) {
 	er := &jobsv1beta.Empty{}
 	err := client.Call(declare, pipe, er)
 	if err != nil {
-		log.Fatal(err)
+		log.Println(err)
 	}
 }
 
@@ -275,7 +269,7 @@ func declareAMQPPipe(client *rpc.Client, p string) {
 	er := &jobsv1beta.Empty{}
 	err := client.Call(declare, pipe, er)
 	if err != nil {
-		log.Fatal(err)
+		log.Println(err)
 	}
 }
 
@@ -292,7 +286,7 @@ func declareBeanstalkPipe(client *rpc.Client, n string) {
 	er := &jobsv1beta.Empty{}
 	err := client.Call(declare, pipe, er)
 	if err != nil {
-		log.Fatal(err)
+		log.Println(err)
 	}
 }
 
@@ -308,7 +302,7 @@ func declareBoltDBPipe(client *rpc.Client, n, file string) {
 	er := &jobsv1beta.Empty{}
 	err := client.Call(declare, pipe, er)
 	if err != nil {
-		log.Fatal(err)
+		log.Println(err)
 	}
 }
 
@@ -323,6 +317,6 @@ func declareMemoryPipe(client *rpc.Client, p string) {
 	er := &jobsv1beta.Empty{}
 	err := client.Call(declare, pipe, er)
 	if err != nil {
-		log.Fatal(err)
+		log.Println(err)
 	}
 }

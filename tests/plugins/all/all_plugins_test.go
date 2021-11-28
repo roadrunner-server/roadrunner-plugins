@@ -128,7 +128,7 @@ func TestAllPluginsInit(t *testing.T) {
 		}
 	}()
 
-	time.Sleep(time.Second * 500)
+	time.Sleep(time.Second * 5)
 
 	stopCh <- struct{}{}
 
