@@ -14,7 +14,7 @@ import (
 	"github.com/spiral/roadrunner/v2/payload"
 )
 
-var json = j.ConfigCompatibleWithStandardLibrary
+var json = j.ConfigFastest
 
 const (
 	defaultMaxMemory = 32 << 20 // 32 MB

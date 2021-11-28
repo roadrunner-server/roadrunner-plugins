@@ -1,7 +1,9 @@
 package main
 
 import (
+	"crypto/rand"
 	"log"
+	rand2 "math/rand"
 	"net"
 	"net/rpc"
 	"os"
@@ -12,6 +14,7 @@ import (
 	"github.com/google/uuid"
 	goridgeRpc "github.com/spiral/goridge/v3/pkg/rpc"
 	jobsv1beta "github.com/spiral/roadrunner-plugins/v2/api/proto/jobs/v1beta"
+	"github.com/spiral/roadrunner/v2/utils"
 )
 
 const (
@@ -151,21 +154,26 @@ func main() {
 
 func push100(client *rpc.Client, pipe string) {
 	for j := 0; j < 100; j++ {
+		tmp := make([]byte, 1024)
+		_, err := rand.Read(tmp)
+		if err != nil {
+			panic(err)
+		}
 		payloads := &jobsv1beta.PushRequest{
 			Job: &jobsv1beta.Job{
-				Job:     "fooooooo",
+				Job:     "Some/Super/PHP/Class",
 				Id:      uuid.NewString(),
-				Payload: "test2dsafjsldfj;lasjdfljasldfjalsdjfasdjfl;asjd;fljasl;dfjla;skjdfl;asjdl;f",
+				Payload: utils.AsString(tmp),
 				Headers: map[string]*jobsv1beta.HeaderValue{"test": {Value: []string{"hello"}}},
 				Options: &jobsv1beta.Options{
-					Priority: 1,
+					Priority: int64(rand2.Intn(100) + 1),
 					Pipeline: pipe,
 				},
 			},
 		}
 
 		resp := jobsv1beta.Empty{}
-		err := client.Call(push, payloads, &resp)
+		err = client.Call(push, payloads, &resp)
 		if err != nil {
 			log.Fatal(err)
 		}
