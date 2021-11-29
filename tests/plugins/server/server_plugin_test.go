@@ -20,9 +20,8 @@ import (
 
 func TestAppPipes(t *testing.T) {
 	container, err := endure.NewContainer(nil, endure.RetryOnFail(true), endure.SetLogLevel(endure.ErrorLevel))
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
+
 	// config plugin
 	vp := &config.Viper{}
 	vp.Path = "configs/.rr.yaml"
@@ -34,19 +33,13 @@ func TestAppPipes(t *testing.T) {
 		&Foo{},
 		&logger.ZapLogger{},
 	)
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
 
 	err = container.Init()
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
 
 	errCh, err := container.Serve()
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
 
 	// stop by CTRL+C
 	c := make(chan os.Signal, 1)
@@ -81,42 +74,29 @@ func TestAppPipes(t *testing.T) {
 
 func TestAppSockets(t *testing.T) {
 	container, err := endure.NewContainer(nil, endure.RetryOnFail(true), endure.SetLogLevel(endure.ErrorLevel))
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
+
 	// config plugin
 	vp := &config.Viper{}
 	vp.Path = "configs/.rr-sockets.yaml"
 	vp.Prefix = "rr"
 	err = container.Register(vp)
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
 
 	err = container.Register(&server.Plugin{})
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
 
 	err = container.Register(&Foo2{})
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
 
 	err = container.Register(&logger.ZapLogger{})
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
 
 	err = container.Init()
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
 
 	errCh, err := container.Serve()
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
 
 	// stop by CTRL+C
 	c := make(chan os.Signal, 1)
@@ -147,17 +127,14 @@ func TestAppSockets(t *testing.T) {
 
 func TestAppTCPOnInit(t *testing.T) {
 	container, err := endure.NewContainer(nil, endure.RetryOnFail(true), endure.SetLogLevel(endure.ErrorLevel))
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
+
 	// config plugin
 	vp := &config.Viper{}
 	vp.Path = "configs/.rr-tcp-on-init.yaml"
 	vp.Prefix = "rr"
 	err = container.Register(vp)
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
 
 	controller := gomock.NewController(t)
 	mockLogger := mocks.NewMockLogger(controller)
@@ -178,12 +155,10 @@ func TestAppTCPOnInit(t *testing.T) {
 	)
 
 	err = container.Init()
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
 
 	ch, err := container.Serve()
-	assert.NoError(t, err)
+	require.NoError(t, err)
 
 	sig := make(chan os.Signal, 1)
 	signal.Notify(sig, os.Interrupt, syscall.SIGINT, syscall.SIGTERM)
@@ -236,9 +211,7 @@ func TestAppSocketsOnInit(t *testing.T) {
 	vp.Path = "configs/.rr-sockets-on-init.yaml"
 	vp.Prefix = "rr"
 	err = container.Register(vp)
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
 
 	controller := gomock.NewController(t)
 	mockLogger := mocks.NewMockLogger(controller)
@@ -259,12 +232,10 @@ func TestAppSocketsOnInit(t *testing.T) {
 	)
 
 	err = container.Init()
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
 
 	ch, err := container.Serve()
-	assert.NoError(t, err)
+	require.NoError(t, err)
 
 	sig := make(chan os.Signal, 1)
 	signal.Notify(sig, os.Interrupt, syscall.SIGINT, syscall.SIGTERM)
@@ -317,9 +288,7 @@ func TestAppSocketsOnInitFastClose(t *testing.T) {
 	vp.Path = "configs/.rr-sockets-on-init-fast-close.yaml"
 	vp.Prefix = "rr"
 	err = container.Register(vp)
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
 
 	controller := gomock.NewController(t)
 	mockLogger := mocks.NewMockLogger(controller)
@@ -335,12 +304,10 @@ func TestAppSocketsOnInitFastClose(t *testing.T) {
 	)
 
 	err = container.Init()
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
 
 	ch, err := container.Serve()
-	assert.NoError(t, err)
+	require.NoError(t, err)
 
 	sig := make(chan os.Signal, 1)
 	signal.Notify(sig, os.Interrupt, syscall.SIGINT, syscall.SIGTERM)
@@ -385,42 +352,29 @@ func TestAppSocketsOnInitFastClose(t *testing.T) {
 
 func TestAppTCP(t *testing.T) {
 	container, err := endure.NewContainer(nil, endure.RetryOnFail(true), endure.SetLogLevel(endure.ErrorLevel))
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
+
 	// config plugin
 	vp := &config.Viper{}
 	vp.Path = "configs/.rr-tcp.yaml"
 	vp.Prefix = "rr"
 	err = container.Register(vp)
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
 
 	err = container.Register(&server.Plugin{})
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
 
 	err = container.Register(&Foo3{})
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
 
 	err = container.Register(&logger.ZapLogger{})
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
 
 	err = container.Init()
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
 
 	errCh, err := container.Serve()
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
 
 	// stop by CTRL+C
 	c := make(chan os.Signal, 1)
@@ -451,184 +405,132 @@ func TestAppTCP(t *testing.T) {
 
 func TestAppWrongConfig(t *testing.T) {
 	container, err := endure.NewContainer(nil, endure.RetryOnFail(true), endure.SetLogLevel(endure.ErrorLevel))
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
 	// config plugin
 	vp := &config.Viper{}
 	vp.Path = "configs/.rrrrrrrrrr.yaml"
 	vp.Prefix = "rr"
 	err = container.Register(vp)
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
 
 	err = container.Register(&server.Plugin{})
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
 
 	err = container.Register(&Foo3{})
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
 
 	err = container.Register(&logger.ZapLogger{})
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
 
-	assert.Error(t, container.Init())
+	require.Error(t, container.Init())
 }
 
 func TestAppWrongRelay(t *testing.T) {
 	container, err := endure.NewContainer(nil, endure.RetryOnFail(true), endure.SetLogLevel(endure.ErrorLevel))
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
+
 	// config plugin
 	vp := &config.Viper{}
 	vp.Path = "configs/.rr-wrong-relay.yaml"
 	vp.Prefix = "rr"
 	err = container.Register(vp)
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
 
 	err = container.Register(&server.Plugin{})
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
 
 	err = container.Register(&Foo3{})
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
 
 	err = container.Register(&logger.ZapLogger{})
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
 
 	err = container.Init()
 	require.Error(t, err)
 
 	_, err = container.Serve()
-	assert.Error(t, err)
+	require.Error(t, err)
 
 	_ = container.Stop()
 }
 
 func TestAppWrongCommand(t *testing.T) {
 	container, err := endure.NewContainer(nil, endure.RetryOnFail(true), endure.SetLogLevel(endure.ErrorLevel))
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
+
 	// config plugin
 	vp := &config.Viper{}
 	vp.Path = "configs/.rr-wrong-command.yaml"
 	vp.Prefix = "rr"
 	err = container.Register(vp)
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
 
 	err = container.Register(&server.Plugin{})
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
 
 	err = container.Register(&Foo3{})
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
 
 	err = container.Register(&logger.ZapLogger{})
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
 
 	err = container.Init()
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
 
 	_, err = container.Serve()
-	assert.Error(t, err)
+	require.Error(t, err)
 }
 
 func TestAppWrongCommandOnInit(t *testing.T) {
 	container, err := endure.NewContainer(nil, endure.RetryOnFail(true), endure.SetLogLevel(endure.ErrorLevel))
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
+
 	// config plugin
 	vp := &config.Viper{}
 	vp.Path = "configs/.rr-wrong-command-on-init.yaml"
 	vp.Prefix = "rr"
 	err = container.Register(vp)
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
 
 	err = container.Register(&server.Plugin{})
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
 
 	err = container.Register(&Foo3{})
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
 
 	err = container.Register(&logger.ZapLogger{})
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
 
 	err = container.Init()
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
 
 	_, err = container.Serve()
-	assert.Error(t, err)
+	require.Error(t, err)
 }
 
 func TestAppNoAppSectionInConfig(t *testing.T) {
 	container, err := endure.NewContainer(nil, endure.RetryOnFail(true), endure.SetLogLevel(endure.ErrorLevel))
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
+
 	// config plugin
 	vp := &config.Viper{}
 	vp.Path = "configs/.rr-wrong-command.yaml"
 	vp.Prefix = "rr"
 	err = container.Register(vp)
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
 
 	err = container.Register(&server.Plugin{})
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
 
 	err = container.Register(&Foo3{})
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
 
 	err = container.Register(&logger.ZapLogger{})
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
 
 	err = container.Init()
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
 
 	_, err = container.Serve()
-	assert.Error(t, err)
+	require.Error(t, err)
 }

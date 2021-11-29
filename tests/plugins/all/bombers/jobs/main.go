@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"log"
 	rand2 "math/rand"
 	"net"
@@ -8,6 +9,8 @@ import (
 	"os"
 	"path"
 	"sync"
+	"sync/atomic"
+	"time"
 
 	"github.com/google/uuid"
 	goridgeRpc "github.com/spiral/goridge/v3/pkg/rpc"
@@ -27,6 +30,8 @@ func main() {
 	wg := &sync.WaitGroup{}
 	wg.Add(33)
 
+	rate := uint64(0)
+
 	go func() {
 		conn, err := net.Dial("tcp", "127.0.0.1:6001")
 		if err != nil {
@@ -42,6 +47,7 @@ func main() {
 					push100(client, n)
 					pausePipelines(client, n)
 					destroyPipelines(client, n)
+					atomic.AddUint64(&rate, 1)
 				}
 				wg.Done()
 			}()
@@ -63,6 +69,7 @@ func main() {
 					push100(client, n)
 					pausePipelines(client, n)
 					destroyPipelines(client, n)
+					atomic.AddUint64(&rate, 1)
 				}
 				wg.Done()
 			}()
@@ -84,6 +91,8 @@ func main() {
 					push100(client, n)
 					pausePipelines(client, n)
 					destroyPipelines(client, n)
+					atomic.AddUint64(&rate, 1)
+
 					cur, err := os.Getwd()
 					if err != nil {
 						panic(err)
@@ -110,6 +119,7 @@ func main() {
 					push100(client, n)
 					pausePipelines(client, n)
 					destroyPipelines(client, n)
+					atomic.AddUint64(&rate, 1)
 				}
 				wg.Done()
 			}()
@@ -131,9 +141,21 @@ func main() {
 					push100(client, n)
 					pausePipelines(client, n)
 					destroyPipelines(client, n)
+					atomic.AddUint64(&rate, 1)
 				}
 				wg.Done()
 			}()
+		}
+	}()
+
+	go func() {
+		tt := time.NewTicker(time.Second)
+		for {
+			select {
+			case <-tt.C:
+				fmt.Println(fmt.Sprintf("-- RATE: %d --", atomic.LoadUint64(&rate)*100))
+				atomic.StoreUint64(&rate, 0)
+			}
 		}
 	}()
 
