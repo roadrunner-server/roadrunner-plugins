@@ -23,7 +23,7 @@ func (c *consumer) listen() {
 					}
 				}
 				// in case of other error - continue
-				c.log.Error("beanstalk reserve", "error", err)
+				c.log.Warn("beanstalk reserve", "error", err)
 				continue
 			}
 

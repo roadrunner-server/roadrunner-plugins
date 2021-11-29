@@ -49,7 +49,7 @@ func TestBeanstalkInit(t *testing.T) {
 	mockLogger.EXPECT().Debug("pipeline stopped", "driver", "beanstalk", "pipeline", "test-1", "start", gomock.Any(), "elapsed", gomock.Any()).Times(1)
 	mockLogger.EXPECT().Debug("pipeline stopped", "driver", "beanstalk", "pipeline", "test-2", "start", gomock.Any(), "elapsed", gomock.Any()).Times(1)
 
-	mockLogger.EXPECT().Error("beanstalk reserve", "error", gomock.Any()).AnyTimes()
+	mockLogger.EXPECT().Warn("beanstalk reserve", "error", gomock.Any()).AnyTimes()
 	mockLogger.EXPECT().Error("job processed with errors", "error", gomock.Any(), "ID", gomock.Any(), "start", gomock.Any(), "elapsed", gomock.Any()).AnyTimes()
 	mockLogger.EXPECT().Debug("beanstalk reserve timeout", "warn", "reserve-with-timeout").AnyTimes()
 	mockLogger.EXPECT().Debug("beanstalk listener stopped").AnyTimes()
