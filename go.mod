@@ -29,7 +29,7 @@ require (
 	github.com/rabbitmq/amqp091-go v1.2.0
 	github.com/spf13/viper v1.9.0
 	// spiral
-	github.com/spiral/endure v1.0.8
+	github.com/spiral/endure v1.0.9
 	github.com/spiral/errors v1.0.12
 	github.com/spiral/goridge/v3 v3.2.4
 	github.com/spiral/roadrunner/v2 v2.6.0-rc.1
@@ -103,7 +103,7 @@ require (
 	golang.org/x/sync v0.0.0-20210220032951-036812b2e83c // indirect
 	golang.org/x/text v0.3.7 // indirect
 	golang.org/x/tools v0.1.7 // indirect
-	google.golang.org/genproto v0.0.0-20211118181313-81c1377c94b1 // indirect
+	google.golang.org/genproto v0.0.0-20211129164237-f09f9a12af12 // indirect
 	gopkg.in/ini.v1 v1.65.0 // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect
 	gopkg.in/yaml.v3 v3.0.0-20210107192922-496545a6307b // indirect

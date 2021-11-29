@@ -28,9 +28,10 @@ const (
 
 func main() {
 	wg := &sync.WaitGroup{}
-	wg.Add(33)
+	wg.Add(28)
 
 	rate := uint64(0)
+	delayedCloseCh := make(chan string, 10000)
 
 	go func() {
 		conn, err := net.Dial("tcp", "127.0.0.1:6001")
@@ -45,8 +46,6 @@ func main() {
 					declareAMQPPipe(client, n)
 					startPipelines(client, n)
 					push100(client, n)
-					pausePipelines(client, n)
-					destroyPipelines(client, n)
 					atomic.AddUint64(&rate, 1)
 				}
 				wg.Done()
@@ -67,8 +66,6 @@ func main() {
 					declareBeanstalkPipe(client, n)
 					startPipelines(client, n)
 					push100(client, n)
-					pausePipelines(client, n)
-					destroyPipelines(client, n)
 					atomic.AddUint64(&rate, 1)
 				}
 				wg.Done()
@@ -89,8 +86,6 @@ func main() {
 					declareBoltDBPipe(client, n, n)
 					startPipelines(client, n)
 					push100(client, n)
-					pausePipelines(client, n)
-					destroyPipelines(client, n)
 					atomic.AddUint64(&rate, 1)
 
 					cur, err := os.Getwd()
@@ -117,8 +112,6 @@ func main() {
 					declareMemoryPipe(client, n)
 					startPipelines(client, n)
 					push100(client, n)
-					pausePipelines(client, n)
-					destroyPipelines(client, n)
 					atomic.AddUint64(&rate, 1)
 				}
 				wg.Done()
@@ -126,27 +119,25 @@ func main() {
 		}
 	}()
 
-	go func() {
-		conn, err := net.Dial("tcp", "127.0.0.1:6001")
-		if err != nil {
-			log.Fatal(err)
-		}
-		client := rpc.NewClientWithCodec(goridgeRpc.NewClientCodec(conn))
-		for i := 0; i < 5; i++ {
-			go func() {
-				for j := 0; j < 1000; j++ {
-					n := uuid.NewString()
-					declareSQSPipe(client, n)
-					startPipelines(client, n)
-					push100(client, n)
-					pausePipelines(client, n)
-					destroyPipelines(client, n)
-					atomic.AddUint64(&rate, 1)
-				}
-				wg.Done()
-			}()
-		}
-	}()
+	//go func() {
+	//	conn, err := net.Dial("tcp", "127.0.0.1:6001")
+	//	if err != nil {
+	//		log.Fatal(err)
+	//	}
+	//	client := rpc.NewClientWithCodec(goridgeRpc.NewClientCodec(conn))
+	//	for i := 0; i < 5; i++ {
+	//		go func() {
+	//			for j := 0; j < 1000; j++ {
+	//				n := uuid.NewString()
+	//				declareSQSPipe(client, n)
+	//				startPipelines(client, n)
+	//				push100(client, n)
+	//				atomic.AddUint64(&rate, 1)
+	//			}
+	//			wg.Done()
+	//		}()
+	//	}
+	//}()
 
 	go func() {
 		tt := time.NewTicker(time.Second)
@@ -156,6 +147,20 @@ func main() {
 				fmt.Println(fmt.Sprintf("-- RATE: %d --", atomic.LoadUint64(&rate)*100))
 				atomic.StoreUint64(&rate, 0)
 			}
+		}
+	}()
+
+	go func() {
+		conn, err := net.Dial("tcp", "127.0.0.1:6001")
+		if err != nil {
+			log.Fatal(err)
+		}
+		client := rpc.NewClientWithCodec(goridgeRpc.NewClientCodec(conn))
+
+		for k := range delayedCloseCh {
+			time.Sleep(time.Second)
+			pausePipelines(client, k)
+			destroyPipelines(client, k)
 		}
 	}()
 

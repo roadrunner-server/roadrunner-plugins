@@ -141,7 +141,7 @@ func NewBoltDBJobs(configKey string, log logger.Logger, cfg cfgPlugin.Configurer
 		db:     db,
 		log:    log,
 		pq:     pq,
-		stopCh: make(chan struct{}, 2),
+		stopCh: make(chan struct{}),
 	}, nil
 }
 
@@ -230,7 +230,7 @@ func FromPipeline(pipeline *pipeline.Pipeline, log logger.Logger, cfg cfgPlugin.
 		db:     db,
 		log:    log,
 		pq:     pq,
-		stopCh: make(chan struct{}, 2),
+		stopCh: make(chan struct{}),
 	}, nil
 }
 
