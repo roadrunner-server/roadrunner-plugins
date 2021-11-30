@@ -362,7 +362,7 @@ func TestBeanstalkStats(t *testing.T) {
 
 	assert.Equal(t, out.Pipeline, "test-3")
 	assert.Equal(t, out.Driver, "beanstalk")
-	assert.Equal(t, out.Queue, "default")
+	assert.NotEmpty(t, out.Queue)
 
 	out = &jobState.State{}
 	t.Run("Stats", stats(out))
@@ -380,7 +380,7 @@ func TestBeanstalkStats(t *testing.T) {
 
 	assert.Equal(t, out.Pipeline, "test-3")
 	assert.Equal(t, out.Driver, "beanstalk")
-	assert.Equal(t, out.Queue, "default")
+	assert.NotEmpty(t, out.Queue)
 
 	assert.Equal(t, int64(0), out.Active)
 	assert.Equal(t, int64(0), out.Delayed)
