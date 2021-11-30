@@ -11,6 +11,7 @@ import (
 	"time"
 
 	"github.com/golang/mock/gomock"
+	"github.com/google/uuid"
 	endure "github.com/spiral/endure/pkg/container"
 	goridgeRpc "github.com/spiral/goridge/v3/pkg/rpc"
 	jobState "github.com/spiral/roadrunner-plugins/v2/api/jobs"
@@ -494,7 +495,7 @@ func TestBeanstalkRespond(t *testing.T) {
 	t.Run("DeclareBeanstalkPipeline", declareBeanstalkPipe)
 	t.Run("ConsumeBeanstalkPipeline", resumePipes("test-3"))
 	t.Run("PushBeanstalkPipeline", pushToPipe("test-3"))
-	time.Sleep(time.Second)
+	time.Sleep(time.Second * 3)
 	t.Run("DestroyBeanstalkPipeline", destroyPipelines("test-3"))
 	t.Run("DestroyBeanstalkPipeline", destroyPipelines("test-1"))
 
@@ -512,7 +513,7 @@ func declareBeanstalkPipe(t *testing.T) {
 	pipe := &jobsv1beta.DeclareRequest{Pipeline: map[string]string{
 		"driver":          "beanstalk",
 		"name":            "test-3",
-		"tube":            "default",
+		"tube":            uuid.NewString(),
 		"reserve_timeout": "60s",
 		"priority":        "3",
 		"tube_priority":   "10",
