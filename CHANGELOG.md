@@ -1,6 +1,6 @@
 # CHANGELOG
 
-## v2.6.0 (-.-.2021)
+## v2.6.0 (30.11.2021)
 
 ## 👀 New:
 
@@ -239,6 +239,8 @@ http:
     allocate_timeout: 60s
     destroy_timeout: 60s
 ```
+
+- ✏️ Beanstalk queue reject stop RPC calls if there are jobs in the priority queue associated with the requested pipeline.
 
 ## 🩹 Fixes:
 

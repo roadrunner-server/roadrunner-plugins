@@ -18,8 +18,8 @@ import (
 )
 
 const (
-	name   string = "grpc"
-	RrGrpc string = "RR_GRPC"
+	pluginName string = "grpc"
+	RrMode     string = "RR_MODE"
 )
 
 type Plugin struct {
@@ -38,7 +38,7 @@ type Plugin struct {
 func (p *Plugin) Init(cfg config.Configurer, log logger.Logger, server server.Server) error {
 	const op = errors.Op("grpc_plugin_init")
 
-	if !cfg.Has(name) {
+	if !cfg.Has(pluginName) {
 		return errors.E(errors.Disabled)
 	}
 	// register the codec
@@ -46,7 +46,7 @@ func (p *Plugin) Init(cfg config.Configurer, log logger.Logger, server server.Se
 		Base: encoding.GetCodec(codec.Name),
 	})
 
-	err := cfg.UnmarshalKey(name, &p.config)
+	err := cfg.UnmarshalKey(pluginName, &p.config)
 	if err != nil {
 		return errors.E(op, err)
 	}
@@ -65,7 +65,7 @@ func (p *Plugin) Init(cfg config.Configurer, log logger.Logger, server server.Se
 	if p.config.Env == nil {
 		p.config.Env = make(map[string]string)
 	}
-	p.config.Env[RrGrpc] = "true"
+	p.config.Env[RrMode] = pluginName
 
 	p.log = log
 	p.mu = &sync.RWMutex{}
@@ -134,7 +134,7 @@ func (p *Plugin) Stop() error {
 func (p *Plugin) Available() {}
 
 func (p *Plugin) Name() string {
-	return name
+	return pluginName
 }
 
 func (p *Plugin) Reset() error {

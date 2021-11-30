@@ -11,6 +11,7 @@ import (
 	"time"
 
 	"github.com/golang/mock/gomock"
+	"github.com/google/uuid"
 	endure "github.com/spiral/endure/pkg/container"
 	goridgeRpc "github.com/spiral/goridge/v3/pkg/rpc"
 	jobState "github.com/spiral/roadrunner-plugins/v2/api/jobs"
@@ -49,7 +50,7 @@ func TestBeanstalkInit(t *testing.T) {
 	mockLogger.EXPECT().Debug("pipeline stopped", "driver", "beanstalk", "pipeline", "test-1", "start", gomock.Any(), "elapsed", gomock.Any()).Times(1)
 	mockLogger.EXPECT().Debug("pipeline stopped", "driver", "beanstalk", "pipeline", "test-2", "start", gomock.Any(), "elapsed", gomock.Any()).Times(1)
 
-	mockLogger.EXPECT().Error("beanstalk reserve", "error", gomock.Any()).AnyTimes()
+	mockLogger.EXPECT().Warn("beanstalk reserve", "error", gomock.Any()).AnyTimes()
 	mockLogger.EXPECT().Error("job processed with errors", "error", gomock.Any(), "ID", gomock.Any(), "start", gomock.Any(), "elapsed", gomock.Any()).AnyTimes()
 	mockLogger.EXPECT().Debug("beanstalk reserve timeout", "warn", "reserve-with-timeout").AnyTimes()
 	mockLogger.EXPECT().Debug("beanstalk listener stopped").AnyTimes()
@@ -187,7 +188,7 @@ func TestBeanstalkDeclare(t *testing.T) {
 	t.Run("DeclareBeanstalkPipeline", declareBeanstalkPipe)
 	t.Run("ConsumeBeanstalkPipeline", resumePipes("test-3"))
 	t.Run("PushBeanstalkPipeline", pushToPipe("test-3"))
-	time.Sleep(time.Second)
+	time.Sleep(time.Second * 3)
 	t.Run("PauseBeanstalkPipeline", pausePipelines("test-3"))
 	time.Sleep(time.Second)
 	t.Run("DestroyBeanstalkPipeline", destroyPipelines("test-3"))
@@ -361,7 +362,7 @@ func TestBeanstalkStats(t *testing.T) {
 
 	assert.Equal(t, out.Pipeline, "test-3")
 	assert.Equal(t, out.Driver, "beanstalk")
-	assert.Equal(t, out.Queue, "default")
+	assert.NotEmpty(t, out.Queue)
 
 	out = &jobState.State{}
 	t.Run("Stats", stats(out))
@@ -379,7 +380,7 @@ func TestBeanstalkStats(t *testing.T) {
 
 	assert.Equal(t, out.Pipeline, "test-3")
 	assert.Equal(t, out.Driver, "beanstalk")
-	assert.Equal(t, out.Queue, "default")
+	assert.NotEmpty(t, out.Queue)
 
 	assert.Equal(t, int64(0), out.Active)
 	assert.Equal(t, int64(0), out.Delayed)
@@ -494,7 +495,7 @@ func TestBeanstalkRespond(t *testing.T) {
 	t.Run("DeclareBeanstalkPipeline", declareBeanstalkPipe)
 	t.Run("ConsumeBeanstalkPipeline", resumePipes("test-3"))
 	t.Run("PushBeanstalkPipeline", pushToPipe("test-3"))
-	time.Sleep(time.Second)
+	time.Sleep(time.Second * 3)
 	t.Run("DestroyBeanstalkPipeline", destroyPipelines("test-3"))
 	t.Run("DestroyBeanstalkPipeline", destroyPipelines("test-1"))
 
@@ -512,7 +513,7 @@ func declareBeanstalkPipe(t *testing.T) {
 	pipe := &jobsv1beta.DeclareRequest{Pipeline: map[string]string{
 		"driver":          "beanstalk",
 		"name":            "test-3",
-		"tube":            "default",
+		"tube":            uuid.NewString(),
 		"reserve_timeout": "60s",
 		"priority":        "3",
 		"tube_priority":   "10",

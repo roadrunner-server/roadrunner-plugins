@@ -150,9 +150,8 @@ func TestBroadcastNoConfig(t *testing.T) {
 	controller := gomock.NewController(t)
 	mockLogger := mocks.NewMockLogger(controller)
 
-	mockLogger.EXPECT().Debug("worker destructed", "pid", gomock.Any()).AnyTimes()
-	mockLogger.EXPECT().Debug("worker constructed", "pid", gomock.Any()).AnyTimes()
-	mockLogger.EXPECT().Debug("RPC plugin started", "address", "tcp://127.0.0.1:6001", "plugins", []string{}).MinTimes(1)
+	mockLogger.EXPECT().Info("event", "type", "EventWorkerConstruct", "message", gomock.Any(), "plugin", "pool").AnyTimes()
+	mockLogger.EXPECT().Debug("RPC plugin started", "address", "tcp://127.0.0.1:6001", "plugins", gomock.Any()).Times(1)
 	mockLogger.EXPECT().Debug("http server is running", "address", gomock.Any()).AnyTimes()
 
 	err = cont.RegisterAll(

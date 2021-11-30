@@ -39,7 +39,7 @@ func TestHandler_Upload_File(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	h, err := handler.NewHandler(1024, 500, os.TempDir(), map[string]struct{}{".go":{}}, map[string]struct{}{}, nil, pool, &mockLog{}, false)
+	h, err := handler.NewHandler(1024, 500, os.TempDir(), map[string]struct{}{".go": {}}, map[string]struct{}{}, nil, pool, &mockLog{}, false)
 	assert.NoError(t, err)
 
 	hs := &http.Server{Addr: ":9021", Handler: h}
@@ -119,7 +119,7 @@ func TestHandler_Upload_NestedFile(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	h, err := handler.NewHandler(1024, 500, os.TempDir(), map[string]struct{}{".go":{}}, map[string]struct{}{}, nil, pool, &mockLog{}, false)
+	h, err := handler.NewHandler(1024, 500, os.TempDir(), map[string]struct{}{".go": {}}, map[string]struct{}{}, nil, pool, &mockLog{}, false)
 
 	assert.NoError(t, err)
 

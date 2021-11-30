@@ -25,7 +25,7 @@ func (c *consumer) listener() {
 			}
 			tx, err := c.db.Begin(true)
 			if err != nil {
-				c.log.Error("failed to begin writable transaction, job will be read on the next attempt", "error", err)
+				c.log.Error("failed to begin writable transaction", "error", err)
 				continue
 			}
 

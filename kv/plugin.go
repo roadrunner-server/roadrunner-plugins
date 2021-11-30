@@ -130,6 +130,9 @@ func (p *Plugin) Stop() error {
 	// stop all attached storages
 	for k := range p.storages {
 		p.storages[k].Stop()
+	}
+
+	for k := range p.storages {
 		delete(p.storages, k)
 	}
 
@@ -147,6 +150,13 @@ func (p *Plugin) Collects() []interface{} {
 	}
 }
 
+func (p *Plugin) Name() string {
+	return PluginName
+}
+
+// Available interface implementation
+func (p *Plugin) Available() {}
+
 func (p *Plugin) GetAllStorageDrivers(name endure.Named, constructor kv.Constructor) {
 	// save the storage constructor
 	p.constructors[name.Name()] = constructor
@@ -156,10 +166,3 @@ func (p *Plugin) GetAllStorageDrivers(name endure.Named, constructor kv.Construc
 func (p *Plugin) RPC() interface{} {
 	return &rpc{srv: p, log: p.log, storages: p.storages}
 }
-
-func (p *Plugin) Name() string {
-	return PluginName
-}
-
-// Available interface implementation
-func (p *Plugin) Available() {}

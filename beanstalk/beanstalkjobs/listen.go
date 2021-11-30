@@ -2,6 +2,7 @@ package beanstalkjobs
 
 import (
 	"context"
+	"sync/atomic"
 
 	"github.com/beanstalkd/go-beanstalk"
 )
@@ -23,7 +24,7 @@ func (c *consumer) listen() {
 					}
 				}
 				// in case of other error - continue
-				c.log.Error("beanstalk reserve", "error", err)
+				c.log.Warn("beanstalk reserve", "error", err)
 				continue
 			}
 
@@ -36,6 +37,7 @@ func (c *consumer) listen() {
 				continue
 			}
 
+			atomic.StoreUint64(&c.items, 1)
 			// insert job into the priority queue
 			c.pq.Insert(item)
 		}

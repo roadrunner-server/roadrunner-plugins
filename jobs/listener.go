@@ -39,7 +39,7 @@ func (p *Plugin) listener() { //nolint:gocognit
 
 						errNack := jb.(jobs.Acknowledger).Nack()
 						if errNack != nil {
-							p.log.Error("negatively acknowledge failed", "error", errNack)
+							p.log.Error("negatively acknowledge failed", "ID", jb.ID(), "error", errNack)
 						}
 						continue
 					}
@@ -62,7 +62,7 @@ func (p *Plugin) listener() { //nolint:gocognit
 						// RR protocol level error, Nack the job
 						errNack := jb.(jobs.Acknowledger).Nack()
 						if errNack != nil {
-							p.log.Error("negatively acknowledge failed", "error", errNack)
+							p.log.Error("negatively acknowledge failed", "ID", jb.ID(), "error", errNack)
 						}
 
 						p.log.Error("job execute failed", "error", err)
@@ -104,7 +104,7 @@ func (p *Plugin) listener() { //nolint:gocognit
 						p.putPayload(exec)
 						errNack := jb.(jobs.Acknowledger).Nack()
 						if errNack != nil {
-							p.log.Error("negatively acknowledge failed, job might be lost", "root error", err, "error nack", errNack)
+							p.log.Error("negatively acknowledge failed, job might be lost", "ID", jb.ID(), "root error", err, "error nack", errNack)
 							jb = nil
 							continue
 						}

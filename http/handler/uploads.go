@@ -1,16 +1,15 @@
 package handler
 
 import (
-	"path"
-	"strings"
-
-	"github.com/spiral/roadrunner-plugins/v2/logger"
-
 	"io"
 	"io/ioutil"
 	"mime/multipart"
 	"os"
+	"path"
+	"strings"
 	"sync"
+
+	"github.com/spiral/roadrunner-plugins/v2/logger"
 )
 
 const (

@@ -81,6 +81,9 @@ func (i *Item) Ack() error {
 	const op = errors.Op("boltdb_item_ack")
 	tx, err := i.Options.db.Begin(true)
 	if err != nil {
+		if tx == nil {
+			return errors.E(op, errors.Errorf("can't open transaction, error: %v", err))
+		}
 		_ = tx.Rollback()
 		return errors.E(op, err)
 	}
@@ -112,6 +115,9 @@ func (i *Item) Nack() error {
 	*/
 	tx, err := i.Options.db.Begin(true)
 	if err != nil {
+		if tx == nil {
+			return errors.E(op, errors.Errorf("can't open transaction, error: %v", err))
+		}
 		_ = tx.Rollback()
 		return errors.E(op, err)
 	}
