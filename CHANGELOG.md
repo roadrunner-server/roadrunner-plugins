@@ -240,6 +240,8 @@ http:
     destroy_timeout: 60s
 ```
 
+- ✏️ Beanstalk queue reject stop RPC calls if there are jobs in the priority queue associated with the requested pipeline.
+
 ## 🩹 Fixes:
 
 - 🐛 Fix: GRPC server will show message when started.
