@@ -6,7 +6,7 @@
 
 - ✏️ **[BETA]** Support for the New Relic observability platform. Sample of the client library might be
   found [here](https://github.com/arku31/roadrunner-newrelic). (Thanks @arku31)   
-New Relic middleware is a part of the HTTP plugin, thus configuration should be inside it:
+  New Relic middleware is a part of the HTTP plugin, thus configuration should be inside it:
 
 ```yaml
 http:
@@ -49,11 +49,13 @@ transaction name.
 
 ---
 
-- ✏️ New plugin: `TCP`. The TCP plugin is used to handle raw TCP payload with a bi-directional [protocol](tcp/docs/tcp.md) between the RR server and PHP worker.
+- ✏️ New plugin: `TCP`. The TCP plugin is used to handle raw TCP payload with a
+  bi-directional [protocol](tcp/docs/tcp.md) between the RR server and PHP worker.
 
 PHP client library: https://github.com/spiral/roadrunner-tcp
 
 Configuration:
+
 ```yaml
 rpc:
   listen: tcp://127.0.0.1:6001
@@ -83,7 +85,8 @@ tcp:
 
 ---
 
-- ✏️ New HTTP middleware: `http_metrics`. 
+- ✏️ New HTTP middleware: `http_metrics`.
+
 ```yaml
 http:
   address: 127.0.0.1:15389
@@ -93,16 +96,18 @@ http:
     allocate_timeout: 60s
     destroy_timeout: 60s
 ```
-All old and new http metrics will be available after the middleware is activated. Be careful, this middleware may slow down your requests. New metrics:
+
+All old and new http metrics will be available after the middleware is activated. Be careful, this middleware may slow
+down your requests. New metrics:
 
     - `rr_http_requests_queue_sum` - number of queued requests.
     - `rr_http_no_free_workers_total` - number of the occurrences of the `NoFreeWorkers` errors.  
-  
 
 -----
-  
-- ✏️ New file server to serve static files. It works on a different address, so it doesn't affect the HTTP performance. It uses advanced configuration specific for the static file servers. It can handle any number of directories with its own HTTP prefixes.
-Config:
+
+- ✏️ New file server to serve static files. It works on a different address, so it doesn't affect the HTTP performance.
+  It uses advanced configuration specific for the static file servers. It can handle any number of directories with its
+  own HTTP prefixes. Config:
 
 ```yaml
 fileserver:
@@ -129,45 +134,48 @@ fileserver:
     # HTTP prefix
     #
     # Error on empty
-  - prefix: "/foo"
+    - prefix: "/foo"
 
-    # Directory to serve
-    #
-    # Default: "."
-    root: "../../../tests"
+      # Directory to serve
+      #
+      # Default: "."
+      root: "../../../tests"
 
-    # When set to true, the server tries minimizing CPU usage by caching compressed files
-    #
-    # Default: false
-    compress: false
+      # When set to true, the server tries minimizing CPU usage by caching compressed files
+      #
+      # Default: false
+      compress: false
 
-    # Expiration duration for inactive file handlers. Units: seconds.
-    #
-    # Default: 10, use a negative value to disable it.
-    cache_duration: 10
+      # Expiration duration for inactive file handlers. Units: seconds.
+      #
+      # Default: 10, use a negative value to disable it.
+      cache_duration: 10
 
-    # The value for the Cache-Control HTTP-header. Units: seconds
-    #
-    # Default: 10 seconds
-    max_age: 10
+      # The value for the Cache-Control HTTP-header. Units: seconds
+      #
+      # Default: 10 seconds
+      max_age: 10
 
-    # Enable range requests
-    # https://developer.mozilla.org/en-US/docs/Web/HTTP/Range_requests
-    #
-    # Default: false
-    bytes_range: true
+      # Enable range requests
+      # https://developer.mozilla.org/en-US/docs/Web/HTTP/Range_requests
+      #
+      # Default: false
+      bytes_range: true
 
-  - prefix: "/foo/bar"
-    root: "../../../tests"
-    compress: false
-    cache_duration: 10s
-    max_age: 10
-    bytes_range: true
+    - prefix: "/foo/bar"
+      root: "../../../tests"
+      compress: false
+      cache_duration: 10s
+      max_age: 10
+      bytes_range: true
 ```
 
-- ✏️ `on_init` option for the `server` plugin. `on_init` code executed before the regular command and can be used to warm up the application for example. Failed `on_init` command doesn't affect the main command, so, the RR will continue to run. Thanks (@OO00O0O)
+- ✏️ `on_init` option for the `server` plugin. `on_init` code executed before the regular command and can be used to
+  warm up the application for example. Failed `on_init` command doesn't affect the main command, so, the RR will
+  continue to run. Thanks (@OO00O0O)
 
 Config:
+
 ```yaml
 # Application server settings (docs: https://roadrunner.dev/docs/php-worker)
 server:
@@ -176,18 +184,18 @@ server:
     #
     # This option is required if using on_init
     command: "any php or script here"
-    
+
     # Script execute timeout
     #
     # Default: 60s [60m, 60h], if used w/o units its means - NANOSECONDS.
     exec_timeout: 20s
-    
+
     # Environment variables for the worker processes.
     #
     # Default: <empty map>
     env:
       - SOME_KEY: "SOME_VALUE"
-      - SOME_KEY2: "SOME_VALUE2" 
+      - SOME_KEY2: "SOME_VALUE2"
 
   # ..REGULAR SERVER OPTIONS...
 ```
@@ -195,43 +203,46 @@ server:
 ---
 
 - ✏️ **[BETA]** GRPC can handle multiply proto files.  
-Config:
+  Config:
+
 ```yaml
 # GRPC service configuration
 grpc:
-    # Proto files to use
-    #
-    # This option is required. At least one proto file must be specified.
-    proto:
-        - "first.proto"
-        - "second.proto"
-        
+  # Proto files to use
+  #
+  # This option is required. At least one proto file must be specified.
+  proto:
+    - "first.proto"
+    - "second.proto"
+
 ## ... OTHER REGULAR GRPC OPTIONS ...
 ```
 
 ---
 
-- ✏️ New `allow` configuration option for the `http.uploads` and multipart requests. The new option allows you to filter upload extensions knowing only allowed. Now, there is no need to have a looong list with all possible extensions to forbid. [FR](https://github.com/spiral/roadrunner-plugins/issues/123) (Thanks @rjd22)  
-`http.uploads.forbid` has a higher priority, so, if you have duplicates in the `http.uploads.allow` and `http.uploads.forbid` the duplicated extension will be forbidden.
-Config:
+- ✏️ New `allow` configuration option for the `http.uploads` and multipart requests. The new option allows you to filter
+  upload extensions knowing only allowed. Now, there is no need to have a looong list with all possible extensions to
+  forbid. [FR](https://github.com/spiral/roadrunner-plugins/issues/123) (Thanks @rjd22)  
+  `http.uploads.forbid` has a higher priority, so, if you have duplicates in the `http.uploads.allow`
+  and `http.uploads.forbid` the duplicated extension will be forbidden. Config:
 
 ```yaml
 http:
   address: 127.0.0.1:18903
   max_request_size: 1024
-  middleware: ["pluginMiddleware", "pluginMiddleware2"]
+  middleware: [ "pluginMiddleware", "pluginMiddleware2" ]
   uploads:
-    forbid: [".php", ".exe", ".bat"]
-    allow: [".html", ".aaa" ] <------------- NEW
+    forbid: [ ".php", ".exe", ".bat" ]
+    allow: [ ".html", ".aaa" ] <------------- NEW
   trusted_subnets:
     [
-      "10.0.0.0/8",
-      "127.0.0.0/8",
-      "172.16.0.0/12",
-      "192.168.0.0/16",
-      "::1/128",
-      "fc00::/7",
-      "fe80::/10",
+    "10.0.0.0/8",
+    "127.0.0.0/8",
+    "172.16.0.0/12",
+    "192.168.0.0/16",
+    "::1/128",
+    "fc00::/7",
+    "fe80::/10",
     ]
   pool:
     num_workers: 2
@@ -240,12 +251,19 @@ http:
     destroy_timeout: 60s
 ```
 
-- ✏️ Beanstalk queue reject stop RPC calls if there are jobs in the priority queue associated with the requested pipeline.
+- ✏️ Beanstalk queue reject stop RPC calls if there are jobs in the priority queue associated with the requested
+  pipeline.
 
 ## 🩹 Fixes:
 
 - 🐛 Fix: GRPC server will show message when started.
-- 🐛 Fix: Static plugin headers were added to all requests. [BUG](https://github.com/spiral/roadrunner-plugins/issues/115)
+- 🐛 Fix: Static plugin headers were added to all
+  requests. [BUG](https://github.com/spiral/roadrunner-plugins/issues/115)
+
+## 📦 Packages:
+
+- 📦 Update goridge to `v3.2.4`
+- 📦 Update endure to `v1.0.9`
 
 ## v2.5.2 (27.10.2021)
 
