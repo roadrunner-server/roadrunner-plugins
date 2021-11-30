@@ -43,8 +43,9 @@ type consumer struct {
 	tubePriority *uint32
 	priority     int64
 
-	stopCh    chan struct{}
-	requeueCh chan *Item
+	stopCh chan struct{}
+
+	items uint64
 }
 
 func NewBeanstalkConsumer(configKey string, log logger.Logger, cfg cfgPlugin.Configurer, pq priorityqueue.Queue) (*consumer, error) {
@@ -100,7 +101,6 @@ func NewBeanstalkConsumer(configKey string, log logger.Logger, cfg cfgPlugin.Con
 
 		// buffered with two because jobs root plugin can call Stop at the same time as Pause
 		stopCh:      make(chan struct{}, 2),
-		requeueCh:   make(chan *Item, 1000),
 		reconnectCh: make(chan struct{}, 2),
 	}
 
@@ -150,7 +150,6 @@ func FromPipeline(pipe *pipeline.Pipeline, log logger.Logger, cfg cfgPlugin.Conf
 
 		// buffered with two because jobs root plugin can call Stop at the same time as Pause
 		stopCh:      make(chan struct{}, 2),
-		requeueCh:   make(chan *Item, 1000),
 		reconnectCh: make(chan struct{}, 2),
 	}
 
@@ -239,6 +238,10 @@ func (c *consumer) Run(_ context.Context, p *pipeline.Pipeline) error {
 func (c *consumer) Stop(context.Context) error {
 	start := time.Now()
 	pipe := c.pipeline.Load().(*pipeline.Pipeline)
+
+	if atomic.LoadUint64(&c.items) > 0 {
+		return errors.Errorf("some jobs are pending in the PQ, can't destroy the pipeline: %s, number of pending jobs: %d", pipe.Name(), atomic.LoadUint64(&c.items))
+	}
 
 	if atomic.LoadUint32(&c.listeners) == 1 {
 		c.stopCh <- struct{}{}
@@ -337,6 +340,8 @@ func (c *consumer) handleItem(ctx context.Context, item *Item) error {
 		}
 		return errors.E(op, err)
 	}
+
+	atomic.AddUint64(&c.items, 1)
 
 	return nil
 }

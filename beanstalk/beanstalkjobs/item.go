@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/gob"
+	"sync/atomic"
 	"time"
 
 	"github.com/beanstalkd/go-beanstalk"
@@ -47,6 +48,8 @@ type Options struct {
 	conn        *beanstalk.Conn
 	requeueFn   func(context.Context, *Item) error
 	handleTPush func([]byte, string) error
+
+	items *uint64
 }
 
 // DelayDuration returns delay duration in a form of time.Duration.
@@ -87,10 +90,12 @@ func (i *Item) Context() ([]byte, error) {
 }
 
 func (i *Item) Ack() error {
+	atomic.AddUint64(i.Options.items, ^uint64(0))
 	return i.Options.conn.Delete(i.Options.id)
 }
 
 func (i *Item) Nack() error {
+	atomic.AddUint64(i.Options.items, ^uint64(0))
 	return i.Options.conn.Delete(i.Options.id)
 }
 
@@ -109,6 +114,7 @@ func (i *Item) Requeue(headers map[string][]string, delay int64) error {
 	if err != nil {
 		return err
 	}
+	atomic.AddUint64(i.Options.items, ^uint64(0))
 
 	return nil
 }
@@ -119,6 +125,7 @@ func (i *Item) Respond(data []byte, queue string) error {
 	if err != nil {
 		return errors.E(op, err)
 	}
+	atomic.AddUint64(i.Options.items, ^uint64(0))
 	return nil
 }
 
@@ -145,6 +152,7 @@ func (c *consumer) unpack(id uint64, data []byte, out *Item) error {
 	out.Options.id = id
 	out.Options.requeueFn = c.handleItem
 	out.Options.handleTPush = c.handleTPush
+	out.Options.items = &c.items
 
 	return nil
 }

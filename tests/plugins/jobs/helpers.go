@@ -7,6 +7,7 @@ import (
 	"net/rpc"
 	"testing"
 
+	"github.com/google/uuid"
 	goridgeRpc "github.com/spiral/goridge/v3/pkg/rpc"
 	jobState "github.com/spiral/roadrunner-plugins/v2/api/jobs"
 	jobsv1beta "github.com/spiral/roadrunner-plugins/v2/api/proto/jobs/v1beta"
@@ -71,7 +72,7 @@ func pushToPipe(pipeline string) func(t *testing.T) {
 
 		req := &jobsv1beta.PushRequest{Job: &jobsv1beta.Job{
 			Job:     "some/php/namespace",
-			Id:      "1",
+			Id:      uuid.NewString(),
 			Payload: `{"hello":"world"}`,
 			Headers: map[string]*jobsv1beta.HeaderValue{"test": {Value: []string{"test2"}}},
 			Options: &jobsv1beta.Options{
@@ -95,7 +96,7 @@ func pushToPipeDelayed(pipeline string, delay int64) func(t *testing.T) {
 
 		req := &jobsv1beta.PushRequest{Job: &jobsv1beta.Job{
 			Job:     "some/php/namespace",
-			Id:      "2",
+			Id:      uuid.NewString(),
 			Payload: `{"hello":"world"}`,
 			Headers: map[string]*jobsv1beta.HeaderValue{"test": {Value: []string{"test2"}}},
 			Options: &jobsv1beta.Options{

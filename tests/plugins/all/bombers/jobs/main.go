@@ -8,6 +8,7 @@ import (
 	"net/rpc"
 	"os"
 	"path"
+	"strings"
 	"sync"
 	"sync/atomic"
 	"time"
@@ -28,10 +29,10 @@ const (
 
 func main() {
 	wg := &sync.WaitGroup{}
-	wg.Add(28)
+	wg.Add(43)
 
 	rate := uint64(0)
-	delayedCloseCh := make(chan string, 10000)
+	delayedCloseCh := make(chan string, 1000000)
 
 	go func() {
 		conn, err := net.Dial("tcp", "127.0.0.1:6001")
@@ -41,12 +42,13 @@ func main() {
 		client := rpc.NewClientWithCodec(goridgeRpc.NewClientCodec(conn))
 		for i := 0; i < 10; i++ {
 			go func() {
-				for j := 0; j < 1000; j++ {
+				for j := 0; j < 10000; j++ {
 					n := uuid.NewString()
 					declareAMQPPipe(client, n)
 					startPipelines(client, n)
 					push100(client, n)
 					atomic.AddUint64(&rate, 1)
+					delayedCloseCh <- n
 				}
 				wg.Done()
 			}()
@@ -59,14 +61,15 @@ func main() {
 			log.Fatal(err)
 		}
 		client := rpc.NewClientWithCodec(goridgeRpc.NewClientCodec(conn))
-		for i := 0; i < 5; i++ {
+		for i := 0; i < 10; i++ {
 			go func() {
-				for j := 0; j < 1000; j++ {
+				for j := 0; j < 10; j++ {
 					n := uuid.NewString()
 					declareBeanstalkPipe(client, n)
 					startPipelines(client, n)
 					push100(client, n)
 					atomic.AddUint64(&rate, 1)
+					delayedCloseCh <- n
 				}
 				wg.Done()
 			}()
@@ -87,6 +90,7 @@ func main() {
 					startPipelines(client, n)
 					push100(client, n)
 					atomic.AddUint64(&rate, 1)
+					delayedCloseCh <- n
 
 					cur, err := os.Getwd()
 					if err != nil {
@@ -113,31 +117,33 @@ func main() {
 					startPipelines(client, n)
 					push100(client, n)
 					atomic.AddUint64(&rate, 1)
+					delayedCloseCh <- n
 				}
 				wg.Done()
 			}()
 		}
 	}()
 
-	//go func() {
-	//	conn, err := net.Dial("tcp", "127.0.0.1:6001")
-	//	if err != nil {
-	//		log.Fatal(err)
-	//	}
-	//	client := rpc.NewClientWithCodec(goridgeRpc.NewClientCodec(conn))
-	//	for i := 0; i < 5; i++ {
-	//		go func() {
-	//			for j := 0; j < 1000; j++ {
-	//				n := uuid.NewString()
-	//				declareSQSPipe(client, n)
-	//				startPipelines(client, n)
-	//				push100(client, n)
-	//				atomic.AddUint64(&rate, 1)
-	//			}
-	//			wg.Done()
-	//		}()
-	//	}
-	//}()
+	go func() {
+		conn, err := net.Dial("tcp", "127.0.0.1:6001")
+		if err != nil {
+			log.Fatal(err)
+		}
+		client := rpc.NewClientWithCodec(goridgeRpc.NewClientCodec(conn))
+		for i := 0; i < 10; i++ {
+			go func() {
+				for j := 0; j < 1000; j++ {
+					n := uuid.NewString()
+					declareSQSPipe(client, n)
+					startPipelines(client, n)
+					push100(client, n)
+					atomic.AddUint64(&rate, 1)
+					delayedCloseCh <- n
+				}
+				wg.Done()
+			}()
+		}
+	}()
 
 	go func() {
 		tt := time.NewTicker(time.Second)
@@ -150,6 +156,8 @@ func main() {
 		}
 	}()
 
+	stopCh := make(chan struct{})
+
 	go func() {
 		conn, err := net.Dial("tcp", "127.0.0.1:6001")
 		if err != nil {
@@ -157,25 +165,30 @@ func main() {
 		}
 		client := rpc.NewClientWithCodec(goridgeRpc.NewClientCodec(conn))
 
-		for k := range delayedCloseCh {
-			time.Sleep(time.Second)
-			pausePipelines(client, k)
-			destroyPipelines(client, k)
+		for {
+			select {
+			case k := <-delayedCloseCh:
+				pausePipelines(client, k)
+				destroyPipelines(delayedCloseCh, client, k)
+			case <-stopCh:
+				return
+			}
 		}
 	}()
 
 	wg.Wait()
+	stopCh <- struct{}{}
 
-	conn, err := net.Dial("tcp", "127.0.0.1:6001")
-	if err != nil {
-		log.Fatal(err)
-	}
-	client := rpc.NewClientWithCodec(goridgeRpc.NewClientCodec(conn))
-	ll := list(client)
-
-	for i := 0; i < len(ll); i++ {
-		destroyPipelines(client, ll[i])
-	}
+	//conn, err := net.Dial("tcp", "127.0.0.1:6001")
+	//if err != nil {
+	//	log.Fatal(err)
+	//}
+	//client := rpc.NewClientWithCodec(goridgeRpc.NewClientCodec(conn))
+	//ll := list(client)
+	//
+	//for i := 0; i < len(ll); i++ {
+	//	destroyPipelines(delayedCloseCh, client, ll[i])
+	//}
 }
 
 func push100(client *rpc.Client, pipe string) {
@@ -229,17 +242,18 @@ func pausePipelines(client *rpc.Client, pipes ...string) {
 	}
 }
 
-func destroyPipelines(client *rpc.Client, pipes ...string) {
-	pipe := &jobsv1beta.Pipelines{Pipelines: make([]string, len(pipes))}
+func destroyPipelines(rest chan<- string, client *rpc.Client, p string) {
+	pipe := &jobsv1beta.Pipelines{Pipelines: make([]string, 1)}
 
-	for i := 0; i < len(pipes); i++ {
-		pipe.GetPipelines()[i] = pipes[i]
-	}
+	pipe.GetPipelines()[0] = p
 
 	er := &jobsv1beta.Empty{}
 	err := client.Call(destroy, pipe, er)
 	if err != nil {
 		log.Println(err)
+		if !strings.Contains(err.Error(), "no such pipeline") {
+			rest <- p
+		}
 	}
 }
 

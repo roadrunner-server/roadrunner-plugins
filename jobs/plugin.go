@@ -218,7 +218,7 @@ func (p *Plugin) Stop() error {
 		err := consumer.Stop(ctx)
 		if err != nil {
 			cancel()
-			p.log.Error("stop job driver", "driver", key)
+			p.log.Error("stop job driver", "error", err, "driver", key)
 			return true
 		}
 		cancel()
