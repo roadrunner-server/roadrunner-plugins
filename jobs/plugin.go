@@ -16,11 +16,11 @@ import (
 	rh "github.com/spiral/roadrunner-plugins/v2/jobs/protocol"
 	"github.com/spiral/roadrunner-plugins/v2/logger"
 	"github.com/spiral/roadrunner-plugins/v2/server"
+	"github.com/spiral/roadrunner-plugins/v2/utils"
 	"github.com/spiral/roadrunner/v2/payload"
 	"github.com/spiral/roadrunner/v2/pool"
 	pq "github.com/spiral/roadrunner/v2/priority_queue"
 	"github.com/spiral/roadrunner/v2/state/process"
-	"github.com/spiral/roadrunner/v2/utils"
 )
 
 const (

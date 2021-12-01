@@ -11,7 +11,7 @@ import (
 	"github.com/spiral/errors"
 	"github.com/spiral/roadrunner-plugins/v2/api/jobs"
 	"github.com/spiral/roadrunner-plugins/v2/jobs/job"
-	"github.com/spiral/roadrunner/v2/utils"
+	"github.com/spiral/roadrunner-plugins/v2/utils"
 )
 
 var _ jobs.Acknowledger = (*Item)(nil)

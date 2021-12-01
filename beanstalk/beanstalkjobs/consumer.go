@@ -16,8 +16,8 @@ import (
 	"github.com/spiral/roadrunner-plugins/v2/jobs/job"
 	"github.com/spiral/roadrunner-plugins/v2/jobs/pipeline"
 	"github.com/spiral/roadrunner-plugins/v2/logger"
+	"github.com/spiral/roadrunner-plugins/v2/utils"
 	priorityqueue "github.com/spiral/roadrunner/v2/priority_queue"
-	"github.com/spiral/roadrunner/v2/utils"
 )
 
 const (

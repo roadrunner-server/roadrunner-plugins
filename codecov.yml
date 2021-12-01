@@ -13,6 +13,7 @@ coverage:
 
 # do not include tests folders
 ignore:
+  - "utils"
   - "broadcast"
   - "transport/protocols/websockets"
   - "internal"

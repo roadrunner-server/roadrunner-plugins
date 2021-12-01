@@ -10,9 +10,9 @@ import (
 	"github.com/spiral/roadrunner-plugins/v2/grpc/proxy"
 	"github.com/spiral/roadrunner-plugins/v2/logger"
 	"github.com/spiral/roadrunner-plugins/v2/server"
+	"github.com/spiral/roadrunner-plugins/v2/utils"
 	"github.com/spiral/roadrunner/v2/pool"
 	"github.com/spiral/roadrunner/v2/state/process"
-	"github.com/spiral/roadrunner/v2/utils"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/encoding"
 )

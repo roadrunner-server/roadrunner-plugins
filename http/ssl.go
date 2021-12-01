@@ -4,7 +4,7 @@ import (
 	"net/http"
 
 	"github.com/spiral/errors"
-	"github.com/spiral/roadrunner/v2/utils"
+	"github.com/spiral/roadrunner-plugins/v2/utils"
 )
 
 func (p *Plugin) serveHTTPS(errCh chan error) {

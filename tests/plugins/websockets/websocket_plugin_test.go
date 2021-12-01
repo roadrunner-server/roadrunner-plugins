@@ -28,8 +28,8 @@ import (
 	"github.com/spiral/roadrunner-plugins/v2/redis"
 	rpcPlugin "github.com/spiral/roadrunner-plugins/v2/rpc"
 	"github.com/spiral/roadrunner-plugins/v2/server"
+	"github.com/spiral/roadrunner-plugins/v2/utils"
 	"github.com/spiral/roadrunner-plugins/v2/websockets"
-	"github.com/spiral/roadrunner/v2/utils"
 	"github.com/stretchr/testify/assert"
 )
 

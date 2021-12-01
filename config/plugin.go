@@ -22,6 +22,9 @@ type Viper struct {
 	// which overwrites initial config key
 	Flags []string
 
+	// RRVersion passed from the RR-Endure.
+	RRVersion string
+
 	CommonConfig *General
 }
 
