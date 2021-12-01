@@ -7,4 +7,7 @@ import "time"
 type General struct {
 	// GracefulTimeout for the temporal and http
 	GracefulTimeout time.Duration
+
+	// internal, RRVersion from the rr-binary
+	RRVersion string
 }

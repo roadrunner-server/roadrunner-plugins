@@ -1,7 +1,7 @@
 package logger
 
 import (
-	"github.com/spiral/roadrunner/v2/utils"
+	"github.com/spiral/roadrunner-plugins/v2/utils"
 )
 
 // StdLogAdapter can be passed to the http.Server or any place which required standard logger to redirect output

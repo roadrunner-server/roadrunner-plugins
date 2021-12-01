@@ -2,8 +2,8 @@ package tcp
 
 import (
 	"github.com/spiral/errors"
+	"github.com/spiral/roadrunner-plugins/v2/utils"
 	"github.com/spiral/roadrunner/v2/pool"
-	"github.com/spiral/roadrunner/v2/utils"
 )
 
 type Server struct {

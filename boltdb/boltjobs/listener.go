@@ -6,7 +6,7 @@ import (
 	"sync/atomic"
 	"time"
 
-	"github.com/spiral/roadrunner/v2/utils"
+	"github.com/spiral/roadrunner-plugins/v2/utils"
 	bolt "go.etcd.io/bbolt"
 )
 
