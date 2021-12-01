@@ -150,7 +150,7 @@ func TestBroadcastNoConfig(t *testing.T) {
 	controller := gomock.NewController(t)
 	mockLogger := mocks.NewMockLogger(controller)
 
-	mockLogger.EXPECT().Info("event", "type", "EventWorkerConstruct", "message", gomock.Any(), "plugin", "pool").AnyTimes()
+	mockLogger.EXPECT().Info(gomock.Any()).AnyTimes()
 	mockLogger.EXPECT().Debug("RPC plugin started", "address", "tcp://127.0.0.1:6001", "plugins", gomock.Any()).Times(1)
 	mockLogger.EXPECT().Debug("http server is running", "address", gomock.Any()).AnyTimes()
 
@@ -194,11 +194,10 @@ func TestBroadcastSameSubscriber(t *testing.T) {
 	controller := gomock.NewController(t)
 	mockLogger := mocks.NewMockLogger(controller)
 
-	mockLogger.EXPECT().Info("event", "type", "EventWorkerConstruct", "message", gomock.Any(), "plugin", "pool").AnyTimes()
 	mockLogger.EXPECT().Debug("RPC plugin started", "address", "tcp://127.0.0.1:6002", "plugins", gomock.Any()).Times(1)
 
-	mockLogger.EXPECT().Debug("message published", "msg", gomock.Any()).AnyTimes()
-	mockLogger.EXPECT().Debug("http server is running", "address", gomock.Any()).AnyTimes()
+	mockLogger.EXPECT().Debug("message published", "msg", gomock.Any()).MinTimes(1)
+	mockLogger.EXPECT().Debug("http server is running", "address", gomock.Any()).MinTimes(1)
 
 	mockLogger.EXPECT().Info(`plugin1: {foo hello}`).Times(3)
 	mockLogger.EXPECT().Info(`plugin1: {foo2 hello}`).Times(2)
@@ -208,6 +207,8 @@ func TestBroadcastSameSubscriber(t *testing.T) {
 	mockLogger.EXPECT().Info(`plugin4: {foo hello}`).Times(3)
 	mockLogger.EXPECT().Info(`plugin5: {foo hello}`).Times(3)
 	mockLogger.EXPECT().Info(`plugin6: {foo hello}`).Times(3)
+
+	mockLogger.EXPECT().Info(gomock.Any()).Times(2)
 
 	err = cont.RegisterAll(
 		cfg,
@@ -316,7 +317,6 @@ func TestBroadcastSameSubscriberGlobal(t *testing.T) {
 	controller := gomock.NewController(t)
 	mockLogger := mocks.NewMockLogger(controller)
 
-	mockLogger.EXPECT().Info("event", "type", "EventWorkerConstruct", "message", gomock.Any(), "plugin", "pool").AnyTimes()
 	mockLogger.EXPECT().Debug("RPC plugin started", "address", "tcp://127.0.0.1:6003", "plugins", gomock.Any()).Times(1)
 
 	mockLogger.EXPECT().Debug("message published", "msg", gomock.Any()).AnyTimes()
@@ -330,6 +330,8 @@ func TestBroadcastSameSubscriberGlobal(t *testing.T) {
 	mockLogger.EXPECT().Info(`plugin4: {foo hello}`).Times(3)
 	mockLogger.EXPECT().Info(`plugin5: {foo hello}`).Times(3)
 	mockLogger.EXPECT().Info(`plugin6: {foo hello}`).Times(3)
+
+	mockLogger.EXPECT().Info(gomock.Any()).AnyTimes()
 
 	err = cont.RegisterAll(
 		cfg,
