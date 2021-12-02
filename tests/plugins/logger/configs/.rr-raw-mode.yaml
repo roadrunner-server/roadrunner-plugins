@@ -1,5 +1,5 @@
 server:
-  command: "php ../../raw-error.php"
+  command: "php ../../php_test_files/raw-error.php"
   relay: "pipes"
 
 http:

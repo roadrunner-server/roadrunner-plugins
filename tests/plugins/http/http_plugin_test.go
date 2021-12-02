@@ -1234,7 +1234,7 @@ rpc:
   disabled: false
 
 server:
-  command: "php ../../http/client.php echoerr pipes"
+  command: "php ../../php_test_files/http/client.php echoerr pipes"
   relay: "pipes"
   relay_timeout: "20s"
 
@@ -2084,7 +2084,7 @@ func TestStaticPlugin(t *testing.T) {
 }
 
 func staticHeaders(t *testing.T) {
-	req, err := http.NewRequest("GET", "http://127.0.0.1:21603/client.php", nil)
+	req, err := http.NewRequest("GET", "http://127.0.0.1:21603/php_test_files/client.php", nil)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -2107,22 +2107,22 @@ func staticHeaders(t *testing.T) {
 		_ = resp.Body.Close()
 	}()
 
-	assert.Equal(t, all("../../../tests/client.php"), string(b))
-	assert.Equal(t, all("../../../tests/client.php"), string(b))
+	require.Equal(t, all("../../php_test_files/client.php"), string(b))
+	require.Equal(t, all("../../php_test_files/client.php"), string(b))
 }
 
 func staticNotForbid(t *testing.T) {
-	b, r, err := get("http://127.0.0.1:21603/client.php")
-	assert.NoError(t, err)
-	assert.Equal(t, all("../../../tests/client.php"), b)
-	assert.Equal(t, all("../../../tests/client.php"), b)
+	b, r, err := get("http://127.0.0.1:21603/php_test_files/client.php")
+	require.NoError(t, err)
+	require.Equal(t, all("../../php_test_files/client.php"), b)
+	require.Equal(t, all("../../php_test_files/client.php"), b)
 	_ = r.Body.Close()
 }
 
 func serveStaticSample(t *testing.T) {
 	b, r, err := get("http://127.0.0.1:21603/sample.txt")
-	assert.NoError(t, err)
-	assert.Contains(t, b, "sample")
+	require.NoError(t, err)
+	require.Contains(t, b, "sample")
 	_ = r.Body.Close()
 }
 
@@ -2217,7 +2217,7 @@ func TestStaticFilesDisabled(t *testing.T) {
 }
 
 func staticFilesDisabled(t *testing.T) {
-	b, r, err := get("http://127.0.0.1:45877/client.php?hello=world")
+	b, r, err := get("http://127.0.0.1:45877/php_test_files/client.php?hello=world")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -2675,10 +2675,13 @@ func get(url string) (string, *http.Response, error) {
 }
 
 func all(fn string) string {
-	f, _ := os.Open(fn)
+	f, err := os.Open(fn)
+	if err != nil {
+		panic(err)
+	}
 
 	b := new(bytes.Buffer)
-	_, err := io.Copy(b, f)
+	_, err = io.Copy(b, f)
 	if err != nil {
 		return ""
 	}

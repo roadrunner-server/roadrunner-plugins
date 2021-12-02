@@ -1,4 +1,4 @@
-PHP_OUT_DIR = ../../../../src
+PHP_OUT_DIR = ../../../../php_test_files/src
 GO_OUT_DIR = ./
 
 all: build

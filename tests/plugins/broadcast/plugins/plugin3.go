@@ -6,7 +6,6 @@ import (
 
 	"github.com/spiral/errors"
 	"github.com/spiral/roadrunner-plugins/v2/api/pubsub"
-	"github.com/spiral/roadrunner-plugins/v2/broadcast"
 	"github.com/spiral/roadrunner-plugins/v2/logger"
 )
 
@@ -14,13 +13,13 @@ const Plugin3Name = "plugin3"
 
 type Plugin3 struct {
 	log    logger.Logger
-	b      broadcast.Broadcaster
+	b      pubsub.Broadcaster
 	driver pubsub.SubReader
 	ctx    context.Context
 	cancel context.CancelFunc
 }
 
-func (p *Plugin3) Init(log logger.Logger, b broadcast.Broadcaster) error {
+func (p *Plugin3) Init(log logger.Logger, b pubsub.Broadcaster) error {
 	p.log = log
 	p.b = b
 	p.ctx, p.cancel = context.WithCancel(context.Background())

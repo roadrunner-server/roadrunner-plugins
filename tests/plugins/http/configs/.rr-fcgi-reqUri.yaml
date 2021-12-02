@@ -1,5 +1,5 @@
 server:
-  command: "php ../../http/client.php request-uri pipes"
+  command: "php ../../php_test_files/http/client.php request-uri pipes"
   relay: "pipes"
   relay_timeout: "20s"
 

@@ -110,9 +110,11 @@ func TestAppSockets(t *testing.T) {
 		case e := <-errCh:
 			assert.NoError(t, e.Error)
 			assert.NoError(t, container.Stop())
+			tt.Stop()
 			return
 		case <-c:
 			er := container.Stop()
+			tt.Stop()
 			if er != nil {
 				panic(er)
 			}

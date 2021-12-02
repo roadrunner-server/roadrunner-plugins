@@ -1,5 +1,5 @@
 server:
-  command: "php ../../psr-worker.php"
+  command: "php ../../php_test_files/psr-worker.php"
   relay: "pipes"
   relay_timeout: "20s"
 

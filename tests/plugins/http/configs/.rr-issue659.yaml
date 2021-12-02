@@ -2,7 +2,7 @@ rpc:
   listen: tcp://127.0.0.1:6009
 
 server:
-  command: "php ../../issue659.php"
+  command: "php ../../php_test_files/issue659.php"
   relay: "pipes"
   relay_timeout: "20s"
 

@@ -1,6 +1,6 @@
 server:
   on_init:
-    command: "php ../../loop.php"
+    command: "php ../../php_test_files/loop.php"
     exec_timeout: 1ns
 
   command: "php socket.php"
