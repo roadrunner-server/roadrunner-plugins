@@ -116,13 +116,7 @@ func TestServiceInitStdout(t *testing.T) {
 	controller := gomock.NewController(t)
 	mockLogger := mocks.NewMockLogger(controller)
 
-	mockLogger.EXPECT().Info("stdout write The number is: 0\n").AnyTimes()
-	mockLogger.EXPECT().Info("The number is: 0\n").AnyTimes()
-	mockLogger.EXPECT().Info("stdout write ").AnyTimes()
-	mockLogger.EXPECT().Info("stdout write The number is: 1\n").MinTimes(1)
-	mockLogger.EXPECT().Info("stdout write The number is: 2\n").MinTimes(1)
-	mockLogger.EXPECT().Info("stdout write The number is: 3\n").MinTimes(1)
-	mockLogger.EXPECT().Info("stdout write The number is: 4\n").AnyTimes()
+	mockLogger.EXPECT().Info("stdout write ").MinTimes(4)
 	mockLogger.EXPECT().Error("process wait error", "error", gomock.Any()).AnyTimes()
 
 	err = cont.RegisterAll(
