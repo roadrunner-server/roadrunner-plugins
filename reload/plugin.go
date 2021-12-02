@@ -12,8 +12,10 @@ import (
 )
 
 // PluginName contains default plugin name.
-const PluginName string = "reload"
-const thresholdChanBuffer uint = 1000
+const (
+	PluginName          string = "reload"
+	thresholdChanBuffer uint   = 1000
+)
 
 type Plugin struct {
 	cfg      *Config
@@ -161,6 +163,3 @@ func (s *Plugin) Stop() error {
 func (s *Plugin) Name() string {
 	return PluginName
 }
-
-// Available interface implementation
-func (s *Plugin) Available() {}

@@ -45,10 +45,6 @@ func (p *Plugin) Name() string {
 	return PluginName
 }
 
-// Available interface implementation
-func (p *Plugin) Available() {
-}
-
 // RPC returns associated rpc service.
 func (p *Plugin) RPC() interface{} {
 	return &rpc{srv: p}
