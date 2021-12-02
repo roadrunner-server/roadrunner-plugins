@@ -1,12 +1,17 @@
 # CHANGELOG
 
+## v2.6.1 (2.12.2021)
+
+## 🩹 Fixes:
+
+- 🐛 Fix: logger incorrectly escaped HTML, JSON, and other special symbols.
+
 ## v2.6.0 (30.11.2021)
 
 ## 👀 New:
 
-- ✏️ **[BETA]** Support for the New Relic observability platform. Sample of the client library might be
-  found [here](https://github.com/arku31/roadrunner-newrelic). (Thanks @arku31)   
-  New Relic middleware is a part of the HTTP plugin, thus configuration should be inside it:
+- ✏️ **[BETA]** Support for the New Relic observability platform. Sample of the client library might be found [here](https://github.com/arku31/roadrunner-newrelic). (Thanks @arku31)  
+New Relic middleware is a part of the HTTP plugin, thus configuration should be inside it:
 
 ```yaml
 http:
@@ -26,15 +31,11 @@ License key and application name could be set via environment variables: (leave 
 - license_key: `NEW_RELIC_LICENSE_KEY`.
 - app_name: `NEW_RELIC_APP_NAME`.
 
-To set the New Relic attributes, the PHP worker should send headers values withing the `rr_newrelic` header key.
-Attributes should be separated by the `:`, for example `foo:bar`, where `foo` is a key and `bar` is a value. New Relic
-attributes sent from the worker will not appear in the HTTP response, they will be sent directly to the New Relic.
+To set the New Relic attributes, the PHP worker should send headers values withing the `rr_newrelic` header key. Attributes should be separated by the `:`, for example `foo:bar`, where `foo` is a key and `bar` is a value. New Relic attributes sent from the worker will not appear in the HTTP response, they will be sent directly to the New Relic.
 
 To see the sample of the PHP library, see the @arku31 implementation: https://github.com/arku31/roadrunner-newrelic
 
-The special key which PHP may set to overwrite the transaction name is: `transaction_name`. For
-example: `transaction_name:foo` means: set transaction name as `foo`. By default, `RequestURI` is used as the
-transaction name.
+The special key which PHP may set to overwrite the transaction name is: `transaction_name`. For example: `transaction_name:foo` means: set transaction name as `foo`. By default, `RequestURI` is used as the transaction name.
 
 ```php
         $resp = new \Nyholm\Psr7\Response();
@@ -49,13 +50,11 @@ transaction name.
 
 ---
 
-- ✏️ New plugin: `TCP`. The TCP plugin is used to handle raw TCP payload with a
-  bi-directional [protocol](tcp/docs/tcp.md) between the RR server and PHP worker.
+- ✏️ **[BETA]** New plugin: `TCP`. The TCP plugin is used to handle raw TCP payload with a bi-directional [protocol](tcp/docs/tcp.md) between the RR server and PHP worker.
 
 PHP client library: https://github.com/spiral/roadrunner-tcp
 
 Configuration:
-
 ```yaml
 rpc:
   listen: tcp://127.0.0.1:6001
@@ -87,6 +86,7 @@ tcp:
 
 - ✏️ New HTTP middleware: `http_metrics`.
 
+Configuration:
 ```yaml
 http:
   address: 127.0.0.1:15389
@@ -105,10 +105,9 @@ down your requests. New metrics:
 
 -----
 
-- ✏️ New file server to serve static files. It works on a different address, so it doesn't affect the HTTP performance.
-  It uses advanced configuration specific for the static file servers. It can handle any number of directories with its
-  own HTTP prefixes. Config:
+- ✏️ New file server to serve static files. It works on a different address, so it doesn't affect the HTTP performance. It uses advanced configuration specific for the static file servers. It can handle any number of directories with its own HTTP prefixes.
 
+Configuration:
 ```yaml
 fileserver:
   # File server address
@@ -170,12 +169,9 @@ fileserver:
       bytes_range: true
 ```
 
-- ✏️ `on_init` option for the `server` plugin. `on_init` code executed before the regular command and can be used to
-  warm up the application for example. Failed `on_init` command doesn't affect the main command, so, the RR will
-  continue to run. Thanks (@OO00O0O)
+- ✏️ `on_init` option for the `server` plugin. `on_init` code executed before the regular command and can be used to warm up the application for example. Failed `on_init` command doesn't affect the main command, so, the RR will continue to run. Thanks (@OO00O0O)
 
-Config:
-
+Configuration:
 ```yaml
 # Application server settings (docs: https://roadrunner.dev/docs/php-worker)
 server:
@@ -203,8 +199,8 @@ server:
 ---
 
 - ✏️ **[BETA]** GRPC can handle multiply proto files.  
-  Config:
 
+Configuration:
 ```yaml
 # GRPC service configuration
 grpc:
@@ -220,12 +216,10 @@ grpc:
 
 ---
 
-- ✏️ New `allow` configuration option for the `http.uploads` and multipart requests. The new option allows you to filter
-  upload extensions knowing only allowed. Now, there is no need to have a looong list with all possible extensions to
-  forbid. [FR](https://github.com/spiral/roadrunner-plugins/issues/123) (Thanks @rjd22)  
-  `http.uploads.forbid` has a higher priority, so, if you have duplicates in the `http.uploads.allow`
-  and `http.uploads.forbid` the duplicated extension will be forbidden. Config:
+- ✏️ New `allow` configuration option for the `http.uploads` and multipart requests. The new option allows you to filter upload extensions knowing only allowed. Now, there is no need to have a looong list with all possible extensions to forbid. [FR](https://github.com/spiral/roadrunner-plugins/issues/123) (Thanks @rjd22)  
+`http.uploads.forbid` has a higher priority, so, if you have duplicates in the `http.uploads.allow` and `http.uploads.forbid` the duplicated extension will be forbidden.
 
+Configuration:
 ```yaml
 http:
   address: 127.0.0.1:18903
@@ -251,14 +245,12 @@ http:
     destroy_timeout: 60s
 ```
 
-- ✏️ Beanstalk queue reject stop RPC calls if there are jobs in the priority queue associated with the requested
-  pipeline.
+- ✏️ Beanstalk queue reject stop RPC calls if there are jobs in the priority queue associated with the requested pipeline.
 
 ## 🩹 Fixes:
 
 - 🐛 Fix: GRPC server will show message when started.
-- 🐛 Fix: Static plugin headers were added to all
-  requests. [BUG](https://github.com/spiral/roadrunner-plugins/issues/115)
+- 🐛 Fix: Static plugin headers were added to all requests. [BUG](https://github.com/spiral/roadrunner-plugins/issues/115)
 
 ## 📦 Packages:
 

@@ -181,9 +181,13 @@ func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if !h.accessLogs {
-		h.log.Info("http request processed", "status", status, "method", req.Method, "URI", req.URI, "remote_address", req.RemoteAddr, "start", start, "elapsed", time.Since(start))
+		h.log.Info("http log", "status", status, "method", req.Method, "URI", req.URI, "remote_address", req.RemoteAddr, "start", start, "elapsed", time.Since(start))
 	} else {
-		body, _ := json.Marshal(r.Header)
+		body, err := json.Marshal(r.Header)
+		if err != nil {
+			h.log.Error("can't calculate body length", "error", err)
+		}
+
 		reqLen := len(body) + int(r.ContentLength)
 
 		h.log.Info("http access log", "status", status, "method", req.Method, "URI", req.URI, "remote_address", req.RemoteAddr, "query", req.RawQuery, "request_length", reqLen, "bytes_sent", r.ContentLength, "host", r.Host, "user_agent", r.UserAgent(), "referer", r.Referer(), "time_local", time.Now().Format("02/Jan/06:15:04:05 -0700"), "request_time", time.Now(), "start", start, "elapsed", time.Since(start))

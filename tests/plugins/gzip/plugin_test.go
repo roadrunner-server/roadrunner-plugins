@@ -18,6 +18,7 @@ import (
 	"github.com/spiral/roadrunner-plugins/v2/server"
 	"github.com/spiral/roadrunner-plugins/v2/tests/mocks"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestGzipPlugin(t *testing.T) {
@@ -98,11 +99,11 @@ func headerCheck(t *testing.T) {
 	}
 
 	r, err := client.Do(req)
-	assert.NoError(t, err)
-	assert.True(t, r.Uncompressed)
+	require.NoError(t, err)
+	require.True(t, r.Uncompressed)
 
 	err = r.Body.Close()
-	assert.NoError(t, err)
+	require.NoError(t, err)
 }
 
 func TestMiddlewareNotExist(t *testing.T) {
@@ -118,11 +119,10 @@ func TestMiddlewareNotExist(t *testing.T) {
 	mockLogger := mocks.NewMockLogger(controller)
 
 	mockLogger.EXPECT().Warn("requested middleware does not exist", "requested", "foo").MinTimes(1)
-
-	mockLogger.EXPECT().Info("event", "type", "EventWorkerConstruct", "message", gomock.Any(), "plugin", "pool").AnyTimes()
-
 	mockLogger.EXPECT().Error(gomock.Any(), gomock.Any(), gomock.Any()).AnyTimes() // placeholder for the workerlogerror
 	mockLogger.EXPECT().Debug("http server is running", "address", gomock.Any()).AnyTimes()
+
+	mockLogger.EXPECT().Info(gomock.Any()).AnyTimes()
 
 	err = cont.RegisterAll(
 		cfg,

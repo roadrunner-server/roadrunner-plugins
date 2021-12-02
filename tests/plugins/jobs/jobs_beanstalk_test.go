@@ -43,7 +43,7 @@ func TestBeanstalkInit(t *testing.T) {
 
 	// general
 	mockLogger.EXPECT().Debug("RPC plugin started", "address", "tcp://127.0.0.1:6001", "plugins", gomock.Any()).Times(1)
-	mockLogger.EXPECT().Info("event", "type", "EventWorkerConstruct", "message", gomock.Any(), "plugin", "pool").AnyTimes()
+	mockLogger.EXPECT().Info(gomock.Any()).AnyTimes()
 
 	mockLogger.EXPECT().Debug("pipeline started", "driver", "beanstalk", "pipeline", "test-1", "start", gomock.Any(), "elapsed", gomock.Any()).Times(1)
 	mockLogger.EXPECT().Debug("pipeline started", "driver", "beanstalk", "pipeline", "test-2", "start", gomock.Any(), "elapsed", gomock.Any()).Times(1)
@@ -188,9 +188,8 @@ func TestBeanstalkDeclare(t *testing.T) {
 	t.Run("DeclareBeanstalkPipeline", declareBeanstalkPipe)
 	t.Run("ConsumeBeanstalkPipeline", resumePipes("test-3"))
 	t.Run("PushBeanstalkPipeline", pushToPipe("test-3"))
-	time.Sleep(time.Second * 3)
 	t.Run("PauseBeanstalkPipeline", pausePipelines("test-3"))
-	time.Sleep(time.Second)
+	time.Sleep(time.Second * 3)
 	t.Run("DestroyBeanstalkPipeline", destroyPipelines("test-3"))
 
 	time.Sleep(time.Second * 5)

@@ -42,7 +42,7 @@ func TestAMQPInit(t *testing.T) {
 
 	// general
 	mockLogger.EXPECT().Debug("RPC plugin started", "address", "tcp://127.0.0.1:6001", "plugins", gomock.Any()).Times(1)
-	mockLogger.EXPECT().Info("event", "type", "EventWorkerConstruct", "message", gomock.Any(), "plugin", "pool").AnyTimes()
+	mockLogger.EXPECT().Info(gomock.Any()).AnyTimes()
 
 	mockLogger.EXPECT().Debug("pipeline active", "driver", "amqp", "pipeline", "test-1", "start", gomock.Any(), "elapsed", gomock.Any()).Times(1)
 	mockLogger.EXPECT().Debug("pipeline active", "driver", "amqp", "pipeline", "test-2", "start", gomock.Any(), "elapsed", gomock.Any()).Times(1)
@@ -127,7 +127,7 @@ func TestAMQPDeclare(t *testing.T) {
 
 	// general
 	mockLogger.EXPECT().Debug("RPC plugin started", "address", "tcp://127.0.0.1:6001", "plugins", gomock.Any()).Times(1)
-	mockLogger.EXPECT().Info("event", "type", "EventWorkerConstruct", "message", gomock.Any(), "plugin", "pool").AnyTimes()
+	mockLogger.EXPECT().Info(gomock.Any()).AnyTimes()
 
 	mockLogger.EXPECT().Debug("job pushed successfully", "ID", gomock.Any(), "pipeline", "test-3", "driver", "amqp", "start", gomock.Any(), "elapsed", gomock.Any()).MinTimes(1)
 	mockLogger.EXPECT().Debug("job processing started", "ID", gomock.Any(), "start", gomock.Any(), "elapsed", gomock.Any()).MinTimes(1)
@@ -225,7 +225,7 @@ func TestAMQPJobsError(t *testing.T) {
 
 	// general
 	mockLogger.EXPECT().Debug("RPC plugin started", "address", "tcp://127.0.0.1:6001", "plugins", gomock.Any()).Times(1)
-	mockLogger.EXPECT().Info("event", "type", "EventWorkerConstruct", "message", gomock.Any(), "plugin", "pool").AnyTimes()
+	mockLogger.EXPECT().Info(gomock.Any()).AnyTimes()
 
 	mockLogger.EXPECT().Debug("job pushed successfully", "ID", gomock.Any(), "pipeline", "test-3", "driver", "amqp", "start", gomock.Any(), "elapsed", gomock.Any()).MinTimes(1)
 	mockLogger.EXPECT().Debug("job processing started", "ID", gomock.Any(), "start", gomock.Any(), "elapsed", gomock.Any()).MinTimes(1)
@@ -353,7 +353,7 @@ func TestAMQPStats(t *testing.T) {
 	mockLogger := mocks.NewMockLogger(controller)
 
 	// general
-	mockLogger.EXPECT().Info("event", "type", "EventWorkerConstruct", "message", gomock.Any(), "plugin", "pool").AnyTimes()
+	mockLogger.EXPECT().Info(gomock.Any()).AnyTimes()
 	mockLogger.EXPECT().Debug("RPC plugin started", "address", "tcp://127.0.0.1:6001", "plugins", gomock.Any()).Times(1)
 
 	mockLogger.EXPECT().Debug("pipeline resumed", "driver", "amqp", "pipeline", "test-3", "start", gomock.Any(), "elapsed", gomock.Any()).Times(2)
@@ -483,7 +483,7 @@ func TestAMQPRespondOk(t *testing.T) {
 	mockLogger := mocks.NewMockLogger(controller)
 
 	// general
-	mockLogger.EXPECT().Info("event", "type", "EventWorkerConstruct", "message", gomock.Any(), "plugin", "pool").AnyTimes()
+	mockLogger.EXPECT().Info(gomock.Any()).AnyTimes()
 	mockLogger.EXPECT().Debug("RPC plugin started", "address", "tcp://127.0.0.1:6001", "plugins", gomock.Any()).Times(1)
 
 	mockLogger.EXPECT().Debug("job pushed successfully", "ID", gomock.Any(), "pipeline", "test-3", "driver", "amqp", "start", gomock.Any(), "elapsed", gomock.Any()).MinTimes(1)

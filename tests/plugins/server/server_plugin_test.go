@@ -140,13 +140,14 @@ func TestAppTCPOnInit(t *testing.T) {
 	mockLogger := mocks.NewMockLogger(controller)
 
 	// process interrupt error
-	mockLogger.EXPECT().Info("event", "type", "EventWorkerConstruct", "message", gomock.Any(), "plugin", "pool").AnyTimes()
 	mockLogger.EXPECT().Info("The number is: 0\n").Times(1)
 	mockLogger.EXPECT().Info("The number is: 1\n").Times(1)
 	mockLogger.EXPECT().Info("The number is: 2\n").Times(1)
 	mockLogger.EXPECT().Info("The number is: 3\n").Times(1)
 	mockLogger.EXPECT().Info("The number is: 4\n").Times(1)
 	mockLogger.EXPECT().Info("The number is: 5\n").Times(1)
+
+	mockLogger.EXPECT().Info(gomock.Any()).AnyTimes()
 
 	err = container.RegisterAll(
 		mockLogger,
@@ -217,13 +218,14 @@ func TestAppSocketsOnInit(t *testing.T) {
 	mockLogger := mocks.NewMockLogger(controller)
 
 	// process interrupt error
-	mockLogger.EXPECT().Info("event", "type", "EventWorkerConstruct", "message", gomock.Any(), "plugin", "pool").AnyTimes()
 	mockLogger.EXPECT().Info("The number is: 0\n").Times(1)
 	mockLogger.EXPECT().Info("The number is: 1\n").Times(1)
 	mockLogger.EXPECT().Info("The number is: 2\n").Times(1)
 	mockLogger.EXPECT().Info("The number is: 3\n").Times(1)
 	mockLogger.EXPECT().Info("The number is: 4\n").Times(1)
 	mockLogger.EXPECT().Info("The number is: 5\n").Times(1)
+
+	mockLogger.EXPECT().Info(gomock.Any()).AnyTimes()
 
 	err = container.RegisterAll(
 		mockLogger,
@@ -294,7 +296,7 @@ func TestAppSocketsOnInitFastClose(t *testing.T) {
 	mockLogger := mocks.NewMockLogger(controller)
 
 	// process interrupt error
-	mockLogger.EXPECT().Info("event", "type", "EventWorkerConstruct", "message", gomock.Any(), "plugin", "pool").AnyTimes()
+	mockLogger.EXPECT().Info(gomock.Any()).AnyTimes()
 	mockLogger.EXPECT().Error("process wait", "error", gomock.Any()).Times(1)
 
 	err = container.RegisterAll(

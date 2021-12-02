@@ -41,7 +41,7 @@ func TestMemoryInit(t *testing.T) {
 
 	// general
 	mockLogger.EXPECT().Debug("RPC plugin started", "address", "tcp://127.0.0.1:6001", "plugins", gomock.Any()).Times(1)
-	mockLogger.EXPECT().Info("event", "type", "EventWorkerConstruct", "message", gomock.Any(), "plugin", "pool").AnyTimes()
+	mockLogger.EXPECT().Info(gomock.Any()).AnyTimes()
 
 	mockLogger.EXPECT().Debug("pipeline active", "driver", "memory", "pipeline", "test-1", "start", gomock.Any(), "elapsed", gomock.Any()).Times(1)
 	mockLogger.EXPECT().Debug("pipeline active", "driver", "memory", "pipeline", "test-2", "start", gomock.Any(), "elapsed", gomock.Any()).Times(1)
@@ -197,7 +197,7 @@ func TestMemoryDeclare(t *testing.T) {
 
 	// general
 	mockLogger.EXPECT().Debug("RPC plugin started", "address", "tcp://127.0.0.1:6001", "plugins", gomock.Any()).Times(1)
-	mockLogger.EXPECT().Info("event", "type", "EventWorkerConstruct", "message", gomock.Any(), "plugin", "pool").AnyTimes()
+	mockLogger.EXPECT().Info(gomock.Any()).AnyTimes()
 
 	mockLogger.EXPECT().Debug("job pushed successfully", "ID", gomock.Any(), "pipeline", "test-3", "driver", "memory", "start", gomock.Any(), "elapsed", gomock.Any()).MinTimes(1)
 	mockLogger.EXPECT().Debug("job processing started", "ID", gomock.Any(), "start", gomock.Any(), "elapsed", gomock.Any()).MinTimes(1)
@@ -293,7 +293,7 @@ func TestMemoryPauseResume(t *testing.T) {
 
 	// general
 	mockLogger.EXPECT().Debug("RPC plugin started", "address", "tcp://127.0.0.1:6001", "plugins", gomock.Any()).Times(1)
-	mockLogger.EXPECT().Info("event", "type", "EventWorkerConstruct", "message", gomock.Any(), "plugin", "pool").AnyTimes()
+	mockLogger.EXPECT().Info(gomock.Any()).AnyTimes()
 
 	mockLogger.EXPECT().Debug("pipeline active", "driver", "memory", "pipeline", "test-local-2", "start", gomock.Any(), "elapsed", gomock.Any()).Times(1)
 	mockLogger.EXPECT().Debug("pipeline active", "driver", "memory", "pipeline", "test-local", "start", gomock.Any(), "elapsed", gomock.Any()).MinTimes(1)
@@ -393,7 +393,7 @@ func TestMemoryJobsError(t *testing.T) {
 	mockLogger := mocks.NewMockLogger(controller)
 
 	// general
-	mockLogger.EXPECT().Info("event", "type", "EventWorkerConstruct", "message", gomock.Any(), "plugin", "pool").AnyTimes()
+	mockLogger.EXPECT().Info(gomock.Any()).AnyTimes()
 	mockLogger.EXPECT().Debug("RPC plugin started", "address", "tcp://127.0.0.1:6001", "plugins", gomock.Any()).Times(1)
 
 	mockLogger.EXPECT().Debug("job pushed successfully", "ID", gomock.Any(), "pipeline", "test-3", "driver", "memory", "start", gomock.Any(), "elapsed", gomock.Any()).MinTimes(1)
@@ -491,7 +491,7 @@ func TestMemoryStats(t *testing.T) {
 	mockLogger := mocks.NewMockLogger(controller)
 
 	// general
-	mockLogger.EXPECT().Info("event", "type", "EventWorkerConstruct", "message", gomock.Any(), "plugin", "pool").AnyTimes()
+	mockLogger.EXPECT().Info(gomock.Any()).AnyTimes()
 	mockLogger.EXPECT().Debug("RPC plugin started", "address", "tcp://127.0.0.1:6001", "plugins", gomock.Any()).Times(1)
 
 	mockLogger.EXPECT().Debug("job pushed successfully", "ID", gomock.Any(), "pipeline", "test-3", "driver", "memory", "start", gomock.Any(), "elapsed", gomock.Any()).MinTimes(1)

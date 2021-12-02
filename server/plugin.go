@@ -13,11 +13,11 @@ import (
 	"github.com/spiral/roadrunner-plugins/v2/logger"
 	"github.com/spiral/roadrunner/v2/events"
 
+	"github.com/spiral/roadrunner-plugins/v2/utils"
 	"github.com/spiral/roadrunner/v2/pool"
 	"github.com/spiral/roadrunner/v2/transport"
 	"github.com/spiral/roadrunner/v2/transport/pipe"
 	"github.com/spiral/roadrunner/v2/transport/socket"
-	"github.com/spiral/roadrunner/v2/utils"
 	"github.com/spiral/roadrunner/v2/worker"
 )
 
@@ -242,7 +242,7 @@ func (p *Plugin) startEventsBus(errCh chan<- error) {
 	for {
 		select {
 		case event := <-eventsCh:
-			p.log.Info("event", "type", event.Type().String(), "message", event.Message(), "plugin", event.Plugin())
+			p.log.Info(event.Message())
 		case <-p.stopCh:
 			eb.Unsubscribe(id)
 			return

@@ -11,7 +11,7 @@ import (
 	json "github.com/json-iterator/go"
 	"github.com/spiral/errors"
 	"github.com/spiral/roadrunner-plugins/v2/jobs/job"
-	"github.com/spiral/roadrunner/v2/utils"
+	"github.com/spiral/roadrunner-plugins/v2/utils"
 )
 
 type Item struct {
