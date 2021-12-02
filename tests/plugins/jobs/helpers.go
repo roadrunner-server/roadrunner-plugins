@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"net/rpc"
 	"testing"
+	"time"
 
 	"github.com/google/uuid"
 	goridgeRpc "github.com/spiral/goridge/v3/pkg/rpc"
@@ -165,9 +166,16 @@ func destroyPipelines(pipes ...string) func(t *testing.T) {
 			pipe.GetPipelines()[i] = pipes[i]
 		}
 
-		er := &jobsv1beta.Empty{}
-		err = client.Call(destroy, pipe, er)
-		assert.NoError(t, err)
+		for i := 0; i < 10; i++ {
+			er := &jobsv1beta.Empty{}
+			err = client.Call(destroy, pipe, er)
+			if err != nil {
+				time.Sleep(time.Second)
+				continue
+			}
+			assert.NoError(t, err)
+			break
+		}
 	}
 }
 

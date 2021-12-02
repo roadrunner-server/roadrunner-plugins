@@ -1,0 +1,35 @@
+server:
+  command: "php ../../sleep.php"
+  relay: "pipes"
+  relay_timeout: "20s"
+
+rpc:
+  listen: tcp://127.0.0.1:6001
+
+http:
+  address: 127.0.0.1:11229
+  uploads:
+    forbid: [ ".php", ".exe", ".bat" ]
+  headers:
+    cors:
+      allowed_origin: "*"
+      allowed_headers: "*"
+      allowed_methods: "GET,POST,PUT,DELETE"
+      allow_credentials: false
+      exposed_headers: "Cache-Control,Content-Type"
+  pool:
+    num_workers: 1
+    allocate_timeout: 60s
+    destroy_timeout: 60s
+
+status:
+  address: localhost:3000
+
+logs:
+  mode: development
+  channels:
+    http:
+      level: info
+    server:
+      level: info
+      mode: raw

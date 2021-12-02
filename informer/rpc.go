@@ -15,14 +15,15 @@ type WorkerList struct {
 	Workers []*process.State `json:"workers"`
 }
 
-// List all resettable services.
+// List all plugins with workers.
 func (rpc *rpc) List(_ bool, list *[]string) error {
-	*list = make([]string, 0, len(rpc.srv.withWorkers))
+	*list = make([]string, 0, len(rpc.srv.available))
 
 	// append all plugin names to the output result
 	for name := range rpc.srv.available {
 		*list = append(*list, name)
 	}
+
 	return nil
 }
 

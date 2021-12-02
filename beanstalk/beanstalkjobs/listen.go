@@ -2,7 +2,6 @@ package beanstalkjobs
 
 import (
 	"context"
-	"sync/atomic"
 
 	"github.com/beanstalkd/go-beanstalk"
 )
@@ -37,7 +36,6 @@ func (c *consumer) listen() {
 				continue
 			}
 
-			atomic.StoreUint64(&c.items, 1)
 			// insert job into the priority queue
 			c.pq.Insert(item)
 		}
