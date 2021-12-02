@@ -4,6 +4,7 @@ import (
 	"context"
 
 	endure "github.com/spiral/endure/pkg/container"
+	"github.com/spiral/roadrunner-plugins/v2/api/informer"
 	"github.com/spiral/roadrunner-plugins/v2/api/jobs"
 	"github.com/spiral/roadrunner/v2/state/process"
 )
@@ -11,15 +12,15 @@ import (
 const PluginName = "informer"
 
 type Plugin struct {
-	withJobs    map[string]JobsStat
-	withWorkers map[string]Informer
-	available   map[string]Availabler
+	withJobs    map[string]informer.JobsStat
+	withWorkers map[string]informer.Informer
+	available   map[string]informer.Availabler
 }
 
 func (p *Plugin) Init() error {
-	p.available = make(map[string]Availabler)
-	p.withWorkers = make(map[string]Informer)
-	p.withJobs = make(map[string]JobsStat)
+	p.available = make(map[string]informer.Availabler)
+	p.withWorkers = make(map[string]informer.Informer)
+	p.withJobs = make(map[string]informer.JobsStat)
 	return nil
 }
 
@@ -52,23 +53,23 @@ func (p *Plugin) Jobs(name string) []*jobs.State {
 // Collects declares services to be collected.
 func (p *Plugin) Collects() []interface{} {
 	return []interface{}{
-		p.CollectPlugins,
+		p.CollectAvailablePlugins,
 		p.CollectWorkers,
 		p.CollectJobs,
 	}
 }
 
-// CollectPlugins collects all RR plugins
-func (p *Plugin) CollectPlugins(name endure.Named, l Availabler) {
+// CollectAvailablePlugins collects all RR plugins
+func (p *Plugin) CollectAvailablePlugins(name endure.Named, l informer.Availabler) {
 	p.available[name.Name()] = l
 }
 
 // CollectWorkers obtains plugins with workers inside.
-func (p *Plugin) CollectWorkers(name endure.Named, r Informer) {
+func (p *Plugin) CollectWorkers(name endure.Named, r informer.Informer) {
 	p.withWorkers[name.Name()] = r
 }
 
-func (p *Plugin) CollectJobs(name endure.Named, j JobsStat) {
+func (p *Plugin) CollectJobs(name endure.Named, j informer.JobsStat) {
 	p.withJobs[name.Name()] = j
 }
 
