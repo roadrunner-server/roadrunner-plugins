@@ -113,7 +113,7 @@ func TestMetricsIssue571(t *testing.T) {
 	mockLogger.EXPECT().Info(gomock.Any()).AnyTimes()
 	mockLogger.EXPECT().Debug("RPC plugin started", "address", "tcp://127.0.0.1:6001", "plugins", gomock.Any()).Times(1)
 
-	mockLogger.EXPECT().Info("http request processed", "status", 200, "method", "GET", "URI", "http://127.0.0.1:56444/", "remote_address", "127.0.0.1", "start", gomock.Any(), "elapsed", gomock.Any()).MinTimes(1)
+	mockLogger.EXPECT().Info("http log", "status", 200, "method", "GET", "URI", "http://127.0.0.1:56444/", "remote_address", "127.0.0.1", "start", gomock.Any(), "elapsed", gomock.Any()).MinTimes(1)
 
 	mockLogger.EXPECT().Info("declaring new metric", "name", "test", "type", gomock.Any(), "namespace", gomock.Any()).MinTimes(1)
 	mockLogger.EXPECT().Info("metric successfully added", "name", "test", "type", gomock.Any(), "namespace", gomock.Any()).MinTimes(1)

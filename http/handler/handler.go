@@ -181,7 +181,7 @@ func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if !h.accessLogs {
-		h.log.Info("http request processed", "status", status, "method", req.Method, "URI", req.URI, "remote_address", req.RemoteAddr, "start", start, "elapsed", time.Since(start))
+		h.log.Info("http log", "status", status, "method", req.Method, "URI", req.URI, "remote_address", req.RemoteAddr, "start", start, "elapsed", time.Since(start))
 	} else {
 		body, _ := json.Marshal(r.Header)
 		reqLen := len(body) + int(r.ContentLength)
