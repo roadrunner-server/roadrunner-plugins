@@ -1,10 +1,10 @@
 # CHANGELOG
 
-## v2.6.2 (2.12.2021)
+## v2.6.2 (3.12.2021)
 
 ## 🩹 Fixes:
 
-- 🐛 Fix: 
+- 🐛 Fix: NPE on RR start. [BUG](https://github.com/spiral/roadrunner-plugins/issues/143)
 
 ## v2.6.1 (2.12.2021)
 
