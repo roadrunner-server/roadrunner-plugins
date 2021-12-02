@@ -318,6 +318,9 @@ func (p *Plugin) Workers() []*process.State {
 	defer p.mu.RUnlock()
 
 	workers := p.workers()
+	if workers == nil {
+		return nil
+	}
 
 	ps := make([]*process.State, 0, len(workers))
 	for i := 0; i < len(workers); i++ {
@@ -333,6 +336,9 @@ func (p *Plugin) Workers() []*process.State {
 
 // internal
 func (p *Plugin) workers() []worker.BaseProcess {
+	if p == nil || p.pool == nil {
+		return nil
+	}
 	return p.pool.Workers()
 }
 
