@@ -4,7 +4,7 @@ go 1.17
 
 require (
 	github.com/Shopify/toxiproxy v2.1.4+incompatible
-	github.com/aws/aws-sdk-go-v2 v1.11.1
+	github.com/aws/aws-sdk-go-v2 v1.11.2
 	github.com/aws/aws-sdk-go-v2/config v1.10.3
 	github.com/aws/aws-sdk-go-v2/credentials v1.6.3
 	github.com/aws/aws-sdk-go-v2/service/sqs v1.13.0
@@ -82,7 +82,7 @@ require (
 	github.com/prometheus/client_model v0.2.0 // indirect
 	github.com/prometheus/common v0.32.1 // indirect
 	github.com/prometheus/procfs v0.7.3 // indirect
-	github.com/shirou/gopsutil v3.21.11+incompatible // indirect
+	github.com/shirou/gopsutil v3.21.11+incompatible
 	github.com/spf13/afero v1.6.0 // indirect
 	github.com/spf13/cast v1.4.1 // indirect
 	github.com/spf13/jwalterweatherman v1.1.0 // indirect
