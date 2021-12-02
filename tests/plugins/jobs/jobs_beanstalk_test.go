@@ -188,9 +188,8 @@ func TestBeanstalkDeclare(t *testing.T) {
 	t.Run("DeclareBeanstalkPipeline", declareBeanstalkPipe)
 	t.Run("ConsumeBeanstalkPipeline", resumePipes("test-3"))
 	t.Run("PushBeanstalkPipeline", pushToPipe("test-3"))
-	time.Sleep(time.Second * 3)
 	t.Run("PauseBeanstalkPipeline", pausePipelines("test-3"))
-	time.Sleep(time.Second)
+	time.Sleep(time.Second * 3)
 	t.Run("DestroyBeanstalkPipeline", destroyPipelines("test-3"))
 
 	time.Sleep(time.Second * 5)
