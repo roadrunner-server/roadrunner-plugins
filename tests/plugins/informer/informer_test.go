@@ -217,7 +217,7 @@ func informerListRPCTest(t *testing.T) {
 	// WorkerList contains list of workers.
 	list := make([]string, 0, 5)
 	// Plugins which are expected to be in the list
-	expected := []string{"rpc", "logs", "informer.plugin1", "config", "server"}
+	expected := []string{"logs", "informer.plugin1", "config", "server"}
 
 	err = client.Call("informer.List", true, &list)
 	assert.NoError(t, err)
