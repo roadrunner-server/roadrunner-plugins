@@ -334,7 +334,6 @@ func TestViperProvider_Init_Version(t *testing.T) {
 
 	err = container.RegisterAll(
 		vp,
-		&Foo{},
 	)
 
 	require.NoError(t, err)
@@ -381,7 +380,7 @@ func TestViperProvider_Init_Version(t *testing.T) {
 		}
 	}()
 
-	time.Sleep(time.Second * 10)
+	time.Sleep(time.Second * 2)
 	stopCh <- struct{}{}
 	wg.Wait()
 }

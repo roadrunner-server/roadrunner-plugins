@@ -10,10 +10,10 @@ import (
 	"github.com/spiral/errors"
 	websocketsv1 "github.com/spiral/roadrunner-plugins/v2/api/proto/websockets/v1beta"
 	"github.com/spiral/roadrunner-plugins/v2/api/pubsub"
+	"github.com/spiral/roadrunner-plugins/v2/http/middleware/websockets/commands"
+	"github.com/spiral/roadrunner-plugins/v2/http/middleware/websockets/connection"
+	"github.com/spiral/roadrunner-plugins/v2/http/middleware/websockets/validator"
 	"github.com/spiral/roadrunner-plugins/v2/logger"
-	"github.com/spiral/roadrunner-plugins/v2/websockets/commands"
-	"github.com/spiral/roadrunner-plugins/v2/websockets/connection"
-	"github.com/spiral/roadrunner-plugins/v2/websockets/validator"
 )
 
 const (

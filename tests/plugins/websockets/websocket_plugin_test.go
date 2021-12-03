@@ -23,13 +23,13 @@ import (
 	"github.com/spiral/roadrunner-plugins/v2/broadcast"
 	"github.com/spiral/roadrunner-plugins/v2/config"
 	httpPlugin "github.com/spiral/roadrunner-plugins/v2/http"
+	"github.com/spiral/roadrunner-plugins/v2/http/middleware/websockets"
 	"github.com/spiral/roadrunner-plugins/v2/logger"
 	"github.com/spiral/roadrunner-plugins/v2/memory"
 	"github.com/spiral/roadrunner-plugins/v2/redis"
 	rpcPlugin "github.com/spiral/roadrunner-plugins/v2/rpc"
 	"github.com/spiral/roadrunner-plugins/v2/server"
 	"github.com/spiral/roadrunner-plugins/v2/utils"
-	"github.com/spiral/roadrunner-plugins/v2/websockets"
 	"github.com/stretchr/testify/assert"
 )
 
