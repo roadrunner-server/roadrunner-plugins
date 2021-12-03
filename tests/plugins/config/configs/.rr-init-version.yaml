@@ -1,0 +1,22 @@
+version: '2.6.3'
+
+rpc:
+  listen: tcp://127.0.0.1:6060
+
+server:
+  command: "php ../../tests/php_test_files/psr-worker-bench.php"
+  relay: "pipes"
+  relay_timeout: "20s"
+
+http:
+  address: 127.0.0.1:12893
+  access_logs: false
+  pool:
+    num_workers: 2
+    allocate_timeout: 60s
+    destroy_timeout: 60s
+
+
+logs:
+  mode: development
+  level: info

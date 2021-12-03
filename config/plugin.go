@@ -10,7 +10,10 @@ import (
 	"github.com/spiral/errors"
 )
 
-const PluginName string = "config"
+const (
+	PluginName string = "config"
+	version    string = "version"
+)
 
 type Viper struct {
 	viper     *viper.Viper
@@ -24,6 +27,9 @@ type Viper struct {
 
 	// RRVersion passed from the RR-Endure.
 	RRVersion string
+
+	// Configuration version
+	ConfigVersion string
 
 	CommonConfig *General
 }
@@ -74,6 +80,13 @@ func (v *Viper) Init() error {
 			v.viper.Set(key, val)
 		}
 	}
+
+	// get configuration version
+	ver := v.viper.Get(version)
+	if ver == nil {
+		ver = "2.6.0"
+	}
+	_ = ver
 
 	return nil
 }

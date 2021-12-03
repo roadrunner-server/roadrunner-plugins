@@ -3,6 +3,8 @@ package config
 import (
 	"os"
 	"os/signal"
+	"sync"
+	"syscall"
 	"testing"
 	"time"
 
@@ -11,6 +13,7 @@ import (
 	"github.com/spiral/roadrunner-plugins/v2/logger"
 	"github.com/spiral/roadrunner-plugins/v2/rpc"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestViperProvider_Init(t *testing.T) {
@@ -313,4 +316,72 @@ func TestConfigProvider_GeneralSection(t *testing.T) {
 			return
 		}
 	}
+}
+
+// VERSIONS
+
+func TestViperProvider_Init_Version(t *testing.T) {
+	container, err := endure.NewContainer(nil, endure.RetryOnFail(true), endure.SetLogLevel(endure.ErrorLevel))
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	vp := &config.Viper{}
+	vp.Path = "configs/.rr-init-version.yaml"
+	vp.Prefix = "rr"
+	vp.Flags = nil
+	vp.RRVersion = "2.6.3"
+
+	err = container.RegisterAll(
+		vp,
+		&Foo{},
+	)
+
+	require.NoError(t, err)
+
+	err = container.Init()
+	require.NoError(t, err)
+
+	ch, err := container.Serve()
+	assert.NoError(t, err)
+
+	sig := make(chan os.Signal, 1)
+	signal.Notify(sig, os.Interrupt, syscall.SIGINT, syscall.SIGTERM)
+
+	wg := &sync.WaitGroup{}
+	wg.Add(1)
+
+	stopCh := make(chan struct{}, 1)
+
+	go func() {
+		defer wg.Done()
+		for {
+			select {
+			case e := <-ch:
+				assert.Fail(t, "error", e.Error.Error())
+				err = container.Stop()
+				if err != nil {
+					assert.FailNow(t, "error", err.Error())
+				}
+				return
+			case <-sig:
+				err = container.Stop()
+				if err != nil {
+					assert.FailNow(t, "error", err.Error())
+				}
+				return
+			case <-stopCh:
+				// timeout
+				err = container.Stop()
+				if err != nil {
+					assert.FailNow(t, "error", err.Error())
+				}
+				return
+			}
+		}
+	}()
+
+	time.Sleep(time.Second * 10)
+	stopCh <- struct{}{}
+	wg.Wait()
 }
