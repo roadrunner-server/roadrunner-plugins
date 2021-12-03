@@ -1,5 +1,5 @@
 server:
-  command: "php ../../sleep.php"
+  command: "php ../../php_test_files/sleep.php"
   relay: "pipes"
   relay_timeout: "20s"
 
