@@ -131,8 +131,6 @@ func (p *Plugin) Stop() error {
 	return nil
 }
 
-func (p *Plugin) Available() {}
-
 func (p *Plugin) Name() string {
 	return pluginName
 }

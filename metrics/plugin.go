@@ -237,6 +237,3 @@ func (p *Plugin) RPC() interface{} {
 		log: p.log,
 	}
 }
-
-// Available interface implementation
-func (p *Plugin) Available() {}

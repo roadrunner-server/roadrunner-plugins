@@ -19,9 +19,3 @@ type JobsStat interface {
 	// JobsState returns slice with the attached drivers information
 	JobsState(ctx context.Context) ([]*jobs.State, error)
 }
-
-// Availabler interface should be implemented by every plugin which wish to report to the PHP worker that it available in the RR runtime
-type Availabler interface {
-	// Available method needed to collect all plugins which are available in the runtime.
-	Available()
-}

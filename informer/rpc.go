@@ -17,10 +17,10 @@ type WorkerList struct {
 
 // List all plugins with workers.
 func (rpc *rpc) List(_ bool, list *[]string) error {
-	*list = make([]string, 0, len(rpc.srv.available))
+	*list = make([]string, 0, len(rpc.srv.withWorkers))
 
 	// append all plugin names to the output result
-	for name := range rpc.srv.available {
+	for name := range rpc.srv.withWorkers {
 		*list = append(*list, name)
 	}
 

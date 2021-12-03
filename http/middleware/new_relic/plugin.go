@@ -142,8 +142,6 @@ func (p *Plugin) Middleware(next http.Handler) http.Handler {
 	})
 }
 
-func (p *Plugin) Available() {}
-
 func (p *Plugin) Name() string {
 	return pluginName
 }

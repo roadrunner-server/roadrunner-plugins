@@ -14,11 +14,9 @@ const PluginName = "informer"
 type Plugin struct {
 	withJobs    map[string]informer.JobsStat
 	withWorkers map[string]informer.Informer
-	available   map[string]informer.Availabler
 }
 
 func (p *Plugin) Init() error {
-	p.available = make(map[string]informer.Availabler)
 	p.withWorkers = make(map[string]informer.Informer)
 	p.withJobs = make(map[string]informer.JobsStat)
 	return nil
@@ -53,15 +51,9 @@ func (p *Plugin) Jobs(name string) []*jobs.State {
 // Collects declares services to be collected.
 func (p *Plugin) Collects() []interface{} {
 	return []interface{}{
-		p.CollectAvailablePlugins,
 		p.CollectWorkers,
 		p.CollectJobs,
 	}
-}
-
-// CollectAvailablePlugins collects all RR plugins
-func (p *Plugin) CollectAvailablePlugins(name endure.Named, l informer.Availabler) {
-	p.available[name.Name()] = l
 }
 
 // CollectWorkers obtains plugins with workers inside.

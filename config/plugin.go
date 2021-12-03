@@ -136,9 +136,6 @@ func (v *Viper) Name() string {
 	return PluginName
 }
 
-// Available interface implementation
-func (v *Viper) Available() {}
-
 func parseFlag(flag string) (string, string, error) {
 	const op = errors.Op("parse_flag")
 	if !strings.Contains(flag, "=") {

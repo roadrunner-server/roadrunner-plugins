@@ -36,8 +36,6 @@ func (p *Plugin) Name() string {
 	return pluginName
 }
 
-func (p *Plugin) Available() {}
-
 func (p *Plugin) ConsumerFromConfig(configKey string, pq priorityqueue.Queue) (jobs.Consumer, error) {
 	return beanstalkjobs.NewBeanstalkConsumer(configKey, p.log, p.cfg, pq)
 }

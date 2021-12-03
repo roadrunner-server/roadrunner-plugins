@@ -28,8 +28,6 @@ func (p *Plugin) Name() string {
 	return pluginName
 }
 
-func (p *Plugin) Available() {}
-
 func (p *Plugin) ConsumerFromConfig(configKey string, pq priorityqueue.Queue) (jobs.Consumer, error) {
 	return amqpjobs.NewAMQPConsumer(configKey, p.log, p.cfg, pq)
 }
