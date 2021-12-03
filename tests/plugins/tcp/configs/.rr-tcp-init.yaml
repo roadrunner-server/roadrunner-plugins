@@ -2,7 +2,7 @@ rpc:
   listen: tcp://127.0.0.1:6002
 
 server:
-  command: "php ../../psr-worker-tcp.php"
+  command: "php ../../php_test_files/psr-worker-tcp.php"
 
 tcp:
   servers:

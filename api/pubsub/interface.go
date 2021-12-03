@@ -21,6 +21,10 @@ type SubReader interface {
 	Reader
 }
 
+type Broadcaster interface {
+	GetDriver(key string) (SubReader, error)
+}
+
 // Subscriber defines the ability to operate as message passing broker.
 // BETA interface
 type Subscriber interface {

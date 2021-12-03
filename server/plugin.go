@@ -91,9 +91,6 @@ func (p *Plugin) Name() string {
 	return PluginName
 }
 
-// Available interface implementation
-func (p *Plugin) Available() {}
-
 // Serve (Start) server plugin (just a mock here to satisfy interface)
 func (p *Plugin) Serve() chan error {
 	errCh := make(chan error, 1)

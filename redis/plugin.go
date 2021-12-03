@@ -33,9 +33,6 @@ func (p *Plugin) Name() string {
 	return PluginName
 }
 
-// Available interface implementation
-func (p *Plugin) Available() {}
-
 // KvFromConfig provides KV storage implementation over the redis plugin
 func (p *Plugin) KvFromConfig(key string) (kv.Storage, error) {
 	const op = errors.Op("redis_plugin_provide")

@@ -2,7 +2,7 @@ rpc:
   listen: tcp://127.0.0.1:6001
 
 server:
-  command: "php ../../metrics-issue-571.php"
+  command: "php ../../php_test_files/metrics-issue-571.php"
 
 http:
   address: "0.0.0.0:56444"

@@ -16,4 +16,4 @@
 .idea
 coverage-ci
 **/vendor
-tests/composer.lock
+tests/php_test_files/composer.lock

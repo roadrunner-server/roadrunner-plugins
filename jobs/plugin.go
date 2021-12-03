@@ -290,8 +290,6 @@ func (p *Plugin) JobsState(ctx context.Context) ([]*jobs.State, error) {
 	return jst, nil
 }
 
-func (p *Plugin) Available() {}
-
 func (p *Plugin) Name() string {
 	return PluginName
 }

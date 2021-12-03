@@ -13,7 +13,7 @@ type rpc struct {
 	log    logger.Logger
 }
 
-// Publish ... msg is a proto decoded payload
+// Publish ... msg is a protobuf decoded payload
 // see: root/proto
 func (r *rpc) Publish(in *websocketsv1.Request, out *websocketsv1.Response) error {
 	const op = errors.Op("broadcast_publish")

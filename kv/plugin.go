@@ -154,9 +154,6 @@ func (p *Plugin) Name() string {
 	return PluginName
 }
 
-// Available interface implementation
-func (p *Plugin) Available() {}
-
 func (p *Plugin) GetAllStorageDrivers(name endure.Named, constructor kv.Constructor) {
 	// save the storage constructor
 	p.constructors[name.Name()] = constructor

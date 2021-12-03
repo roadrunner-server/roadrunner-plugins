@@ -163,8 +163,6 @@ func (p *Plugin) Reset() error {
 	return nil
 }
 
-func (p *Plugin) Available() {}
-
 func (p *Plugin) Name() string {
 	return pluginName
 }

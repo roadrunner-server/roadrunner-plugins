@@ -2,7 +2,7 @@ rpc:
   listen: tcp://127.0.0.1:6001
 
 server:
-  command: "php ../../psr-worker-bench.php"
+  command: "php ../../php_test_files/psr-worker-bench.php"
   user: ""
   group: ""
   relay: "pipes"

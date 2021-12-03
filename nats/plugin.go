@@ -36,8 +36,6 @@ func (p *Plugin) Name() string {
 	return pluginName
 }
 
-func (p *Plugin) Available() {}
-
 func (p *Plugin) ConsumerFromConfig(configKey string, queue priorityqueue.Queue) (jobs.Consumer, error) {
 	return natsjobs.FromConfig(configKey, p.log, p.cfg, queue)
 }

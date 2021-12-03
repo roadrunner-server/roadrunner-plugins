@@ -446,6 +446,3 @@ func (p *Plugin) Ready() status.Status {
 		Code: http.StatusServiceUnavailable,
 	}
 }
-
-// Available interface implementation
-func (p *Plugin) Available() {}

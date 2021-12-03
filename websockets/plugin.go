@@ -10,7 +10,6 @@ import (
 	json "github.com/json-iterator/go"
 	"github.com/spiral/errors"
 	"github.com/spiral/roadrunner-plugins/v2/api/pubsub"
-	"github.com/spiral/roadrunner-plugins/v2/broadcast"
 	"github.com/spiral/roadrunner-plugins/v2/config"
 	"github.com/spiral/roadrunner-plugins/v2/http/attributes"
 	"github.com/spiral/roadrunner-plugins/v2/logger"
@@ -39,7 +38,7 @@ type Plugin struct {
 	// subscriber+reader interfaces
 	subReader pubsub.SubReader
 	// broadcaster
-	broadcaster broadcast.Broadcaster
+	broadcaster pubsub.Broadcaster
 
 	cfg *Config
 	log logger.Logger
@@ -65,7 +64,7 @@ type Plugin struct {
 	accessValidator validator.AccessValidatorFn
 }
 
-func (p *Plugin) Init(cfg config.Configurer, log logger.Logger, server server.Server, b broadcast.Broadcaster) error {
+func (p *Plugin) Init(cfg config.Configurer, log logger.Logger, server server.Server, b pubsub.Broadcaster) error {
 	const op = errors.Op("websockets_plugin_init")
 	if !cfg.Has(PluginName) {
 		return errors.E(op, errors.Disabled)
@@ -164,8 +163,6 @@ func (p *Plugin) Stop() error {
 
 	return nil
 }
-
-func (p *Plugin) Available() {}
 
 func (p *Plugin) Name() string {
 	return PluginName

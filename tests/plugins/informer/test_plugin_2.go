@@ -64,8 +64,6 @@ func (p2 *Plugin2) Name() string {
 	return "informer.plugin2"
 }
 
-func (p2 *Plugin2) Available() {}
-
 func (p2 *Plugin2) Workers() []*process.State {
 	if p2.pool == nil {
 		return nil

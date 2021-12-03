@@ -24,8 +24,6 @@ func (p *Plugin) Init(log logger.Logger, cfg config.Configurer) error {
 	return nil
 }
 
-func (p *Plugin) Available() {}
-
 func (p *Plugin) Name() string {
 	return pluginName
 }

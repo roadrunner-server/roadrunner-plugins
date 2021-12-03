@@ -2,7 +2,7 @@ rpc:
   listen: tcp://127.0.0.1:6001
 
 server:
-  command: "php ../../jobs_create_memory.php"
+  command: "php ../../php_test_files/jobs_create_memory.php"
   relay: pipes
   relay_timeout: "20s"
 

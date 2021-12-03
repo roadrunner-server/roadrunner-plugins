@@ -31,8 +31,6 @@ func (p *Plugin) Name() string {
 	return PluginName
 }
 
-func (p *Plugin) Available() {}
-
 // Drivers implementation
 
 func (p *Plugin) PubSubFromConfig(key string) (pubsub.PubSub, error) {

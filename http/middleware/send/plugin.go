@@ -109,6 +109,3 @@ func (p *Plugin) Middleware(next http.Handler) http.Handler { //nolint:gocognit
 func (p *Plugin) Name() string {
 	return PluginName
 }
-
-// Available interface implementation
-func (p *Plugin) Available() {}
