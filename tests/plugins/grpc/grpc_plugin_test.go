@@ -35,7 +35,7 @@ func TestGrpcInit(t *testing.T) {
 	cont, err := endure.NewContainer(nil, endure.SetLogLevel(endure.ErrorLevel))
 	assert.NoError(t, err)
 
-	cfg := &config.Viper{
+	cfg := &config.Plugin{
 		Path:   "configs/.rr-grpc-init.yaml",
 		Prefix: "rr",
 	}
@@ -104,7 +104,7 @@ func TestGrpcInitDuplicate(t *testing.T) {
 	cont, err := endure.NewContainer(nil, endure.SetLogLevel(endure.ErrorLevel))
 	assert.NoError(t, err)
 
-	cfg := &config.Viper{
+	cfg := &config.Plugin{
 		Path:   "configs/.rr-grpc-init-duplicate.yaml",
 		Prefix: "rr",
 	}
@@ -130,7 +130,7 @@ func TestGrpcInitDup2(t *testing.T) {
 	cont, err := endure.NewContainer(nil, endure.SetLogLevel(endure.ErrorLevel))
 	assert.NoError(t, err)
 
-	cfg := &config.Viper{
+	cfg := &config.Plugin{
 		Path:   "configs/.rr-grpc-init-duplicate-2.yaml",
 		Prefix: "rr",
 	}
@@ -197,7 +197,7 @@ func TestGrpcInitMultiple(t *testing.T) {
 	cont, err := endure.NewContainer(nil, endure.SetLogLevel(endure.ErrorLevel))
 	assert.NoError(t, err)
 
-	cfg := &config.Viper{
+	cfg := &config.Plugin{
 		Path:   "configs/.rr-grpc-init-multiple.yaml",
 		Prefix: "rr",
 	}
@@ -264,7 +264,7 @@ func TestGrpcRqRs(t *testing.T) {
 	cont, err := endure.NewContainer(nil, endure.SetLogLevel(endure.ErrorLevel))
 	assert.NoError(t, err)
 
-	cfg := &config.Viper{
+	cfg := &config.Plugin{
 		Path:   "configs/.rr-grpc-rq.yaml",
 		Prefix: "rr",
 	}
@@ -341,7 +341,7 @@ func TestGrpcRqRsMultiple(t *testing.T) {
 	cont, err := endure.NewContainer(nil, endure.SetLogLevel(endure.ErrorLevel))
 	assert.NoError(t, err)
 
-	cfg := &config.Viper{
+	cfg := &config.Plugin{
 		Path:   "configs/.rr-grpc-rq-multiple.yaml",
 		Prefix: "rr",
 	}
@@ -423,7 +423,7 @@ func TestGrpcRqRsTLS(t *testing.T) {
 	cont, err := endure.NewContainer(nil, endure.SetLogLevel(endure.ErrorLevel))
 	assert.NoError(t, err)
 
-	cfg := &config.Viper{
+	cfg := &config.Plugin{
 		Path:   "configs/.rr-grpc-rq-tls.yaml",
 		Prefix: "rr",
 	}
@@ -506,7 +506,7 @@ func TestGrpcRqRsTLSRootCA(t *testing.T) {
 	cont, err := endure.NewContainer(nil, endure.SetLogLevel(endure.ErrorLevel))
 	assert.NoError(t, err)
 
-	cfg := &config.Viper{
+	cfg := &config.Plugin{
 		Path:   "configs/.rr-grpc-rq-tls-rootca.yaml",
 		Prefix: "rr",
 	}
@@ -599,7 +599,7 @@ func TestGrpcRqRsTLS_WithReset(t *testing.T) {
 	cont, err := endure.NewContainer(nil, endure.SetLogLevel(endure.ErrorLevel))
 	assert.NoError(t, err)
 
-	cfg := &config.Viper{
+	cfg := &config.Plugin{
 		Path:   "configs/.rr-grpc-rq-tls.yaml",
 		Prefix: "rr",
 	}

@@ -27,7 +27,7 @@ func TestTCPInit(t *testing.T) {
 	cont, err := endure.NewContainer(nil, endure.SetLogLevel(endure.ErrorLevel))
 	assert.NoError(t, err)
 
-	cfg := &config.Viper{
+	cfg := &config.Plugin{
 		Path:   "configs/.rr-tcp-init.yaml",
 		Prefix: "rr",
 	}
@@ -146,7 +146,7 @@ func TestTCPEmptySend(t *testing.T) {
 	cont, err := endure.NewContainer(nil, endure.SetLogLevel(endure.ErrorLevel))
 	assert.NoError(t, err)
 
-	cfg := &config.Viper{
+	cfg := &config.Plugin{
 		Path:   "configs/.rr-tcp-empty.yaml",
 		Prefix: "rr",
 	}
@@ -228,7 +228,7 @@ func TestTCPConnClose(t *testing.T) {
 	cont, err := endure.NewContainer(nil, endure.SetLogLevel(endure.ErrorLevel))
 	assert.NoError(t, err)
 
-	cfg := &config.Viper{
+	cfg := &config.Plugin{
 		Path:   "configs/.rr-tcp-close.yaml",
 		Prefix: "rr",
 	}
@@ -312,7 +312,7 @@ func TestTCPFull(t *testing.T) {
 	cont, err := endure.NewContainer(nil, endure.SetLogLevel(endure.ErrorLevel))
 	assert.NoError(t, err)
 
-	cfg := &config.Viper{
+	cfg := &config.Plugin{
 		Path:   "configs/.rr-tcp-full.yaml",
 		Prefix: "rr",
 	}

@@ -9,10 +9,10 @@ import (
 // Config configures metrics service.
 type Config struct {
 	// Address to listen
-	Address string
+	Address string `mapstructure:"address"`
 
 	// Collect define application specific metrics.
-	Collect map[string]Collector
+	Collect map[string]Collector `mapstructure:"collect"`
 }
 
 type NamedCollector struct {

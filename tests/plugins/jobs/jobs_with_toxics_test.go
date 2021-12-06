@@ -35,7 +35,7 @@ func TestDurabilityAMQP(t *testing.T) {
 	cont, err := endure.NewContainer(nil, endure.SetLogLevel(endure.ErrorLevel))
 	require.NoError(t, err)
 
-	cfg := &config.Viper{
+	cfg := &config.Plugin{
 		Path:   "durability/.rr-amqp-durability-redial.yaml",
 		Prefix: "rr",
 	}
@@ -129,7 +129,7 @@ func TestDurabilitySQS(t *testing.T) {
 	cont, err := endure.NewContainer(nil, endure.SetLogLevel(endure.ErrorLevel))
 	require.NoError(t, err)
 
-	cfg := &config.Viper{
+	cfg := &config.Plugin{
 		Path:   "durability/.rr-sqs-durability-redial.yaml",
 		Prefix: "rr",
 	}
@@ -224,7 +224,7 @@ func TestDurabilityBeanstalk(t *testing.T) {
 	cont, err := endure.NewContainer(nil, endure.SetLogLevel(endure.ErrorLevel), endure.GracefulShutdownTimeout(time.Second*60))
 	require.NoError(t, err)
 
-	cfg := &config.Viper{
+	cfg := &config.Plugin{
 		Path:   "durability/.rr-beanstalk-durability-redial.yaml",
 		Prefix: "rr",
 	}
@@ -318,7 +318,7 @@ func TestDurabilityNATS(t *testing.T) {
 	cont, err := endure.NewContainer(nil, endure.SetLogLevel(endure.ErrorLevel))
 	require.NoError(t, err)
 
-	cfg := &config.Viper{
+	cfg := &config.Plugin{
 		Path:   "durability/.rr-nats-durability-redial.yaml",
 		Prefix: "rr",
 	}

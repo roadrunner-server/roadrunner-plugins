@@ -23,7 +23,7 @@ func TestServiceInit(t *testing.T) {
 	cont, err := endure.NewContainer(nil, endure.SetLogLevel(endure.ErrorLevel))
 	assert.NoError(t, err)
 
-	cfg := &config.Viper{
+	cfg := &config.Plugin{
 		Path:   "configs/.rr-service-init.yaml",
 		Prefix: "rr",
 	}
@@ -108,7 +108,7 @@ func TestServiceInitStdout(t *testing.T) {
 	cont, err := endure.NewContainer(nil, endure.SetLogLevel(endure.ErrorLevel))
 	assert.NoError(t, err)
 
-	cfg := &config.Viper{
+	cfg := &config.Plugin{
 		Path:   "configs/.rr-service-init-stdout.yaml",
 		Prefix: "rr",
 	}
@@ -179,7 +179,7 @@ func TestServiceEnv(t *testing.T) {
 	cont, err := endure.NewContainer(nil, endure.SetLogLevel(endure.ErrorLevel))
 	assert.NoError(t, err)
 
-	cfg := &config.Viper{
+	cfg := &config.Plugin{
 		Path:   "configs/.rr-service-env.yaml",
 		Prefix: "rr",
 	}
@@ -254,7 +254,7 @@ func TestServiceError(t *testing.T) {
 	cont, err := endure.NewContainer(nil, endure.SetLogLevel(endure.ErrorLevel))
 	assert.NoError(t, err)
 
-	cfg := &config.Viper{
+	cfg := &config.Plugin{
 		Path:   "configs/.rr-service-error.yaml",
 		Prefix: "rr",
 	}
@@ -323,7 +323,7 @@ func TestServiceRestarts(t *testing.T) {
 	cont, err := endure.NewContainer(nil, endure.SetLogLevel(endure.ErrorLevel))
 	assert.NoError(t, err)
 
-	cfg := &config.Viper{
+	cfg := &config.Plugin{
 		Path:   "configs/.rr-service-restarts.yaml",
 		Prefix: "rr",
 	}

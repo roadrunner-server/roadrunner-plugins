@@ -25,7 +25,7 @@ func TestGzipPlugin(t *testing.T) {
 	cont, err := endure.NewContainer(nil, endure.SetLogLevel(endure.ErrorLevel))
 	assert.NoError(t, err)
 
-	cfg := &config.Viper{
+	cfg := &config.Plugin{
 		Path:   "configs/.rr-http-withGzip.yaml",
 		Prefix: "rr",
 	}
@@ -110,7 +110,7 @@ func TestMiddlewareNotExist(t *testing.T) {
 	cont, err := endure.NewContainer(nil, endure.SetLogLevel(endure.ErrorLevel))
 	assert.NoError(t, err)
 
-	cfg := &config.Viper{
+	cfg := &config.Plugin{
 		Path:   "configs/.rr-http-middlewareNotExist.yaml",
 		Prefix: "rr",
 	}

@@ -33,7 +33,7 @@ func TestRpcInit(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	v := &config.Viper{}
+	v := &config.Plugin{}
 	v.Path = "configs/.rr.yaml"
 	v.Prefix = "rr"
 	err = cont.Register(v)
@@ -110,7 +110,7 @@ func TestRpcDisabled(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	v := &config.Viper{}
+	v := &config.Plugin{}
 	v.Path = "configs/.rr-rpc-disabled.yaml"
 	v.Prefix = "rr"
 	err = cont.Register(v)

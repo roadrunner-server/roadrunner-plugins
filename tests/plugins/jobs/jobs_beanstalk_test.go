@@ -33,7 +33,7 @@ func TestBeanstalkInit(t *testing.T) {
 	cont, err := endure.NewContainer(nil, endure.SetLogLevel(endure.ErrorLevel), endure.GracefulShutdownTimeout(time.Second*60))
 	assert.NoError(t, err)
 
-	cfg := &config.Viper{
+	cfg := &config.Plugin{
 		Path:   "beanstalk/.rr-beanstalk-init.yaml",
 		Prefix: "rr",
 	}
@@ -121,7 +121,7 @@ func TestBeanstalkDeclare(t *testing.T) {
 	cont, err := endure.NewContainer(nil, endure.SetLogLevel(endure.ErrorLevel), endure.GracefulShutdownTimeout(time.Second*60))
 	assert.NoError(t, err)
 
-	cfg := &config.Viper{
+	cfg := &config.Plugin{
 		Path:   "beanstalk/.rr-beanstalk-declare.yaml",
 		Prefix: "rr",
 	}
@@ -201,7 +201,7 @@ func TestBeanstalkJobsError(t *testing.T) {
 	cont, err := endure.NewContainer(nil, endure.SetLogLevel(endure.ErrorLevel), endure.GracefulShutdownTimeout(time.Second*60))
 	assert.NoError(t, err)
 
-	cfg := &config.Viper{
+	cfg := &config.Plugin{
 		Path:   "beanstalk/.rr-beanstalk-jobs-err.yaml",
 		Prefix: "rr",
 	}
@@ -282,7 +282,7 @@ func TestBeanstalkStats(t *testing.T) {
 	cont, err := endure.NewContainer(nil, endure.SetLogLevel(endure.ErrorLevel), endure.GracefulShutdownTimeout(time.Second*60))
 	assert.NoError(t, err)
 
-	cfg := &config.Viper{
+	cfg := &config.Plugin{
 		Path:   "beanstalk/.rr-beanstalk-declare.yaml",
 		Prefix: "rr",
 	}
@@ -397,7 +397,7 @@ func TestBeanstalkNoGlobalSection(t *testing.T) {
 	cont, err := endure.NewContainer(nil, endure.SetLogLevel(endure.ErrorLevel), endure.GracefulShutdownTimeout(time.Second*60))
 	assert.NoError(t, err)
 
-	cfg := &config.Viper{
+	cfg := &config.Plugin{
 		Path:   "beanstalk/.rr-no-global.yaml",
 		Prefix: "rr",
 	}
@@ -427,7 +427,7 @@ func TestBeanstalkRespond(t *testing.T) {
 	cont, err := endure.NewContainer(nil, endure.SetLogLevel(endure.ErrorLevel), endure.GracefulShutdownTimeout(time.Second*60))
 	assert.NoError(t, err)
 
-	cfg := &config.Viper{
+	cfg := &config.Plugin{
 		Path:   "beanstalk/.rr-beanstalk-respond.yaml",
 		Prefix: "rr",
 	}

@@ -30,7 +30,7 @@ func TestKVInit(t *testing.T) {
 	cont, err := endure.NewContainer(nil, endure.SetLogLevel(endure.ErrorLevel))
 	assert.NoError(t, err)
 
-	cfg := &config.Viper{
+	cfg := &config.Plugin{
 		Path:   "configs/.rr-kv-init.yaml",
 		Prefix: "rr",
 	}
@@ -108,7 +108,7 @@ func TestKVNoInterval(t *testing.T) {
 	cont, err := endure.NewContainer(nil, endure.SetLogLevel(endure.ErrorLevel))
 	assert.NoError(t, err)
 
-	cfg := &config.Viper{
+	cfg := &config.Plugin{
 		Path:   "configs/.rr-kv-bolt-no-interval.yaml",
 		Prefix: "rr",
 	}
@@ -183,7 +183,7 @@ func TestKVCreateToReopenWithPerms(t *testing.T) {
 	cont, err := endure.NewContainer(nil, endure.SetLogLevel(endure.ErrorLevel))
 	assert.NoError(t, err)
 
-	cfg := &config.Viper{
+	cfg := &config.Plugin{
 		Path:   "configs/.rr-kv-bolt-perms.yaml",
 		Prefix: "rr",
 	}
@@ -251,7 +251,7 @@ func TestKVCreateToReopenWithPerms2(t *testing.T) {
 	cont, err := endure.NewContainer(nil, endure.SetLogLevel(endure.ErrorLevel))
 	assert.NoError(t, err)
 
-	cfg := &config.Viper{
+	cfg := &config.Plugin{
 		Path:   "configs/.rr-kv-bolt-perms.yaml",
 		Prefix: "rr",
 	}
@@ -367,7 +367,7 @@ func TestBoltDb(t *testing.T) {
 	cont, err := endure.NewContainer(nil, endure.SetLogLevel(endure.ErrorLevel))
 	assert.NoError(t, err)
 
-	cfg := &config.Viper{
+	cfg := &config.Plugin{
 		Path:   "configs/.rr-boltdb.yaml",
 		Prefix: "rr",
 	}
@@ -630,7 +630,7 @@ func TestMemcached(t *testing.T) {
 	cont, err := endure.NewContainer(nil, endure.SetLogLevel(endure.ErrorLevel))
 	assert.NoError(t, err)
 
-	cfg := &config.Viper{
+	cfg := &config.Plugin{
 		Path:   "configs/.rr-memcached.yaml",
 		Prefix: "rr",
 	}
@@ -893,7 +893,7 @@ func TestInMemory(t *testing.T) {
 	cont, err := endure.NewContainer(nil, endure.SetLogLevel(endure.ErrorLevel))
 	assert.NoError(t, err)
 
-	cfg := &config.Viper{
+	cfg := &config.Plugin{
 		Path:   "configs/.rr-in-memory.yaml",
 		Prefix: "rr",
 	}
@@ -1154,7 +1154,7 @@ func TestRedis(t *testing.T) {
 	cont, err := endure.NewContainer(nil, endure.SetLogLevel(endure.ErrorLevel))
 	assert.NoError(t, err)
 
-	cfg := &config.Viper{
+	cfg := &config.Plugin{
 		Path:   "configs/.rr-redis.yaml",
 		Prefix: "rr",
 	}
@@ -1222,7 +1222,7 @@ func TestRedisGlobalSection(t *testing.T) {
 	cont, err := endure.NewContainer(nil, endure.SetLogLevel(endure.ErrorLevel))
 	assert.NoError(t, err)
 
-	cfg := &config.Viper{
+	cfg := &config.Plugin{
 		Path:   "configs/.rr-redis-global.yaml",
 		Prefix: "rr",
 	}
@@ -1290,7 +1290,7 @@ func TestRedisNoConfig(t *testing.T) {
 	cont, err := endure.NewContainer(nil, endure.SetLogLevel(endure.ErrorLevel))
 	assert.NoError(t, err)
 
-	cfg := &config.Viper{
+	cfg := &config.Plugin{
 		Path:   "configs/.rr-redis-no-config.yaml", // should be used default
 		Prefix: "rr",
 	}

@@ -9,30 +9,27 @@ import (
 // Config is a Reload configuration point.
 type Config struct {
 	// Interval is a global refresh interval
-	Interval time.Duration
+	Interval time.Duration `mapstructure:"interval"`
 
 	// Patterns is a global file patterns to watch. It will be applied to every directory in project
-	Patterns []string
+	Patterns []string `mapstructure:"patterns"`
 
-	// Services is set of services which would be reloaded in case of FS changes
-	Services map[string]ServiceConfig
+	// Plugins is set of services which would be reloaded in case of FS changes
+	Plugins map[string]ServiceConfig `mapstructure:"services"`
 }
 
 type ServiceConfig struct {
-	// Enabled indicates that service must be watched, doest not required when any other option specified
-	Enabled bool
-
 	// Recursive is options to use nested files from root folder
-	Recursive bool
+	Recursive bool `mapstructure:"recursive"`
 
 	// Patterns is per-service specific files to watch
-	Patterns []string
+	Patterns []string `mapstructure:"patterns"`
 
 	// Dirs is per-service specific dirs which will be combined with Patterns
-	Dirs []string
+	Dirs []string `mapstructure:"dirs"`
 
 	// Ignore is set of files which would not be watched
-	Ignore []string
+	Ignore []string `mapstructure:"ignore"`
 }
 
 // InitDefaults sets missing values to their default values.
@@ -52,9 +49,9 @@ func (c *Config) Valid() error {
 		return errors.E(op, errors.Str("too short interval"))
 	}
 
-	if c.Services == nil {
+	if c.Plugins == nil {
 		return errors.E(op, errors.Str("should add at least 1 service"))
-	} else if len(c.Services) == 0 {
+	} else if len(c.Plugins) == 0 {
 		return errors.E(op, errors.Str("service initialized, however, no config added"))
 	}
 

@@ -32,7 +32,7 @@ func TestAMQPInit(t *testing.T) {
 	cont, err := endure.NewContainer(nil, endure.SetLogLevel(endure.ErrorLevel))
 	assert.NoError(t, err)
 
-	cfg := &config.Viper{
+	cfg := &config.Plugin{
 		Path:   "amqp/.rr-amqp-init.yaml",
 		Prefix: "rr",
 	}
@@ -117,7 +117,7 @@ func TestAMQPDeclare(t *testing.T) {
 	cont, err := endure.NewContainer(nil, endure.SetLogLevel(endure.ErrorLevel))
 	assert.NoError(t, err)
 
-	cfg := &config.Viper{
+	cfg := &config.Plugin{
 		Path:   "amqp/.rr-amqp-declare.yaml",
 		Prefix: "rr",
 	}
@@ -215,7 +215,7 @@ func TestAMQPJobsError(t *testing.T) {
 	cont, err := endure.NewContainer(nil, endure.SetLogLevel(endure.ErrorLevel))
 	assert.NoError(t, err)
 
-	cfg := &config.Viper{
+	cfg := &config.Plugin{
 		Path:   "amqp/.rr-amqp-jobs-err.yaml",
 		Prefix: "rr",
 	}
@@ -314,7 +314,7 @@ func TestAMQPNoGlobalSection(t *testing.T) {
 	cont, err := endure.NewContainer(nil, endure.SetLogLevel(endure.ErrorLevel))
 	assert.NoError(t, err)
 
-	cfg := &config.Viper{
+	cfg := &config.Plugin{
 		Path:   "amqp/.rr-no-global.yaml",
 		Prefix: "rr",
 	}
@@ -344,7 +344,7 @@ func TestAMQPStats(t *testing.T) {
 	cont, err := endure.NewContainer(nil, endure.SetLogLevel(endure.ErrorLevel))
 	assert.NoError(t, err)
 
-	cfg := &config.Viper{
+	cfg := &config.Plugin{
 		Path:   "amqp/.rr-amqp-declare.yaml",
 		Prefix: "rr",
 	}
@@ -474,7 +474,7 @@ func TestAMQPRespondOk(t *testing.T) {
 	cont, err := endure.NewContainer(nil, endure.SetLogLevel(endure.ErrorLevel))
 	assert.NoError(t, err)
 
-	cfg := &config.Viper{
+	cfg := &config.Plugin{
 		Path:   "amqp/.rr-amqp-resp-jobs-ok.yaml",
 		Prefix: "rr",
 	}

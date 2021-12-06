@@ -34,7 +34,7 @@ func TestReloadInit(t *testing.T) {
 	cont, err := endure.NewContainer(nil, endure.SetLogLevel(endure.ErrorLevel))
 	assert.NoError(t, err)
 
-	cfg := &config.Viper{
+	cfg := &config.Plugin{
 		Path:   "configs/.rr-reload.yaml",
 		Prefix: "rr",
 	}
@@ -127,7 +127,7 @@ func TestReloadHugeNumberOfFiles(t *testing.T) {
 	cont, err := endure.NewContainer(nil, endure.SetLogLevel(endure.ErrorLevel))
 	assert.NoError(t, err)
 
-	cfg := &config.Viper{
+	cfg := &config.Plugin{
 		Path:   "configs/.rr-reload.yaml",
 		Prefix: "rr",
 	}
@@ -241,7 +241,7 @@ func TestReloadFilterFileExt(t *testing.T) {
 	cont, err := endure.NewContainer(nil, endure.SetLogLevel(endure.ErrorLevel))
 	assert.NoError(t, err)
 
-	cfg := &config.Viper{
+	cfg := &config.Plugin{
 		Path:   "configs/.rr-reload-2.yaml",
 		Prefix: "rr",
 	}
@@ -366,7 +366,7 @@ func TestReloadCopy100(t *testing.T) {
 	cont, err := endure.NewContainer(nil, endure.SetLogLevel(endure.ErrorLevel))
 	assert.NoError(t, err)
 
-	cfg := &config.Viper{
+	cfg := &config.Plugin{
 		Path:   "configs/.rr-reload-3.yaml",
 		Prefix: "rr",
 	}
@@ -656,7 +656,7 @@ func TestReloadNoRecursion(t *testing.T) {
 	cont, err := endure.NewContainer(nil, endure.SetLogLevel(endure.ErrorLevel))
 	assert.NoError(t, err)
 
-	cfg := &config.Viper{
+	cfg := &config.Plugin{
 		Path:   "configs/.rr-reload-4.yaml",
 		Prefix: "rr",
 	}

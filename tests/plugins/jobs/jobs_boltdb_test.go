@@ -35,7 +35,7 @@ func TestBoltDBInit(t *testing.T) {
 	cont, err := endure.NewContainer(nil, endure.SetLogLevel(endure.ErrorLevel))
 	assert.NoError(t, err)
 
-	cfg := &config.Viper{
+	cfg := &config.Plugin{
 		Path:   "boltdb/.rr-boltdb-init.yaml",
 		Prefix: "rr",
 	}
@@ -109,7 +109,7 @@ func TestBoltDBDeclare(t *testing.T) {
 	cont, err := endure.NewContainer(nil, endure.SetLogLevel(endure.ErrorLevel))
 	assert.NoError(t, err)
 
-	cfg := &config.Viper{
+	cfg := &config.Plugin{
 		Path:   "boltdb/.rr-boltdb-declare.yaml",
 		Prefix: "rr",
 	}
@@ -191,7 +191,7 @@ func TestBoltDBJobsError(t *testing.T) {
 	cont, err := endure.NewContainer(nil, endure.SetLogLevel(endure.ErrorLevel))
 	assert.NoError(t, err)
 
-	cfg := &config.Viper{
+	cfg := &config.Plugin{
 		Path:   "boltdb/.rr-boltdb-jobs-err.yaml",
 		Prefix: "rr",
 	}
@@ -272,7 +272,7 @@ func TestBoltDBNoGlobalSection(t *testing.T) {
 	cont, err := endure.NewContainer(nil, endure.SetLogLevel(endure.ErrorLevel))
 	assert.NoError(t, err)
 
-	cfg := &config.Viper{
+	cfg := &config.Plugin{
 		Path:   "boltdb/.rr-no-global.yaml",
 		Prefix: "rr",
 	}
@@ -302,7 +302,7 @@ func TestBoltDBStats(t *testing.T) {
 	cont, err := endure.NewContainer(nil, endure.SetLogLevel(endure.ErrorLevel))
 	assert.NoError(t, err)
 
-	cfg := &config.Viper{
+	cfg := &config.Plugin{
 		Path:   "boltdb/.rr-boltdb-declare.yaml",
 		Prefix: "rr",
 	}

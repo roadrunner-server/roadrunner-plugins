@@ -30,7 +30,7 @@ func TestNATSInit(t *testing.T) {
 	cont, err := endure.NewContainer(nil, endure.SetLogLevel(endure.ErrorLevel))
 	assert.NoError(t, err)
 
-	cfg := &config.Viper{
+	cfg := &config.Plugin{
 		Path:   "nats/.rr-nats-init.yaml",
 		Prefix: "rr",
 	}
@@ -101,7 +101,7 @@ func TestNATSDeclare(t *testing.T) {
 	cont, err := endure.NewContainer(nil, endure.SetLogLevel(endure.ErrorLevel))
 	assert.NoError(t, err)
 
-	cfg := &config.Viper{
+	cfg := &config.Plugin{
 		Path:   "nats/.rr-nats-declare.yaml",
 		Prefix: "rr",
 	}
@@ -181,7 +181,7 @@ func TestNATSJobsError(t *testing.T) {
 	cont, err := endure.NewContainer(nil, endure.SetLogLevel(endure.ErrorLevel))
 	assert.NoError(t, err)
 
-	cfg := &config.Viper{
+	cfg := &config.Plugin{
 		Path:   "nats/.rr-nats-jobs-err.yaml",
 		Prefix: "rr",
 	}
@@ -261,7 +261,7 @@ func TestNATSRespond(t *testing.T) {
 	cont, err := endure.NewContainer(nil, endure.SetLogLevel(endure.ErrorLevel))
 	assert.NoError(t, err)
 
-	cfg := &config.Viper{
+	cfg := &config.Plugin{
 		Path:   "nats/.rr-nats-respond.yaml",
 		Prefix: "rr",
 	}
@@ -339,7 +339,7 @@ func TestNATSNoGlobalSection(t *testing.T) {
 	cont, err := endure.NewContainer(nil, endure.SetLogLevel(endure.ErrorLevel))
 	assert.NoError(t, err)
 
-	cfg := &config.Viper{
+	cfg := &config.Plugin{
 		Path:   "nats/.rr-no-global.yaml",
 		Prefix: "rr",
 	}
@@ -369,7 +369,7 @@ func TestNATSStats(t *testing.T) {
 	cont, err := endure.NewContainer(nil, endure.SetLogLevel(endure.ErrorLevel))
 	assert.NoError(t, err)
 
-	cfg := &config.Viper{
+	cfg := &config.Plugin{
 		Path:   "nats/.rr-nats-stat.yaml",
 		Prefix: "rr",
 	}

@@ -23,7 +23,7 @@ func TestAppPipes(t *testing.T) {
 	require.NoError(t, err)
 
 	// config plugin
-	vp := &config.Viper{}
+	vp := &config.Plugin{}
 	vp.Path = "configs/.rr.yaml"
 	vp.Prefix = "rr"
 
@@ -77,7 +77,7 @@ func TestAppSockets(t *testing.T) {
 	require.NoError(t, err)
 
 	// config plugin
-	vp := &config.Viper{}
+	vp := &config.Plugin{}
 	vp.Path = "configs/.rr-sockets.yaml"
 	vp.Prefix = "rr"
 	err = container.Register(vp)
@@ -132,7 +132,7 @@ func TestAppTCPOnInit(t *testing.T) {
 	require.NoError(t, err)
 
 	// config plugin
-	vp := &config.Viper{}
+	vp := &config.Plugin{}
 	vp.Path = "configs/.rr-tcp-on-init.yaml"
 	vp.Prefix = "rr"
 	err = container.Register(vp)
@@ -210,7 +210,7 @@ func TestAppSocketsOnInit(t *testing.T) {
 		t.Fatal(err)
 	}
 	// config plugin
-	vp := &config.Viper{}
+	vp := &config.Plugin{}
 	vp.Path = "configs/.rr-sockets-on-init.yaml"
 	vp.Prefix = "rr"
 	err = container.Register(vp)
@@ -288,7 +288,7 @@ func TestAppSocketsOnInitFastClose(t *testing.T) {
 		t.Fatal(err)
 	}
 	// config plugin
-	vp := &config.Viper{}
+	vp := &config.Plugin{}
 	vp.Path = "configs/.rr-sockets-on-init-fast-close.yaml"
 	vp.Prefix = "rr"
 	err = container.Register(vp)
@@ -359,7 +359,7 @@ func TestAppTCP(t *testing.T) {
 	require.NoError(t, err)
 
 	// config plugin
-	vp := &config.Viper{}
+	vp := &config.Plugin{}
 	vp.Path = "configs/.rr-tcp.yaml"
 	vp.Prefix = "rr"
 	err = container.Register(vp)
@@ -411,7 +411,7 @@ func TestAppWrongConfig(t *testing.T) {
 	container, err := endure.NewContainer(nil, endure.RetryOnFail(true), endure.SetLogLevel(endure.ErrorLevel))
 	require.NoError(t, err)
 	// config plugin
-	vp := &config.Viper{}
+	vp := &config.Plugin{}
 	vp.Path = "configs/.rrrrrrrrrr.yaml"
 	vp.Prefix = "rr"
 	err = container.Register(vp)
@@ -434,7 +434,7 @@ func TestAppWrongRelay(t *testing.T) {
 	require.NoError(t, err)
 
 	// config plugin
-	vp := &config.Viper{}
+	vp := &config.Plugin{}
 	vp.Path = "configs/.rr-wrong-relay.yaml"
 	vp.Prefix = "rr"
 	err = container.Register(vp)
@@ -463,7 +463,7 @@ func TestAppWrongCommand(t *testing.T) {
 	require.NoError(t, err)
 
 	// config plugin
-	vp := &config.Viper{}
+	vp := &config.Plugin{}
 	vp.Path = "configs/.rr-wrong-command.yaml"
 	vp.Prefix = "rr"
 	err = container.Register(vp)
@@ -490,7 +490,7 @@ func TestAppWrongCommandOnInit(t *testing.T) {
 	require.NoError(t, err)
 
 	// config plugin
-	vp := &config.Viper{}
+	vp := &config.Plugin{}
 	vp.Path = "configs/.rr-wrong-command-on-init.yaml"
 	vp.Prefix = "rr"
 	err = container.Register(vp)
@@ -517,7 +517,7 @@ func TestAppNoAppSectionInConfig(t *testing.T) {
 	require.NoError(t, err)
 
 	// config plugin
-	vp := &config.Viper{}
+	vp := &config.Plugin{}
 	vp.Path = "configs/.rr-wrong-command.yaml"
 	vp.Prefix = "rr"
 	err = container.Register(vp)

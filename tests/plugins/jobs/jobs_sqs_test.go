@@ -30,7 +30,7 @@ func TestSQSInit(t *testing.T) {
 	cont, err := endure.NewContainer(nil, endure.SetLogLevel(endure.ErrorLevel))
 	assert.NoError(t, err)
 
-	cfg := &config.Viper{
+	cfg := &config.Plugin{
 		Path:   "sqs/.rr-sqs-init.yaml",
 		Prefix: "rr",
 	}
@@ -101,7 +101,7 @@ func TestSQSDeclare(t *testing.T) {
 	cont, err := endure.NewContainer(nil, endure.SetLogLevel(endure.ErrorLevel))
 	assert.NoError(t, err)
 
-	cfg := &config.Viper{
+	cfg := &config.Plugin{
 		Path:   "sqs/.rr-sqs-declare.yaml",
 		Prefix: "rr",
 	}
@@ -182,7 +182,7 @@ func TestSQSJobsError(t *testing.T) {
 	cont, err := endure.NewContainer(nil, endure.SetLogLevel(endure.ErrorLevel))
 	assert.NoError(t, err)
 
-	cfg := &config.Viper{
+	cfg := &config.Plugin{
 		Path:   "sqs/.rr-sqs-jobs-err.yaml",
 		Prefix: "rr",
 	}
@@ -265,7 +265,7 @@ func TestSQSNoGlobalSection(t *testing.T) {
 	cont, err := endure.NewContainer(nil, endure.SetLogLevel(endure.ErrorLevel))
 	assert.NoError(t, err)
 
-	cfg := &config.Viper{
+	cfg := &config.Plugin{
 		Path:   "sqs/.rr-no-global.yaml",
 		Prefix: "rr",
 	}
@@ -295,7 +295,7 @@ func TestSQSStat(t *testing.T) {
 	cont, err := endure.NewContainer(nil, endure.SetLogLevel(endure.ErrorLevel))
 	assert.NoError(t, err)
 
-	cfg := &config.Viper{
+	cfg := &config.Plugin{
 		Path:   "sqs/.rr-sqs-declare.yaml",
 		Prefix: "rr",
 	}
@@ -407,7 +407,7 @@ func TestSQSRespond(t *testing.T) {
 	cont, err := endure.NewContainer(nil, endure.SetLogLevel(endure.ErrorLevel))
 	assert.NoError(t, err)
 
-	cfg := &config.Viper{
+	cfg := &config.Plugin{
 		Path:   "sqs/.rr-sqs-respond.yaml",
 		Prefix: "rr",
 	}

@@ -37,7 +37,7 @@ func TestWebsocketsInit(t *testing.T) {
 	cont, err := endure.NewContainer(nil, endure.SetLogLevel(endure.ErrorLevel))
 	assert.NoError(t, err)
 
-	cfg := &config.Viper{
+	cfg := &config.Plugin{
 		Path:   "configs/.rr-websockets-init.yaml",
 		Prefix: "rr",
 	}
@@ -115,7 +115,7 @@ func TestWSRedis(t *testing.T) {
 	cont, err := endure.NewContainer(nil, endure.SetLogLevel(endure.ErrorLevel))
 	assert.NoError(t, err)
 
-	cfg := &config.Viper{
+	cfg := &config.Plugin{
 		Path:   "configs/.rr-websockets-redis.yaml",
 		Prefix: "rr",
 	}
@@ -190,7 +190,7 @@ func TestWSRedisNoSection(t *testing.T) {
 	cont, err := endure.NewContainer(nil, endure.SetLogLevel(endure.ErrorLevel))
 	assert.NoError(t, err)
 
-	cfg := &config.Viper{
+	cfg := &config.Plugin{
 		Path:   "configs/.rr-websockets-broker-no-section.yaml",
 		Prefix: "rr",
 	}
@@ -220,7 +220,7 @@ func TestWSDeny(t *testing.T) {
 	cont, err := endure.NewContainer(nil, endure.SetLogLevel(endure.ErrorLevel))
 	assert.NoError(t, err)
 
-	cfg := &config.Viper{
+	cfg := &config.Plugin{
 		Path:   "configs/.rr-websockets-deny.yaml",
 		Prefix: "rr",
 	}
@@ -294,7 +294,7 @@ func TestWSDeny2(t *testing.T) {
 	cont, err := endure.NewContainer(nil, endure.SetLogLevel(endure.ErrorLevel))
 	assert.NoError(t, err)
 
-	cfg := &config.Viper{
+	cfg := &config.Plugin{
 		Path:   "configs/.rr-websockets-deny2.yaml",
 		Prefix: "rr",
 	}
@@ -368,7 +368,7 @@ func TestWSStop(t *testing.T) {
 	cont, err := endure.NewContainer(nil, endure.SetLogLevel(endure.ErrorLevel))
 	assert.NoError(t, err)
 
-	cfg := &config.Viper{
+	cfg := &config.Plugin{
 		Path:   "configs/.rr-websockets-stop.yaml",
 		Prefix: "rr",
 	}
@@ -455,7 +455,7 @@ func TestWSAllow(t *testing.T) {
 	cont, err := endure.NewContainer(nil, endure.SetLogLevel(endure.ErrorLevel))
 	assert.NoError(t, err)
 
-	cfg := &config.Viper{
+	cfg := &config.Plugin{
 		Path:   "configs/.rr-websockets-allow.yaml",
 		Prefix: "rr",
 	}
@@ -530,7 +530,7 @@ func TestWSAllow2(t *testing.T) {
 	cont, err := endure.NewContainer(nil, endure.SetLogLevel(endure.ErrorLevel))
 	assert.NoError(t, err)
 
-	cfg := &config.Viper{
+	cfg := &config.Plugin{
 		Path:   "configs/.rr-websockets-allow2.yaml",
 		Prefix: "rr",
 	}

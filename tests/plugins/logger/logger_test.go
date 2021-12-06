@@ -27,7 +27,7 @@ func TestLogger(t *testing.T) {
 		t.Fatal(err)
 	}
 	// config plugin
-	vp := &config.Viper{}
+	vp := &config.Plugin{}
 	vp.Path = "configs/.rr.yaml"
 	vp.Prefix = "rr"
 
@@ -85,7 +85,7 @@ func TestLoggerRawErr(t *testing.T) {
 	assert.NoError(t, err)
 
 	// config plugin
-	cfg := &config.Viper{}
+	cfg := &config.Plugin{}
 	cfg.Path = "configs/.rr-raw-mode.yaml"
 	cfg.Prefix = "rr"
 
@@ -157,7 +157,7 @@ func TestLoggerNoConfig(t *testing.T) {
 		t.Fatal(err)
 	}
 	// config plugin
-	vp := &config.Viper{}
+	vp := &config.Plugin{}
 	vp.Path = "configs/.rr-no-logger.yaml"
 	vp.Prefix = "rr"
 
@@ -217,7 +217,7 @@ func TestLoggerNoConfig2(t *testing.T) {
 		t.Fatal(err)
 	}
 	// config plugin
-	vp := &config.Viper{}
+	vp := &config.Plugin{}
 	vp.Path = "configs/.rr-no-logger2.yaml"
 	vp.Prefix = "rr"
 
@@ -278,7 +278,7 @@ func TestFileLogger(t *testing.T) {
 		t.Fatal(err)
 	}
 	// config plugin
-	vp := &config.Viper{}
+	vp := &config.Plugin{}
 	vp.Path = "configs/.rr-file-logger.yaml"
 	vp.Prefix = "rr"
 
@@ -364,7 +364,7 @@ func TestMarshalObjectLogging(t *testing.T) {
 		t.Fatal(err)
 	}
 	// config plugin
-	vp := &config.Viper{}
+	vp := &config.Plugin{}
 	vp.Path = "configs/.rr-file-logger.yaml"
 	vp.Prefix = "rr"
 

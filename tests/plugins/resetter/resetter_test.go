@@ -27,7 +27,7 @@ func TestResetterInit(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	cfg := &config.Viper{
+	cfg := &config.Plugin{
 		Path:   ".rr-resetter.yaml",
 		Prefix: "rr",
 	}

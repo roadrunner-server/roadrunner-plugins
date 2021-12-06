@@ -21,7 +21,7 @@ func TestViperProvider_Init(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	vp := &config.Viper{}
+	vp := &config.Plugin{}
 	vp.Path = "configs/.rr.yaml"
 	vp.Prefix = "rr"
 	vp.Flags = nil
@@ -75,7 +75,7 @@ func TestConfigOverwriteFail(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	vp := &config.Viper{}
+	vp := &config.Plugin{}
 	vp.Path = "configs/.rr.yaml"
 	vp.Prefix = "rr"
 	vp.Flags = []string{"rpc.listen=tcp//not_exist"}
@@ -97,7 +97,7 @@ func TestConfigOverwriteFail_2(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	vp := &config.Viper{}
+	vp := &config.Plugin{}
 	vp.Path = "configs/.rr.yaml"
 	vp.Prefix = "rr"
 	vp.Flags = []string{"rpc.listen="}
@@ -119,7 +119,7 @@ func TestConfigOverwriteFail_3(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	vp := &config.Viper{}
+	vp := &config.Plugin{}
 	vp.Path = "configs/.rr.yaml"
 	vp.Prefix = "rr"
 	vp.Flags = []string{"="}
@@ -141,7 +141,7 @@ func TestConfigOverwriteValid(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	vp := &config.Viper{}
+	vp := &config.Plugin{}
 	vp.Path = "configs/.rr.yaml"
 	vp.Prefix = "rr"
 	vp.Flags = []string{"rpc.listen=tcp://127.0.0.1:36643"}
@@ -193,7 +193,7 @@ func TestConfigEnvVariables(t *testing.T) {
 	err = os.Setenv("SUPER_RPC_ENV", "tcp://127.0.0.1:36643")
 	assert.NoError(t, err)
 
-	vp := &config.Viper{}
+	vp := &config.Plugin{}
 	vp.Path = "configs/.rr-env.yaml"
 	vp.Prefix = "rr"
 
@@ -244,7 +244,7 @@ func TestConfigEnvVariablesFail(t *testing.T) {
 	err = os.Setenv("SUPER_RPC_ENV", "tcp://127.0.0.1:6065")
 	assert.NoError(t, err)
 
-	vp := &config.Viper{}
+	vp := &config.Plugin{}
 	vp.Path = "configs/.rr-env.yaml"
 	vp.Prefix = "rr"
 
@@ -268,7 +268,7 @@ func TestConfigProvider_GeneralSection(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	vp := &config.Viper{}
+	vp := &config.Plugin{}
 	vp.Path = "configs/.rr.yaml"
 	vp.Prefix = "rr"
 	vp.Flags = nil
@@ -326,7 +326,7 @@ func TestViperProvider_Init_Version(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	vp := &config.Viper{}
+	vp := &config.Plugin{}
 	vp.Path = "configs/.rr-init-version.yaml"
 	vp.Prefix = "rr"
 	vp.Flags = nil

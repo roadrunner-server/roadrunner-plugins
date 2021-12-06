@@ -34,7 +34,7 @@ func TestBroadcastInit(t *testing.T) {
 	cont, err := endure.NewContainer(nil, endure.SetLogLevel(endure.ErrorLevel))
 	assert.NoError(t, err)
 
-	cfg := &config.Viper{
+	cfg := &config.Plugin{
 		Path:   "configs/.rr-broadcast-init.yaml",
 		Prefix: "rr",
 	}
@@ -107,7 +107,7 @@ func TestBroadcastConfigError(t *testing.T) {
 	cont, err := endure.NewContainer(nil, endure.SetLogLevel(endure.ErrorLevel))
 	assert.NoError(t, err)
 
-	cfg := &config.Viper{
+	cfg := &config.Plugin{
 		Path:   "configs/.rr-broadcast-config-error.yaml",
 		Prefix: "rr",
 	}
@@ -142,7 +142,7 @@ func TestBroadcastNoConfig(t *testing.T) {
 	cont, err := endure.NewContainer(nil, endure.SetLogLevel(endure.ErrorLevel))
 	assert.NoError(t, err)
 
-	cfg := &config.Viper{
+	cfg := &config.Plugin{
 		Path:   "configs/.rr-broadcast-no-config.yaml",
 		Prefix: "rr",
 	}
@@ -186,7 +186,7 @@ func TestBroadcastSameSubscriber(t *testing.T) {
 	cont, err := endure.NewContainer(nil, endure.SetLogLevel(endure.ErrorLevel), endure.GracefulShutdownTimeout(time.Second))
 	assert.NoError(t, err)
 
-	cfg := &config.Viper{
+	cfg := &config.Plugin{
 		Path:   "configs/.rr-broadcast-same-section.yaml",
 		Prefix: "rr",
 	}
@@ -309,7 +309,7 @@ func TestBroadcastSameSubscriberGlobal(t *testing.T) {
 	cont, err := endure.NewContainer(nil, endure.SetLogLevel(endure.ErrorLevel), endure.GracefulShutdownTimeout(time.Second))
 	assert.NoError(t, err)
 
-	cfg := &config.Viper{
+	cfg := &config.Plugin{
 		Path:   "configs/.rr-broadcast-global.yaml",
 		Prefix: "rr",
 	}

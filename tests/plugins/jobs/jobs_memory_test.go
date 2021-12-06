@@ -31,7 +31,7 @@ func TestMemoryInit(t *testing.T) {
 	cont, err := endure.NewContainer(nil, endure.SetLogLevel(endure.ErrorLevel))
 	assert.NoError(t, err)
 
-	cfg := &config.Viper{
+	cfg := &config.Plugin{
 		Path:   "memory/.rr-memory-init.yaml",
 		Prefix: "rr",
 	}
@@ -115,7 +115,7 @@ func TestMemoryCreate(t *testing.T) {
 	cont, err := endure.NewContainer(nil, endure.SetLogLevel(endure.ErrorLevel))
 	assert.NoError(t, err)
 
-	cfg := &config.Viper{
+	cfg := &config.Plugin{
 		Path:   "memory/.rr-memory-create.yaml",
 		Prefix: "rr",
 	}
@@ -187,7 +187,7 @@ func TestMemoryDeclare(t *testing.T) {
 	cont, err := endure.NewContainer(nil, endure.SetLogLevel(endure.ErrorLevel))
 	assert.NoError(t, err)
 
-	cfg := &config.Viper{
+	cfg := &config.Plugin{
 		Path:   "memory/.rr-memory-declare.yaml",
 		Prefix: "rr",
 	}
@@ -283,7 +283,7 @@ func TestMemoryPauseResume(t *testing.T) {
 	cont, err := endure.NewContainer(nil, endure.SetLogLevel(endure.ErrorLevel))
 	assert.NoError(t, err)
 
-	cfg := &config.Viper{
+	cfg := &config.Plugin{
 		Path:   "memory/.rr-memory-pause-resume.yaml",
 		Prefix: "rr",
 	}
@@ -384,7 +384,7 @@ func TestMemoryJobsError(t *testing.T) {
 	cont, err := endure.NewContainer(nil, endure.SetLogLevel(endure.ErrorLevel))
 	assert.NoError(t, err)
 
-	cfg := &config.Viper{
+	cfg := &config.Plugin{
 		Path:   "memory/.rr-memory-jobs-err.yaml",
 		Prefix: "rr",
 	}
@@ -482,7 +482,7 @@ func TestMemoryStats(t *testing.T) {
 	cont, err := endure.NewContainer(nil, endure.SetLogLevel(endure.ErrorLevel))
 	assert.NoError(t, err)
 
-	cfg := &config.Viper{
+	cfg := &config.Plugin{
 		Path:   "memory/.rr-memory-declare.yaml",
 		Prefix: "rr",
 	}

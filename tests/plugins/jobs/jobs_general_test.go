@@ -28,7 +28,7 @@ func TestJobsInit(t *testing.T) {
 	cont, err := endure.NewContainer(nil, endure.SetLogLevel(endure.ErrorLevel))
 	assert.NoError(t, err)
 
-	cfg := &config.Viper{
+	cfg := &config.Plugin{
 		Path:   "configs/.rr-jobs-init.yaml",
 		Prefix: "rr",
 	}
@@ -102,7 +102,7 @@ func TestJOBSMetrics(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	cfg := &config.Viper{}
+	cfg := &config.Plugin{}
 	cfg.Prefix = "rr"
 	cfg.Path = "configs/.rr-jobs-metrics.yaml"
 
