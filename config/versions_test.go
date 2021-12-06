@@ -54,11 +54,17 @@ func TestTransition(t *testing.T) {
 	to = "2.7"
 
 	err = transition(from, to, v)
-	require.Error(t, err)
+	require.NoError(t, err)
 
 	from = "2.6"
 	to = "2.7"
 
 	err = transition(from, to, v)
 	require.NoError(t, err)
+
+	from = "2.6"
+	to = "2d.7"
+
+	err = transition(from, to, v)
+	require.Error(t, err)
 }

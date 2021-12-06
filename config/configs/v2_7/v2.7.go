@@ -1,4 +1,5 @@
 package v2_7 //nolint:stylecheck
+
 import (
 	"time"
 )
@@ -9,12 +10,12 @@ type (
 )
 
 type Config struct {
-	RPC struct {
+	RPC *struct {
 		Listen string `mapstructure:"listen"`
 	} `mapstructure:"rpc"`
 	// --------------
-	Server struct {
-		OnInit struct {
+	Server *struct {
+		OnInit *struct {
 			Command     string `mapstructure:"command"`
 			ExecTimeout string `mapstructure:"exec_timeout"`
 			Env         Env    `mapstructure:"env"`
@@ -27,7 +28,7 @@ type Config struct {
 		RelayTimeout string `mapstructure:"relay_timeout"`
 	} `mapstructure:"server"`
 	// --------------
-	Logs struct {
+	Logs *struct {
 		Mode        string            `mapstructure:"mode"`
 		Level       string            `mapstructure:"level"`
 		LineEnding  string            `mapstructure:"line_ending"`
@@ -38,22 +39,22 @@ type Config struct {
 		Channels    map[string]Logs   `mapstructure:"channels"`
 	} `mapstructure:"logs"`
 	// --------------
-	Temporal struct {
+	Temporal *struct {
 		Address   string `mapstructure:"address"`
 		CacheSize int    `mapstructure:"cache_size"`
 		Namespace string `mapstructure:"namespace"`
-		Metrics   struct {
+		Metrics   *struct {
 			Address string `mapstructure:"address"`
 			Type    string `mapstructure:"type"`
 			Prefix  string `mapstructure:"prefix"`
 		} `mapstructure:"metrics"`
-		Activities struct {
+		Activities *struct {
 			Debug           bool   `mapstructure:"debug"`
 			NumWorkers      int    `mapstructure:"num_workers"`
 			MaxJobs         int    `mapstructure:"max_jobs"`
 			AllocateTimeout string `mapstructure:"allocate_timeout"`
 			DestroyTimeout  string `mapstructure:"destroy_timeout"`
-			Supervisor      struct {
+			Supervisor      *struct {
 				WatchTick       string `mapstructure:"watch_tick"`
 				TTL             string `mapstructure:"ttl"`
 				IdleTTL         string `mapstructure:"idle_ttl"`
@@ -65,28 +66,28 @@ type Config struct {
 		DebugLevel int    `mapstructure:"debug_level"`
 	} `mapstructure:"temporal"`
 	// --------------
-	Kv map[string]interface{} `mapstructure:"kv"`
+	Kv *map[string]interface{} `mapstructure:"kv"`
 	// --------------
-	Services map[string]Service `mapstructure:"service"`
+	Services *map[string]Service `mapstructure:"service"`
 	// --------------
-	HTTP struct {
+	HTTP *struct {
 		Address           string   `mapstructure:"address"`
 		InternalErrorCode int      `mapstructure:"internal_error_code"`
 		AccessLogs        bool     `mapstructure:"access_logs"`
 		MaxRequestSize    int      `mapstructure:"max_request_size"`
 		Middleware        []string `mapstructure:"middleware"`
 		TrustedSubnets    []string `mapstructure:"trusted_subnets"`
-		NewRelic          struct {
+		NewRelic          *struct {
 			AppName    string `mapstructure:"app_name"`
 			LicenseKey string `mapstructure:"license_key"`
 		} `mapstructure:"new_relic"`
-		Uploads struct {
+		Uploads *struct {
 			Dir    string   `mapstructure:"dir"`
 			Forbid []string `mapstructure:"forbid"`
 			Allow  []string `mapstructure:"allow"`
 		} `mapstructure:"uploads"`
-		Headers struct {
-			Cors struct {
+		Headers *struct {
+			Cors *struct {
 				AllowedOrigin    string `mapstructure:"allowed_origin"`
 				AllowedHeaders   string `mapstructure:"allowed_headers"`
 				AllowedMethods   string `mapstructure:"allowed_methods"`
@@ -94,33 +95,33 @@ type Config struct {
 				ExposedHeaders   string `mapstructure:"exposed_headers"`
 				MaxAge           int    `mapstructure:"max_age"`
 			} `mapstructure:"cors"`
-			Request struct {
+			Request *struct {
 				Input string `mapstructure:"input"`
 			} `mapstructure:"request"`
-			Response struct {
+			Response *struct {
 				XPoweredBy string `mapstructure:"X-Powered-By"`
 			} `mapstructure:"response"`
 		} `mapstructure:"headers"`
-		Static struct {
+		Static *struct {
 			Dir           string   `mapstructure:"dir"`
 			Forbid        []string `mapstructure:"forbid"`
 			CalculateEtag bool     `mapstructure:"calculate_etag"`
 			Weak          bool     `mapstructure:"weak"`
 			Allow         []string `mapstructure:"allow"`
-			Request       struct {
+			Request       *struct {
 				Input string `mapstructure:"input"`
 			} `mapstructure:"request"`
-			Response struct {
+			Response *struct {
 				Output string `mapstructure:"output"`
 			} `mapstructure:"response"`
 		} `mapstructure:"static"`
-		Pool struct {
+		Pool *struct {
 			Debug           bool   `mapstructure:"debug"`
 			NumWorkers      int    `mapstructure:"num_workers"`
 			MaxJobs         int    `mapstructure:"max_jobs"`
 			AllocateTimeout string `mapstructure:"allocate_timeout"`
 			DestroyTimeout  string `mapstructure:"destroy_timeout"`
-			Supervisor      struct {
+			Supervisor      *struct {
 				WatchTick       string `mapstructure:"watch_tick"`
 				TTL             string `mapstructure:"ttl"`
 				IdleTTL         string `mapstructure:"idle_ttl"`
@@ -128,9 +129,9 @@ type Config struct {
 				ExecTTL         string `mapstructure:"exec_ttl"`
 			} `mapstructure:"supervisor"`
 		} `mapstructure:"pool"`
-		Ssl struct {
+		Ssl *struct {
 			Address string `mapstructure:"address"`
-			Acme    struct {
+			Acme    *struct {
 				CertsDir              string   `mapstructure:"certs_dir"`
 				Email                 string   `mapstructure:"email"`
 				AltHTTPPort           int      `mapstructure:"alt_http_port"`
@@ -144,16 +145,16 @@ type Config struct {
 			Key      string `mapstructure:"key"`
 			RootCa   string `mapstructure:"root_ca"`
 		} `mapstructure:"ssl"`
-		Fcgi struct {
+		Fcgi *struct {
 			Address string `mapstructure:"address"`
 		} `mapstructure:"fcgi"`
-		HTTP2 struct {
+		HTTP2 *struct {
 			H2C                  bool `mapstructure:"h2c"`
 			MaxConcurrentStreams int  `mapstructure:"max_concurrent_streams"`
 		} `mapstructure:"http2"`
 	} `mapstructure:"http"`
 	// --------------
-	Redis struct {
+	Redis *struct {
 		Addrs            []string `mapstructure:"addrs"`
 		MasterName       string   `mapstructure:"master_name"`
 		Username         string   `mapstructure:"username"`
@@ -177,48 +178,48 @@ type Config struct {
 		ReadOnly         bool     `mapstructure:"read_only"`
 	} `mapstructure:"redis"`
 	// --------------
-	Websockets struct {
+	Websockets *struct {
 		Broker        string `mapstructure:"broker"`
 		AllowedOrigin string `mapstructure:"allowed_origin"`
 		Path          string `mapstructure:"path"`
 	} `mapstructure:"websockets"`
 	// --------------
-	Broadcast map[string]interface{} `mapstructure:"broadcast"`
+	Broadcast *map[string]interface{} `mapstructure:"broadcast"`
 	// --------------
-	Metrics struct {
+	Metrics *struct {
 		Address string               `mapstructure:"address"`
 		Collect map[string]Collector `mapstructure:"collect"`
 	} `mapstructure:"metrics"`
 	// --------------
-	Status struct {
+	Status *struct {
 		Address               string `mapstructure:"address"`
 		UnavailableStatusCode int    `mapstructure:"unavailable_status_code"`
 	} `mapstructure:"status"`
 	// --------------
-	Reload struct {
+	Reload *struct {
 		Interval time.Duration            `mapstructure:"interval"`
 		Patterns []string                 `mapstructure:"patterns"`
 		Plugins  map[string]ServiceConfig `mapstructure:"services"`
 	} `mapstructure:"reload"`
 	// --------------
-	Nats struct {
+	Nats *struct {
 		Addr string `mapstructure:"addr"`
 	} `mapstructure:"nats"`
 	// --------------
-	Boltdb struct {
+	Boltdb *struct {
 		Permissions int `mapstructure:"permissions"`
 	} `mapstructure:"boltdb"`
 	// --------------
-	AMQP struct {
+	AMQP *struct {
 		Addr string `mapstructure:"addr"`
 	} `mapstructure:"amqp"`
 	// --------------
-	Beanstalk struct {
+	Beanstalk *struct {
 		Addr    string `mapstructure:"addr"`
 		Timeout string `mapstructure:"timeout"`
 	} `mapstructure:"beanstalk"`
 	// --------------
-	Sqs struct {
+	Sqs *struct {
 		Key          string `mapstructure:"key"`
 		Secret       string `mapstructure:"secret"`
 		Region       string `mapstructure:"region"`
@@ -226,10 +227,10 @@ type Config struct {
 		Endpoint     string `mapstructure:"endpoint"`
 	} `mapstructure:"sqs"`
 	// --------------
-	Jobs struct {
+	Jobs *struct {
 		NumPollers   int `mapstructure:"num_pollers"`
 		PipelineSize int `mapstructure:"pipeline_size"`
-		Pool         struct {
+		Pool         *struct {
 			NumWorkers      int    `mapstructure:"num_workers"`
 			MaxJobs         int    `mapstructure:"max_jobs"`
 			AllocateTimeout string `mapstructure:"allocate_timeout"`
@@ -239,10 +240,10 @@ type Config struct {
 		Consume   []string             `mapstructure:"consume"`
 	} `mapstructure:"jobs"`
 	// --------------
-	Grpc struct {
+	Grpc *struct {
 		Listen string   `mapstructure:"listen"`
 		Proto  []string `mapstructure:"proto"`
-		TLS    struct {
+		TLS    *struct {
 			Key            string `mapstructure:"key"`
 			Cert           string `mapstructure:"cert"`
 			RootCa         string `mapstructure:"root_ca"`
@@ -256,7 +257,7 @@ type Config struct {
 		MaxConcurrentStreams  int    `mapstructure:"max_concurrent_streams"`
 		PingTime              string `mapstructure:"ping_time"`
 		Timeout               string `mapstructure:"timeout"`
-		Pool                  struct {
+		Pool                  *struct {
 			NumWorkers      int    `mapstructure:"num_workers"`
 			MaxJobs         int    `mapstructure:"max_jobs"`
 			AllocateTimeout string `mapstructure:"allocate_timeout"`
@@ -264,16 +265,16 @@ type Config struct {
 		} `mapstructure:"pool"`
 	} `mapstructure:"grpc"`
 	// --------------
-	TCP struct {
+	TCP *struct {
 		Servers        map[string]*Server `mapstructure:"servers"`
 		ReadBufferSize int                `mapstructure:"read_buf_size"`
-		Pool           struct {
+		Pool           *struct {
 			Debug           bool   `mapstructure:"debug"`
 			NumWorkers      int    `mapstructure:"num_workers"`
 			MaxJobs         int    `mapstructure:"max_jobs"`
 			AllocateTimeout string `mapstructure:"allocate_timeout"`
 			DestroyTimeout  string `mapstructure:"destroy_timeout"`
-			Supervisor      struct {
+			Supervisor      *struct {
 				WatchTick       string `mapstructure:"watch_tick"`
 				TTL             string `mapstructure:"ttl"`
 				IdleTTL         string `mapstructure:"idle_ttl"`
@@ -283,12 +284,12 @@ type Config struct {
 		} `mapstructure:"pool"`
 	} `mapstructure:"tcp"`
 	// --------------
-	Fileserver struct {
+	Fileserver *struct {
 		Address           string `mapstructure:"address"`
 		CalculateEtag     bool   `mapstructure:"calculate_etag"`
 		Weak              bool   `mapstructure:"weak"`
 		StreamRequestBody bool   `mapstructure:"stream_request_body"`
-		Serve             []struct {
+		Serve             []*struct {
 			Prefix        string `mapstructure:"prefix"`
 			Root          string `mapstructure:"root"`
 			Compress      bool   `mapstructure:"compress"`
@@ -298,7 +299,7 @@ type Config struct {
 		} `mapstructure:"serve"`
 	} `mapstructure:"fileserver"`
 	// --------------
-	Endure struct {
+	Endure *struct {
 		GracePeriod string `mapstructure:"grace_period"`
 		PrintGraph  bool   `mapstructure:"print_graph"`
 		LogLevel    string `mapstructure:"log_level"`
@@ -323,7 +324,7 @@ type ChannelConfig struct {
 	Channels map[string]Config `mapstructure:"channels"`
 }
 
-// FileLoggerConfig structure represents configuration for the file logger
+// FileLoggerConfig *structure represents configuration for the file logger
 type FileLoggerConfig struct {
 	LogOutput  string `mapstructure:"log_output"`
 	MaxSize    int    `mapstructure:"max_size"`

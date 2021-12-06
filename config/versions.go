@@ -1,6 +1,8 @@
 package config
 
 import (
+	"fmt"
+
 	"github.com/hashicorp/go-version"
 	"github.com/spf13/viper"
 	"github.com/spiral/errors"
@@ -9,8 +11,13 @@ import (
 )
 
 const (
-	v26 string = "v2.6.0"
-	v27 string = "v2.7.0"
+	v26 string = "2.6.0"
+	v27 string = "2.7.0"
+)
+
+// changed sections
+const (
+	jobs string = "jobs"
 )
 
 // all configuration version
@@ -43,17 +50,17 @@ func transition(from, to string, v *viper.Viper) error {
 		return errors.Errorf("incompatible versions passed: from: %s, to: %s", vfrom.String(), vto.String())
 	}
 
-	if segTo[2] != 0 {
-		return errors.Errorf("bugfix version should be 0 in the: %s", vto.String())
-	}
+	// use only 2 digits
+	trFrom := fmt.Sprintf("%d.%d.0", segFrom[0], segFrom[1])
+	trTo := fmt.Sprintf("%d.%d.0", segTo[0], segTo[1])
 
-	if segFrom[2] != 0 {
-		return errors.Errorf("bugfix version should be 0 in the: %s", vfrom.String())
-	}
-
-	switch vfrom.String() {
+	switch trFrom {
 	case v26:
-		v26to27(versionsTable[v26].(*v2_6.Config), versionsTable[v27].(*v2_7.Config), v)
+		switch trTo { //nolint:gocritic
+		case v27:
+			// transition configuration from v2.6 to v2.7
+			v26to27(versionsTable[v26].(*v2_6.Config), versionsTable[v27].(*v2_7.Config), v)
+		}
 	case v27:
 		return nil
 	}
@@ -62,5 +69,8 @@ func transition(from, to string, v *viper.Viper) error {
 }
 
 func v26to27(from *v2_6.Config, to *v2_7.Config, v *viper.Viper) {
-
+	err := v.UnmarshalKey(jobs, &from.Jobs)
+	if err != nil {
+		panic(err)
+	}
 }

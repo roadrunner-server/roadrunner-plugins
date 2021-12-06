@@ -6,6 +6,7 @@ import (
 	"os"
 	"strings"
 
+	"github.com/hashicorp/go-version"
 	"github.com/spf13/viper"
 	"github.com/spiral/errors"
 )
@@ -28,9 +29,6 @@ type Plugin struct {
 
 	// RRVersion passed from the Endure.
 	RRVersion string
-
-	// Configuration version obtained from the configuration (2.6 used as a start point)
-	ConfigVersion string
 
 	// All plugins common parameters
 	CommonConfig *General
@@ -69,19 +67,50 @@ func (p *Plugin) Init() error {
 	ver := p.viper.Get(versionKey)
 	if ver == nil {
 		// default version (versioning start point is 2.6)
-		ver = "2.6"
+		ver = defaultVersion
 	}
 
 	if _, ok := ver.(string); !ok {
 		return errors.E(op, errors.Errorf("version should be a string, actual type: %T", ver))
 	}
 
-	if p.ConfigVersion == "" {
-		p.ConfigVersion = defaultVersion
+	// versions before 2.7
+	if p.RRVersion == "" {
+		p.RRVersion = defaultVersion
 	}
 
-	if p.ConfigVersion != ver.(string) {
-		err = transition(ver.(string), p.ConfigVersion, p.viper)
+	// configuration version
+	cfgV, err := version.NewSemver(ver.(string))
+	if err != nil {
+		return errors.E(op, err)
+	}
+
+	// RR version
+	rrV, err := version.NewSemver(p.RRVersion)
+	if err != nil {
+		return errors.E(op, err)
+	}
+
+	// default version (2.6.0)
+	defV, err := version.NewSemver(defaultVersion)
+	if err != nil {
+		return errors.E(op, err)
+	}
+
+	// probably user set too old version
+	if cfgV.LessThan(defV) {
+		return errors.E(op, errors.Errorf("too old configuration version used, should be at least 2.6"))
+	}
+
+	// if RR version is less than configuration version (2.6 RR and 2.7 config)
+	if rrV.LessThan(cfgV) {
+		return errors.E(op, errors.Errorf("RR version is older than configuration version, RR version: %s, configuration version: %s", p.RRVersion, ver.(string)))
+	}
+
+	// if rr version is equal to the configuration version, skip transition
+	if !rrV.Equal(cfgV) {
+		// transform from the older config to the recent RR version
+		err = transition(cfgV.String(), rrV.String(), p.viper)
 		if err != nil {
 			return errors.E(op, err)
 		}

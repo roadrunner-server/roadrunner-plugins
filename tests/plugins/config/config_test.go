@@ -330,7 +330,7 @@ func TestViperProvider_Init_Version(t *testing.T) {
 	vp.Path = "configs/.rr-init-version.yaml"
 	vp.Prefix = "rr"
 	vp.Flags = nil
-	vp.RRVersion = "2.6.3"
+	vp.RRVersion = "2.7.2"
 
 	err = container.RegisterAll(
 		vp,
