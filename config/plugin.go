@@ -11,8 +11,9 @@ import (
 )
 
 const (
-	PluginName string = "config"
-	versionKey string = "version"
+	PluginName     string = "config"
+	versionKey     string = "version"
+	defaultVersion string = "2.6"
 )
 
 type Plugin struct {
@@ -71,9 +72,19 @@ func (p *Plugin) Init() error {
 		ver = "2.6"
 	}
 
-	err = transition(ver.(string), p.ConfigVersion, p.viper)
-	if err != nil {
-		return errors.E(op, err)
+	if _, ok := ver.(string); !ok {
+		return errors.E(op, errors.Errorf("version should be a string, actual type: %T", ver))
+	}
+
+	if p.ConfigVersion == "" {
+		p.ConfigVersion = defaultVersion
+	}
+
+	if p.ConfigVersion != ver.(string) {
+		err = transition(ver.(string), p.ConfigVersion, p.viper)
+		if err != nil {
+			return errors.E(op, err)
+		}
 	}
 
 	// automatically inject ENV variables using ${ENV} pattern
