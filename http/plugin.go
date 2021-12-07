@@ -355,6 +355,12 @@ func (p *Plugin) Reset() error {
 	defer p.mu.Unlock()
 
 	ctxTout, cancel := context.WithTimeout(context.Background(), time.Second*60)
+	if p.pool == nil {
+		p.log.Info("pool is nil, nothing to restart")
+		cancel()
+		return nil
+	}
+
 	p.pool.Destroy(ctxTout)
 	cancel()
 
