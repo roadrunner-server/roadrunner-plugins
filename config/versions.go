@@ -73,4 +73,50 @@ func v26to27(from *v2_6.Config, to *v2_7.Config, v *viper.Viper) {
 	if err != nil {
 		panic(err)
 	}
+
+	// The user don't use a jobs, skip configuration convert
+	if from.Jobs == nil {
+		return
+	}
+
+	// iterate over old styled pipelines and fill the new configuration
+	for key, val := range from.Jobs.Pipelines {
+		dr := val.Driver()
+		switch dr {
+		case "amqp":
+			oldConfigKey := fmt.Sprintf("%s.%s.%s", "jobs", "pipelines", key)
+			amqpConf := &v2_6.AMQPConfig{}
+			err = v.UnmarshalKey(oldConfigKey, amqpConf)
+			if err != nil {
+				panic(err)
+			}
+
+			newConf := &struct {
+				Prefetch      int    `mapstructure:"prefetch"`
+				Queue         string `mapstructure:"queue"`
+				Exchange      string `mapstructure:"exchange"`
+				ExchangeType  string `mapstructure:"exchange_type"`
+				RoutingKey    string `mapstructure:"routing_key"`
+				Exclusive     bool   `mapstructure:"exclusive"`
+				MultipleAck   bool   `mapstructure:"multiple_ask"`
+				RequeueOnFail bool   `mapstructure:"requeue_on_fail"`
+			}{
+				Prefetch:      amqpConf.Prefetch,
+				Queue:         amqpConf.Queue,
+				Exchange:      amqpConf.Exchange,
+				ExchangeType:  amqpConf.ExchangeType,
+				RoutingKey:    amqpConf.RoutingKey,
+				Exclusive:     amqpConf.Exclusive,
+				MultipleAck:   amqpConf.MultipleAck,
+				RequeueOnFail: amqpConf.RequeueOnFail,
+			}
+
+			conf27 := &v2_7.AMQPConfig{Config: newConf}
+
+			newConfigKey := fmt.Sprintf("%s.%s.%s.%s", "jobs", "pipelines", key, "config")
+
+			v.Set(newConfigKey, conf27)
+		default:
+		}
+	}
 }

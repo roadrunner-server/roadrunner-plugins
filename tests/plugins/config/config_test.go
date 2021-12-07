@@ -9,9 +9,12 @@ import (
 	"time"
 
 	endure "github.com/spiral/endure/pkg/container"
+	"github.com/spiral/roadrunner-plugins/v2/amqp"
 	"github.com/spiral/roadrunner-plugins/v2/config"
+	"github.com/spiral/roadrunner-plugins/v2/jobs"
 	"github.com/spiral/roadrunner-plugins/v2/logger"
 	"github.com/spiral/roadrunner-plugins/v2/rpc"
+	"github.com/spiral/roadrunner-plugins/v2/server"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -333,6 +336,10 @@ func TestViperProvider_Init_Version(t *testing.T) {
 	vp.RRVersion = "2.7.2"
 
 	err = container.RegisterAll(
+		&jobs.Plugin{},
+		&amqp.Plugin{},
+		&logger.ZapLogger{},
+		&server.Plugin{},
 		vp,
 	)
 

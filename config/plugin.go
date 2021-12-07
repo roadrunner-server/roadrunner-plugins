@@ -108,13 +108,24 @@ func (p *Plugin) Init() error {
 	}
 
 	// if rr version is equal to the configuration version, skip transition
+	// but we can have versions like 2.7.0 (config) and 2.7.2 (RR version), they are not equal, but we don't change config
+	// in the bugfix versions. We should additionally check the minor versions
 	if !rrV.Equal(cfgV) {
-		// transform from the older config to the recent RR version
-		err = transition(cfgV.String(), rrV.String(), p.viper)
-		if err != nil {
-			return errors.E(op, err)
+		// minor RR and minor config
+		if (rrV.Segments64()[0] == cfgV.Segments64()[0]) && rrV.Segments64()[1] != cfgV.Segments64()[1] {
+			// transform from the older config to the recent RR version
+			err = transition(cfgV.String(), rrV.String(), p.viper)
+			if err != nil {
+				return errors.E(op, err)
+			}
 		}
 	}
+
+	if p.CommonConfig == nil {
+		p.CommonConfig = &General{}
+	}
+
+	p.CommonConfig.RRVersion = rrV
 
 	// automatically inject ENV variables using ${ENV} pattern
 	for _, key := range p.viper.AllKeys() {

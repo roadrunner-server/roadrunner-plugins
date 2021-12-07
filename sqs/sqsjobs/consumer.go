@@ -16,9 +16,9 @@ import (
 	"github.com/google/uuid"
 	"github.com/spiral/errors"
 	jobState "github.com/spiral/roadrunner-plugins/v2/api/jobs"
+	"github.com/spiral/roadrunner-plugins/v2/api/jobs/pipeline"
 	cfgPlugin "github.com/spiral/roadrunner-plugins/v2/config"
 	"github.com/spiral/roadrunner-plugins/v2/jobs/job"
-	"github.com/spiral/roadrunner-plugins/v2/jobs/pipeline"
 	"github.com/spiral/roadrunner-plugins/v2/logger"
 	priorityqueue "github.com/spiral/roadrunner/v2/priority_queue"
 )

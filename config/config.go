@@ -11,6 +11,9 @@ import (
 type General struct {
 	// GracefulTimeout for the temporal and http
 	GracefulTimeout time.Duration
+
+	// RRVersion passed from the rr-binary
+	RRVersion *version.Version
 }
 
 func validateVersion(ver string) error {
