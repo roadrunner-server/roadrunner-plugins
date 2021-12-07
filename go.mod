@@ -24,7 +24,7 @@ require (
 	github.com/klauspost/compress v1.13.6
 	github.com/mholt/acmez v1.0.1
 	github.com/nats-io/nats.go v1.13.0
-	github.com/newrelic/go-agent/v3 v3.15.1
+	github.com/newrelic/go-agent/v3 v3.15.2
 	github.com/prometheus/client_golang v1.11.0
 	github.com/rabbitmq/amqp091-go v1.2.0
 	github.com/spf13/viper v1.9.0
@@ -38,7 +38,7 @@ require (
 	github.com/yookoala/gofast v0.6.0
 	go.etcd.io/bbolt v1.3.6
 	go.uber.org/zap v1.19.1
-	golang.org/x/net v0.0.0-20211205041911-012df41ee64c
+	golang.org/x/net v0.0.0-20211206223403-eba003a116a9
 	golang.org/x/sys v0.0.0-20211205182925-97ca703d548d
 	google.golang.org/grpc v1.42.0
 	google.golang.org/protobuf v1.27.1
@@ -104,7 +104,7 @@ require (
 	golang.org/x/sync v0.0.0-20210220032951-036812b2e83c // indirect
 	golang.org/x/text v0.3.7 // indirect
 	golang.org/x/tools v0.1.8 // indirect
-	google.golang.org/genproto v0.0.0-20211206160659-862468c7d6e0 // indirect
+	google.golang.org/genproto v0.0.0-20211206220100-3cb06788ce7f // indirect
 	gopkg.in/ini.v1 v1.66.2 // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect
 	gopkg.in/yaml.v3 v3.0.0-20210107192922-496545a6307b // indirect
