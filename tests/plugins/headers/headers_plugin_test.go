@@ -23,7 +23,7 @@ func TestHeadersInit(t *testing.T) {
 	cont, err := endure.NewContainer(nil, endure.SetLogLevel(endure.ErrorLevel))
 	assert.NoError(t, err)
 
-	cfg := &config.Viper{
+	cfg := &config.Plugin{
 		Path:   "configs/.rr-headers-init.yaml",
 		Prefix: "rr",
 	}
@@ -89,7 +89,7 @@ func TestRequestHeaders(t *testing.T) {
 	cont, err := endure.NewContainer(nil, endure.SetLogLevel(endure.ErrorLevel))
 	assert.NoError(t, err)
 
-	cfg := &config.Viper{
+	cfg := &config.Plugin{
 		Path:   "configs/.rr-req-headers.yaml",
 		Prefix: "rr",
 	}
@@ -174,7 +174,7 @@ func TestResponseHeaders(t *testing.T) {
 	cont, err := endure.NewContainer(nil, endure.SetLogLevel(endure.ErrorLevel))
 	assert.NoError(t, err)
 
-	cfg := &config.Viper{
+	cfg := &config.Plugin{
 		Path:   "configs/.rr-res-headers.yaml",
 		Prefix: "rr",
 	}
@@ -260,7 +260,7 @@ func TestCORSHeaders(t *testing.T) {
 	cont, err := endure.NewContainer(nil, endure.SetLogLevel(endure.ErrorLevel))
 	assert.NoError(t, err)
 
-	cfg := &config.Viper{
+	cfg := &config.Plugin{
 		Path:   "configs/.rr-cors-headers.yaml",
 		Prefix: "rr",
 	}

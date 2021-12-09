@@ -10,10 +10,9 @@ import (
 	"time"
 
 	"github.com/spiral/errors"
-	jobState "github.com/spiral/roadrunner-plugins/v2/api/jobs"
+	"github.com/spiral/roadrunner-plugins/v2/api/jobs"
+	"github.com/spiral/roadrunner-plugins/v2/api/jobs/pipeline"
 	cfgPlugin "github.com/spiral/roadrunner-plugins/v2/config"
-	"github.com/spiral/roadrunner-plugins/v2/jobs/job"
-	"github.com/spiral/roadrunner-plugins/v2/jobs/pipeline"
 	"github.com/spiral/roadrunner-plugins/v2/logger"
 	"github.com/spiral/roadrunner-plugins/v2/utils"
 	priorityqueue "github.com/spiral/roadrunner/v2/priority_queue"
@@ -32,7 +31,7 @@ const (
 type consumer struct {
 	file        string
 	permissions int
-	priority    int
+	priority    int64
 	prefetch    int
 
 	db *bolt.DB
@@ -215,7 +214,7 @@ func FromPipeline(pipeline *pipeline.Pipeline, log logger.Logger, cfg cfgPlugin.
 
 	return &consumer{
 		file:        pipeline.String(file, rrDB),
-		priority:    pipeline.Int(priority, 10),
+		priority:    pipeline.Priority(),
 		prefetch:    pipeline.Int(prefetch, 1000),
 		permissions: conf.Permissions,
 
@@ -234,7 +233,7 @@ func FromPipeline(pipeline *pipeline.Pipeline, log logger.Logger, cfg cfgPlugin.
 	}, nil
 }
 
-func (c *consumer) Push(_ context.Context, job *job.Job) error {
+func (c *consumer) Push(_ context.Context, job *jobs.Job) error {
 	const op = errors.Op("boltdb_jobs_push")
 	err := c.db.Update(func(tx *bolt.Tx) error {
 		item := fromJob(job)
@@ -368,10 +367,10 @@ func (c *consumer) Resume(_ context.Context, p string) {
 	c.log.Debug("pipeline resumed", "driver", pipe.Driver(), "pipeline", pipe.Name(), "start", start, "elapsed", time.Since(start))
 }
 
-func (c *consumer) State(_ context.Context) (*jobState.State, error) {
+func (c *consumer) State(_ context.Context) (*jobs.State, error) {
 	pipe := c.pipeline.Load().(*pipeline.Pipeline)
 
-	return &jobState.State{
+	return &jobs.State{
 		Pipeline: pipe.Name(),
 		Driver:   pipe.Driver(),
 		Queue:    PushBucket,

@@ -1,10 +1,11 @@
 package handler
 
+// immutable
 var (
-	CLOSE      = []byte("CLOSE")
-	CONTINUE   = []byte("CONTINUE")
-	WRITECLOSE = []byte("WRITECLOSE")
-	WRITE      = []byte("WRITE")
+	CLOSE      = []byte("CLOSE")      //nolint:gochecknoglobals
+	CONTINUE   = []byte("CONTINUE")   //nolint:gochecknoglobals
+	WRITECLOSE = []byte("WRITECLOSE") //nolint:gochecknoglobals
+	WRITE      = []byte("WRITE")      //nolint:gochecknoglobals
 )
 
 type ServerInfo struct {

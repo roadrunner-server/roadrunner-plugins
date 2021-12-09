@@ -1,0 +1,48 @@
+version: "2.7"
+
+rpc:
+  listen: tcp://127.0.0.1:6001
+
+server:
+  command: "php ../../php_test_files/jobs_ok.php"
+  relay: "pipes"
+  relay_timeout: "20s"
+
+nats:
+  addr: ""
+
+logs:
+  level: debug
+  encoding: console
+  mode: development
+
+jobs:
+  num_pollers: 1
+  pipeline_size: 100000
+  timeout: 1
+  pool:
+    num_workers: 10
+    max_jobs: 0
+    allocate_timeout: 60s
+    destroy_timeout: 60s
+
+  pipelines:
+    test-1:
+      driver: nats
+      config:
+        prefetch: 100
+        subject: "default"
+        stream: "foo"
+        deliver_new: "true"
+        priority: 1
+
+    test-2:
+      driver: nats
+      config:
+        prefetch: 100
+        subject: "default"
+        stream: "foo"
+        deliver_new: "true"
+        priority: 2
+
+  consume: [ "test-1", "test-2" ]

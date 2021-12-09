@@ -10,7 +10,6 @@ import (
 	amqp "github.com/rabbitmq/amqp091-go"
 	"github.com/spiral/errors"
 	"github.com/spiral/roadrunner-plugins/v2/api/jobs"
-	"github.com/spiral/roadrunner-plugins/v2/jobs/job"
 	"github.com/spiral/roadrunner-plugins/v2/utils"
 )
 
@@ -180,7 +179,7 @@ func (c *consumer) fromDelivery(d amqp.Delivery) (*Item, error) {
 	return i, nil
 }
 
-func fromJob(job *job.Job) *Item {
+func fromJob(job *jobs.Job) *Item {
 	return &Item{
 		Job:     job.Job,
 		Ident:   job.Ident,
@@ -201,12 +200,12 @@ func pack(id string, j *Item) (amqp.Table, error) {
 		return nil, err
 	}
 	return amqp.Table{
-		job.RRID:       id,
-		job.RRJob:      j.Job,
-		job.RRPipeline: j.Options.Pipeline,
-		job.RRHeaders:  headers,
-		job.RRDelay:    j.Options.Delay,
-		job.RRPriority: j.Options.Priority,
+		jobs.RRID:       id,
+		jobs.RRJob:      j.Job,
+		jobs.RRPipeline: j.Options.Pipeline,
+		jobs.RRHeaders:  headers,
+		jobs.RRDelay:    j.Options.Delay,
+		jobs.RRPriority: j.Options.Priority,
 	}, nil
 }
 
@@ -218,30 +217,30 @@ func (c *consumer) unpack(d amqp.Delivery) (*Item, error) {
 		requeueFn:   c.handleItem,
 	}}
 
-	if _, ok := d.Headers[job.RRID].(string); !ok {
-		return nil, errors.E(errors.Errorf("missing header `%s`", job.RRID))
+	if _, ok := d.Headers[jobs.RRID].(string); !ok {
+		return nil, errors.E(errors.Errorf("missing header `%s`", jobs.RRID))
 	}
 
-	item.Ident = d.Headers[job.RRID].(string)
+	item.Ident = d.Headers[jobs.RRID].(string)
 
-	if _, ok := d.Headers[job.RRJob].(string); !ok {
-		return nil, errors.E(errors.Errorf("missing header `%s`", job.RRJob))
+	if _, ok := d.Headers[jobs.RRJob].(string); !ok {
+		return nil, errors.E(errors.Errorf("missing header `%s`", jobs.RRJob))
 	}
 
-	item.Job = d.Headers[job.RRJob].(string)
+	item.Job = d.Headers[jobs.RRJob].(string)
 
-	if _, ok := d.Headers[job.RRPipeline].(string); ok {
-		item.Options.Pipeline = d.Headers[job.RRPipeline].(string)
+	if _, ok := d.Headers[jobs.RRPipeline].(string); ok {
+		item.Options.Pipeline = d.Headers[jobs.RRPipeline].(string)
 	}
 
-	if h, ok := d.Headers[job.RRHeaders].([]byte); ok {
+	if h, ok := d.Headers[jobs.RRHeaders].([]byte); ok {
 		err := json.Unmarshal(h, &item.Headers)
 		if err != nil {
 			return nil, err
 		}
 	}
 
-	if t, ok := d.Headers[job.RRDelay]; ok {
+	if t, ok := d.Headers[jobs.RRDelay]; ok {
 		switch t.(type) {
 		case int, int16, int32, int64:
 			item.Options.Delay = t.(int64)
@@ -250,7 +249,7 @@ func (c *consumer) unpack(d amqp.Delivery) (*Item, error) {
 		}
 	}
 
-	if t, ok := d.Headers[job.RRPriority]; !ok {
+	if t, ok := d.Headers[jobs.RRPriority]; !ok {
 		// set pipe's priority
 		item.Options.Priority = c.priority
 	} else {

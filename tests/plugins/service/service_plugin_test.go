@@ -23,7 +23,7 @@ func TestServiceInit(t *testing.T) {
 	cont, err := endure.NewContainer(nil, endure.SetLogLevel(endure.ErrorLevel))
 	assert.NoError(t, err)
 
-	cfg := &config.Viper{
+	cfg := &config.Plugin{
 		Path:   "configs/.rr-service-init.yaml",
 		Prefix: "rr",
 	}
@@ -31,8 +31,6 @@ func TestServiceInit(t *testing.T) {
 	controller := gomock.NewController(t)
 	mockLogger := mocks.NewMockLogger(controller)
 
-	mockLogger.EXPECT().Debug("worker destructed", "pid", gomock.Any()).AnyTimes()
-	mockLogger.EXPECT().Debug("worker constructed", "pid", gomock.Any()).AnyTimes()
 	mockLogger.EXPECT().Info("The number is: 0\n").MinTimes(1)
 	mockLogger.EXPECT().Info("The number is: 1\n").MinTimes(1)
 	mockLogger.EXPECT().Info("The number is: 2\n").MinTimes(1)
@@ -108,7 +106,7 @@ func TestServiceInitStdout(t *testing.T) {
 	cont, err := endure.NewContainer(nil, endure.SetLogLevel(endure.ErrorLevel))
 	assert.NoError(t, err)
 
-	cfg := &config.Viper{
+	cfg := &config.Plugin{
 		Path:   "configs/.rr-service-init-stdout.yaml",
 		Prefix: "rr",
 	}
@@ -179,7 +177,7 @@ func TestServiceEnv(t *testing.T) {
 	cont, err := endure.NewContainer(nil, endure.SetLogLevel(endure.ErrorLevel))
 	assert.NoError(t, err)
 
-	cfg := &config.Viper{
+	cfg := &config.Plugin{
 		Path:   "configs/.rr-service-env.yaml",
 		Prefix: "rr",
 	}
@@ -187,8 +185,6 @@ func TestServiceEnv(t *testing.T) {
 	controller := gomock.NewController(t)
 	mockLogger := mocks.NewMockLogger(controller)
 
-	mockLogger.EXPECT().Debug("worker destructed", "pid", gomock.Any()).AnyTimes()
-	mockLogger.EXPECT().Debug("worker constructed", "pid", gomock.Any()).AnyTimes()
 	mockLogger.EXPECT().Info("The number is: BAR\n").MinTimes(2)
 
 	// process interrupt error
@@ -254,7 +250,7 @@ func TestServiceError(t *testing.T) {
 	cont, err := endure.NewContainer(nil, endure.SetLogLevel(endure.ErrorLevel))
 	assert.NoError(t, err)
 
-	cfg := &config.Viper{
+	cfg := &config.Plugin{
 		Path:   "configs/.rr-service-error.yaml",
 		Prefix: "rr",
 	}
@@ -323,16 +319,13 @@ func TestServiceRestarts(t *testing.T) {
 	cont, err := endure.NewContainer(nil, endure.SetLogLevel(endure.ErrorLevel))
 	assert.NoError(t, err)
 
-	cfg := &config.Viper{
+	cfg := &config.Plugin{
 		Path:   "configs/.rr-service-restarts.yaml",
 		Prefix: "rr",
 	}
 
 	controller := gomock.NewController(t)
 	mockLogger := mocks.NewMockLogger(controller)
-
-	mockLogger.EXPECT().Debug("worker destructed", "pid", gomock.Any()).AnyTimes()
-	mockLogger.EXPECT().Debug("worker constructed", "pid", gomock.Any()).AnyTimes()
 
 	// process interrupt error
 	mockLogger.EXPECT().Error("process wait error", gomock.Any()).MinTimes(1)

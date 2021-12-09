@@ -3,14 +3,21 @@ package config
 import (
 	"os"
 	"os/signal"
+	"sync"
+	"syscall"
 	"testing"
 	"time"
 
 	endure "github.com/spiral/endure/pkg/container"
+	"github.com/spiral/roadrunner-plugins/v2/amqp"
+	"github.com/spiral/roadrunner-plugins/v2/beanstalk"
 	"github.com/spiral/roadrunner-plugins/v2/config"
+	"github.com/spiral/roadrunner-plugins/v2/jobs"
 	"github.com/spiral/roadrunner-plugins/v2/logger"
 	"github.com/spiral/roadrunner-plugins/v2/rpc"
+	"github.com/spiral/roadrunner-plugins/v2/server"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestViperProvider_Init(t *testing.T) {
@@ -18,7 +25,7 @@ func TestViperProvider_Init(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	vp := &config.Viper{}
+	vp := &config.Plugin{}
 	vp.Path = "configs/.rr.yaml"
 	vp.Prefix = "rr"
 	vp.Flags = nil
@@ -72,7 +79,7 @@ func TestConfigOverwriteFail(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	vp := &config.Viper{}
+	vp := &config.Plugin{}
 	vp.Path = "configs/.rr.yaml"
 	vp.Prefix = "rr"
 	vp.Flags = []string{"rpc.listen=tcp//not_exist"}
@@ -94,7 +101,7 @@ func TestConfigOverwriteFail_2(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	vp := &config.Viper{}
+	vp := &config.Plugin{}
 	vp.Path = "configs/.rr.yaml"
 	vp.Prefix = "rr"
 	vp.Flags = []string{"rpc.listen="}
@@ -116,7 +123,7 @@ func TestConfigOverwriteFail_3(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	vp := &config.Viper{}
+	vp := &config.Plugin{}
 	vp.Path = "configs/.rr.yaml"
 	vp.Prefix = "rr"
 	vp.Flags = []string{"="}
@@ -138,7 +145,7 @@ func TestConfigOverwriteValid(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	vp := &config.Viper{}
+	vp := &config.Plugin{}
 	vp.Path = "configs/.rr.yaml"
 	vp.Prefix = "rr"
 	vp.Flags = []string{"rpc.listen=tcp://127.0.0.1:36643"}
@@ -190,7 +197,7 @@ func TestConfigEnvVariables(t *testing.T) {
 	err = os.Setenv("SUPER_RPC_ENV", "tcp://127.0.0.1:36643")
 	assert.NoError(t, err)
 
-	vp := &config.Viper{}
+	vp := &config.Plugin{}
 	vp.Path = "configs/.rr-env.yaml"
 	vp.Prefix = "rr"
 
@@ -241,7 +248,7 @@ func TestConfigEnvVariablesFail(t *testing.T) {
 	err = os.Setenv("SUPER_RPC_ENV", "tcp://127.0.0.1:6065")
 	assert.NoError(t, err)
 
-	vp := &config.Viper{}
+	vp := &config.Plugin{}
 	vp.Path = "configs/.rr-env.yaml"
 	vp.Prefix = "rr"
 
@@ -265,7 +272,7 @@ func TestConfigProvider_GeneralSection(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	vp := &config.Viper{}
+	vp := &config.Plugin{}
 	vp.Path = "configs/.rr.yaml"
 	vp.Prefix = "rr"
 	vp.Flags = nil
@@ -313,4 +320,76 @@ func TestConfigProvider_GeneralSection(t *testing.T) {
 			return
 		}
 	}
+}
+
+// VERSIONS
+
+func TestViperProvider_Init_Version(t *testing.T) {
+	container, err := endure.NewContainer(nil, endure.RetryOnFail(true), endure.SetLogLevel(endure.ErrorLevel))
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	vp := &config.Plugin{}
+	vp.Path = "configs/.rr-init-version.yaml"
+	vp.Prefix = "rr"
+	vp.Flags = nil
+	vp.RRVersion = "2.7.2"
+
+	err = container.RegisterAll(
+		&jobs.Plugin{},
+		&amqp.Plugin{},
+		&beanstalk.Plugin{},
+		&logger.ZapLogger{},
+		&server.Plugin{},
+		vp,
+	)
+
+	require.NoError(t, err)
+
+	err = container.Init()
+	require.NoError(t, err)
+
+	ch, err := container.Serve()
+	assert.NoError(t, err)
+
+	sig := make(chan os.Signal, 1)
+	signal.Notify(sig, os.Interrupt, syscall.SIGINT, syscall.SIGTERM)
+
+	wg := &sync.WaitGroup{}
+	wg.Add(1)
+
+	stopCh := make(chan struct{}, 1)
+
+	go func() {
+		defer wg.Done()
+		for {
+			select {
+			case e := <-ch:
+				assert.Fail(t, "error", e.Error.Error())
+				err = container.Stop()
+				if err != nil {
+					assert.FailNow(t, "error", err.Error())
+				}
+				return
+			case <-sig:
+				err = container.Stop()
+				if err != nil {
+					assert.FailNow(t, "error", err.Error())
+				}
+				return
+			case <-stopCh:
+				// timeout
+				err = container.Stop()
+				if err != nil {
+					assert.FailNow(t, "error", err.Error())
+				}
+				return
+			}
+		}
+	}()
+
+	time.Sleep(time.Second * 2)
+	stopCh <- struct{}{}
+	wg.Wait()
 }

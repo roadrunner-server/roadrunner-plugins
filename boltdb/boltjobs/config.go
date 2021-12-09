@@ -2,7 +2,6 @@ package boltjobs
 
 const (
 	file     string = "file"
-	priority string = "priority"
 	prefetch string = "prefetch"
 )
 
@@ -12,7 +11,7 @@ type config struct {
 
 	// local
 	File     string `mapstructure:"file"`
-	Priority int    `mapstructure:"priority"`
+	Priority int64  `mapstructure:"priority"`
 	Prefetch int    `mapstructure:"prefetch"`
 }
 

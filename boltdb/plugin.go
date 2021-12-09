@@ -3,11 +3,11 @@ package boltdb
 import (
 	"github.com/spiral/errors"
 	"github.com/spiral/roadrunner-plugins/v2/api/jobs"
+	"github.com/spiral/roadrunner-plugins/v2/api/jobs/pipeline"
 	"github.com/spiral/roadrunner-plugins/v2/api/kv"
 	"github.com/spiral/roadrunner-plugins/v2/boltdb/boltjobs"
 	"github.com/spiral/roadrunner-plugins/v2/boltdb/boltkv"
 	"github.com/spiral/roadrunner-plugins/v2/config"
-	"github.com/spiral/roadrunner-plugins/v2/jobs/pipeline"
 	"github.com/spiral/roadrunner-plugins/v2/logger"
 	priorityqueue "github.com/spiral/roadrunner/v2/priority_queue"
 )

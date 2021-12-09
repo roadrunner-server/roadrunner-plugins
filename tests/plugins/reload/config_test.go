@@ -20,7 +20,7 @@ func Test_Config_Valid(t *testing.T) {
 	cfg := &reload.Config{
 		Interval: time.Second,
 		Patterns: nil,
-		Services: services,
+		Plugins:  services,
 	}
 	assert.NoError(t, cfg.Valid())
 }
@@ -30,7 +30,7 @@ func Test_Fake_ServiceConfig(t *testing.T) {
 	cfg := &reload.Config{
 		Interval: time.Microsecond,
 		Patterns: nil,
-		Services: services,
+		Plugins:  services,
 	}
 	assert.Error(t, cfg.Valid())
 }
@@ -38,7 +38,6 @@ func Test_Fake_ServiceConfig(t *testing.T) {
 func Test_Interval(t *testing.T) {
 	services := make(map[string]reload.ServiceConfig)
 	services["test"] = reload.ServiceConfig{
-		Enabled:   false,
 		Recursive: false,
 		Patterns:  nil,
 		Dirs:      nil,
@@ -48,7 +47,7 @@ func Test_Interval(t *testing.T) {
 	cfg := &reload.Config{
 		Interval: time.Millisecond, // should crash here
 		Patterns: nil,
-		Services: services,
+		Plugins:  services,
 	}
 	assert.Error(t, cfg.Valid())
 }
@@ -57,7 +56,7 @@ func Test_NoServiceConfig(t *testing.T) {
 	cfg := &reload.Config{
 		Interval: time.Second,
 		Patterns: nil,
-		Services: nil,
+		Plugins:  nil,
 	}
 	assert.Error(t, cfg.Valid())
 }

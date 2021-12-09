@@ -24,7 +24,7 @@ services:
       - "127.0.0.1:6378:6379"
 
   toxicproxy:
-    image: shopify/toxiproxy
+    image: shopify/toxiproxy:latest
     network_mode: "host"
 
   beanstalk:

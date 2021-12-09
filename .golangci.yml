@@ -7,6 +7,8 @@ run:
     - .git
     - tests/mocks
     - tests/plugins
+    - config/configs/v2_6
+    - config/configs/v2_7
   modules-download-mode: readonly
   allow-parallel-runners: true
 
@@ -77,6 +79,7 @@ linters: # All available linters list: <https://golangci-lint.run/usage/linters/
     - unconvert # Remove unnecessary type conversions
     - unused # Checks Go code for unused constants, variables, functions and types
     - varcheck # Finds unused global variables and constants
+    - gochecknoglobals
     - whitespace # Tool for detection of leading and trailing whitespace
 
 issues:

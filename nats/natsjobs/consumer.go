@@ -9,10 +9,9 @@ import (
 	json "github.com/json-iterator/go"
 	"github.com/nats-io/nats.go"
 	"github.com/spiral/errors"
-	jobState "github.com/spiral/roadrunner-plugins/v2/api/jobs"
+	"github.com/spiral/roadrunner-plugins/v2/api/jobs"
+	"github.com/spiral/roadrunner-plugins/v2/api/jobs/pipeline"
 	cfgPlugin "github.com/spiral/roadrunner-plugins/v2/config"
-	"github.com/spiral/roadrunner-plugins/v2/jobs/job"
-	"github.com/spiral/roadrunner-plugins/v2/jobs/pipeline"
 	"github.com/spiral/roadrunner-plugins/v2/logger"
 	priorityqueue "github.com/spiral/roadrunner/v2/priority_queue"
 )
@@ -38,6 +37,7 @@ type consumer struct {
 	js    nats.JetStreamContext
 
 	// config
+	priority           int64
 	subject            string
 	stream             string
 	prefetch           int
@@ -117,6 +117,7 @@ func FromConfig(configKey string, log logger.Logger, cfg cfgPlugin.Configurer, q
 
 		conn:               conn,
 		js:                 js,
+		priority:           conf.Priority,
 		subject:            conf.Subject,
 		stream:             conf.Stream,
 		deleteAfterAck:     conf.DeleteAfterAck,
@@ -191,6 +192,7 @@ func FromPipeline(pipe *pipeline.Pipeline, log logger.Logger, cfg cfgPlugin.Conf
 
 		conn:               conn,
 		js:                 js,
+		priority:           pipe.Priority(),
 		subject:            pipe.String(pipeSubject, "default"),
 		stream:             pipe.String(pipeStream, "default-stream"),
 		prefetch:           pipe.Int(pipePrefetch, 100),
@@ -204,7 +206,7 @@ func FromPipeline(pipe *pipeline.Pipeline, log logger.Logger, cfg cfgPlugin.Conf
 	return cs, nil
 }
 
-func (c *consumer) Push(_ context.Context, job *job.Job) error {
+func (c *consumer) Push(_ context.Context, job *jobs.Job) error {
 	const op = errors.Op("nats_consumer_push")
 	if job.Options.Delay > 0 {
 		return errors.E(op, errors.Str("nats doesn't support delayed messages, see: https://github.com/nats-io/nats-streaming-server/issues/324"))
@@ -309,10 +311,10 @@ func (c *consumer) Resume(_ context.Context, p string) {
 	c.log.Debug("pipeline resumed", "driver", pipe.Driver(), "pipeline", pipe.Name(), "start", start, "elapsed", time.Since(start))
 }
 
-func (c *consumer) State(_ context.Context) (*jobState.State, error) {
+func (c *consumer) State(_ context.Context) (*jobs.State, error) {
 	pipe := c.pipeline.Load().(*pipeline.Pipeline)
 
-	st := &jobState.State{
+	st := &jobs.State{
 		Pipeline: pipe.Name(),
 		Driver:   pipe.Driver(),
 		Queue:    c.subject,

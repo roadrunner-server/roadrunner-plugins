@@ -2,8 +2,8 @@ package nats
 
 import (
 	"github.com/spiral/roadrunner-plugins/v2/api/jobs"
+	"github.com/spiral/roadrunner-plugins/v2/api/jobs/pipeline"
 	"github.com/spiral/roadrunner-plugins/v2/config"
-	"github.com/spiral/roadrunner-plugins/v2/jobs/pipeline"
 	"github.com/spiral/roadrunner-plugins/v2/logger"
 	"github.com/spiral/roadrunner-plugins/v2/nats/natsjobs"
 	priorityqueue "github.com/spiral/roadrunner/v2/priority_queue"

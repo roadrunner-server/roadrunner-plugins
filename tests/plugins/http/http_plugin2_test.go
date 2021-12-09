@@ -27,7 +27,7 @@ func TestHTTPPost(t *testing.T) {
 	cont, err := endure.NewContainer(nil, endure.SetLogLevel(endure.ErrorLevel))
 	assert.NoError(t, err)
 
-	cfg := &config.Viper{
+	cfg := &config.Plugin{
 		Path:   "configs/.rr-post-test.yaml",
 		Prefix: "rr",
 	}
@@ -136,7 +136,7 @@ func TestSSLNoHTTP(t *testing.T) {
 	cont, err := endure.NewContainer(nil, endure.SetLogLevel(endure.ErrorLevel))
 	assert.NoError(t, err)
 
-	cfg := &config.Viper{
+	cfg := &config.Plugin{
 		Path:   "configs/.rr-ssl-no-http.yaml",
 		Prefix: "rr",
 	}
@@ -225,7 +225,7 @@ func TestFileServer(t *testing.T) {
 	cont, err := endure.NewContainer(nil, endure.SetLogLevel(endure.ErrorLevel), endure.GracefulShutdownTimeout(time.Second*30))
 	assert.NoError(t, err)
 
-	cfg := &config.Viper{
+	cfg := &config.Plugin{
 		Path:   "configs/.rr-http-static-new.yaml",
 		Prefix: "rr",
 	}

@@ -9,6 +9,7 @@ import (
 	"strings"
 	"sync"
 
+	json "github.com/json-iterator/go"
 	"github.com/spiral/roadrunner-plugins/v2/logger"
 )
 

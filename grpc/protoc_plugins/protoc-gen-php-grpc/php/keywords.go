@@ -29,7 +29,8 @@ import (
 )
 
 // @see https://github.com/protocolbuffers/protobuf/blob/master/php/ext/google/protobuf/protobuf.c#L168
-var reservedKeywords = []string{
+// immutable
+var reservedKeywords = []string{ //nolint:gochecknoglobals
 	"abstract", "and", "array", "as", "break",
 	"callable", "case", "catch", "class", "clone",
 	"const", "continue", "declare", "default", "die",

@@ -3,14 +3,13 @@ package jobs
 import (
 	"context"
 
-	"github.com/spiral/roadrunner-plugins/v2/jobs/job"
-	"github.com/spiral/roadrunner-plugins/v2/jobs/pipeline"
+	"github.com/spiral/roadrunner-plugins/v2/api/jobs/pipeline"
 	priorityqueue "github.com/spiral/roadrunner/v2/priority_queue"
 )
 
 // Consumer represents a single jobs driver interface
 type Consumer interface {
-	Push(ctx context.Context, job *job.Job) error
+	Push(ctx context.Context, job *Job) error
 	Register(ctx context.Context, pipeline *pipeline.Pipeline) error
 	Run(ctx context.Context, pipeline *pipeline.Pipeline) error
 	Stop(ctx context.Context) error

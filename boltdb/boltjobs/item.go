@@ -8,7 +8,7 @@ import (
 
 	json "github.com/json-iterator/go"
 	"github.com/spiral/errors"
-	"github.com/spiral/roadrunner-plugins/v2/jobs/job"
+	"github.com/spiral/roadrunner-plugins/v2/api/jobs"
 	"github.com/spiral/roadrunner-plugins/v2/utils"
 	"go.etcd.io/bbolt"
 )
@@ -224,7 +224,7 @@ func (i *Item) rollback(err error, tx *bbolt.Tx) error {
 	return errors.Errorf("transaction commit error: %v", err)
 }
 
-func fromJob(job *job.Job) *Item {
+func fromJob(job *jobs.Job) *Item {
 	return &Item{
 		Job:     job.Job,
 		Ident:   job.Ident,

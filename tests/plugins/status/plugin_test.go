@@ -27,7 +27,7 @@ func TestStatusHttp(t *testing.T) {
 	cont, err := endure.NewContainer(nil, endure.SetLogLevel(endure.ErrorLevel))
 	assert.NoError(t, err)
 
-	cfg := &config.Viper{
+	cfg := &config.Plugin{
 		Path:   "configs/.rr-status-init.yaml",
 		Prefix: "rr",
 	}
@@ -113,7 +113,7 @@ func TestStatusRPC(t *testing.T) {
 	cont, err := endure.NewContainer(nil, endure.SetLogLevel(endure.ErrorLevel))
 	assert.NoError(t, err)
 
-	cfg := &config.Viper{
+	cfg := &config.Plugin{
 		Path:   "configs/.rr-status-init.yaml",
 		Prefix: "rr",
 	}
@@ -193,7 +193,7 @@ func TestReadyHttp(t *testing.T) {
 	cont, err := endure.NewContainer(nil, endure.SetLogLevel(endure.ErrorLevel))
 	assert.NoError(t, err)
 
-	cfg := &config.Viper{
+	cfg := &config.Plugin{
 		Path:   "configs/.rr-status-init.yaml",
 		Prefix: "rr",
 	}
@@ -279,7 +279,7 @@ func TestReadinessRPCWorkerNotReady(t *testing.T) {
 	cont, err := endure.NewContainer(nil, endure.SetLogLevel(endure.ErrorLevel), endure.GracefulShutdownTimeout(time.Second*2))
 	assert.NoError(t, err)
 
-	cfg := &config.Viper{
+	cfg := &config.Plugin{
 		Path:   "configs/.rr-ready-init.yaml",
 		Prefix: "rr",
 	}

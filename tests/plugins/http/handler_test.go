@@ -573,8 +573,18 @@ func TestHandler_FormData_POST(t *testing.T) {
 	assert.NoError(t, err)
 	assert.Equal(t, 200, r.StatusCode)
 
-	// Sorted
-	assert.Equal(t, "{\"arr\":{\"c\":{\"p\":\"l\",\"z\":\"\"},\"x\":{\"y\":{\"e\":\"f\",\"z\":\"y\"}}},\"key\":\"value\",\"name\":[\"name1\",\"name2\",\"name3\"]}", string(b))
+	var res map[string]interface{}
+	err = json.Unmarshal(b, &res)
+	require.NoError(t, err)
+	assert.Equal(t, res["arr"].(map[string]interface{})["c"].(map[string]interface{})["p"], "l")
+	assert.Equal(t, res["arr"].(map[string]interface{})["c"].(map[string]interface{})["z"], "")
+
+	assert.Equal(t, res["arr"].(map[string]interface{})["x"].(map[string]interface{})["y"].(map[string]interface{})["z"], "y")
+	assert.Equal(t, res["arr"].(map[string]interface{})["x"].(map[string]interface{})["y"].(map[string]interface{})["e"], "f")
+
+	assert.Equal(t, res["key"], "value")
+
+	assert.Equal(t, res["name"], []interface{}{"name1", "name2", "name3"})
 }
 
 func TestHandler_FormData_POST_Overwrite(t *testing.T) {
@@ -644,7 +654,18 @@ func TestHandler_FormData_POST_Overwrite(t *testing.T) {
 	assert.NoError(t, err)
 	assert.Equal(t, 200, r.StatusCode)
 
-	assert.Equal(t, `{"arr":{"c":{"p":"l","z":""},"x":{"y":{"e":"f","z":"y"}}},"key":"value2","name":["name1","name2","name3"]}`, string(b))
+	var res map[string]interface{}
+	err = json.Unmarshal(b, &res)
+	require.NoError(t, err)
+	assert.Equal(t, res["arr"].(map[string]interface{})["c"].(map[string]interface{})["p"], "l")
+	assert.Equal(t, res["arr"].(map[string]interface{})["c"].(map[string]interface{})["z"], "")
+
+	assert.Equal(t, res["arr"].(map[string]interface{})["x"].(map[string]interface{})["y"].(map[string]interface{})["z"], "y")
+	assert.Equal(t, res["arr"].(map[string]interface{})["x"].(map[string]interface{})["y"].(map[string]interface{})["e"], "f")
+
+	assert.Equal(t, res["key"], "value2")
+
+	assert.Equal(t, res["name"], []interface{}{"name1", "name2", "name3"})
 }
 
 func TestHandler_FormData_POST_Form_UrlEncoded_Charset(t *testing.T) {
@@ -713,7 +734,18 @@ func TestHandler_FormData_POST_Form_UrlEncoded_Charset(t *testing.T) {
 	assert.NoError(t, err)
 	assert.Equal(t, 200, r.StatusCode)
 
-	assert.Equal(t, `{"arr":{"c":{"p":"l","z":""},"x":{"y":{"e":"f","z":"y"}}},"key":"value","name":["name1","name2","name3"]}`, string(b))
+	var res map[string]interface{}
+	err = json.Unmarshal(b, &res)
+	require.NoError(t, err)
+	assert.Equal(t, res["arr"].(map[string]interface{})["c"].(map[string]interface{})["p"], "l")
+	assert.Equal(t, res["arr"].(map[string]interface{})["c"].(map[string]interface{})["z"], "")
+
+	assert.Equal(t, res["arr"].(map[string]interface{})["x"].(map[string]interface{})["y"].(map[string]interface{})["z"], "y")
+	assert.Equal(t, res["arr"].(map[string]interface{})["x"].(map[string]interface{})["y"].(map[string]interface{})["e"], "f")
+
+	assert.Equal(t, res["key"], "value")
+
+	assert.Equal(t, res["name"], []interface{}{"name1", "name2", "name3"})
 }
 
 func TestHandler_FormData_PUT(t *testing.T) {
@@ -781,8 +813,20 @@ func TestHandler_FormData_PUT(t *testing.T) {
 
 	assert.NoError(t, err)
 	assert.Equal(t, 200, r.StatusCode)
+	var res map[string]interface{}
+	err = json.Unmarshal(b, &res)
+	require.NoError(t, err)
 
-	assert.Equal(t, `{"arr":{"c":{"p":"l","z":""},"x":{"y":{"e":"f","z":"y"}}},"key":"value","name":["name1","name2","name3"]}`, string(b))
+	// `{"arr":{"c":{"p":"l","z":""},"x":{"y":{"e":"f","z":"y"}}},"key":"value","name":["name1","name2","name3"]}`
+	assert.Equal(t, res["arr"].(map[string]interface{})["c"].(map[string]interface{})["p"], "l")
+	assert.Equal(t, res["arr"].(map[string]interface{})["c"].(map[string]interface{})["z"], "")
+
+	assert.Equal(t, res["arr"].(map[string]interface{})["x"].(map[string]interface{})["y"].(map[string]interface{})["z"], "y")
+	assert.Equal(t, res["arr"].(map[string]interface{})["x"].(map[string]interface{})["y"].(map[string]interface{})["e"], "f")
+
+	assert.Equal(t, res["key"], "value")
+
+	assert.Equal(t, res["name"], []interface{}{"name1", "name2", "name3"})
 }
 
 func TestHandler_FormData_PATCH(t *testing.T) {
@@ -851,7 +895,18 @@ func TestHandler_FormData_PATCH(t *testing.T) {
 	assert.NoError(t, err)
 	assert.Equal(t, 200, r.StatusCode)
 
-	assert.Equal(t, "{\"arr\":{\"c\":{\"p\":\"l\",\"z\":\"\"},\"x\":{\"y\":{\"e\":\"f\",\"z\":\"y\"}}},\"key\":\"value\",\"name\":[\"name1\",\"name2\",\"name3\"]}", string(b))
+	var res map[string]interface{}
+	err = json.Unmarshal(b, &res)
+	require.NoError(t, err)
+	assert.Equal(t, res["arr"].(map[string]interface{})["c"].(map[string]interface{})["p"], "l")
+	assert.Equal(t, res["arr"].(map[string]interface{})["c"].(map[string]interface{})["z"], "")
+
+	assert.Equal(t, res["arr"].(map[string]interface{})["x"].(map[string]interface{})["y"].(map[string]interface{})["z"], "y")
+	assert.Equal(t, res["arr"].(map[string]interface{})["x"].(map[string]interface{})["y"].(map[string]interface{})["e"], "f")
+
+	assert.Equal(t, res["key"], "value")
+
+	assert.Equal(t, res["name"], []interface{}{"name1", "name2", "name3"})
 }
 
 func TestHandler_Multipart_POST(t *testing.T) {
@@ -962,7 +1017,18 @@ func TestHandler_Multipart_POST(t *testing.T) {
 	assert.NoError(t, err)
 	assert.Equal(t, 200, r.StatusCode)
 
-	assert.Equal(t, "{\"arr\":{\"c\":{\"p\":\"l\",\"z\":\"\"},\"x\":{\"y\":{\"e\":\"f\",\"z\":\"y\"}}},\"key\":\"value\",\"name\":[\"name1\",\"name2\",\"name3\"]}", string(b))
+	var res map[string]interface{}
+	err = json.Unmarshal(b, &res)
+	require.NoError(t, err)
+	assert.Equal(t, res["arr"].(map[string]interface{})["c"].(map[string]interface{})["p"], "l")
+	assert.Equal(t, res["arr"].(map[string]interface{})["c"].(map[string]interface{})["z"], "")
+
+	assert.Equal(t, res["arr"].(map[string]interface{})["x"].(map[string]interface{})["y"].(map[string]interface{})["z"], "y")
+	assert.Equal(t, res["arr"].(map[string]interface{})["x"].(map[string]interface{})["y"].(map[string]interface{})["e"], "f")
+
+	assert.Equal(t, res["key"], "value")
+
+	assert.Equal(t, res["name"], []interface{}{"name1", "name2", "name3"})
 }
 
 func TestHandler_Multipart_PUT(t *testing.T) {
@@ -1073,7 +1139,18 @@ func TestHandler_Multipart_PUT(t *testing.T) {
 	assert.NoError(t, err)
 	assert.Equal(t, 200, r.StatusCode)
 
-	assert.Equal(t, `{"arr":{"c":{"p":"l","z":""},"x":{"y":{"e":"f","z":"y"}}},"key":"value","name":["name1","name2","name3"]}`, string(b))
+	var res map[string]interface{}
+	err = json.Unmarshal(b, &res)
+	require.NoError(t, err)
+	assert.Equal(t, res["arr"].(map[string]interface{})["c"].(map[string]interface{})["p"], "l")
+	assert.Equal(t, res["arr"].(map[string]interface{})["c"].(map[string]interface{})["z"], "")
+
+	assert.Equal(t, res["arr"].(map[string]interface{})["x"].(map[string]interface{})["y"].(map[string]interface{})["z"], "y")
+	assert.Equal(t, res["arr"].(map[string]interface{})["x"].(map[string]interface{})["y"].(map[string]interface{})["e"], "f")
+
+	assert.Equal(t, res["key"], "value")
+
+	assert.Equal(t, res["name"], []interface{}{"name1", "name2", "name3"})
 }
 
 func TestHandler_Multipart_PATCH(t *testing.T) {
@@ -1186,7 +1263,18 @@ func TestHandler_Multipart_PATCH(t *testing.T) {
 	assert.NoError(t, err)
 	assert.Equal(t, 200, r.StatusCode)
 
-	assert.Equal(t, `{"arr":{"c":{"p":"l","z":""},"x":{"y":{"e":"f","z":"y"}}},"key":"value","name":["name1","name2","name3"]}`, string(b))
+	var res map[string]interface{}
+	err = json.Unmarshal(b, &res)
+	require.NoError(t, err)
+	assert.Equal(t, res["arr"].(map[string]interface{})["c"].(map[string]interface{})["p"], "l")
+	assert.Equal(t, res["arr"].(map[string]interface{})["c"].(map[string]interface{})["z"], "")
+
+	assert.Equal(t, res["arr"].(map[string]interface{})["x"].(map[string]interface{})["y"].(map[string]interface{})["z"], "y")
+	assert.Equal(t, res["arr"].(map[string]interface{})["x"].(map[string]interface{})["y"].(map[string]interface{})["e"], "f")
+
+	assert.Equal(t, res["key"], "value")
+
+	assert.Equal(t, res["name"], []interface{}{"name1", "name2", "name3"})
 }
 
 func TestHandler_Error(t *testing.T) {

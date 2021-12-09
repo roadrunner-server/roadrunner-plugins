@@ -46,9 +46,9 @@ func (s *Plugin) Init(cfg config.Configurer, log logger.Logger, res *resetter.Pl
 	s.stopc = make(chan struct{}, 1)
 	s.services = make(map[string]interface{})
 
-	configs := make([]WatcherConfig, 0, len(s.cfg.Services))
+	configs := make([]WatcherConfig, 0, len(s.cfg.Plugins))
 
-	for serviceName, serviceConfig := range s.cfg.Services {
+	for serviceName, serviceConfig := range s.cfg.Plugins {
 		ignored, errIgn := ConvertIgnored(serviceConfig.Ignore)
 		if errIgn != nil {
 			return errors.E(op, err)
@@ -103,12 +103,12 @@ func (s *Plugin) Serve() chan error {
 			thCh <- struct {
 				serviceConfig ServiceConfig
 				service       string
-			}{serviceConfig: s.cfg.Services[e.service], service: e.service}
+			}{serviceConfig: s.cfg.Plugins[e.service], service: e.service}
 		}
 	}()
 
 	// map with config by services
-	updated := make(map[string]ServiceConfig, len(s.cfg.Services))
+	updated := make(map[string]ServiceConfig, len(s.cfg.Plugins))
 
 	go func() {
 		for {
@@ -134,7 +134,7 @@ func (s *Plugin) Serve() chan error {
 						}
 					}
 					// zero map
-					updated = make(map[string]ServiceConfig, len(s.cfg.Services))
+					updated = make(map[string]ServiceConfig, len(s.cfg.Plugins))
 				}
 			case <-s.stopc:
 				timer.Stop()

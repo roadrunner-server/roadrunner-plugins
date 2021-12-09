@@ -11,10 +11,9 @@ import (
 
 	"github.com/beanstalkd/go-beanstalk"
 	"github.com/spiral/errors"
-	jobState "github.com/spiral/roadrunner-plugins/v2/api/jobs"
+	"github.com/spiral/roadrunner-plugins/v2/api/jobs"
+	"github.com/spiral/roadrunner-plugins/v2/api/jobs/pipeline"
 	cfgPlugin "github.com/spiral/roadrunner-plugins/v2/config"
-	"github.com/spiral/roadrunner-plugins/v2/jobs/job"
-	"github.com/spiral/roadrunner-plugins/v2/jobs/pipeline"
 	"github.com/spiral/roadrunner-plugins/v2/logger"
 	"github.com/spiral/roadrunner-plugins/v2/utils"
 	priorityqueue "github.com/spiral/roadrunner/v2/priority_queue"
@@ -153,7 +152,7 @@ func FromPipeline(pipe *pipeline.Pipeline, log logger.Logger, cfg cfgPlugin.Conf
 
 	return jc, nil
 }
-func (c *consumer) Push(ctx context.Context, jb *job.Job) error {
+func (c *consumer) Push(ctx context.Context, jb *jobs.Job) error {
 	const op = errors.Op("beanstalk_push")
 	// check if the pipeline registered
 
@@ -178,7 +177,7 @@ func (c *consumer) Register(_ context.Context, p *pipeline.Pipeline) error {
 }
 
 // State https://github.com/beanstalkd/beanstalkd/blob/master/doc/protocol.txt#L514
-func (c *consumer) State(ctx context.Context) (*jobState.State, error) {
+func (c *consumer) State(ctx context.Context) (*jobs.State, error) {
 	const op = errors.Op("beanstalk_state")
 	stat, err := c.pool.Stats(ctx)
 	if err != nil {
@@ -187,7 +186,7 @@ func (c *consumer) State(ctx context.Context) (*jobState.State, error) {
 
 	pipe := c.pipeline.Load().(*pipeline.Pipeline)
 
-	out := &jobState.State{
+	out := &jobs.State{
 		Pipeline: pipe.Name(),
 		Driver:   pipe.Driver(),
 		Queue:    c.tName,

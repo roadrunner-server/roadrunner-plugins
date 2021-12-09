@@ -10,9 +10,8 @@ import (
 	endure "github.com/spiral/endure/pkg/container"
 	"github.com/spiral/errors"
 	"github.com/spiral/roadrunner-plugins/v2/api/jobs"
+	"github.com/spiral/roadrunner-plugins/v2/api/jobs/pipeline"
 	"github.com/spiral/roadrunner-plugins/v2/config"
-	"github.com/spiral/roadrunner-plugins/v2/jobs/job"
-	"github.com/spiral/roadrunner-plugins/v2/jobs/pipeline"
 	rh "github.com/spiral/roadrunner-plugins/v2/jobs/protocol"
 	"github.com/spiral/roadrunner-plugins/v2/logger"
 	"github.com/spiral/roadrunner-plugins/v2/server"
@@ -30,6 +29,9 @@ const (
 
 	PluginName string = "jobs"
 	pipelines  string = "pipelines"
+
+	// v2.7 and newer config key
+	cfgKey string = "config"
 )
 
 type metrics struct {
@@ -117,6 +119,10 @@ func (p *Plugin) Init(cfg config.Configurer, log logger.Logger, server server.Se
 	p.statsExporter = newStatsExporter(p, p.metrics.jobsOk, p.metrics.pushOk, p.metrics.jobsErr, p.metrics.pushErr)
 	p.respHandler = rh.NewResponseHandler(log)
 
+	if err != nil {
+		return errors.E(op, err)
+	}
+
 	return nil
 }
 
@@ -135,11 +141,17 @@ func (p *Plugin) Serve() chan error {
 		// driver for the pipeline (ie amqp, ephemeral, etc)
 		dr := pipe.Driver()
 
+		if dr == "" {
+			p.log.Warn("can't find driver name for the pipeline, please, check that the 'driver' keyword for the pipelines specified correctly, JOBS plugin will try to run the next pipeline")
+			return true
+		}
+
 		// jobConstructors contains constructors for the drivers
 		// we need here to initialize these drivers for the pipelines
 		if _, ok := p.jobConstructors[dr]; ok {
+			// v2.7 and newer
 			// config key for the particular sub-driver jobs.pipelines.test-local
-			configKey := fmt.Sprintf("%s.%s.%s", PluginName, pipelines, name)
+			configKey := fmt.Sprintf("%s.%s.%s.%s", PluginName, pipelines, name, cfgKey)
 
 			// init the driver
 			initializedDriver, err := p.jobConstructors[dr].ConsumerFromConfig(configKey, p.queue)
@@ -231,6 +243,11 @@ func (p *Plugin) Stop() error {
 	}
 	p.Unlock()
 
+	p.pipelines.Range(func(key, _ interface{}) bool {
+		p.pipelines.Delete(key)
+		return true
+	})
+
 	return nil
 }
 
@@ -314,7 +331,7 @@ func (p *Plugin) Reset() error {
 	return nil
 }
 
-func (p *Plugin) Push(j *job.Job) error {
+func (p *Plugin) Push(j *jobs.Job) error {
 	const op = errors.Op("jobs_plugin_push")
 
 	start := time.Now()
@@ -353,7 +370,7 @@ func (p *Plugin) Push(j *job.Job) error {
 	return nil
 }
 
-func (p *Plugin) PushBatch(j []*job.Job) error {
+func (p *Plugin) PushBatch(j []*jobs.Job) error {
 	const op = errors.Op("jobs_plugin_push")
 	start := time.Now()
 

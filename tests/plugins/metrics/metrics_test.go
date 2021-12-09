@@ -38,7 +38,7 @@ func TestMetricsInit(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	cfg := &config.Viper{}
+	cfg := &config.Plugin{}
 	cfg.Prefix = "rr"
 	cfg.Path = "configs/.rr-test.yaml"
 
@@ -103,7 +103,7 @@ func TestMetricsIssue571(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	cfg := &config.Viper{}
+	cfg := &config.Plugin{}
 	cfg.Prefix = "rr"
 	cfg.Path = "configs/.rr-issue-571.yaml"
 
@@ -238,7 +238,7 @@ func TestMetricsGaugeCollector(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	cfg := &config.Viper{}
+	cfg := &config.Plugin{}
 	cfg.Prefix = "rr"
 	cfg.Path = "configs/.rr-test.yaml"
 
@@ -307,7 +307,7 @@ func TestMetricsDifferentRPCCalls(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	cfg := &config.Viper{}
+	cfg := &config.Plugin{}
 	cfg.Prefix = "rr"
 	cfg.Path = "configs/.rr-test.yaml"
 
@@ -966,7 +966,7 @@ func TestHTTPMetrics(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	cfg := &config.Viper{}
+	cfg := &config.Plugin{}
 	cfg.Prefix = "rr"
 	cfg.Path = "configs/.rr-http-metrics.yaml"
 
@@ -1056,7 +1056,7 @@ func TestHTTPMetricsNoFreeWorkers(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	cfg := &config.Viper{}
+	cfg := &config.Plugin{}
 	cfg.Prefix = "rr"
 	cfg.Path = "configs/.rr-http-metrics-no-free-workers.yaml"
 

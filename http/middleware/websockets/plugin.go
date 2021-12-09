@@ -12,12 +12,12 @@ import (
 	"github.com/spiral/roadrunner-plugins/v2/api/pubsub"
 	"github.com/spiral/roadrunner-plugins/v2/config"
 	"github.com/spiral/roadrunner-plugins/v2/http/attributes"
+	"github.com/spiral/roadrunner-plugins/v2/http/middleware/websockets/connection"
+	"github.com/spiral/roadrunner-plugins/v2/http/middleware/websockets/executor"
+	"github.com/spiral/roadrunner-plugins/v2/http/middleware/websockets/pool"
+	"github.com/spiral/roadrunner-plugins/v2/http/middleware/websockets/validator"
 	"github.com/spiral/roadrunner-plugins/v2/logger"
 	"github.com/spiral/roadrunner-plugins/v2/server"
-	"github.com/spiral/roadrunner-plugins/v2/websockets/connection"
-	"github.com/spiral/roadrunner-plugins/v2/websockets/executor"
-	"github.com/spiral/roadrunner-plugins/v2/websockets/pool"
-	"github.com/spiral/roadrunner-plugins/v2/websockets/validator"
 	"github.com/spiral/roadrunner/v2/payload"
 	phpPool "github.com/spiral/roadrunner/v2/pool"
 	"github.com/spiral/roadrunner/v2/state/process"
@@ -53,6 +53,8 @@ type Plugin struct {
 
 	// workers pool
 	phpPool phpPool.Pool
+	// payloads pool
+	pldPool sync.Pool
 	// server which produces commands to the pool
 	server server.Server
 
@@ -88,6 +90,15 @@ func (p *Plugin) Init(cfg config.Configurer, log logger.Logger, server server.Se
 	ctx, cancel := context.WithCancel(context.Background())
 	p.ctx = ctx
 	p.cancel = cancel
+
+	p.pldPool = sync.Pool{
+		New: func() interface{} {
+			return &payload.Payload{
+				Context: make([]byte, 0, 100),
+				Body:    make([]byte, 0, 100),
+			}
+		},
+	}
 
 	return nil
 }
@@ -314,7 +325,7 @@ func (p *Plugin) defaultAccessValidator(pool phpPool.Pool) validator.AccessValid
 				return nil, errors.E(op, err)
 			}
 
-			val, err := exec(ctx, pool)
+			val, err := p.exec(ctx, pool)
 			if err != nil {
 				return nil, errors.E(err)
 			}
@@ -327,7 +338,7 @@ func (p *Plugin) defaultAccessValidator(pool phpPool.Pool) validator.AccessValid
 			return nil, errors.E(op, err)
 		}
 
-		val, err := exec(ctx, pool)
+		val, err := p.exec(ctx, pool)
 		if err != nil {
 			return nil, errors.E(op)
 		}
@@ -340,29 +351,20 @@ func (p *Plugin) defaultAccessValidator(pool phpPool.Pool) validator.AccessValid
 	}
 }
 
-var pldPool = &sync.Pool{
-	New: func() interface{} {
-		return &payload.Payload{
-			Context: make([]byte, 0, 100),
-			Body:    make([]byte, 0, 100),
-		}
-	},
+func (p *Plugin) putPld(pld *payload.Payload) {
+	pld.Context = make([]byte, 0, 100)
+	pld.Body = make([]byte, 0, 100)
+	p.pldPool.Put(pld)
 }
 
-func putPld(pld *payload.Payload) {
-	pld.Body = nil
-	pld.Context = nil
-	pldPool.Put(pld)
+func (p *Plugin) getPld() *payload.Payload {
+	return p.pldPool.Get().(*payload.Payload)
 }
 
-func getPld() *payload.Payload {
-	return pldPool.Get().(*payload.Payload)
-}
-
-func exec(ctx []byte, pool phpPool.Pool) (*validator.AccessValidator, error) {
+func (p *Plugin) exec(ctx []byte, pool phpPool.Pool) (*validator.AccessValidator, error) {
 	const op = errors.Op("exec")
-	pd := getPld()
-	defer putPld(pd)
+	pd := p.getPld()
+	defer p.putPld(pd)
 
 	pd.Context = ctx
 

@@ -13,6 +13,9 @@ const (
 	driver   string = "driver"
 	name     string = "name"
 	queue    string = "queue"
+
+	// config
+	config string = "config"
 )
 
 // With pipeline value
@@ -41,6 +44,16 @@ func (p Pipeline) Driver() string {
 func (p Pipeline) Has(name string) bool {
 	if _, ok := p[name]; ok {
 		return true
+	} else {
+		// check the config section if exists
+		if val, ok := p[config]; ok {
+			if rv, ok := val.(map[string]interface{}); ok {
+				if _, ok := rv[name]; ok {
+					return true
+				}
+				return false
+			}
+		}
 	}
 
 	return false
@@ -52,6 +65,15 @@ func (p Pipeline) String(name string, d string) string {
 		if str, ok := value.(string); ok {
 			return str
 		}
+	} else {
+		// check the config section if exists
+		if val, ok := p[config]; ok {
+			if rv, ok := val.(map[string]interface{}); ok {
+				if rv[name] != "" {
+					return rv[name].(string)
+				}
+			}
+		}
 	}
 
 	return d
@@ -62,6 +84,15 @@ func (p Pipeline) Int(name string, d int) int {
 	if value, ok := p[name]; ok {
 		if i, ok := value.(int); ok {
 			return i
+		}
+	} else {
+		// check the config section if exists
+		if val, ok := p[config]; ok {
+			if rv, ok := val.(map[string]interface{}); ok {
+				if rv[name] != nil {
+					return rv[name].(int)
+				}
+			}
 		}
 	}
 
@@ -81,6 +112,24 @@ func (p Pipeline) Bool(name string, d bool) bool {
 				return false
 			}
 		}
+	} else {
+		// check the config section if exists
+		if val, ok := p[config]; ok {
+			if rv, ok := val.(map[string]interface{}); ok {
+				if rv[name] != nil {
+					if i, ok := value.(string); ok {
+						switch i {
+						case "true":
+							return true
+						case "false":
+							return false
+						default:
+							return false
+						}
+					}
+				}
+			}
+		}
 	}
 
 	return d
@@ -96,6 +145,21 @@ func (p Pipeline) Map(name string, out map[string]string) error {
 				return err
 			}
 		}
+	} else {
+		// check the config section if exists
+		if val, ok := p[config]; ok {
+			if rv, ok := val.(map[string]interface{}); ok {
+				if val, ok := rv[name]; ok {
+					if m, ok := val.(string); ok {
+						err := json.Unmarshal(utils.AsBytes(m), &out)
+						if err != nil {
+							return err
+						}
+					}
+					return nil
+				}
+			}
+		}
 	}
 
 	return nil
@@ -106,6 +170,15 @@ func (p Pipeline) Priority() int64 {
 	if value, ok := p[priority]; ok {
 		if v, ok := value.(int64); ok {
 			return v
+		}
+	} else {
+		// check the config section if exists
+		if val, ok := p[config]; ok {
+			if rv, ok := val.(map[string]interface{}); ok {
+				if rv[name] != nil {
+					return rv[name].(int64)
+				}
+			}
 		}
 	}
 

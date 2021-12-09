@@ -6,10 +6,9 @@ import (
 	"time"
 
 	"github.com/spiral/errors"
-	jobState "github.com/spiral/roadrunner-plugins/v2/api/jobs"
+	"github.com/spiral/roadrunner-plugins/v2/api/jobs"
+	"github.com/spiral/roadrunner-plugins/v2/api/jobs/pipeline"
 	"github.com/spiral/roadrunner-plugins/v2/config"
-	"github.com/spiral/roadrunner-plugins/v2/jobs/job"
-	"github.com/spiral/roadrunner-plugins/v2/jobs/pipeline"
 	"github.com/spiral/roadrunner-plugins/v2/logger"
 	"github.com/spiral/roadrunner-plugins/v2/utils"
 	priorityqueue "github.com/spiral/roadrunner/v2/priority_queue"
@@ -21,6 +20,7 @@ const (
 )
 
 type Config struct {
+	Priority int64  `mapstructure:"priority"`
 	Prefetch uint64 `mapstructure:"prefetch"`
 }
 
@@ -37,6 +37,7 @@ type consumer struct {
 	delayed *int64
 	active  *int64
 
+	priority  int64
 	listeners uint32
 	stopCh    chan struct{}
 }
@@ -66,6 +67,12 @@ func FromConfig(configKey string, log logger.Logger, cfg config.Configurer, pq p
 		jb.cfg.Prefetch = 100_000
 	}
 
+	if jb.cfg.Priority == 0 {
+		jb.cfg.Priority = 10
+	}
+
+	jb.priority = jb.cfg.Priority
+
 	// initialize a local queue
 	jb.localPrefetch = make(chan *Item, jb.cfg.Prefetch)
 
@@ -80,11 +87,12 @@ func FromPipeline(pipeline *pipeline.Pipeline, log logger.Logger, pq priorityque
 		goroutines:    0,
 		active:        utils.Int64(0),
 		delayed:       utils.Int64(0),
+		priority:      pipeline.Priority(),
 		stopCh:        make(chan struct{}),
 	}, nil
 }
 
-func (c *consumer) Push(ctx context.Context, jb *job.Job) error {
+func (c *consumer) Push(ctx context.Context, jb *jobs.Job) error {
 	const op = errors.Op("ephemeral_push")
 	// check if the pipeline registered
 	_, ok := c.pipeline.Load().(*pipeline.Pipeline)
@@ -100,9 +108,9 @@ func (c *consumer) Push(ctx context.Context, jb *job.Job) error {
 	return nil
 }
 
-func (c *consumer) State(_ context.Context) (*jobState.State, error) {
+func (c *consumer) State(_ context.Context) (*jobs.State, error) {
 	pipe := c.pipeline.Load().(*pipeline.Pipeline)
-	return &jobState.State{
+	return &jobs.State{
 		Pipeline: pipe.Name(),
 		Driver:   pipe.Driver(),
 		Queue:    pipe.Name(),
@@ -250,6 +258,9 @@ func (c *consumer) consume() {
 					return
 				}
 
+				if item.Priority() == 0 {
+					item.Options.Priority = c.priority
+				}
 				// set requeue channel
 				item.Options.requeueFn = c.handleItem
 				item.Options.active = c.active

@@ -33,7 +33,7 @@ func TestBeanstalkInit(t *testing.T) {
 	cont, err := endure.NewContainer(nil, endure.SetLogLevel(endure.ErrorLevel), endure.GracefulShutdownTimeout(time.Second*60))
 	assert.NoError(t, err)
 
-	cfg := &config.Viper{
+	cfg := &config.Plugin{
 		Path:   "beanstalk/.rr-beanstalk-init.yaml",
 		Prefix: "rr",
 	}
@@ -117,20 +117,46 @@ func TestBeanstalkInit(t *testing.T) {
 	wg.Wait()
 }
 
-func TestBeanstalkDeclare(t *testing.T) {
+func TestBeanstalkInitV27(t *testing.T) {
 	cont, err := endure.NewContainer(nil, endure.SetLogLevel(endure.ErrorLevel), endure.GracefulShutdownTimeout(time.Second*60))
 	assert.NoError(t, err)
 
-	cfg := &config.Viper{
-		Path:   "beanstalk/.rr-beanstalk-declare.yaml",
-		Prefix: "rr",
+	cfg := &config.Plugin{
+		Path:      "beanstalk/.rr-beanstalk-init-v27.yaml",
+		Prefix:    "rr",
+		RRVersion: "2.7.0",
 	}
+
+	controller := gomock.NewController(t)
+	mockLogger := mocks.NewMockLogger(controller)
+
+	// general
+	mockLogger.EXPECT().Debug("RPC plugin started", "address", "tcp://127.0.0.1:6001", "plugins", gomock.Any()).Times(1)
+
+	mockLogger.EXPECT().Debug("pipeline started", "driver", "beanstalk", "pipeline", "test-1", "start", gomock.Any(), "elapsed", gomock.Any()).Times(1)
+	mockLogger.EXPECT().Debug("pipeline started", "driver", "beanstalk", "pipeline", "test-2", "start", gomock.Any(), "elapsed", gomock.Any()).Times(1)
+	mockLogger.EXPECT().Debug("pipeline stopped", "driver", "beanstalk", "pipeline", "test-1", "start", gomock.Any(), "elapsed", gomock.Any()).Times(1)
+	mockLogger.EXPECT().Debug("pipeline stopped", "driver", "beanstalk", "pipeline", "test-2", "start", gomock.Any(), "elapsed", gomock.Any()).Times(1)
+
+	mockLogger.EXPECT().Debug("job pushed successfully", "ID", gomock.Any(), "pipeline", "test-1", "driver", "beanstalk", "start", gomock.Any(), "elapsed", gomock.Any()).Times(1)
+	mockLogger.EXPECT().Debug("job pushed successfully", "ID", gomock.Any(), "pipeline", "test-2", "driver", "beanstalk", "start", gomock.Any(), "elapsed", gomock.Any()).Times(1)
+
+	mockLogger.EXPECT().Debug("job processed successfully", "ID", gomock.Any(), "start", gomock.Any(), "elapsed", gomock.Any()).Times(2)
+	mockLogger.EXPECT().Debug("job processing started", "ID", gomock.Any(), "start", gomock.Any(), "elapsed", gomock.Any()).Times(2)
+
+	mockLogger.EXPECT().Warn("beanstalk reserve", "error", gomock.Any()).AnyTimes()
+	mockLogger.EXPECT().Error("job processed with errors", "error", gomock.Any(), "ID", gomock.Any(), "start", gomock.Any(), "elapsed", gomock.Any()).AnyTimes()
+	mockLogger.EXPECT().Debug("beanstalk reserve timeout", "warn", "reserve-with-timeout").AnyTimes()
+	mockLogger.EXPECT().Debug("beanstalk listener stopped").AnyTimes()
+	mockLogger.EXPECT().Debug("------> job poller stopped <------").AnyTimes()
+
+	mockLogger.EXPECT().Info(gomock.Any()).AnyTimes()
 
 	err = cont.RegisterAll(
 		cfg,
 		&server.Plugin{},
 		&rpcPlugin.Plugin{},
-		&logger.ZapLogger{},
+		mockLogger,
 		&jobs.Plugin{},
 		&resetter.Plugin{},
 		&informer.Plugin{},
@@ -185,95 +211,11 @@ func TestBeanstalkDeclare(t *testing.T) {
 
 	time.Sleep(time.Second * 3)
 
-	t.Run("DeclareBeanstalkPipeline", declareBeanstalkPipe)
-	t.Run("ConsumeBeanstalkPipeline", resumePipes("test-3"))
-	t.Run("PushBeanstalkPipeline", pushToPipe("test-3"))
-	t.Run("PauseBeanstalkPipeline", pausePipelines("test-3"))
-	time.Sleep(time.Second * 5)
-	t.Run("DestroyBeanstalkPipeline", destroyPipelines("test-3"))
+	t.Run("PushPipeline", pushToPipe("test-1"))
+	t.Run("PushPipeline", pushToPipe("test-2"))
 
-	time.Sleep(time.Second * 5)
-	stopCh <- struct{}{}
-	wg.Wait()
-}
-
-func TestBeanstalkJobsError(t *testing.T) {
-	cont, err := endure.NewContainer(nil, endure.SetLogLevel(endure.ErrorLevel), endure.GracefulShutdownTimeout(time.Second*60))
-	assert.NoError(t, err)
-
-	cfg := &config.Viper{
-		Path:   "beanstalk/.rr-beanstalk-jobs-err.yaml",
-		Prefix: "rr",
-	}
-
-	err = cont.RegisterAll(
-		cfg,
-		&server.Plugin{},
-		&rpcPlugin.Plugin{},
-		&logger.ZapLogger{},
-		&jobs.Plugin{},
-		&resetter.Plugin{},
-		&informer.Plugin{},
-		&beanstalk.Plugin{},
-	)
-	assert.NoError(t, err)
-
-	err = cont.Init()
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	ch, err := cont.Serve()
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	sig := make(chan os.Signal, 1)
-	signal.Notify(sig, os.Interrupt, syscall.SIGINT, syscall.SIGTERM)
-
-	wg := &sync.WaitGroup{}
-	wg.Add(1)
-
-	stopCh := make(chan struct{}, 1)
-
-	go func() {
-		defer wg.Done()
-		for {
-			select {
-			case e := <-ch:
-				assert.Fail(t, "error", e.Error.Error())
-				err = cont.Stop()
-				if err != nil {
-					assert.FailNow(t, "error", err.Error())
-				}
-			case <-sig:
-				err = cont.Stop()
-				if err != nil {
-					assert.FailNow(t, "error", err.Error())
-				}
-				return
-			case <-stopCh:
-				// timeout
-				err = cont.Stop()
-				if err != nil {
-					assert.FailNow(t, "error", err.Error())
-				}
-				return
-			}
-		}
-	}()
-
-	time.Sleep(time.Second * 3)
-
-	t.Run("DeclareBeanstalkPipeline", declareBeanstalkPipe)
-	t.Run("ConsumeBeanstalkPipeline", resumePipes("test-3"))
-	t.Run("PushBeanstalkPipeline", pushToPipe("test-3"))
-	time.Sleep(time.Second * 25)
-	t.Run("PauseBeanstalkPipeline", pausePipelines("test-3"))
 	time.Sleep(time.Second)
-	t.Run("DestroyBeanstalkPipeline", destroyPipelines("test-3"))
 
-	time.Sleep(time.Second * 5)
 	stopCh <- struct{}{}
 	wg.Wait()
 }
@@ -282,7 +224,7 @@ func TestBeanstalkStats(t *testing.T) {
 	cont, err := endure.NewContainer(nil, endure.SetLogLevel(endure.ErrorLevel), endure.GracefulShutdownTimeout(time.Second*60))
 	assert.NoError(t, err)
 
-	cfg := &config.Viper{
+	cfg := &config.Plugin{
 		Path:   "beanstalk/.rr-beanstalk-declare.yaml",
 		Prefix: "rr",
 	}
@@ -393,11 +335,172 @@ func TestBeanstalkStats(t *testing.T) {
 	wg.Wait()
 }
 
+func TestBeanstalkDeclare(t *testing.T) {
+	cont, err := endure.NewContainer(nil, endure.SetLogLevel(endure.ErrorLevel), endure.GracefulShutdownTimeout(time.Second*60))
+	assert.NoError(t, err)
+
+	cfg := &config.Plugin{
+		Path:   "beanstalk/.rr-beanstalk-declare.yaml",
+		Prefix: "rr",
+	}
+
+	err = cont.RegisterAll(
+		cfg,
+		&server.Plugin{},
+		&rpcPlugin.Plugin{},
+		&logger.ZapLogger{},
+		&jobs.Plugin{},
+		&resetter.Plugin{},
+		&informer.Plugin{},
+		&beanstalk.Plugin{},
+	)
+	assert.NoError(t, err)
+
+	err = cont.Init()
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	ch, err := cont.Serve()
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	sig := make(chan os.Signal, 1)
+	signal.Notify(sig, os.Interrupt, syscall.SIGINT, syscall.SIGTERM)
+
+	wg := &sync.WaitGroup{}
+	wg.Add(1)
+
+	stopCh := make(chan struct{}, 1)
+
+	go func() {
+		defer wg.Done()
+		for {
+			select {
+			case e := <-ch:
+				assert.Fail(t, "error", e.Error.Error())
+				err = cont.Stop()
+				if err != nil {
+					assert.FailNow(t, "error", err.Error())
+				}
+			case <-sig:
+				err = cont.Stop()
+				if err != nil {
+					assert.FailNow(t, "error", err.Error())
+				}
+				return
+			case <-stopCh:
+				// timeout
+				err = cont.Stop()
+				if err != nil {
+					assert.FailNow(t, "error", err.Error())
+				}
+				return
+			}
+		}
+	}()
+
+	time.Sleep(time.Second * 3)
+
+	t.Run("DeclareBeanstalkPipeline", declareBeanstalkPipe)
+	t.Run("ConsumeBeanstalkPipeline", resumePipes("test-3"))
+	t.Run("PushBeanstalkPipeline", pushToPipe("test-3"))
+	t.Run("PauseBeanstalkPipeline", pausePipelines("test-3"))
+	time.Sleep(time.Second * 5)
+	t.Run("DestroyBeanstalkPipeline", destroyPipelines("test-3"))
+
+	time.Sleep(time.Second * 5)
+	stopCh <- struct{}{}
+	wg.Wait()
+}
+
+func TestBeanstalkJobsError(t *testing.T) {
+	cont, err := endure.NewContainer(nil, endure.SetLogLevel(endure.ErrorLevel), endure.GracefulShutdownTimeout(time.Second*60))
+	assert.NoError(t, err)
+
+	cfg := &config.Plugin{
+		Path:   "beanstalk/.rr-beanstalk-jobs-err.yaml",
+		Prefix: "rr",
+	}
+
+	err = cont.RegisterAll(
+		cfg,
+		&server.Plugin{},
+		&rpcPlugin.Plugin{},
+		&logger.ZapLogger{},
+		&jobs.Plugin{},
+		&resetter.Plugin{},
+		&informer.Plugin{},
+		&beanstalk.Plugin{},
+	)
+	assert.NoError(t, err)
+
+	err = cont.Init()
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	ch, err := cont.Serve()
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	sig := make(chan os.Signal, 1)
+	signal.Notify(sig, os.Interrupt, syscall.SIGINT, syscall.SIGTERM)
+
+	wg := &sync.WaitGroup{}
+	wg.Add(1)
+
+	stopCh := make(chan struct{}, 1)
+
+	go func() {
+		defer wg.Done()
+		for {
+			select {
+			case e := <-ch:
+				assert.Fail(t, "error", e.Error.Error())
+				err = cont.Stop()
+				if err != nil {
+					assert.FailNow(t, "error", err.Error())
+				}
+			case <-sig:
+				err = cont.Stop()
+				if err != nil {
+					assert.FailNow(t, "error", err.Error())
+				}
+				return
+			case <-stopCh:
+				// timeout
+				err = cont.Stop()
+				if err != nil {
+					assert.FailNow(t, "error", err.Error())
+				}
+				return
+			}
+		}
+	}()
+
+	time.Sleep(time.Second * 3)
+
+	t.Run("DeclareBeanstalkPipeline", declareBeanstalkPipe)
+	t.Run("ConsumeBeanstalkPipeline", resumePipes("test-3"))
+	t.Run("PushBeanstalkPipeline", pushToPipe("test-3"))
+	time.Sleep(time.Second * 25)
+	t.Run("PauseBeanstalkPipeline", pausePipelines("test-3"))
+	time.Sleep(time.Second)
+	t.Run("DestroyBeanstalkPipeline", destroyPipelines("test-3"))
+
+	time.Sleep(time.Second * 5)
+	stopCh <- struct{}{}
+	wg.Wait()
+}
+
 func TestBeanstalkNoGlobalSection(t *testing.T) {
 	cont, err := endure.NewContainer(nil, endure.SetLogLevel(endure.ErrorLevel), endure.GracefulShutdownTimeout(time.Second*60))
 	assert.NoError(t, err)
 
-	cfg := &config.Viper{
+	cfg := &config.Plugin{
 		Path:   "beanstalk/.rr-no-global.yaml",
 		Prefix: "rr",
 	}
@@ -427,7 +530,7 @@ func TestBeanstalkRespond(t *testing.T) {
 	cont, err := endure.NewContainer(nil, endure.SetLogLevel(endure.ErrorLevel), endure.GracefulShutdownTimeout(time.Second*60))
 	assert.NoError(t, err)
 
-	cfg := &config.Viper{
+	cfg := &config.Plugin{
 		Path:   "beanstalk/.rr-beanstalk-respond.yaml",
 		Prefix: "rr",
 	}

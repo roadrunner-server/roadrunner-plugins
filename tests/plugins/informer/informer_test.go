@@ -31,7 +31,7 @@ func TestInformerInit(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	cfg := &config.Viper{
+	cfg := &config.Plugin{
 		Path:   "configs/.rr-informer.yaml",
 		Prefix: "rr",
 	}
@@ -101,7 +101,7 @@ func TestInformerEarlyCall(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	cfg := &config.Viper{
+	cfg := &config.Plugin{
 		Path:   "configs/.rr-informer-early-call.yaml",
 		Prefix: "rr",
 	}

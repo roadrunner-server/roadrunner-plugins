@@ -6,13 +6,19 @@ import (
 	"os"
 	"strings"
 
+	"github.com/hashicorp/go-version"
 	"github.com/spf13/viper"
 	"github.com/spiral/errors"
 )
 
-const PluginName string = "config"
+const (
+	PluginName       string = "config"
+	versionKey       string = "version"
+	defaultVersion   string = "2.6"
+	defaultRRVersion string = "2.7"
+)
 
-type Viper struct {
+type Plugin struct {
 	viper     *viper.Viper
 	Path      string
 	Prefix    string
@@ -22,56 +28,122 @@ type Viper struct {
 	// which overwrites initial config key
 	Flags []string
 
-	// RRVersion passed from the RR-Endure.
+	// RRVersion passed from the Endure.
 	RRVersion string
 
+	// All plugins common parameters
 	CommonConfig *General
 }
 
 // Init config provider.
-func (v *Viper) Init() error {
+func (p *Plugin) Init() error {
 	const op = errors.Op("config_plugin_init")
-	v.viper = viper.New()
+	p.viper = viper.New()
 	// If user provided []byte data with config, read it and ignore Path and Prefix
-	if v.ReadInCfg != nil && v.Type != "" {
-		v.viper.SetConfigType("yaml")
-		return v.viper.ReadConfig(bytes.NewBuffer(v.ReadInCfg))
+	if p.ReadInCfg != nil && p.Type != "" {
+		p.viper.SetConfigType("yaml")
+		return p.viper.ReadConfig(bytes.NewBuffer(p.ReadInCfg))
 	}
 
 	// read in environment variables that match
-	v.viper.AutomaticEnv()
-	if v.Prefix == "" {
+	p.viper.AutomaticEnv()
+	if p.Prefix == "" {
 		return errors.E(op, errors.Str("prefix should be set"))
 	}
 
-	v.viper.SetEnvPrefix(v.Prefix)
-	if v.Path == "" {
+	p.viper.SetEnvPrefix(p.Prefix)
+	if p.Path == "" {
 		return errors.E(op, errors.Str("path should be set"))
 	}
 
-	v.viper.SetConfigFile(v.Path)
-	v.viper.SetEnvKeyReplacer(strings.NewReplacer(".", "_"))
+	p.viper.SetConfigFile(p.Path)
+	p.viper.SetEnvKeyReplacer(strings.NewReplacer(".", "_"))
 
-	err := v.viper.ReadInConfig()
+	err := p.viper.ReadInConfig()
 	if err != nil {
 		return errors.E(op, err)
 	}
 
+	// get configuration version
+	ver := p.viper.Get(versionKey)
+	if ver == nil {
+		// default version (versioning start point is 2.6)
+		ver = defaultVersion
+	}
+
+	if _, ok := ver.(string); !ok {
+		return errors.E(op, errors.Errorf("version should be a string, actual type: %T", ver))
+	}
+
+	// RR gets config feature starting v2.7, so, it's default
+	// but this only needed for tests, because starting v2.7 rr-binary will pass the version automatically.
+	if p.RRVersion == "" {
+		p.RRVersion = defaultRRVersion
+	}
+
+	// configuration version
+	cfgV, err := version.NewSemver(ver.(string))
+	if err != nil {
+		return errors.E(op, err)
+	}
+
+	// RR version
+	rrV, err := version.NewSemver(p.RRVersion)
+	if err != nil {
+		return errors.E(op, err)
+	}
+
+	// default version (2.6.0)
+	defV, err := version.NewSemver(defaultVersion)
+	if err != nil {
+		return errors.E(op, err)
+	}
+
+	// probably user set too old version
+	if cfgV.LessThan(defV) {
+		return errors.E(op, errors.Errorf("too old configuration version used, should be at least 2.6"))
+	}
+
+	// if RR version is less than configuration version (2.6 RR and 2.7 config)
+	if rrV.LessThan(cfgV) {
+		return errors.E(op, errors.Errorf("RR version is older than configuration version, RR version: %s, configuration version: %s", p.RRVersion, ver.(string)))
+	}
+
+	// if rr version is equal to the configuration version, skip transition
+	// but we can have versions like 2.7.0 (config) and 2.7.2 (RR version), they are not equal, but we don't change config
+	// in the bugfix versions. We should additionally check the minor versions
+	if !rrV.Equal(cfgV) {
+		// minor RR and minor config
+		if (rrV.Segments64()[0] == cfgV.Segments64()[0]) && rrV.Segments64()[1] != cfgV.Segments64()[1] {
+			// transform from the older config to the recent RR version
+			err = transition(cfgV.String(), rrV.String(), p.viper)
+			if err != nil {
+				return errors.E(op, err)
+			}
+		}
+	}
+
+	if p.CommonConfig == nil {
+		p.CommonConfig = &General{}
+	}
+
+	p.CommonConfig.RRVersion = rrV
+
 	// automatically inject ENV variables using ${ENV} pattern
-	for _, key := range v.viper.AllKeys() {
-		val := v.viper.Get(key)
-		v.viper.Set(key, parseEnv(val))
+	for _, key := range p.viper.AllKeys() {
+		val := p.viper.Get(key)
+		p.viper.Set(key, parseEnv(val))
 	}
 
 	// override config Flags
-	if len(v.Flags) > 0 {
-		for _, f := range v.Flags {
+	if len(p.Flags) > 0 {
+		for _, f := range p.Flags {
 			key, val, err := parseFlag(f)
 			if err != nil {
 				return errors.E(op, err)
 			}
 
-			v.viper.Set(key, val)
+			p.viper.Set(key, val)
 		}
 	}
 
@@ -79,10 +151,10 @@ func (v *Viper) Init() error {
 }
 
 // Overwrite overwrites existing config with provided values
-func (v *Viper) Overwrite(values map[string]interface{}) error {
+func (p *Plugin) Overwrite(values map[string]interface{}) error {
 	if len(values) != 0 {
 		for key, value := range values {
-			v.viper.Set(key, value)
+			p.viper.Set(key, value)
 		}
 	}
 
@@ -90,18 +162,18 @@ func (v *Viper) Overwrite(values map[string]interface{}) error {
 }
 
 // UnmarshalKey reads configuration section into configuration object.
-func (v *Viper) UnmarshalKey(name string, out interface{}) error {
+func (p *Plugin) UnmarshalKey(name string, out interface{}) error {
 	const op = errors.Op("config_plugin_unmarshal_key")
-	err := v.viper.UnmarshalKey(name, &out)
+	err := p.viper.UnmarshalKey(name, &out)
 	if err != nil {
 		return errors.E(op, err)
 	}
 	return nil
 }
 
-func (v *Viper) Unmarshal(out interface{}) error {
+func (p *Plugin) Unmarshal(out interface{}) error {
 	const op = errors.Op("config_plugin_unmarshal")
-	err := v.viper.Unmarshal(&out)
+	err := p.viper.Unmarshal(&out)
 	if err != nil {
 		return errors.E(op, err)
 	}
@@ -109,30 +181,30 @@ func (v *Viper) Unmarshal(out interface{}) error {
 }
 
 // Get raw config in a form of config section.
-func (v *Viper) Get(name string) interface{} {
-	return v.viper.Get(name)
+func (p *Plugin) Get(name string) interface{} {
+	return p.viper.Get(name)
 }
 
 // Has checks if config section exists.
-func (v *Viper) Has(name string) bool {
-	return v.viper.IsSet(name)
+func (p *Plugin) Has(name string) bool {
+	return p.viper.IsSet(name)
 }
 
 // GetCommonConfig Returns common config parameters
-func (v *Viper) GetCommonConfig() *General {
-	return v.CommonConfig
+func (p *Plugin) GetCommonConfig() *General {
+	return p.CommonConfig
 }
 
-func (v *Viper) Serve() chan error {
+func (p *Plugin) Serve() chan error {
 	return make(chan error, 1)
 }
 
-func (v *Viper) Stop() error {
+func (p *Plugin) Stop() error {
 	return nil
 }
 
 // Name returns user-friendly plugin name
-func (v *Viper) Name() string {
+func (p *Plugin) Name() string {
 	return PluginName
 }
 

@@ -5,9 +5,9 @@ import (
 
 	json "github.com/json-iterator/go"
 	"github.com/spiral/roadrunner-plugins/v2/api/pubsub"
+	"github.com/spiral/roadrunner-plugins/v2/http/middleware/websockets/connection"
 	"github.com/spiral/roadrunner-plugins/v2/logger"
 	"github.com/spiral/roadrunner-plugins/v2/utils"
-	"github.com/spiral/roadrunner-plugins/v2/websockets/connection"
 )
 
 // number of the WS pollers

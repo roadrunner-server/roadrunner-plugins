@@ -6,7 +6,7 @@ import (
 	"time"
 
 	json "github.com/json-iterator/go"
-	"github.com/spiral/roadrunner-plugins/v2/jobs/job"
+	"github.com/spiral/roadrunner-plugins/v2/api/jobs"
 	"github.com/spiral/roadrunner-plugins/v2/utils"
 )
 
@@ -124,7 +124,7 @@ func (i *Item) atomicallyReduceCount() {
 	// noop for the in-memory
 }
 
-func fromJob(job *job.Job) *Item {
+func fromJob(job *jobs.Job) *Item {
 	return &Item{
 		Job:     job.Job,
 		Ident:   job.Ident,

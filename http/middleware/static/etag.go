@@ -10,11 +10,11 @@ import (
 
 const etag string = "Etag"
 
-// weak Etag prefix
-var weakPrefix = []byte(`W/`)
+// weak Etag prefix, constant
+var weakPrefix = []byte(`W/`) //nolint:gochecknoglobals
 
-// CRC32 table
-var crc32q = crc32.MakeTable(0x48D90782)
+// CRC32 table, constant
+var crc32q = crc32.MakeTable(0x48D90782) //nolint:gochecknoglobals
 
 // SetEtag sets etag for the file
 func SetEtag(weak bool, f http.File, name string, w http.ResponseWriter) {
