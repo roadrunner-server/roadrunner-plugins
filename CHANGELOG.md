@@ -1,5 +1,159 @@
 # CHANGELOG
 
+## v2.7.0 (_._.2022?)
+
+## 👀 New:
+
+- ✏️ `.rr.yaml` now support versions. You may safely use your old configurations w/o specifying versions. Configuration w/o version will be treated as `2.6`. It is safe to use configuration w/o version or with version `2.6` with RR `2.7` because RR is able to automatically transform the old configuration.
+But if you use configuration version `2.7` you must update the `jobs` pipelines config.  
+**At this point we can guarantee, that no breaking changes will be introduced in the configuration w/o auto-convert from the older configuration version**  
+  For example, if we introduce a configuration update let's say in version `2.10`, we will support automatic conversion from at least 2 previous versions w/o involving the user into the process. In the example case, versions `2.9` and `2.8` will be automatically converted. From our release cycle, you will have at least 2 months to update the configuration from version `2.8` and 3 months from `2.9`.Version located at the top of the `.rr.yaml`:
+
+Compatibility matrix located here: TODO
+Configuration changelog: TODO
+
+```yaml
+version: "2.6"
+
+# ..... PLUGINS ......
+```
+
+**Before:**  
+```yaml
+  pipelines:
+    test-local:
+      driver: memory
+      priority: 10
+      prefetch: 10000
+
+    test-local-1:
+      driver: boltdb
+      priority: 10
+      file: "rr.db"
+      prefetch: 10000
+
+    test-local-2:
+      driver: amqp
+      prefetch: 10
+      priority: 1
+      queue: test-1-queue
+      exchange: default
+      exchange_type: direct
+      routing_key: test
+      exclusive: false
+      multiple_ack: false
+      requeue_on_fail: false
+
+    test-local-3:
+      driver: beanstalk
+      priority: 11
+      tube_priority: 1
+      tube: default-1
+      reserve_timeout: 10s
+
+    test-local-4:
+      driver: sqs
+      priority: 10
+      prefetch: 10
+      visibility_timeout: 0
+      wait_time_seconds: 0
+      queue: default
+      attributes:
+        DelaySeconds: 0
+        MaximumMessageSize: 262144
+        MessageRetentionPeriod: 345600
+        ReceiveMessageWaitTimeSeconds: 0
+        VisibilityTimeout: 30
+      tags:
+        test: "tag"
+
+    test-local-5:
+      driver: nats
+      priority: 2
+      prefetch: 100
+      subject: default
+      stream: foo
+      deliver_new: true
+      rate_limit: 100
+      delete_stream_on_stop: false
+      delete_after_ack: false
+```
+
+**After**:  
+Now, pipelines have only `driver` key with the configuration under the `config` key. We did that to uniform configuration across all drivers (like in the `KV`).
+```yaml
+  pipelines:
+    test-local:
+      driver: memory
+
+      config: # <------------------ NEW
+        priority: 10
+        prefetch: 10000
+
+    test-local-1:
+      driver: boltdb
+
+      config: # <------------------ NEW
+        priority: 10
+        file: "test-local-1-bolt.db"
+        prefetch: 10000
+
+    test-local-2:
+      driver: amqp
+
+      config: # <------------------ NEW
+        priority: 11
+        prefetch: 100
+        queue: test-12-queue
+        exchange: default
+        exchange_type: direct
+        routing_key: test
+        exclusive: false
+        multiple_ack: false
+        requeue_on_fail: false
+
+    test-local-3:
+      driver: beanstalk
+
+      config: # <------------------ NEW
+        priority: 11
+        tube_priority: 1
+        tube: default-2
+        reserve_timeout: 10s
+
+    test-local-4:
+      driver: sqs
+
+      config: # <------------------ NEW
+        priority: 10
+        prefetch: 10
+        visibility_timeout: 0
+        wait_time_seconds: 0
+        queue: default
+
+        attributes:
+          DelaySeconds: 0
+          MaximumMessageSize: 262144
+          MessageRetentionPeriod: 345600
+          ReceiveMessageWaitTimeSeconds: 0
+          VisibilityTimeout: 30
+        tags:
+        test: "tag"
+
+    test-local-5:
+      driver: nats
+
+      config: # <------------------ NEW
+        priority: 2
+        prefetch: 100
+        subject: default
+        stream: foo
+        deliver_new: true
+        rate_limit: 100
+        delete_stream_on_stop: false
+        delete_after_ack: false
+```
+
 ## v2.6.4 (7.12.2021)
 
 ## 📦 Packages:

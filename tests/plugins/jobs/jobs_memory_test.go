@@ -111,6 +111,100 @@ func TestMemoryInit(t *testing.T) {
 	wg.Wait()
 }
 
+func TestMemoryInitV27(t *testing.T) {
+	cont, err := endure.NewContainer(nil, endure.SetLogLevel(endure.ErrorLevel))
+	assert.NoError(t, err)
+
+	cfg := &config.Plugin{
+		Path:   "memory/.rr-memory-init.yaml",
+		Prefix: "rr",
+	}
+
+	controller := gomock.NewController(t)
+	mockLogger := mocks.NewMockLogger(controller)
+
+	// general
+	mockLogger.EXPECT().Debug("RPC plugin started", "address", "tcp://127.0.0.1:6001", "plugins", gomock.Any()).Times(1)
+
+	mockLogger.EXPECT().Debug("job pushed successfully", "ID", gomock.Any(), "pipeline", "test-1", "driver", "memory", "start", gomock.Any(), "elapsed", gomock.Any()).Times(1)
+	mockLogger.EXPECT().Debug("job pushed successfully", "ID", gomock.Any(), "pipeline", "test-2", "driver", "memory", "start", gomock.Any(), "elapsed", gomock.Any()).Times(1)
+
+	mockLogger.EXPECT().Debug("job processed successfully", "ID", gomock.Any(), "start", gomock.Any(), "elapsed", gomock.Any()).Times(2)
+	mockLogger.EXPECT().Debug("job processing started", "ID", gomock.Any(), "start", gomock.Any(), "elapsed", gomock.Any()).Times(2)
+
+	mockLogger.EXPECT().Debug("pipeline active", "driver", "memory", "pipeline", "test-1", "start", gomock.Any(), "elapsed", gomock.Any()).Times(1)
+	mockLogger.EXPECT().Debug("pipeline active", "driver", "memory", "pipeline", "test-2", "start", gomock.Any(), "elapsed", gomock.Any()).Times(1)
+	mockLogger.EXPECT().Debug("pipeline stopped", "driver", "memory", "pipeline", "test-1", "start", gomock.Any(), "elapsed", gomock.Any()).Times(1)
+	mockLogger.EXPECT().Debug("pipeline stopped", "driver", "memory", "pipeline", "test-2", "start", gomock.Any(), "elapsed", gomock.Any()).Times(1)
+
+	mockLogger.EXPECT().Info(gomock.Any()).AnyTimes()
+
+	err = cont.RegisterAll(
+		cfg,
+		&server.Plugin{},
+		&rpcPlugin.Plugin{},
+		mockLogger,
+		&jobs.Plugin{},
+		&resetter.Plugin{},
+		&informer.Plugin{},
+		&memory.Plugin{},
+	)
+	assert.NoError(t, err)
+
+	err = cont.Init()
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	ch, err := cont.Serve()
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	sig := make(chan os.Signal, 1)
+	signal.Notify(sig, os.Interrupt, syscall.SIGINT, syscall.SIGTERM)
+
+	wg := &sync.WaitGroup{}
+	wg.Add(1)
+
+	stopCh := make(chan struct{}, 1)
+
+	go func() {
+		defer wg.Done()
+		for {
+			select {
+			case e := <-ch:
+				assert.Fail(t, "error", e.Error.Error())
+				err = cont.Stop()
+				if err != nil {
+					assert.FailNow(t, "error", err.Error())
+				}
+			case <-sig:
+				err = cont.Stop()
+				if err != nil {
+					assert.FailNow(t, "error", err.Error())
+				}
+				return
+			case <-stopCh:
+				// timeout
+				err = cont.Stop()
+				if err != nil {
+					assert.FailNow(t, "error", err.Error())
+				}
+				return
+			}
+		}
+	}()
+
+	time.Sleep(time.Second * 1)
+	t.Run("PushPipeline", pushToPipe("test-1"))
+	t.Run("PushPipeline", pushToPipe("test-2"))
+	time.Sleep(time.Second * 1)
+
+	stopCh <- struct{}{}
+	wg.Wait()
+}
+
 func TestMemoryCreate(t *testing.T) {
 	t.Skip("not for the CI")
 	cont, err := endure.NewContainer(nil, endure.SetLogLevel(endure.ErrorLevel))

@@ -9,22 +9,22 @@ server:
   relay_timeout: 60s
 
 
-#nats:
-#  addr: "demo.nats.io"
-#
-#boltdb:
-#  permissions: 0777
+nats:
+  addr: "demo.nats.io"
+
+boltdb:
+  permissions: 0777
 
 amqp:
   addr: amqp://guest:guest@127.0.0.1:5672/
 
-#beanstalk:
-#  addr: tcp://127.0.0.1:11300
-#  timeout: 10s
-#
-#sqs:
-#  endpoint: http://127.0.0.1:9324
-#
+beanstalk:
+  addr: tcp://127.0.0.1:11300
+  timeout: 10s
+
+sqs:
+  endpoint: http://127.0.0.1:9324
+
 
 jobs:
   num_pollers: 32
@@ -36,15 +36,15 @@ jobs:
     destroy_timeout: 60s
 
   pipelines:
-#    test-local:
-#      driver: memory
-#      priority: 10
-#      prefetch: 10000
-#
-#    test-local-1:
-#      driver: boltdb
-#      priority: 10
-#      prefetch: 10000
+    test-local:
+      driver: memory
+      priority: 10
+      prefetch: 10000
+
+    test-local-1:
+      driver: boltdb
+      priority: 10
+      prefetch: 10000
 
     test-local-2:
       driver: amqp
@@ -58,47 +58,47 @@ jobs:
       multiple_ack: false
       requeue_on_fail: false
 
-#    test-local-3:
-#      driver: beanstalk
-#      priority: 11
-#      tube_priority: 1
-#      tube: default-1
-#      reserve_timeout: 10s
-#
-#    test-local-4:
-#      driver: sqs
-#      priority: 10
-#      prefetch: 10
-#      visibility_timeout: 0
-#      wait_time_seconds: 0
-#      queue: default
-#      attributes:
-#        DelaySeconds: 0
-#        MaximumMessageSize: 262144
-#        MessageRetentionPeriod: 345600
-#        ReceiveMessageWaitTimeSeconds: 0
-#        VisibilityTimeout: 30
-#      tags:
-#        test: "tag"
-#
-#    test-local-5:
-#      driver: nats
-#      priority: 2
-#      prefetch: 100
-#      subject: default
-#      stream: foo
-#      deliver_new: true
-#      rate_limit: 100
-#      delete_stream_on_stop: false
-#      delete_after_ack: false
+    test-local-3:
+      driver: beanstalk
+      priority: 11
+      tube_priority: 1
+      tube: default-1
+      reserve_timeout: 10s
+
+    test-local-4:
+      driver: sqs
+      priority: 10
+      prefetch: 10
+      visibility_timeout: 0
+      wait_time_seconds: 0
+      queue: default
+      attributes:
+        DelaySeconds: 0
+        MaximumMessageSize: 262144
+        MessageRetentionPeriod: 345600
+        ReceiveMessageWaitTimeSeconds: 0
+        VisibilityTimeout: 30
+      tags:
+        test: "tag"
+
+    test-local-5:
+      driver: nats
+      priority: 2
+      prefetch: 100
+      subject: default
+      stream: foo
+      deliver_new: true
+      rate_limit: 100
+      delete_stream_on_stop: false
+      delete_after_ack: false
 
   consume:
     [
-#        "test-local",
-#        "test-local-1",
+        "test-local",
+        "test-local-1",
         "test-local-2",
-#        "test-local-3",
-#        "test-local-4",
-#        "test-local-5",
+        "test-local-3",
+        "test-local-4",
+        "test-local-5",
     ]
 
