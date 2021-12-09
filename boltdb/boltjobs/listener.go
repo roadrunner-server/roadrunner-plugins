@@ -49,6 +49,10 @@ func (c *consumer) listener() {
 				continue
 			}
 
+			if item.Options.Priority == 0 {
+				item.Options.Priority = c.priority
+			}
+
 			err = inQb.Put(utils.AsBytes(item.ID()), v)
 			if err != nil {
 				c.rollback(err, tx)
@@ -116,6 +120,10 @@ func (c *consumer) delayedJobsListener() {
 				if err != nil {
 					c.rollback(err, tx)
 					continue
+				}
+
+				if item.Options.Priority == 0 {
+					item.Options.Priority = c.priority
 				}
 
 				err = inQb.Put(utils.AsBytes(item.ID()), v)

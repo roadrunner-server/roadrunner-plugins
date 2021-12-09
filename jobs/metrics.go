@@ -24,15 +24,13 @@ type statsExporter struct {
 	pushOk        *uint64
 	jobsErr       *uint64
 	pushErr       *uint64
-}
 
-var (
-	worker  = prometheus.NewDesc("workers_memory_bytes", "Memory usage by JOBS workers.", nil, nil)
-	pushOk  = prometheus.NewDesc(prometheus.BuildFQName(namespace, "", "push_ok"), "Number of job push.", nil, nil)
-	pushErr = prometheus.NewDesc(prometheus.BuildFQName(namespace, "", "push_err"), "Number of jobs push which was failed.", nil, nil)
-	jobsErr = prometheus.NewDesc(prometheus.BuildFQName(namespace, "", "jobs_err"), "Number of jobs error while processing in the worker.", nil, nil)
-	jobsOk  = prometheus.NewDesc(prometheus.BuildFQName(namespace, "", "jobs_ok"), "Number of successfully processed jobs.", nil, nil)
-)
+	worker      *prometheus.Desc
+	pushOkDesc  *prometheus.Desc
+	pushErrDesc *prometheus.Desc
+	jobsErrDesc *prometheus.Desc
+	jobsOkDesc  *prometheus.Desc
+}
 
 func newStatsExporter(stats informer.Informer, jobsOk, pushOk, jobsErr, pushErr *uint64) *statsExporter {
 	return &statsExporter{
@@ -42,16 +40,22 @@ func newStatsExporter(stats informer.Informer, jobsOk, pushOk, jobsErr, pushErr 
 		pushOk:        pushOk,
 		jobsErr:       jobsErr,
 		pushErr:       pushErr,
+
+		worker:      prometheus.NewDesc("workers_memory_bytes", "Memory usage by JOBS workers.", nil, nil),
+		pushOkDesc:  prometheus.NewDesc(prometheus.BuildFQName(namespace, "", "push_ok"), "Number of job push.", nil, nil),
+		pushErrDesc: prometheus.NewDesc(prometheus.BuildFQName(namespace, "", "push_err"), "Number of jobs push which was failed.", nil, nil),
+		jobsErrDesc: prometheus.NewDesc(prometheus.BuildFQName(namespace, "", "jobs_err"), "Number of jobs error while processing in the worker.", nil, nil),
+		jobsOkDesc:  prometheus.NewDesc(prometheus.BuildFQName(namespace, "", "jobs_ok"), "Number of successfully processed jobs.", nil, nil),
 	}
 }
 
 func (se *statsExporter) Describe(d chan<- *prometheus.Desc) {
 	// send description
-	d <- worker
-	d <- pushErr
-	d <- pushOk
-	d <- jobsErr
-	d <- jobsOk
+	d <- se.worker
+	d <- se.pushErrDesc
+	d <- se.pushOkDesc
+	d <- se.jobsErrDesc
+	d <- se.jobsOkDesc
 }
 
 func (se *statsExporter) Collect(ch chan<- prometheus.Metric) {
@@ -67,10 +71,10 @@ func (se *statsExporter) Collect(ch chan<- prometheus.Metric) {
 	}
 
 	// send the values to the prometheus
-	ch <- prometheus.MustNewConstMetric(worker, prometheus.GaugeValue, float64(cum))
+	ch <- prometheus.MustNewConstMetric(se.worker, prometheus.GaugeValue, float64(cum))
 	// send the values to the prometheus
-	ch <- prometheus.MustNewConstMetric(jobsOk, prometheus.GaugeValue, float64(atomic.LoadUint64(se.jobsOk)))
-	ch <- prometheus.MustNewConstMetric(jobsErr, prometheus.GaugeValue, float64(atomic.LoadUint64(se.jobsErr)))
-	ch <- prometheus.MustNewConstMetric(pushOk, prometheus.GaugeValue, float64(atomic.LoadUint64(se.pushOk)))
-	ch <- prometheus.MustNewConstMetric(pushErr, prometheus.GaugeValue, float64(atomic.LoadUint64(se.pushErr)))
+	ch <- prometheus.MustNewConstMetric(se.jobsOkDesc, prometheus.GaugeValue, float64(atomic.LoadUint64(se.jobsOk)))
+	ch <- prometheus.MustNewConstMetric(se.jobsErrDesc, prometheus.GaugeValue, float64(atomic.LoadUint64(se.jobsErr)))
+	ch <- prometheus.MustNewConstMetric(se.pushOkDesc, prometheus.GaugeValue, float64(atomic.LoadUint64(se.pushOk)))
+	ch <- prometheus.MustNewConstMetric(se.pushErrDesc, prometheus.GaugeValue, float64(atomic.LoadUint64(se.pushErr)))
 }

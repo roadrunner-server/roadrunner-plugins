@@ -4,7 +4,13 @@ import (
 	"net/http"
 	"strings"
 
+	json "github.com/json-iterator/go"
 	"github.com/spiral/roadrunner/v2/payload"
+)
+
+const (
+	Trailer   string = "Trailer"
+	Http2Push string = "Http2-Push" //nolint:stylecheck
 )
 
 // Response handles PSR7 response logic.
@@ -28,12 +34,12 @@ func (h *Handler) Write(pld *payload.Payload, w http.ResponseWriter) (int, error
 	}
 
 	// handle push headers
-	if len(rsp.Headers[http2pushHeaderKey]) != 0 {
-		push := rsp.Headers[http2pushHeaderKey]
+	if len(rsp.Headers[Http2Push]) != 0 {
+		push := rsp.Headers[Http2Push]
 
 		if pusher, ok := w.(http.Pusher); ok {
 			for i := 0; i < len(push); i++ {
-				err = pusher.Push(rsp.Headers[http2pushHeaderKey][i], nil)
+				err = pusher.Push(rsp.Headers[Http2Push][i], nil)
 				if err != nil {
 					return 0, err
 				}
@@ -41,7 +47,7 @@ func (h *Handler) Write(pld *payload.Payload, w http.ResponseWriter) (int, error
 		}
 	}
 
-	if len(rsp.Headers[TrailerHeaderKey]) != 0 {
+	if len(rsp.Headers[Trailer]) != 0 {
 		handleTrailers(rsp.Headers)
 	}
 
@@ -63,7 +69,7 @@ func (h *Handler) Write(pld *payload.Payload, w http.ResponseWriter) (int, error
 }
 
 func handleTrailers(h map[string][]string) {
-	for _, tr := range h[TrailerHeaderKey] {
+	for _, tr := range h[Trailer] {
 		for _, n := range strings.Split(tr, ",") {
 			n = strings.Trim(n, "\t ")
 			if v, ok := h[n]; ok {
@@ -74,5 +80,5 @@ func handleTrailers(h map[string][]string) {
 		}
 	}
 
-	delete(h, TrailerHeaderKey)
+	delete(h, Trailer)
 }

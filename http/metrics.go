@@ -9,23 +9,21 @@ func (p *Plugin) MetricsCollector() []prometheus.Collector {
 	return []prometheus.Collector{p.statsExporter}
 }
 
-var (
-	workersMemory = prometheus.NewDesc("rr_http_workers_memory_bytes", "Memory usage by HTTP workers.", nil, nil)
-)
-
 type statsExporter struct {
+	desc    *prometheus.Desc
 	workers informer.Informer
 }
 
 func newWorkersExporter(stats informer.Informer) *statsExporter {
 	return &statsExporter{
+		desc:    prometheus.NewDesc("rr_http_workers_memory_bytes", "Memory usage by HTTP workers.", nil, nil),
 		workers: stats,
 	}
 }
 
 func (s *statsExporter) Describe(d chan<- *prometheus.Desc) {
 	// send description
-	d <- workersMemory
+	d <- s.desc
 }
 
 func (s *statsExporter) Collect(ch chan<- prometheus.Metric) {
@@ -41,5 +39,5 @@ func (s *statsExporter) Collect(ch chan<- prometheus.Metric) {
 	}
 
 	// send the values to the prometheus
-	ch <- prometheus.MustNewConstMetric(workersMemory, prometheus.GaugeValue, float64(cum))
+	ch <- prometheus.MustNewConstMetric(s.desc, prometheus.GaugeValue, float64(cum))
 }

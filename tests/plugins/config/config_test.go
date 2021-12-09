@@ -10,6 +10,7 @@ import (
 
 	endure "github.com/spiral/endure/pkg/container"
 	"github.com/spiral/roadrunner-plugins/v2/amqp"
+	"github.com/spiral/roadrunner-plugins/v2/beanstalk"
 	"github.com/spiral/roadrunner-plugins/v2/config"
 	"github.com/spiral/roadrunner-plugins/v2/jobs"
 	"github.com/spiral/roadrunner-plugins/v2/logger"
@@ -338,6 +339,7 @@ func TestViperProvider_Init_Version(t *testing.T) {
 	err = container.RegisterAll(
 		&jobs.Plugin{},
 		&amqp.Plugin{},
+		&beanstalk.Plugin{},
 		&logger.ZapLogger{},
 		&server.Plugin{},
 		vp,

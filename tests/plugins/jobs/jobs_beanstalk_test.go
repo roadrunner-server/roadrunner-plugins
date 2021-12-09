@@ -117,6 +117,121 @@ func TestBeanstalkInit(t *testing.T) {
 	wg.Wait()
 }
 
+func TestBeanstalkStats(t *testing.T) {
+	cont, err := endure.NewContainer(nil, endure.SetLogLevel(endure.ErrorLevel), endure.GracefulShutdownTimeout(time.Second*60))
+	assert.NoError(t, err)
+
+	cfg := &config.Plugin{
+		Path:   "beanstalk/.rr-beanstalk-declare.yaml",
+		Prefix: "rr",
+	}
+
+	err = cont.RegisterAll(
+		cfg,
+		&server.Plugin{},
+		&rpcPlugin.Plugin{},
+		&logger.ZapLogger{},
+		&jobs.Plugin{},
+		&resetter.Plugin{},
+		&informer.Plugin{},
+		&beanstalk.Plugin{},
+	)
+	assert.NoError(t, err)
+
+	err = cont.Init()
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	ch, err := cont.Serve()
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	sig := make(chan os.Signal, 1)
+	signal.Notify(sig, os.Interrupt, syscall.SIGINT, syscall.SIGTERM)
+
+	wg := &sync.WaitGroup{}
+	wg.Add(1)
+
+	stopCh := make(chan struct{}, 1)
+
+	go func() {
+		defer wg.Done()
+		for {
+			select {
+			case e := <-ch:
+				assert.Fail(t, "error", e.Error.Error())
+				err = cont.Stop()
+				if err != nil {
+					assert.FailNow(t, "error", err.Error())
+				}
+			case <-sig:
+				err = cont.Stop()
+				if err != nil {
+					assert.FailNow(t, "error", err.Error())
+				}
+				return
+			case <-stopCh:
+				// timeout
+				err = cont.Stop()
+				if err != nil {
+					assert.FailNow(t, "error", err.Error())
+				}
+				return
+			}
+		}
+	}()
+
+	time.Sleep(time.Second * 3)
+
+	t.Run("DeclarePipeline", declareBeanstalkPipe)
+	t.Run("ConsumePipeline", resumePipes("test-3"))
+	t.Run("PushPipeline", pushToPipe("test-3"))
+	time.Sleep(time.Second * 2)
+	t.Run("PausePipeline", pausePipelines("test-3"))
+	time.Sleep(time.Second * 3)
+	t.Run("PushPipelineDelayed", pushToPipeDelayed("test-3", 8))
+	t.Run("PushPipeline", pushToPipe("test-3"))
+	time.Sleep(time.Second)
+
+	out := &jobState.State{}
+	t.Run("Stats", stats(out))
+
+	assert.Equal(t, out.Pipeline, "test-3")
+	assert.Equal(t, out.Driver, "beanstalk")
+	assert.NotEmpty(t, out.Queue)
+
+	out = &jobState.State{}
+	t.Run("Stats", stats(out))
+
+	assert.Equal(t, int64(1), out.Active)
+	assert.Equal(t, int64(1), out.Delayed)
+	assert.Equal(t, int64(0), out.Reserved)
+
+	time.Sleep(time.Second)
+	t.Run("ResumePipeline", resumePipes("test-3"))
+	time.Sleep(time.Second * 15)
+
+	out = &jobState.State{}
+	t.Run("Stats", stats(out))
+
+	assert.Equal(t, out.Pipeline, "test-3")
+	assert.Equal(t, out.Driver, "beanstalk")
+	assert.NotEmpty(t, out.Queue)
+
+	assert.Equal(t, int64(0), out.Active)
+	assert.Equal(t, int64(0), out.Delayed)
+	assert.Equal(t, int64(0), out.Reserved)
+
+	time.Sleep(time.Second)
+	t.Run("DestroyPipeline", destroyPipelines("test-3"))
+
+	time.Sleep(time.Second)
+	stopCh <- struct{}{}
+	wg.Wait()
+}
+
 func TestBeanstalkDeclare(t *testing.T) {
 	cont, err := endure.NewContainer(nil, endure.SetLogLevel(endure.ErrorLevel), endure.GracefulShutdownTimeout(time.Second*60))
 	assert.NoError(t, err)
@@ -274,121 +389,6 @@ func TestBeanstalkJobsError(t *testing.T) {
 	t.Run("DestroyBeanstalkPipeline", destroyPipelines("test-3"))
 
 	time.Sleep(time.Second * 5)
-	stopCh <- struct{}{}
-	wg.Wait()
-}
-
-func TestBeanstalkStats(t *testing.T) {
-	cont, err := endure.NewContainer(nil, endure.SetLogLevel(endure.ErrorLevel), endure.GracefulShutdownTimeout(time.Second*60))
-	assert.NoError(t, err)
-
-	cfg := &config.Plugin{
-		Path:   "beanstalk/.rr-beanstalk-declare.yaml",
-		Prefix: "rr",
-	}
-
-	err = cont.RegisterAll(
-		cfg,
-		&server.Plugin{},
-		&rpcPlugin.Plugin{},
-		&logger.ZapLogger{},
-		&jobs.Plugin{},
-		&resetter.Plugin{},
-		&informer.Plugin{},
-		&beanstalk.Plugin{},
-	)
-	assert.NoError(t, err)
-
-	err = cont.Init()
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	ch, err := cont.Serve()
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	sig := make(chan os.Signal, 1)
-	signal.Notify(sig, os.Interrupt, syscall.SIGINT, syscall.SIGTERM)
-
-	wg := &sync.WaitGroup{}
-	wg.Add(1)
-
-	stopCh := make(chan struct{}, 1)
-
-	go func() {
-		defer wg.Done()
-		for {
-			select {
-			case e := <-ch:
-				assert.Fail(t, "error", e.Error.Error())
-				err = cont.Stop()
-				if err != nil {
-					assert.FailNow(t, "error", err.Error())
-				}
-			case <-sig:
-				err = cont.Stop()
-				if err != nil {
-					assert.FailNow(t, "error", err.Error())
-				}
-				return
-			case <-stopCh:
-				// timeout
-				err = cont.Stop()
-				if err != nil {
-					assert.FailNow(t, "error", err.Error())
-				}
-				return
-			}
-		}
-	}()
-
-	time.Sleep(time.Second * 3)
-
-	t.Run("DeclarePipeline", declareBeanstalkPipe)
-	t.Run("ConsumePipeline", resumePipes("test-3"))
-	t.Run("PushPipeline", pushToPipe("test-3"))
-	time.Sleep(time.Second * 2)
-	t.Run("PausePipeline", pausePipelines("test-3"))
-	time.Sleep(time.Second * 3)
-	t.Run("PushPipelineDelayed", pushToPipeDelayed("test-3", 8))
-	t.Run("PushPipeline", pushToPipe("test-3"))
-	time.Sleep(time.Second)
-
-	out := &jobState.State{}
-	t.Run("Stats", stats(out))
-
-	assert.Equal(t, out.Pipeline, "test-3")
-	assert.Equal(t, out.Driver, "beanstalk")
-	assert.NotEmpty(t, out.Queue)
-
-	out = &jobState.State{}
-	t.Run("Stats", stats(out))
-
-	assert.Equal(t, int64(1), out.Active)
-	assert.Equal(t, int64(1), out.Delayed)
-	assert.Equal(t, int64(0), out.Reserved)
-
-	time.Sleep(time.Second)
-	t.Run("ResumePipeline", resumePipes("test-3"))
-	time.Sleep(time.Second * 15)
-
-	out = &jobState.State{}
-	t.Run("Stats", stats(out))
-
-	assert.Equal(t, out.Pipeline, "test-3")
-	assert.Equal(t, out.Driver, "beanstalk")
-	assert.NotEmpty(t, out.Queue)
-
-	assert.Equal(t, int64(0), out.Active)
-	assert.Equal(t, int64(0), out.Delayed)
-	assert.Equal(t, int64(0), out.Reserved)
-
-	time.Sleep(time.Second)
-	t.Run("DestroyPipeline", destroyPipelines("test-3"))
-
-	time.Sleep(time.Second)
 	stopCh <- struct{}{}
 	wg.Wait()
 }

@@ -8,6 +8,7 @@ import (
 	"sync"
 	"time"
 
+	json "github.com/json-iterator/go"
 	"github.com/spiral/errors"
 	"github.com/spiral/roadrunner-plugins/v2/http/attributes"
 	"github.com/spiral/roadrunner-plugins/v2/http/config"

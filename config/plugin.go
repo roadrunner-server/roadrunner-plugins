@@ -12,9 +12,10 @@ import (
 )
 
 const (
-	PluginName     string = "config"
-	versionKey     string = "version"
-	defaultVersion string = "2.6"
+	PluginName       string = "config"
+	versionKey       string = "version"
+	defaultVersion   string = "2.6"
+	defaultRRVersion string = "2.7"
 )
 
 type Plugin struct {
@@ -74,9 +75,10 @@ func (p *Plugin) Init() error {
 		return errors.E(op, errors.Errorf("version should be a string, actual type: %T", ver))
 	}
 
-	// versions before 2.7
+	// RR gets config feature starting v2.7, so, it's default
+	// but this only needed for tests, because starting v2.7 rr-binary will pass the version automatically.
 	if p.RRVersion == "" {
-		p.RRVersion = defaultVersion
+		p.RRVersion = defaultRRVersion
 	}
 
 	// configuration version

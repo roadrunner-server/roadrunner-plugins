@@ -4,19 +4,25 @@ import (
 	"time"
 )
 
+type MemoryConfig struct {
+	Priority int64 `mapstructure:"priority"`
+}
+
 type BeanstalkConfig struct {
-	PipePriority   int64         `mapstructure:"priority"`
+	Priority       int64         `mapstructure:"priority"`
 	TubePriority   *uint32       `mapstructure:"tube_priority"`
 	Tube           string        `mapstructure:"tube"`
 	ReserveTimeout time.Duration `mapstructure:"reserve_timeout"`
 }
 
 type BoltDBConfig struct {
+	Priority int64  `mapstructure:"priority"`
 	File     string `mapstructure:"file"`
 	Prefetch int    `mapstructure:"prefetch"`
 }
 
 type AMQPConfig struct {
+	Priority      int64  `mapstructure:"priority"`
 	Prefetch      int    `mapstructure:"prefetch"`
 	Queue         string `mapstructure:"queue"`
 	Exchange      string `mapstructure:"exchange"`
@@ -28,6 +34,7 @@ type AMQPConfig struct {
 }
 
 type NATSConfig struct {
+	Priority           int64  `mapstructure:"priority"`
 	Subject            string `mapstructure:"subject"`
 	Stream             string `mapstructure:"stream"`
 	Prefetch           int    `mapstructure:"prefetch"`
@@ -38,6 +45,7 @@ type NATSConfig struct {
 }
 
 type SQSConfig struct {
+	Priority          int64             `mapstructure:"priority"`
 	VisibilityTimeout int32             `mapstructure:"visibility_timeout"`
 	WaitTimeSeconds   int32             `mapstructure:"wait_time_seconds"`
 	Prefetch          int32             `mapstructure:"prefetch"`

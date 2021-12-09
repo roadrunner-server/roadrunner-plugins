@@ -111,6 +111,9 @@ func TestAMQPInit(t *testing.T) {
 	time.Sleep(time.Second * 3)
 	stopCh <- struct{}{}
 	wg.Wait()
+	t.Cleanup(func() {
+		cont = nil
+	})
 }
 
 func TestAMQPDeclare(t *testing.T) {
@@ -338,6 +341,7 @@ func TestAMQPNoGlobalSection(t *testing.T) {
 
 	_, err = cont.Serve()
 	require.Error(t, err)
+	_ = cont.Stop()
 }
 
 func TestAMQPStats(t *testing.T) {

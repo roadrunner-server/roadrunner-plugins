@@ -41,12 +41,13 @@ func TestMemoryInit(t *testing.T) {
 
 	// general
 	mockLogger.EXPECT().Debug("RPC plugin started", "address", "tcp://127.0.0.1:6001", "plugins", gomock.Any()).Times(1)
-	mockLogger.EXPECT().Info(gomock.Any()).AnyTimes()
 
 	mockLogger.EXPECT().Debug("pipeline active", "driver", "memory", "pipeline", "test-1", "start", gomock.Any(), "elapsed", gomock.Any()).Times(1)
 	mockLogger.EXPECT().Debug("pipeline active", "driver", "memory", "pipeline", "test-2", "start", gomock.Any(), "elapsed", gomock.Any()).Times(1)
 	mockLogger.EXPECT().Debug("pipeline stopped", "driver", "memory", "pipeline", "test-1", "start", gomock.Any(), "elapsed", gomock.Any()).Times(1)
 	mockLogger.EXPECT().Debug("pipeline stopped", "driver", "memory", "pipeline", "test-2", "start", gomock.Any(), "elapsed", gomock.Any()).Times(1)
+
+	mockLogger.EXPECT().Info(gomock.Any()).AnyTimes()
 
 	err = cont.RegisterAll(
 		cfg,
@@ -197,7 +198,6 @@ func TestMemoryDeclare(t *testing.T) {
 
 	// general
 	mockLogger.EXPECT().Debug("RPC plugin started", "address", "tcp://127.0.0.1:6001", "plugins", gomock.Any()).Times(1)
-	mockLogger.EXPECT().Info(gomock.Any()).AnyTimes()
 
 	mockLogger.EXPECT().Debug("job pushed successfully", "ID", gomock.Any(), "pipeline", "test-3", "driver", "memory", "start", gomock.Any(), "elapsed", gomock.Any()).MinTimes(1)
 	mockLogger.EXPECT().Debug("job processing started", "ID", gomock.Any(), "start", gomock.Any(), "elapsed", gomock.Any()).MinTimes(1)
@@ -206,6 +206,8 @@ func TestMemoryDeclare(t *testing.T) {
 	mockLogger.EXPECT().Debug("pipeline resumed", "driver", "memory", "pipeline", "test-3", "start", gomock.Any(), "elapsed", gomock.Any()).Times(1)
 	mockLogger.EXPECT().Debug("pipeline paused", "driver", "memory", "pipeline", "test-3", "start", gomock.Any(), "elapsed", gomock.Any()).Times(1)
 	mockLogger.EXPECT().Debug("pipeline stopped", "driver", "memory", "pipeline", "test-3", "start", gomock.Any(), "elapsed", gomock.Any()).Times(1)
+
+	mockLogger.EXPECT().Info(gomock.Any()).AnyTimes()
 
 	err = cont.RegisterAll(
 		cfg,
@@ -293,7 +295,6 @@ func TestMemoryPauseResume(t *testing.T) {
 
 	// general
 	mockLogger.EXPECT().Debug("RPC plugin started", "address", "tcp://127.0.0.1:6001", "plugins", gomock.Any()).Times(1)
-	mockLogger.EXPECT().Info(gomock.Any()).AnyTimes()
 
 	mockLogger.EXPECT().Debug("pipeline active", "driver", "memory", "pipeline", "test-local-2", "start", gomock.Any(), "elapsed", gomock.Any()).Times(1)
 	mockLogger.EXPECT().Debug("pipeline active", "driver", "memory", "pipeline", "test-local", "start", gomock.Any(), "elapsed", gomock.Any()).MinTimes(1)
@@ -308,6 +309,8 @@ func TestMemoryPauseResume(t *testing.T) {
 	mockLogger.EXPECT().Debug("pipeline stopped", "driver", "memory", "pipeline", "test-local-3", "start", gomock.Any(), "elapsed", gomock.Any()).Times(1)
 	mockLogger.EXPECT().Debug("pipeline stopped", "driver", "memory", "pipeline", "test-local-2", "start", gomock.Any(), "elapsed", gomock.Any()).Times(1)
 	mockLogger.EXPECT().Debug("pipeline stopped", "driver", "memory", "pipeline", "test-local", "start", gomock.Any(), "elapsed", gomock.Any()).Times(1)
+
+	mockLogger.EXPECT().Info(gomock.Any()).AnyTimes()
 
 	err = cont.RegisterAll(
 		cfg,
@@ -393,7 +396,6 @@ func TestMemoryJobsError(t *testing.T) {
 	mockLogger := mocks.NewMockLogger(controller)
 
 	// general
-	mockLogger.EXPECT().Info(gomock.Any()).AnyTimes()
 	mockLogger.EXPECT().Debug("RPC plugin started", "address", "tcp://127.0.0.1:6001", "plugins", gomock.Any()).Times(1)
 
 	mockLogger.EXPECT().Debug("job pushed successfully", "ID", gomock.Any(), "pipeline", "test-3", "driver", "memory", "start", gomock.Any(), "elapsed", gomock.Any()).MinTimes(1)
@@ -405,6 +407,8 @@ func TestMemoryJobsError(t *testing.T) {
 	mockLogger.EXPECT().Debug("pipeline stopped", "driver", "memory", "pipeline", "test-3", "start", gomock.Any(), "elapsed", gomock.Any()).Times(1)
 
 	mockLogger.EXPECT().Error("jobs protocol error", "error", "error", "delay", gomock.Any(), "requeue", gomock.Any()).Times(3)
+
+	mockLogger.EXPECT().Info(gomock.Any()).AnyTimes()
 
 	err = cont.RegisterAll(
 		cfg,
@@ -491,7 +495,6 @@ func TestMemoryStats(t *testing.T) {
 	mockLogger := mocks.NewMockLogger(controller)
 
 	// general
-	mockLogger.EXPECT().Info(gomock.Any()).AnyTimes()
 	mockLogger.EXPECT().Debug("RPC plugin started", "address", "tcp://127.0.0.1:6001", "plugins", gomock.Any()).Times(1)
 
 	mockLogger.EXPECT().Debug("job pushed successfully", "ID", gomock.Any(), "pipeline", "test-3", "driver", "memory", "start", gomock.Any(), "elapsed", gomock.Any()).MinTimes(1)
@@ -501,6 +504,8 @@ func TestMemoryStats(t *testing.T) {
 	mockLogger.EXPECT().Debug("pipeline resumed", "driver", "memory", "pipeline", "test-3", "start", gomock.Any(), "elapsed", gomock.Any()).Times(2)
 	mockLogger.EXPECT().Debug("pipeline paused", "driver", "memory", "pipeline", "test-3", "start", gomock.Any(), "elapsed", gomock.Any()).Times(1)
 	mockLogger.EXPECT().Debug("pipeline stopped", "driver", "memory", "pipeline", "test-3", "start", gomock.Any(), "elapsed", gomock.Any()).Times(1)
+
+	mockLogger.EXPECT().Info(gomock.Any()).AnyTimes()
 
 	err = cont.RegisterAll(
 		cfg,

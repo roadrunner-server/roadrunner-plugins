@@ -10,10 +10,9 @@ import (
 	"github.com/google/uuid"
 	amqp "github.com/rabbitmq/amqp091-go"
 	"github.com/spiral/errors"
-	jobState "github.com/spiral/roadrunner-plugins/v2/api/jobs"
+	"github.com/spiral/roadrunner-plugins/v2/api/jobs"
 	"github.com/spiral/roadrunner-plugins/v2/api/jobs/pipeline"
 	cfgPlugin "github.com/spiral/roadrunner-plugins/v2/config"
-	"github.com/spiral/roadrunner-plugins/v2/jobs/job"
 	"github.com/spiral/roadrunner-plugins/v2/logger"
 	"github.com/spiral/roadrunner-plugins/v2/utils"
 	priorityqueue "github.com/spiral/roadrunner/v2/priority_queue"
@@ -77,7 +76,6 @@ func NewAMQPConsumer(configKey string, log logger.Logger, cfg cfgPlugin.Configur
 
 	// PARSE CONFIGURATION START -------
 	var conf config
-
 	err := cfg.UnmarshalKey(configKey, &conf)
 	if err != nil {
 		return nil, errors.E(op, err)
@@ -208,7 +206,7 @@ func FromPipeline(pipeline *pipeline.Pipeline, log logger.Logger, cfg cfgPlugin.
 	return jb, nil
 }
 
-func (c *consumer) Push(ctx context.Context, job *job.Job) error {
+func (c *consumer) Push(ctx context.Context, job *jobs.Job) error {
 	const op = errors.Op("rabbitmq_push")
 	// check if the pipeline registered
 
@@ -277,7 +275,7 @@ func (c *consumer) Run(_ context.Context, p *pipeline.Pipeline) error {
 	return nil
 }
 
-func (c *consumer) State(ctx context.Context) (*jobState.State, error) {
+func (c *consumer) State(ctx context.Context) (*jobs.State, error) {
 	const op = errors.Op("amqp_driver_state")
 	select {
 	case pch := <-c.publishChan:
@@ -292,7 +290,7 @@ func (c *consumer) State(ctx context.Context) (*jobState.State, error) {
 
 		pipe := c.pipeline.Load().(*pipeline.Pipeline)
 
-		return &jobState.State{
+		return &jobs.State{
 			Pipeline: pipe.Name(),
 			Driver:   pipe.Driver(),
 			Queue:    q.Name,

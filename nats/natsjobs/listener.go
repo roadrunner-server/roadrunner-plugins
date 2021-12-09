@@ -57,6 +57,10 @@ func (c *consumer) listenerStart() {
 				item.Options.deleteAfterAck = c.deleteAfterAck
 			}
 
+			if item.Priority() == 0 {
+				item.Options.Priority = c.priority
+			}
+
 			c.queue.Insert(item)
 		case <-c.stopCh:
 			return

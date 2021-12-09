@@ -191,10 +191,9 @@ func (cp *ConnPool) redial() error {
 	return nil
 }
 
-var connErrors = map[string]struct{}{"EOF": {}}
-
 func (cp *ConnPool) checkAndRedial(err error) error {
 	const op = errors.Op("connection_pool_check_redial")
+	const EOF string = "EOF"
 	switch et := err.(type) { //nolint:gocritic
 	// check if the error
 	case beanstalk.ConnError:
@@ -211,7 +210,7 @@ func (cp *ConnPool) checkAndRedial(err error) error {
 			// if redial was successful -> continue listening
 			return nil
 		default:
-			if _, ok := connErrors[et.Err.Error()]; ok {
+			if et.Err.Error() == EOF {
 				// if error is related to the broken connection - redial
 				cp.RUnlock()
 				errR := cp.redial()

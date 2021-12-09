@@ -4,9 +4,9 @@ import (
 	"context"
 
 	"github.com/spiral/errors"
+	"github.com/spiral/roadrunner-plugins/v2/api/jobs"
 	"github.com/spiral/roadrunner-plugins/v2/api/jobs/pipeline"
 	jobsv1beta "github.com/spiral/roadrunner-plugins/v2/api/proto/jobs/v1beta"
-	"github.com/spiral/roadrunner-plugins/v2/jobs/job"
 	"github.com/spiral/roadrunner-plugins/v2/logger"
 )
 
@@ -38,7 +38,7 @@ func (r *rpc) PushBatch(j *jobsv1beta.PushBatchRequest, _ *jobsv1beta.Empty) err
 
 	l := len(j.GetJobs())
 
-	batch := make([]*job.Job, l)
+	batch := make([]*jobs.Job, l)
 
 	for i := 0; i < l; i++ {
 		// convert transport entity into domain
@@ -137,19 +137,19 @@ func (r *rpc) Stat(_ *jobsv1beta.Empty, resp *jobsv1beta.Stats) error {
 }
 
 // from converts from transport entity to domain
-func from(j *jobsv1beta.Job) *job.Job {
+func from(j *jobsv1beta.Job) *jobs.Job {
 	headers := make(map[string][]string, len(j.GetHeaders()))
 
 	for k, v := range j.GetHeaders() {
 		headers[k] = v.GetValue()
 	}
 
-	jb := &job.Job{
+	jb := &jobs.Job{
 		Job:     j.GetJob(),
 		Headers: headers,
 		Ident:   j.GetId(),
 		Payload: j.GetPayload(),
-		Options: &job.Options{
+		Options: &jobs.Options{
 			Priority: j.GetOptions().GetPriority(),
 			Pipeline: j.GetOptions().GetPipeline(),
 			Delay:    j.GetOptions().GetDelay(),

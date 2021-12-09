@@ -10,7 +10,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/sqs/types"
 	json "github.com/json-iterator/go"
 	"github.com/spiral/errors"
-	"github.com/spiral/roadrunner-plugins/v2/jobs/job"
+	"github.com/spiral/roadrunner-plugins/v2/api/jobs"
 	"github.com/spiral/roadrunner-plugins/v2/utils"
 )
 
@@ -21,12 +21,13 @@ const (
 	ApproximateReceiveCount string = "ApproximateReceiveCount"
 )
 
-var itemAttributes = []string{
-	job.RRID,
-	job.RRJob,
-	job.RRDelay,
-	job.RRPriority,
-	job.RRHeaders,
+// immutable
+var itemAttributes = []string{ //nolint:gochecknoglobals
+	jobs.RRID,
+	jobs.RRJob,
+	jobs.RRDelay,
+	jobs.RRPriority,
+	jobs.RRHeaders,
 }
 
 type Item struct {
@@ -171,7 +172,7 @@ func (i *Item) Respond(data []byte, queue string) error {
 	return nil
 }
 
-func fromJob(job *job.Job) *Item {
+func fromJob(job *jobs.Job) *Item {
 	return &Item{
 		Job:     job.Job,
 		Ident:   job.Ident,
@@ -197,11 +198,11 @@ func (i *Item) pack(queue *string) (*sqs.SendMessageInput, error) {
 		QueueUrl:     queue,
 		DelaySeconds: int32(i.Options.Delay),
 		MessageAttributes: map[string]types.MessageAttributeValue{
-			job.RRID:       {DataType: aws.String(StringType), BinaryValue: nil, BinaryListValues: nil, StringListValues: nil, StringValue: aws.String(i.Ident)},
-			job.RRJob:      {DataType: aws.String(StringType), BinaryValue: nil, BinaryListValues: nil, StringListValues: nil, StringValue: aws.String(i.Job)},
-			job.RRDelay:    {DataType: aws.String(StringType), BinaryValue: nil, BinaryListValues: nil, StringListValues: nil, StringValue: aws.String(strconv.Itoa(int(i.Options.Delay)))},
-			job.RRHeaders:  {DataType: aws.String(BinaryType), BinaryValue: data, BinaryListValues: nil, StringListValues: nil, StringValue: nil},
-			job.RRPriority: {DataType: aws.String(NumberType), BinaryValue: nil, BinaryListValues: nil, StringListValues: nil, StringValue: aws.String(strconv.Itoa(int(i.Options.Priority)))},
+			jobs.RRID:       {DataType: aws.String(StringType), BinaryValue: nil, BinaryListValues: nil, StringListValues: nil, StringValue: aws.String(i.Ident)},
+			jobs.RRJob:      {DataType: aws.String(StringType), BinaryValue: nil, BinaryListValues: nil, StringListValues: nil, StringValue: aws.String(i.Job)},
+			jobs.RRDelay:    {DataType: aws.String(StringType), BinaryValue: nil, BinaryListValues: nil, StringListValues: nil, StringValue: aws.String(strconv.Itoa(int(i.Options.Delay)))},
+			jobs.RRHeaders:  {DataType: aws.String(BinaryType), BinaryValue: data, BinaryListValues: nil, StringListValues: nil, StringValue: nil},
+			jobs.RRPriority: {DataType: aws.String(NumberType), BinaryValue: nil, BinaryListValues: nil, StringListValues: nil, StringValue: aws.String(strconv.Itoa(int(i.Options.Priority)))},
 		},
 	}, nil
 }
@@ -220,17 +221,17 @@ func (c *consumer) unpack(msg *types.Message) (*Item, error) {
 	}
 
 	var h map[string][]string
-	err := json.Unmarshal(msg.MessageAttributes[job.RRHeaders].BinaryValue, &h)
+	err := json.Unmarshal(msg.MessageAttributes[jobs.RRHeaders].BinaryValue, &h)
 	if err != nil {
 		return nil, err
 	}
 
-	delay, err := strconv.Atoi(*msg.MessageAttributes[job.RRDelay].StringValue)
+	delay, err := strconv.Atoi(*msg.MessageAttributes[jobs.RRDelay].StringValue)
 	if err != nil {
 		return nil, errors.E(op, err)
 	}
 
-	priority, err := strconv.Atoi(*msg.MessageAttributes[job.RRPriority].StringValue)
+	priority, err := strconv.Atoi(*msg.MessageAttributes[jobs.RRPriority].StringValue)
 	if err != nil {
 		return nil, errors.E(op, err)
 	}
@@ -241,8 +242,8 @@ func (c *consumer) unpack(msg *types.Message) (*Item, error) {
 	}
 
 	item := &Item{
-		Job:     *msg.MessageAttributes[job.RRJob].StringValue,
-		Ident:   *msg.MessageAttributes[job.RRID].StringValue,
+		Job:     *msg.MessageAttributes[jobs.RRJob].StringValue,
+		Ident:   *msg.MessageAttributes[jobs.RRID].StringValue,
 		Payload: *msg.Body,
 		Headers: h,
 		Options: &Options{

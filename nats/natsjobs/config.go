@@ -19,6 +19,7 @@ type config struct {
 	// NATS URL
 	Addr string `mapstructure:"addr"`
 
+	Priority           int64  `mapstructure:"priority"`
 	Subject            string `mapstructure:"subject"`
 	Stream             string `mapstructure:"stream"`
 	Prefetch           int    `mapstructure:"prefetch"`
@@ -35,6 +36,10 @@ func (c *config) InitDefaults() {
 
 	if c.RateLimit == 0 {
 		c.RateLimit = 1000
+	}
+
+	if c.Priority == 0 {
+		c.Priority = 10
 	}
 
 	if c.Stream == "" {

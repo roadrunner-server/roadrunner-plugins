@@ -9,7 +9,7 @@ import (
 	"github.com/beanstalkd/go-beanstalk"
 	json "github.com/json-iterator/go"
 	"github.com/spiral/errors"
-	"github.com/spiral/roadrunner-plugins/v2/jobs/job"
+	"github.com/spiral/roadrunner-plugins/v2/api/jobs"
 	"github.com/spiral/roadrunner-plugins/v2/utils"
 )
 
@@ -122,7 +122,7 @@ func (i *Item) Respond(data []byte, queue string) error {
 	return nil
 }
 
-func fromJob(job *job.Job) *Item {
+func fromJob(job *jobs.Job) *Item {
 	return &Item{
 		Job:     job.Job,
 		Ident:   job.Ident,
@@ -140,6 +140,10 @@ func (c *consumer) unpack(id uint64, data []byte, out *Item) error {
 	err := gob.NewDecoder(bytes.NewBuffer(data)).Decode(out)
 	if err != nil {
 		return err
+	}
+
+	if out.Options.Priority == 0 {
+		out.Options.Priority = c.priority
 	}
 	out.Options.conn = c.pool.conn
 	out.Options.id = id

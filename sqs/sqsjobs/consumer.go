@@ -15,10 +15,9 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/sqs/types"
 	"github.com/google/uuid"
 	"github.com/spiral/errors"
-	jobState "github.com/spiral/roadrunner-plugins/v2/api/jobs"
+	"github.com/spiral/roadrunner-plugins/v2/api/jobs"
 	"github.com/spiral/roadrunner-plugins/v2/api/jobs/pipeline"
 	cfgPlugin "github.com/spiral/roadrunner-plugins/v2/config"
-	"github.com/spiral/roadrunner-plugins/v2/jobs/job"
 	"github.com/spiral/roadrunner-plugins/v2/logger"
 	priorityqueue "github.com/spiral/roadrunner/v2/priority_queue"
 )
@@ -223,7 +222,7 @@ func FromPipeline(pipe *pipeline.Pipeline, log logger.Logger, cfg cfgPlugin.Conf
 	return jb, nil
 }
 
-func (c *consumer) Push(ctx context.Context, jb *job.Job) error {
+func (c *consumer) Push(ctx context.Context, jb *jobs.Job) error {
 	const op = errors.Op("sqs_push")
 	// check if the pipeline registered
 
@@ -247,7 +246,7 @@ func (c *consumer) Push(ctx context.Context, jb *job.Job) error {
 	return nil
 }
 
-func (c *consumer) State(ctx context.Context) (*jobState.State, error) {
+func (c *consumer) State(ctx context.Context) (*jobs.State, error) {
 	const op = errors.Op("sqs_state")
 	attr, err := c.client.GetQueueAttributes(ctx, &sqs.GetQueueAttributesInput{
 		QueueUrl: c.queueURL,
@@ -264,7 +263,7 @@ func (c *consumer) State(ctx context.Context) (*jobState.State, error) {
 
 	pipe := c.pipeline.Load().(*pipeline.Pipeline)
 
-	out := &jobState.State{
+	out := &jobs.State{
 		Pipeline: pipe.Name(),
 		Driver:   pipe.Driver(),
 		Queue:    *c.queueURL,

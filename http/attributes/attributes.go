@@ -16,7 +16,8 @@ func (k *contextKey) String() string { return k.name }
 
 var (
 	// PsrContextKey is a context key. It can be used in the http attributes
-	PsrContextKey = &contextKey{"psr_attributes"}
+	// immutable
+	PsrContextKey = &contextKey{"psr_attributes"} //nolint:gochecknoglobals
 )
 
 type attrs map[string]interface{}

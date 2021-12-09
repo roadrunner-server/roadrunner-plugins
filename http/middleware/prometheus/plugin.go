@@ -15,40 +15,16 @@ const (
 	namespace  string = "rr_http"
 )
 
-var (
-	queueSize = prometheus.NewSummary(prometheus.SummaryOpts{
-		Namespace: namespace,
-		Name:      "requests_queue",
-		Help:      "Total number of queued requests.",
-	})
-
-	noFreeWorkers = prometheus.NewCounterVec(prometheus.CounterOpts{
-		Namespace: namespace,
-		Name:      "no_free_workers_total",
-		Help:      "Total number of NoFreeWorkers occurrences.",
-	}, nil)
-
-	requestCounter = prometheus.NewCounterVec(prometheus.CounterOpts{
-		Namespace: namespace,
-		Name:      "request_total",
-		Help:      "Total number of handled http requests after server restart.",
-	}, []string{"status"})
-
-	requestDuration = prometheus.NewHistogramVec(
-		prometheus.HistogramOpts{
-			Namespace: namespace,
-			Name:      "request_duration_seconds",
-			Help:      "HTTP request duration.",
-		},
-		[]string{"status"},
-	)
-)
-
 type Plugin struct {
 	writersPool sync.Pool
 	stopCh      chan struct{}
 	id          string
 	bus         events.EventBus
+
+	queueSize       prometheus.Summary
+	noFreeWorkers   *prometheus.CounterVec
+	requestCounter  *prometheus.CounterVec
+	requestDuration *prometheus.HistogramVec
 }
 
 func (p *Plugin) Init() error {
@@ -62,6 +38,33 @@ func (p *Plugin) Init() error {
 
 	p.bus, p.id = events.Bus()
 	p.stopCh = make(chan struct{}, 1)
+
+	p.queueSize = prometheus.NewSummary(prometheus.SummaryOpts{
+		Namespace: namespace,
+		Name:      "requests_queue",
+		Help:      "Total number of queued requests.",
+	})
+
+	p.noFreeWorkers = prometheus.NewCounterVec(prometheus.CounterOpts{
+		Namespace: namespace,
+		Name:      "no_free_workers_total",
+		Help:      "Total number of NoFreeWorkers occurrences.",
+	}, nil)
+
+	p.requestCounter = prometheus.NewCounterVec(prometheus.CounterOpts{
+		Namespace: namespace,
+		Name:      "request_total",
+		Help:      "Total number of handled http requests after server restart.",
+	}, []string{"status"})
+
+	p.requestDuration = prometheus.NewHistogramVec(
+		prometheus.HistogramOpts{
+			Namespace: namespace,
+			Name:      "request_duration_seconds",
+			Help:      "HTTP request duration.",
+		},
+		[]string{"status"},
+	)
 
 	return nil
 }
@@ -81,7 +84,7 @@ func (p *Plugin) Serve() chan error {
 			select {
 			case <-eventsCh:
 				// increment no free workers event
-				noFreeWorkers.With(nil).Inc()
+				p.noFreeWorkers.With(nil).Inc()
 			case <-p.stopCh:
 				p.bus.Unsubscribe(p.id)
 			}
@@ -104,19 +107,19 @@ func (p *Plugin) Middleware(next http.Handler) http.Handler {
 		rrWriter := p.getWriter(w)
 		defer p.putWriter(rrWriter)
 
-		queueSize.Observe(1)
+		p.queueSize.Observe(1)
 
 		next.ServeHTTP(rrWriter, r)
 
-		requestCounter.With(prometheus.Labels{
+		p.requestCounter.With(prometheus.Labels{
 			"status": strconv.Itoa(rrWriter.code),
 		}).Inc()
 
-		requestDuration.With(prometheus.Labels{
+		p.requestDuration.With(prometheus.Labels{
 			"status": strconv.Itoa(rrWriter.code),
 		}).Observe(time.Since(start).Seconds())
 
-		queueSize.Observe(-1)
+		p.queueSize.Observe(-1)
 	})
 }
 
@@ -125,7 +128,7 @@ func (p *Plugin) Name() string {
 }
 
 func (p *Plugin) MetricsCollector() []prometheus.Collector {
-	return []prometheus.Collector{requestCounter, requestDuration, queueSize, noFreeWorkers}
+	return []prometheus.Collector{p.requestCounter, p.requestDuration, p.queueSize, p.noFreeWorkers}
 }
 
 func (p *Plugin) getWriter(w http.ResponseWriter) *writer {
