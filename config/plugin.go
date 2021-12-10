@@ -77,7 +77,7 @@ func (p *Plugin) Init() error {
 
 	// RR gets config feature starting v2.7, so, it's default
 	// but this only needed for tests, because starting v2.7 rr-binary will pass the version automatically.
-	if p.RRVersion == "" {
+	if p.RRVersion == "" || p.RRVersion == "local" {
 		p.RRVersion = defaultRRVersion
 	}
 
