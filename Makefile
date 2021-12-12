@@ -14,7 +14,6 @@ test_coverage:
 	go test -v -race -cover -tags=debug -coverpkg=./... -failfast -coverprofile=./coverage-ci/server_cmd.out -covermode=atomic ./server
 	go test -v -race -cover -tags=debug -coverpkg=./... -failfast -coverprofile=./coverage-ci/struct_jobs.out -covermode=atomic ./jobs
 	go test -v -race -cover -tags=debug -coverpkg=./... -failfast -coverprofile=./coverage-ci/pipeline_jobs.out -covermode=atomic ./api/jobs/pipeline
-	go test -v -race -cover -tags=debug -coverpkg=./... -failfast -coverprofile=./coverage-ci/config_validate.out -covermode=atomic ./config
 	go test -v -race -cover -tags=debug -coverpkg=./... -failfast -coverprofile=./coverage-ci/service.out -covermode=atomic ./tests/plugins/service
 	go test -timeout 20m -v -race -cover -tags=debug -failfast -coverpkg=./... -coverprofile=./coverage-ci/jobs_core.out -covermode=atomic ./tests/plugins/jobs
 	go test -v -race -cover -tags=debug -coverpkg=./... -failfast -coverprofile=./coverage-ci/kv_plugin.out -covermode=atomic ./tests/plugins/kv
@@ -47,7 +46,6 @@ test: ## Run application tests
 	go test -v -race -failfast -tags=debug ./jobs
 	go test -v -race -failfast -tags=debug ./http/config
 	go test -v -race -failfast -tags=debug ./http/middleware/new_relic
-	go test -v -race -failfast -tags=debug ./config
 	go test -v -race -failfast -tags=debug ./http/middleware/websockets
 	go test -v -race -failfast -tags=debug ./server
 	go test -v -race -failfast -tags=debug ./grpc/codec

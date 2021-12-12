@@ -95,6 +95,13 @@ func (c *Config) InitDefaults() error { //nolint:gocognit
 
 		// RootCA is optional, but if provided - check it
 		if c.TLS.RootCA != "" {
+			if _, err := os.Stat(c.TLS.RootCA); err != nil {
+				if os.IsNotExist(err) {
+					return errors.E(op, errors.Errorf("root ca path provided, but key file '%s' does not exists", c.TLS.RootCA))
+				}
+				return errors.E(op, err)
+			}
+
 			// auth type used only for the CA
 			switch c.TLS.AuthType {
 			case NoClientCert:
@@ -109,12 +116,6 @@ func (c *Config) InitDefaults() error { //nolint:gocognit
 				c.TLS.auth = tls.RequireAndVerifyClientCert
 			default:
 				c.TLS.auth = tls.NoClientCert
-			}
-			if _, err := os.Stat(c.TLS.RootCA); err != nil {
-				if os.IsNotExist(err) {
-					return errors.E(op, errors.Errorf("root ca path provided, but key file '%s' does not exists", c.TLS.RootCA))
-				}
-				return errors.E(op, err)
 			}
 		}
 	}
