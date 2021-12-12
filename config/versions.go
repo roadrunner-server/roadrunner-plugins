@@ -32,26 +32,12 @@ const (
 
 // transition used to upgrade configuration.
 // configuration can be upgraded between related versions (2.5 -> 2.6, but not 2.5 -> 2.7).
-func transition(from, to string, v *viper.Viper) error {
-	vfrom, err := version.NewSemver(from)
-	if err != nil {
-		return err
-	}
-
-	vto, err := version.NewSemver(to)
-	if err != nil {
-		return err
-	}
-
-	if !vto.GreaterThan(vfrom) {
-		return errors.Str("the result version should be greater than original version")
-	}
-
-	segFrom := vfrom.Segments64()
-	segTo := vto.Segments64()
+func transition(from, to *version.Version, v *viper.Viper) error {
+	segFrom := from.Segments64()
+	segTo := to.Segments64()
 
 	if (len(segTo) < 3 || len(segFrom) < 3) || (segTo[1]-segFrom[1]) != 1 {
-		return errors.Errorf("incompatible versions passed: from: %s, to: %s", vfrom.String(), vto.String())
+		return errors.Errorf("incompatible versions passed: from: %s, to: %s", from.String(), to.String())
 	}
 
 	// use only 2 digits
@@ -63,7 +49,7 @@ func transition(from, to string, v *viper.Viper) error {
 		switch trTo { //nolint:gocritic
 		case v27:
 			// transition configuration from v2.6 to v2.7
-			err = v26to27(v)
+			err := v26to27(v)
 			if err != nil {
 				return err
 			}

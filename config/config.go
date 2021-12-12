@@ -15,17 +15,3 @@ type General struct {
 	// RRVersion passed from the rr-binary
 	RRVersion *version.Version
 }
-
-func validateVersion(ver string) error {
-	// local build
-	if ver == "local" {
-		return nil
-	}
-
-	_, err := version.NewSemver(ver)
-	if err != nil {
-		return err
-	}
-
-	return nil
-}

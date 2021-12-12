@@ -109,6 +109,10 @@ func (p *Plugin) Init() error {
 		return errors.E(op, errors.Errorf("RR version is older than configuration version, RR version: %s, configuration version: %s", p.RRVersion, ver.(string)))
 	}
 
+	if !rrV.GreaterThanOrEqual(cfgV) {
+		return errors.Str("configuration version can't be greater that RR version")
+	}
+
 	// if rr version is equal to the configuration version, skip transition
 	// but we can have versions like 2.7.0 (config) and 2.7.2 (RR version), they are not equal, but we don't change config
 	// in the bugfix versions. We should additionally check the minor versions
@@ -116,7 +120,7 @@ func (p *Plugin) Init() error {
 		// minor RR and minor config
 		if (rrV.Segments64()[0] == cfgV.Segments64()[0]) && rrV.Segments64()[1] != cfgV.Segments64()[1] {
 			// transform from the older config to the recent RR version
-			err = transition(cfgV.String(), rrV.String(), p.viper)
+			err = transition(cfgV, rrV, p.viper)
 			if err != nil {
 				return errors.E(op, err)
 			}
@@ -152,10 +156,8 @@ func (p *Plugin) Init() error {
 
 // Overwrite overwrites existing config with provided values
 func (p *Plugin) Overwrite(values map[string]interface{}) error {
-	if len(values) != 0 {
-		for key, value := range values {
-			p.viper.Set(key, value)
-		}
+	for key, value := range values {
+		p.viper.Set(key, value)
 	}
 
 	return nil
