@@ -49,6 +49,11 @@ type Plugin struct {
 	stopCh      chan struct{}
 	id          string
 	bus         events.EventBus
+
+	queueSize       prometheus.Gauge
+	noFreeWorkers   *prometheus.CounterVec
+	requestCounter  *prometheus.CounterVec
+	requestDuration *prometheus.HistogramVec
 }
 
 func (p *Plugin) Init() error {
@@ -62,6 +67,33 @@ func (p *Plugin) Init() error {
 
 	p.bus, p.id = events.Bus()
 	p.stopCh = make(chan struct{}, 1)
+
+	p.queueSize = prometheus.NewGauge(prometheus.GaugeOpts{
+		Namespace: namespace,
+		Name:      "requests_queue",
+		Help:      "Total number of queued requests.",
+	})
+
+	p.noFreeWorkers = prometheus.NewCounterVec(prometheus.CounterOpts{
+		Namespace: namespace,
+		Name:      "no_free_workers_total",
+		Help:      "Total number of NoFreeWorkers occurrences.",
+	}, nil)
+
+	p.requestCounter = prometheus.NewCounterVec(prometheus.CounterOpts{
+		Namespace: namespace,
+		Name:      "request_total",
+		Help:      "Total number of handled http requests after server restart.",
+	}, []string{"status"})
+
+	p.requestDuration = prometheus.NewHistogramVec(
+		prometheus.HistogramOpts{
+			Namespace: namespace,
+			Name:      "request_duration_seconds",
+			Help:      "HTTP request duration.",
+		},
+		[]string{"status"},
+	)
 
 	return nil
 }
@@ -104,7 +136,7 @@ func (p *Plugin) Middleware(next http.Handler) http.Handler {
 		rrWriter := p.getWriter(w)
 		defer p.putWriter(rrWriter)
 
-		queueSize.Observe(1)
+		p.queueSize.Inc()
 
 		next.ServeHTTP(rrWriter, r)
 
@@ -116,7 +148,7 @@ func (p *Plugin) Middleware(next http.Handler) http.Handler {
 			"status": strconv.Itoa(rrWriter.code),
 		}).Observe(time.Since(start).Seconds())
 
-		queueSize.Observe(-1)
+		p.queueSize.Dec()
 	})
 }
 

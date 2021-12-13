@@ -1119,8 +1119,7 @@ func TestHTTPMetricsNoFreeWorkers(t *testing.T) {
 
 	genericOut, err := get2()
 	assert.NoError(t, err)
-	assert.Contains(t, genericOut, `rr_http_requests_queue_sum`)
-	assert.Contains(t, genericOut, `rr_http_requests_queue_count`)
+	assert.Contains(t, genericOut, `rr_http_requests_queue`)
 	assert.Contains(t, genericOut, `rr_http_no_free_workers_total 1`)
 
 	close(sig)
