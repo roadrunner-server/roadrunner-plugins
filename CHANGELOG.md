@@ -154,6 +154,9 @@ Now, pipelines have only `driver` key with the configuration under the `config` 
         delete_after_ack: false
 ```
 
+## 🩹 Fixes:
+- 🐛 Fix: Wrong metrics type for the `rr_http_requests_queue`, [bug](https://github.com/spiral/roadrunner-plugins/issues/162) (@victor-sudakov)
+
 ## v2.6.4 (7.12.2021)
 
 ## 📦 Packages:
