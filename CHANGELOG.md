@@ -1,173 +1,34 @@
 # CHANGELOG
 
-=======
+---
 
-## v2.7.0 (_._.2022?)
+## v2.6.6 (15.12.2021)
 
 ## 👀 New:
 
-- ✏️ `.rr.yaml` now support versions. You may safely use your old configurations w/o specifying versions. Configuration w/o version will be treated as `2.6`. It is safe to use configuration w/o version or with version `2.6` with RR `2.7` because RR is able to automatically transform the old configuration.
-But if you use configuration version `2.7` you must update the `jobs` pipelines config.  
-**At this point we can guarantee, that no breaking changes will be introduced in the configuration w/o auto-convert from the older configuration version**  
-  For example, if we introduce a configuration update let's say in version `2.10`, we will support automatic conversion from at least 2 previous versions w/o involving the user into the process. In the example case, versions `2.9` and `2.8` will be automatically converted. From our release cycle, you will have at least 2 months to update the configuration from version `2.8` and 3 months from `2.9`.Version located at the top of the `.rr.yaml`:
+- ✏️ Add events from the supervisor to the `server` plugin.
 
-Compatibility matrix located here: TODO
-Configuration changelog: TODO
+## 📦 Packages:
 
-```yaml
-version: "2.6"
-
-# ..... PLUGINS ......
-```
-
-**Before:**  
-```yaml
-  pipelines:
-    test-local:
-      driver: memory
-      priority: 10
-      prefetch: 10000
-
-    test-local-1:
-      driver: boltdb
-      priority: 10
-      file: "rr.db"
-      prefetch: 10000
-
-    test-local-2:
-      driver: amqp
-      prefetch: 10
-      priority: 1
-      queue: test-1-queue
-      exchange: default
-      exchange_type: direct
-      routing_key: test
-      exclusive: false
-      multiple_ack: false
-      requeue_on_fail: false
-
-    test-local-3:
-      driver: beanstalk
-      priority: 11
-      tube_priority: 1
-      tube: default-1
-      reserve_timeout: 10s
-
-    test-local-4:
-      driver: sqs
-      priority: 10
-      prefetch: 10
-      visibility_timeout: 0
-      wait_time_seconds: 0
-      queue: default
-      attributes:
-        DelaySeconds: 0
-        MaximumMessageSize: 262144
-        MessageRetentionPeriod: 345600
-        ReceiveMessageWaitTimeSeconds: 0
-        VisibilityTimeout: 30
-      tags:
-        test: "tag"
-
-    test-local-5:
-      driver: nats
-      priority: 2
-      prefetch: 100
-      subject: default
-      stream: foo
-      deliver_new: true
-      rate_limit: 100
-      delete_stream_on_stop: false
-      delete_after_ack: false
-```
-
-**After**:  
-Now, pipelines have only `driver` key with the configuration under the `config` key. We did that to uniform configuration across all drivers (like in the `KV`).
-```yaml
-  pipelines:
-    test-local:
-      driver: memory
-
-      config: # <------------------ NEW
-        priority: 10
-        prefetch: 10000
-
-    test-local-1:
-      driver: boltdb
-
-      config: # <------------------ NEW
-        priority: 10
-        file: "test-local-1-bolt.db"
-        prefetch: 10000
-
-    test-local-2:
-      driver: amqp
-
-      config: # <------------------ NEW
-        priority: 11
-        prefetch: 100
-        queue: test-12-queue
-        exchange: default
-        exchange_type: direct
-        routing_key: test
-        exclusive: false
-        multiple_ack: false
-        requeue_on_fail: false
-
-    test-local-3:
-      driver: beanstalk
-
-      config: # <------------------ NEW
-        priority: 11
-        tube_priority: 1
-        tube: default-2
-        reserve_timeout: 10s
-
-    test-local-4:
-      driver: sqs
-
-      config: # <------------------ NEW
-        priority: 10
-        prefetch: 10
-        visibility_timeout: 0
-        wait_time_seconds: 0
-        queue: default
-
-        attributes:
-          DelaySeconds: 0
-          MaximumMessageSize: 262144
-          MessageRetentionPeriod: 345600
-          ReceiveMessageWaitTimeSeconds: 0
-          VisibilityTimeout: 30
-        tags:
-        test: "tag"
-
-    test-local-5:
-      driver: nats
-
-      config: # <------------------ NEW
-        priority: 2
-        prefetch: 100
-        subject: default
-        stream: foo
-        deliver_new: true
-        rate_limit: 100
-        delete_stream_on_stop: false
-        delete_after_ack: false
-```
+- 📦 Update RR to `v2.6.6`
 
 ---
 
 ## v2.6.5 (14.12.2021)
 
 ## 🩹 Fixes:
-- 🐛 Fix: Wrong metrics type for the `rr_http_requests_queue`, [bug](https://github.com/spiral/roadrunner-plugins/issues/162) (@victor-sudakov)
+
+- 🐛 Fix: Wrong metrics type for the `rr_http_requests_queue`, [bug](https://github.com/spiral/roadrunner-plugins/issues/162) (reporter: @victor-sudakov)
 
 ## 📦 Packages:
 
-- 📦 Update RoadRunner to `v2.6.1`
+- 📦 Update RR to `v2.6.5`
 
 ---
+
+## 🩹 Fixes:
+
+- 🐛 Fix: Wrong metrics type for the `rr_http_requests_queue`, [bug](https://github.com/spiral/roadrunner-plugins/issues/162) (@victor-sudakov)
 
 ## v2.6.4 (7.12.2021)
 
@@ -205,7 +66,7 @@ Now, pipelines have only `driver` key with the configuration under the `config` 
 ## 👀 New:
 
 - ✏️ **[BETA]** Support for the New Relic observability platform. Sample of the client library might be found [here](https://github.com/arku31/roadrunner-newrelic). (Thanks @arku31)  
-New Relic middleware is a part of the HTTP plugin, thus configuration should be inside it:
+  New Relic middleware is a part of the HTTP plugin, thus configuration should be inside it:
 
 ```yaml
 http:
@@ -392,7 +253,7 @@ server:
 
 ---
 
-- ✏️ **[BETA]** GRPC can handle multiply proto files.  
+- ✏️ **[BETA]** GRPC can handle multiply proto files.
 
 Configuration:
 ```yaml
@@ -411,7 +272,7 @@ grpc:
 ---
 
 - ✏️ New `allow` configuration option for the `http.uploads` and multipart requests. The new option allows you to filter upload extensions knowing only allowed. Now, there is no need to have a looong list with all possible extensions to forbid. [FR](https://github.com/spiral/roadrunner-plugins/issues/123) (Thanks @rjd22)  
-`http.uploads.forbid` has a higher priority, so, if you have duplicates in the `http.uploads.allow` and `http.uploads.forbid` the duplicated extension will be forbidden.
+  `http.uploads.forbid` has a higher priority, so, if you have duplicates in the `http.uploads.allow` and `http.uploads.forbid` the duplicated extension will be forbidden.
 
 Configuration:
 ```yaml
@@ -676,9 +537,9 @@ jobs:
 
 - ✏️ Response API for the NATS, RabbitMQ, SQS and Beanstalk drivers. This means, that you'll be able to respond to a
   specified in the response queue. Limitations:
-    - To send a response to the queue maintained by the RR, you should send it as a `Job` type. There are no limitations
-      for the responses into the other queues (tubes, subjects).
-    - Driver uses the same endpoint (address) to send the response as specified in the configuration.
+  - To send a response to the queue maintained by the RR, you should send it as a `Job` type. There are no limitations
+    for the responses into the other queues (tubes, subjects).
+  - Driver uses the same endpoint (address) to send the response as specified in the configuration.
 
 ## 🩹 Fixes:
 
