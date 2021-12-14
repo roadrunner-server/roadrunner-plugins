@@ -1271,7 +1271,7 @@ logs:
 	mockLogger.EXPECT().Info("WORLD\n").MinTimes(1)
 	mockLogger.EXPECT().Debug("http server is running", "address", gomock.Any()).Times(1)
 
-	mockLogger.EXPECT().Info(gomock.Any()).AnyTimes().Times(2)
+	mockLogger.EXPECT().Info(gomock.Any()).AnyTimes().AnyTimes()
 	mockLogger.EXPECT().Debug(gomock.Any()).AnyTimes()
 
 	err = cont.RegisterAll(
