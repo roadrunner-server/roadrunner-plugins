@@ -1,6 +1,8 @@
 package server
 
 import (
+	"fmt"
+	"os"
 	"os/exec"
 	"strings"
 	"time"
@@ -61,7 +63,15 @@ func (p *Plugin) createProcess(env Env, cmd string) *exec.Cmd {
 		command = exec.Command(cmdArgs[0], cmdArgs[1:]...) //nolint:gosec
 	}
 
-	command.Env = p.setEnv(env)
+	// set env variables from the config
+	if len(env) > 0 {
+		for k, v := range env {
+			command.Env = append(command.Env, fmt.Sprintf("%s=%s", strings.ToUpper(k), v))
+		}
+	}
+
+	// append system envs
+	command.Env = append(command.Env, os.Environ()...)
 	// redirect stderr and stdout into the Write function of the process.go
 	command.Stderr = p
 	command.Stdout = p

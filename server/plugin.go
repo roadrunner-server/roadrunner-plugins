@@ -45,8 +45,10 @@ const (
 type Plugin struct {
 	sync.Mutex
 
-	cfg    *Config
-	rpcCfg *RPCConfig
+	cfg          *Config
+	rpcCfg       *RPCConfig
+	preparedCmd  []string
+	preparedEnvs []string
 
 	log     logger.Logger
 	factory transport.Factory
@@ -82,6 +84,20 @@ func (p *Plugin) Init(cfg config.Configurer, log logger.Logger) error {
 
 	p.log = log
 	p.stopCh = make(chan struct{})
+
+	p.preparedCmd = append(p.preparedCmd, strings.Split(p.cfg.Command, " ")...)
+
+	p.preparedEnvs = append(os.Environ(), fmt.Sprintf(RrRelay+"=%s", p.cfg.Relay))
+	if p.rpcCfg != nil && p.rpcCfg.Listen != "" {
+		p.preparedEnvs = append(p.preparedEnvs, fmt.Sprintf("%s=%s", RrRPC, p.rpcCfg.Listen))
+	}
+
+	// set env variables from the config
+	if len(p.cfg.Env) > 0 {
+		for k, v := range p.cfg.Env {
+			p.preparedEnvs = append(p.preparedEnvs, fmt.Sprintf("%s=%s", strings.ToUpper(k), v))
+		}
+	}
 
 	return nil
 }
@@ -121,14 +137,23 @@ func (p *Plugin) Stop() error {
 // CmdFactory provides worker command factory associated with given context.
 func (p *Plugin) CmdFactory(env Env) func() *exec.Cmd {
 	return func() *exec.Cmd {
-		var cmdArgs []string
-		// create command according to the config
-		cmdArgs = append(cmdArgs, strings.Split(p.cfg.Command, " ")...)
 		var cmd *exec.Cmd
-		if len(cmdArgs) == 1 {
-			cmd = exec.Command(cmdArgs[0]) //nolint:gosec
+
+		if len(p.preparedCmd) == 1 {
+			cmd = exec.Command(p.preparedCmd[0]) //nolint:gosec
 		} else {
-			cmd = exec.Command(cmdArgs[0], cmdArgs[1:]...) //nolint:gosec
+			cmd = exec.Command(p.preparedCmd[0], p.preparedCmd[1:]...) //nolint:gosec
+		}
+
+		// copy prepared envs
+		cmd.Env = make([]string, len(p.preparedEnvs))
+		copy(cmd.Env, p.preparedEnvs)
+
+		// append external envs
+		if len(env) > 0 {
+			for k, v := range env {
+				cmd.Env = append(cmd.Env, fmt.Sprintf("%s=%s", strings.ToUpper(k), v))
+			}
 		}
 
 		utils.IsolateProcess(cmd)
@@ -141,7 +166,6 @@ func (p *Plugin) CmdFactory(env Env) func() *exec.Cmd {
 			}
 		}
 
-		cmd.Env = p.setEnv(env)
 		return cmd
 	}
 }
@@ -193,26 +217,6 @@ func (p *Plugin) initFactory() (transport.Factory, error) {
 	default:
 		return nil, errors.E(op, errors.Network, errors.Str("invalid DSN (tcp://:6001, unix://file.sock)"))
 	}
-}
-
-func (p *Plugin) setEnv(e Env) []string {
-	env := append(os.Environ(), fmt.Sprintf(RrRelay+"=%s", p.cfg.Relay))
-	for k, v := range e {
-		env = append(env, fmt.Sprintf("%s=%s", strings.ToUpper(k), v))
-	}
-
-	if p.rpcCfg != nil && p.rpcCfg.Listen != "" {
-		env = append(env, fmt.Sprintf("%s=%s", RrRPC, p.rpcCfg.Listen))
-	}
-
-	// set env variables from the config
-	if len(p.cfg.Env) > 0 {
-		for k, v := range p.cfg.Env {
-			env = append(env, fmt.Sprintf("%s=%s", strings.ToUpper(k), v))
-		}
-	}
-
-	return env
 }
 
 func (p *Plugin) startEventsBus(errCh chan<- error) {
