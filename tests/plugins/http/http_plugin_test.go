@@ -1258,25 +1258,13 @@ logs:
 `
 
 	cfg := &config.Plugin{
-		Path:      "",
-		Prefix:    "",
 		Type:      "yaml",
 		ReadInCfg: []byte(rIn),
 	}
 
-	controller := gomock.NewController(t)
-	mockLogger := mocks.NewMockLogger(controller)
-
-	mockLogger.EXPECT().Info("http log", "status", 201, "method", "GET", "URI", "http://127.0.0.1:34999/?hello=world", "remote_address", "127.0.0.1", "start", gomock.Any(), "elapsed", gomock.Any()).MinTimes(1)
-	mockLogger.EXPECT().Info("WORLD\n").MinTimes(1)
-	mockLogger.EXPECT().Debug("http server is running", "address", gomock.Any()).Times(1)
-
-	mockLogger.EXPECT().Info(gomock.Any()).AnyTimes().AnyTimes()
-	mockLogger.EXPECT().Debug(gomock.Any()).AnyTimes()
-
 	err = cont.RegisterAll(
 		cfg,
-		mockLogger,
+		&logger.ZapLogger{},
 		&server.Plugin{},
 		&httpPlugin.Plugin{},
 		&PluginMiddleware{},
