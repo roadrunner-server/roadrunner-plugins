@@ -10,7 +10,7 @@
 
 ## 📦 Packages:
 
-- 📦 Update RR to `v2.6.6`
+- 📦 Update RR to `v2.6.2`
 
 ---
 
@@ -22,7 +22,7 @@
 
 ## 📦 Packages:
 
-- 📦 Update RR to `v2.6.5`
+- 📦 Update RR to `v2.6.1`
 
 ---
 
