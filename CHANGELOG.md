@@ -154,7 +154,34 @@ Now, pipelines have only `driver` key with the configuration under the `config` 
         delete_after_ack: false
 ```
 
+---
+
+## v2.6.6 (15.12.2021)
+
+## 👀 New:
+
+- ✏️ Add events from the supervisor to the `server` plugin.
+
+## 📦 Packages:
+
+- 📦 Update RR to `v2.6.6`
+
+---
+
+## v2.6.5 (14.12.2021)
+
 ## 🩹 Fixes:
+
+- 🐛 Fix: Wrong metrics type for the `rr_http_requests_queue`, [bug](https://github.com/spiral/roadrunner-plugins/issues/162) (reporter: @victor-sudakov)
+
+## 📦 Packages:
+
+- 📦 Update RR to `v2.6.5`
+
+---
+
+## 🩹 Fixes:
+
 - 🐛 Fix: Wrong metrics type for the `rr_http_requests_queue`, [bug](https://github.com/spiral/roadrunner-plugins/issues/162) (@victor-sudakov)
 
 ## v2.6.4 (7.12.2021)
