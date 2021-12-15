@@ -15,35 +15,6 @@ const (
 	namespace  string = "rr_http"
 )
 
-var (
-	queueSize = prometheus.NewSummary(prometheus.SummaryOpts{
-		Namespace: namespace,
-		Name:      "requests_queue",
-		Help:      "Total number of queued requests.",
-	})
-
-	noFreeWorkers = prometheus.NewCounterVec(prometheus.CounterOpts{
-		Namespace: namespace,
-		Name:      "no_free_workers_total",
-		Help:      "Total number of NoFreeWorkers occurrences.",
-	}, nil)
-
-	requestCounter = prometheus.NewCounterVec(prometheus.CounterOpts{
-		Namespace: namespace,
-		Name:      "request_total",
-		Help:      "Total number of handled http requests after server restart.",
-	}, []string{"status"})
-
-	requestDuration = prometheus.NewHistogramVec(
-		prometheus.HistogramOpts{
-			Namespace: namespace,
-			Name:      "request_duration_seconds",
-			Help:      "HTTP request duration.",
-		},
-		[]string{"status"},
-	)
-)
-
 type Plugin struct {
 	writersPool sync.Pool
 	stopCh      chan struct{}
@@ -113,7 +84,7 @@ func (p *Plugin) Serve() chan error {
 			select {
 			case <-eventsCh:
 				// increment no free workers event
-				noFreeWorkers.With(nil).Inc()
+				p.noFreeWorkers.With(nil).Inc()
 			case <-p.stopCh:
 				p.bus.Unsubscribe(p.id)
 			}
@@ -140,11 +111,11 @@ func (p *Plugin) Middleware(next http.Handler) http.Handler {
 
 		next.ServeHTTP(rrWriter, r)
 
-		requestCounter.With(prometheus.Labels{
+		p.requestCounter.With(prometheus.Labels{
 			"status": strconv.Itoa(rrWriter.code),
 		}).Inc()
 
-		requestDuration.With(prometheus.Labels{
+		p.requestDuration.With(prometheus.Labels{
 			"status": strconv.Itoa(rrWriter.code),
 		}).Observe(time.Since(start).Seconds())
 
@@ -157,7 +128,7 @@ func (p *Plugin) Name() string {
 }
 
 func (p *Plugin) MetricsCollector() []prometheus.Collector {
-	return []prometheus.Collector{requestCounter, requestDuration, queueSize, noFreeWorkers}
+	return []prometheus.Collector{p.requestCounter, p.requestDuration, p.queueSize, p.noFreeWorkers}
 }
 
 func (p *Plugin) getWriter(w http.ResponseWriter) *writer {
