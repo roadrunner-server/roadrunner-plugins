@@ -27,7 +27,7 @@ require (
 	github.com/newrelic/go-agent/v3 v3.15.2
 	github.com/prometheus/client_golang v1.11.0
 	github.com/rabbitmq/amqp091-go v1.2.0
-	github.com/spf13/viper v1.9.0
+	github.com/spf13/viper v1.10.1
 	// spiral
 	github.com/spiral/endure v1.1.0
 	github.com/spiral/errors v1.0.12
@@ -40,7 +40,7 @@ require (
 	go.uber.org/zap v1.19.1
 	golang.org/x/net v0.0.0-20211209124913-491a49abca63
 	golang.org/x/sys v0.0.0-20211214170744-3b038e5940ed
-	google.golang.org/grpc v1.42.0
+	google.golang.org/grpc v1.43.0
 	google.golang.org/protobuf v1.27.1
 	gopkg.in/natefinch/lumberjack.v2 v2.0.0
 )
