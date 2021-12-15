@@ -34,11 +34,12 @@ const (
 	// RrRPC env variable key (internal) if the RPC presents
 	RrRPC string = "RR_RPC"
 
-	// Event types
+	// Event types server subscribed. It listens only for the sdk system events.
 
-	PoolEvents    string = "pool.*"
-	WorkerEvents  string = "worker.*"
-	WatcherEvents string = "worker_watcher.*"
+	poolEvents       string = "pool.*"
+	workerEvents     string = "worker.*"
+	watcherEvents    string = "worker_watcher.*"
+	supervisorEvents string = "supervisor.*"
 )
 
 // Plugin manages worker
@@ -223,18 +224,24 @@ func (p *Plugin) startEventsBus(errCh chan<- error) {
 	eb, id := events.Bus()
 	eventsCh := make(chan events.Event, 10)
 
-	err := eb.SubscribeP(id, PoolEvents, eventsCh)
+	err := eb.SubscribeP(id, poolEvents, eventsCh)
 	if err != nil {
 		errCh <- err
 		return
 	}
 
-	err = eb.SubscribeP(id, WorkerEvents, eventsCh)
+	err = eb.SubscribeP(id, workerEvents, eventsCh)
 	if err != nil {
 		errCh <- err
 		return
 	}
-	err = eb.SubscribeP(id, WatcherEvents, eventsCh)
+	err = eb.SubscribeP(id, watcherEvents, eventsCh)
+	if err != nil {
+		errCh <- err
+		return
+	}
+
+	err = eb.SubscribeP(id, supervisorEvents, eventsCh)
 	if err != nil {
 		errCh <- err
 		return
