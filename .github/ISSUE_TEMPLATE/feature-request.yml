@@ -26,6 +26,10 @@ body:
         - Service
         - Server
         - Status
+        - Metrics
+        - Temporal
+        - Broadcast
+        - Websockets
 
   - type: textarea
     id: idea
