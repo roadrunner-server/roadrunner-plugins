@@ -173,11 +173,23 @@ func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// CVE: https://github.com/spiral/roadrunner-plugins/pull/184/checks?check_run_id=4635904339
+	uri := strings.ReplaceAll(req.URI, "\n", "")
+	uri = strings.ReplaceAll(uri, "\r", "")
 	switch h.accessLogs {
 	case false:
-		h.log.Info("http log", zap.Int("status", status), zap.String("method", req.Method), zap.String("URI", req.URI), zap.String("remote_address", req.RemoteAddr), zap.Time("start", start), zap.Duration("elapsed", time.Since(start)))
+		h.log.Info("http log", zap.Int("status", status), zap.String("method", req.Method), zap.String("URI", uri), zap.String("remote_address", req.RemoteAddr), zap.Time("start", start), zap.Duration("elapsed", time.Since(start)))
 	case true:
-		h.log.Info("http access log", zap.Int("status", status), zap.String("method", req.Method), zap.String("URI", req.URI), zap.String("remote_address", req.RemoteAddr), zap.String("query", req.RawQuery), zap.Int64("content_len", r.ContentLength), zap.String("host", r.Host), zap.String("user_agent", r.UserAgent()), zap.String("referer", r.Referer()), zap.String("time_local", time.Now().Format("02/Jan/06:15:04:05 -0700")), zap.Time("request_time", time.Now()), zap.Time("start", start), zap.Duration("elapsed", time.Since(start)))
+		rq := strings.ReplaceAll(req.RawQuery, "\n", "")
+		rq = strings.ReplaceAll(rq, "\r", "")
+
+		usrA := strings.ReplaceAll(r.UserAgent(), "\n", "")
+		usrA = strings.ReplaceAll(usrA, "\r", "")
+
+		rfr := strings.ReplaceAll(r.Referer(), "\n", "")
+		rfr = strings.ReplaceAll(rfr, "\r", "")
+
+		h.log.Info("http access log", zap.Int("status", status), zap.String("method", req.Method), zap.String("URI", uri), zap.String("remote_address", req.RemoteAddr), zap.String("query", rq), zap.Int64("content_len", r.ContentLength), zap.String("host", r.Host), zap.String("user_agent", usrA), zap.String("referer", rfr), zap.String("time_local", time.Now().Format("02/Jan/06:15:04:05 -0700")), zap.Time("request_time", time.Now()), zap.Time("start", start), zap.Duration("elapsed", time.Since(start)))
 	}
 
 	h.putPld(pld)

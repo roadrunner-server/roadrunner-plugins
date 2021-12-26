@@ -42,34 +42,34 @@ test_coverage:
 test: ## Run application tests
 	docker compose -f tests/env/docker-compose.yaml up -d --remove-orphans
 	sleep 10
-	go test -v -race -failfast -tags=debug ./api/v2/jobs/pipeline
-	go test -v -race -failfast -tags=debug ./jobs
-	go test -v -race -failfast -tags=debug ./http/config
-	go test -v -race -failfast -tags=debug ./http/middleware/new_relic
-	go test -v -race -failfast -tags=debug ./http/middleware/websockets
-	go test -v -race -failfast -tags=debug ./server
-	go test -v -race -failfast -tags=debug ./grpc/codec
-	go test -v -race -failfast -tags=debug ./grpc/parser
-	go test -timeout 20m -v -race -failfast -tags=debug ./tests/plugins/jobs
-	go test -v -race -failfast -tags=debug ./tests/plugins/kv
-	go test -v -race -failfast -tags=debug ./tests/plugins/tcp
-	go test -v -race -failfast -tags=debug ./tests/plugins/broadcast
-	go test -v -race -failfast -tags=debug ./tests/plugins/websockets
-	go test -v -race -failfast -tags=debug ./tests/plugins/http
-	go test -v -race -failfast -tags=debug ./tests/plugins/informer
-	go test -v -race -failfast -tags=debug ./tests/plugins/reload
-	go test -v -race -failfast -tags=debug ./tests/plugins/websockets
-	go test -v -race -failfast -tags=debug ./tests/plugins/grpc
-	go test -v -race -failfast -tags=debug ./tests/plugins/server
-	go test -v -race -failfast -tags=debug ./tests/plugins/service
-	go test -v -race -failfast -tags=debug ./tests/plugins/status
-	go test -v -race -failfast -tags=debug ./tests/plugins/config
-	go test -v -race -failfast -tags=debug ./tests/plugins/gzip
-	go test -v -race -failfast -tags=debug ./tests/plugins/headers
-	go test -v -race -failfast -tags=debug ./tests/plugins/logger
-	go test -v -race -failfast -tags=debug ./tests/plugins/metrics
-	go test -v -race -failfast -tags=debug ./tests/plugins/resetter
-	go test -v -race -failfast -tags=debug ./tests/plugins/rpc
+	go test -v -race -tags=debug ./api/v2/jobs/pipeline
+	go test -v -race -tags=debug ./jobs
+	go test -v -race -tags=debug ./http/config
+	go test -v -race -tags=debug ./http/middleware/new_relic
+	go test -v -race -tags=debug ./http/middleware/websockets
+	go test -v -race -tags=debug ./server
+	go test -v -race -tags=debug ./grpc/codec
+	go test -v -race -tags=debug ./grpc/parser
+	go test -timeout 20m -v -race -tags=debug ./tests/plugins/jobs
+	go test -v -race -tags=debug ./tests/plugins/kv
+	go test -v -race -tags=debug ./tests/plugins/tcp
+	go test -v -race -tags=debug ./tests/plugins/broadcast
+	go test -v -race -tags=debug ./tests/plugins/websockets
+	go test -v -race -tags=debug ./tests/plugins/http
+	go test -v -race -tags=debug ./tests/plugins/informer
+	go test -v -race -tags=debug ./tests/plugins/reload
+	go test -v -race -tags=debug ./tests/plugins/websockets
+	go test -v -race -tags=debug ./tests/plugins/grpc
+	go test -v -race -tags=debug ./tests/plugins/server
+	go test -v -race -tags=debug ./tests/plugins/service
+	go test -v -race -tags=debug ./tests/plugins/status
+	go test -v -race -tags=debug ./tests/plugins/config
+	go test -v -race -tags=debug ./tests/plugins/gzip
+	go test -v -race -tags=debug ./tests/plugins/headers
+	go test -v -race -tags=debug ./tests/plugins/logger
+	go test -v -race -tags=debug ./tests/plugins/metrics
+	go test -v -race -tags=debug ./tests/plugins/resetter
+	go test -v -race -tags=debug ./tests/plugins/rpc
 	docker compose -f tests/env/docker-compose.yaml down
 
 generate-proto:
