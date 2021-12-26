@@ -10,12 +10,11 @@ import (
 	"testing"
 	"time"
 
-	"github.com/golang/mock/gomock"
 	"github.com/google/uuid"
 	endure "github.com/spiral/endure/pkg/container"
 	goridgeRpc "github.com/spiral/goridge/v3/pkg/rpc"
-	jobState "github.com/spiral/roadrunner-plugins/v2/api/jobs"
 	jobsv1beta "github.com/spiral/roadrunner-plugins/v2/api/proto/jobs/v1beta"
+	jobState "github.com/spiral/roadrunner-plugins/v2/api/v2/jobs"
 	"github.com/spiral/roadrunner-plugins/v2/beanstalk"
 	"github.com/spiral/roadrunner-plugins/v2/config"
 	"github.com/spiral/roadrunner-plugins/v2/informer"
@@ -24,9 +23,10 @@ import (
 	"github.com/spiral/roadrunner-plugins/v2/resetter"
 	rpcPlugin "github.com/spiral/roadrunner-plugins/v2/rpc"
 	"github.com/spiral/roadrunner-plugins/v2/server"
-	"github.com/spiral/roadrunner-plugins/v2/tests/mocks"
+	mocklogger "github.com/spiral/roadrunner-plugins/v2/tests/mock"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"go.uber.org/zap"
 )
 
 func TestBeanstalkInit(t *testing.T) {
@@ -38,28 +38,12 @@ func TestBeanstalkInit(t *testing.T) {
 		Prefix: "rr",
 	}
 
-	controller := gomock.NewController(t)
-	mockLogger := mocks.NewMockLogger(controller)
-
-	// general
-	mockLogger.EXPECT().Debug("RPC plugin started", "address", "tcp://127.0.0.1:6001", "plugins", gomock.Any()).Times(1)
-	mockLogger.EXPECT().Info(gomock.Any()).AnyTimes()
-
-	mockLogger.EXPECT().Debug("pipeline started", "driver", "beanstalk", "pipeline", "test-1", "start", gomock.Any(), "elapsed", gomock.Any()).Times(1)
-	mockLogger.EXPECT().Debug("pipeline started", "driver", "beanstalk", "pipeline", "test-2", "start", gomock.Any(), "elapsed", gomock.Any()).Times(1)
-	mockLogger.EXPECT().Debug("pipeline stopped", "driver", "beanstalk", "pipeline", "test-1", "start", gomock.Any(), "elapsed", gomock.Any()).Times(1)
-	mockLogger.EXPECT().Debug("pipeline stopped", "driver", "beanstalk", "pipeline", "test-2", "start", gomock.Any(), "elapsed", gomock.Any()).Times(1)
-
-	mockLogger.EXPECT().Warn("beanstalk reserve", "error", gomock.Any()).AnyTimes()
-	mockLogger.EXPECT().Error("job processed with errors", "error", gomock.Any(), "ID", gomock.Any(), "start", gomock.Any(), "elapsed", gomock.Any()).AnyTimes()
-	mockLogger.EXPECT().Debug("beanstalk reserve timeout", "warn", "reserve-with-timeout").AnyTimes()
-	mockLogger.EXPECT().Debug("beanstalk listener stopped").AnyTimes()
-
+	l, oLogger := mocklogger.ZapTestLogger(zap.DebugLevel)
 	err = cont.RegisterAll(
 		cfg,
 		&server.Plugin{},
 		&rpcPlugin.Plugin{},
-		mockLogger,
+		l,
 		&jobs.Plugin{},
 		&resetter.Plugin{},
 		&informer.Plugin{},
@@ -115,6 +99,10 @@ func TestBeanstalkInit(t *testing.T) {
 	time.Sleep(time.Second * 3)
 	stopCh <- struct{}{}
 	wg.Wait()
+
+	require.Equal(t, 2, oLogger.FilterMessageSnippet("pipeline was started").Len())
+	require.Equal(t, 2, oLogger.FilterMessageSnippet("pipeline was stopped").Len())
+	require.Equal(t, 2, oLogger.FilterMessageSnippet("beanstalk listener stopped").Len())
 }
 
 func TestBeanstalkInitV27(t *testing.T) {
@@ -127,36 +115,12 @@ func TestBeanstalkInitV27(t *testing.T) {
 		RRVersion: "2.7.0",
 	}
 
-	controller := gomock.NewController(t)
-	mockLogger := mocks.NewMockLogger(controller)
-
-	// general
-	mockLogger.EXPECT().Debug("RPC plugin started", "address", "tcp://127.0.0.1:6001", "plugins", gomock.Any()).Times(1)
-
-	mockLogger.EXPECT().Debug("pipeline started", "driver", "beanstalk", "pipeline", "test-1", "start", gomock.Any(), "elapsed", gomock.Any()).Times(1)
-	mockLogger.EXPECT().Debug("pipeline started", "driver", "beanstalk", "pipeline", "test-2", "start", gomock.Any(), "elapsed", gomock.Any()).Times(1)
-	mockLogger.EXPECT().Debug("pipeline stopped", "driver", "beanstalk", "pipeline", "test-1", "start", gomock.Any(), "elapsed", gomock.Any()).Times(1)
-	mockLogger.EXPECT().Debug("pipeline stopped", "driver", "beanstalk", "pipeline", "test-2", "start", gomock.Any(), "elapsed", gomock.Any()).Times(1)
-
-	mockLogger.EXPECT().Debug("job pushed successfully", "ID", gomock.Any(), "pipeline", "test-1", "driver", "beanstalk", "start", gomock.Any(), "elapsed", gomock.Any()).Times(1)
-	mockLogger.EXPECT().Debug("job pushed successfully", "ID", gomock.Any(), "pipeline", "test-2", "driver", "beanstalk", "start", gomock.Any(), "elapsed", gomock.Any()).Times(1)
-
-	mockLogger.EXPECT().Debug("job processed successfully", "ID", gomock.Any(), "start", gomock.Any(), "elapsed", gomock.Any()).Times(2)
-	mockLogger.EXPECT().Debug("job processing started", "ID", gomock.Any(), "start", gomock.Any(), "elapsed", gomock.Any()).Times(2)
-
-	mockLogger.EXPECT().Warn("beanstalk reserve", "error", gomock.Any()).AnyTimes()
-	mockLogger.EXPECT().Error("job processed with errors", "error", gomock.Any(), "ID", gomock.Any(), "start", gomock.Any(), "elapsed", gomock.Any()).AnyTimes()
-	mockLogger.EXPECT().Debug("beanstalk reserve timeout", "warn", "reserve-with-timeout").AnyTimes()
-	mockLogger.EXPECT().Debug("beanstalk listener stopped").AnyTimes()
-	mockLogger.EXPECT().Debug("------> job poller stopped <------").AnyTimes()
-
-	mockLogger.EXPECT().Info(gomock.Any()).AnyTimes()
-
+	l, oLogger := mocklogger.ZapTestLogger(zap.DebugLevel)
 	err = cont.RegisterAll(
 		cfg,
 		&server.Plugin{},
 		&rpcPlugin.Plugin{},
-		mockLogger,
+		l,
 		&jobs.Plugin{},
 		&resetter.Plugin{},
 		&informer.Plugin{},
@@ -218,6 +182,10 @@ func TestBeanstalkInitV27(t *testing.T) {
 
 	stopCh <- struct{}{}
 	wg.Wait()
+
+	require.Equal(t, 2, oLogger.FilterMessageSnippet("pipeline was started").Len())
+	require.Equal(t, 2, oLogger.FilterMessageSnippet("pipeline was stopped").Len())
+	require.Equal(t, 2, oLogger.FilterMessageSnippet("beanstalk listener stopped").Len())
 }
 
 func TestBeanstalkStats(t *testing.T) {

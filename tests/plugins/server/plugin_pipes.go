@@ -5,8 +5,9 @@ import (
 	"time"
 
 	"github.com/spiral/errors"
-	"github.com/spiral/roadrunner-plugins/v2/config"
-	"github.com/spiral/roadrunner-plugins/v2/server"
+	"github.com/spiral/roadrunner-plugins/v2/api/v2/config"
+	"github.com/spiral/roadrunner-plugins/v2/api/v2/server"
+	serverImpl "github.com/spiral/roadrunner-plugins/v2/server"
 	"github.com/spiral/roadrunner/v2/payload"
 	"github.com/spiral/roadrunner/v2/pool"
 	"github.com/spiral/roadrunner/v2/worker"
@@ -52,7 +53,7 @@ func (f *Foo) Serve() chan error {
 
 	errCh := make(chan error, 1)
 
-	conf := &server.Config{}
+	conf := &serverImpl.Config{}
 	var err error
 	err = f.configProvider.UnmarshalKey(ConfigSection, conf)
 	if err != nil {
@@ -123,6 +124,5 @@ func (f *Foo) Serve() chan error {
 }
 
 func (f *Foo) Stop() error {
-	f.pool.Destroy(context.Background())
 	return nil
 }

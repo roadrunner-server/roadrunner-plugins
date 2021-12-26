@@ -2,14 +2,14 @@ package boltdb
 
 import (
 	"github.com/spiral/errors"
-	"github.com/spiral/roadrunner-plugins/v2/api/jobs"
-	"github.com/spiral/roadrunner-plugins/v2/api/jobs/pipeline"
-	"github.com/spiral/roadrunner-plugins/v2/api/kv"
+	"github.com/spiral/roadrunner-plugins/v2/api/v2/config"
+	"github.com/spiral/roadrunner-plugins/v2/api/v2/jobs"
+	"github.com/spiral/roadrunner-plugins/v2/api/v2/jobs/pipeline"
+	"github.com/spiral/roadrunner-plugins/v2/api/v2/kv"
 	"github.com/spiral/roadrunner-plugins/v2/boltdb/boltjobs"
 	"github.com/spiral/roadrunner-plugins/v2/boltdb/boltkv"
-	"github.com/spiral/roadrunner-plugins/v2/config"
-	"github.com/spiral/roadrunner-plugins/v2/logger"
 	priorityqueue "github.com/spiral/roadrunner/v2/priority_queue"
+	"go.uber.org/zap"
 )
 
 const (
@@ -20,10 +20,10 @@ const (
 type Plugin struct {
 	cfg config.Configurer
 	// logger
-	log logger.Logger
+	log *zap.Logger
 }
 
-func (p *Plugin) Init(log logger.Logger, cfg config.Configurer) error {
+func (p *Plugin) Init(log *zap.Logger, cfg config.Configurer) error {
 	p.log = log
 	p.cfg = cfg
 	return nil

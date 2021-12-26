@@ -3,7 +3,6 @@ package http
 import (
 	"bytes"
 	"context"
-	"fmt"
 	"io/ioutil"
 	"mime/multipart"
 	"net/http"
@@ -16,33 +15,18 @@ import (
 	"time"
 
 	"github.com/spiral/roadrunner-plugins/v2/http/config"
-	handler "github.com/spiral/roadrunner-plugins/v2/http/handler"
+	"github.com/spiral/roadrunner-plugins/v2/http/handler"
 	"github.com/spiral/roadrunner/v2/pool"
 	"github.com/spiral/roadrunner/v2/transport/pipe"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"go.uber.org/zap"
 )
 
-type mockLog struct{}
-
-func (m *mockLog) Debug(msg string, keyvals ...interface{}) {
-	fmt.Println(keyvals...)
-}
-
-func (m *mockLog) Info(msg string, keyvals ...interface{}) {
-	fmt.Println(keyvals...)
-}
-
-func (m *mockLog) Warn(msg string, keyvals ...interface{}) {
-	fmt.Println(keyvals...)
-}
-
-func (m *mockLog) Error(msg string, keyvals ...interface{}) {
-	fmt.Println(keyvals...)
-}
+var mockLog = zap.NewNop()
 
 func TestHandler_Echo(t *testing.T) {
-	p, err := pool.Initialize(context.Background(),
+	p, err := pool.NewStaticPool(context.Background(),
 		func() *exec.Cmd { return exec.Command("php", "../../php_test_files/http/client.php", "echo", "pipes") },
 		pipe.NewPipeFactory(),
 		&pool.Config{
@@ -52,7 +36,7 @@ func TestHandler_Echo(t *testing.T) {
 		})
 	require.NoError(t, err)
 
-	h, err := handler.NewHandler(1024, 500, os.TempDir(), map[string]struct{}{}, map[string]struct{}{}, nil, p, &mockLog{}, false)
+	h, err := handler.NewHandler(1024, 500, os.TempDir(), map[string]struct{}{}, map[string]struct{}{}, nil, p, mockLog, false)
 	assert.NoError(t, err)
 
 	hs := &http.Server{Addr: ":9177", Handler: h}
@@ -85,7 +69,7 @@ func Test_HandlerErrors(t *testing.T) {
 }
 
 func TestHandler_Headers(t *testing.T) {
-	p, err := pool.Initialize(context.Background(),
+	p, err := pool.NewStaticPool(context.Background(),
 		func() *exec.Cmd {
 			return exec.Command("php", "../../php_test_files/http/client.php", "header", "pipes")
 		},
@@ -102,7 +86,7 @@ func TestHandler_Headers(t *testing.T) {
 		p.Destroy(context.Background())
 	}()
 
-	h, err := handler.NewHandler(1024, 500, os.TempDir(), map[string]struct{}{}, map[string]struct{}{}, nil, p, &mockLog{}, false)
+	h, err := handler.NewHandler(1024, 500, os.TempDir(), map[string]struct{}{}, map[string]struct{}{}, nil, p, mockLog, false)
 	assert.NoError(t, err)
 
 	hs := &http.Server{Addr: ":8078", Handler: h}
@@ -145,7 +129,7 @@ func TestHandler_Headers(t *testing.T) {
 }
 
 func TestHandler_Empty_User_Agent(t *testing.T) {
-	p, err := pool.Initialize(context.Background(),
+	p, err := pool.NewStaticPool(context.Background(),
 		func() *exec.Cmd {
 			return exec.Command("php", "../../php_test_files/http/client.php", "user-agent", "pipes")
 		},
@@ -162,7 +146,7 @@ func TestHandler_Empty_User_Agent(t *testing.T) {
 		p.Destroy(context.Background())
 	}()
 
-	h, err := handler.NewHandler(1024, 500, os.TempDir(), map[string]struct{}{}, map[string]struct{}{}, nil, p, &mockLog{}, false)
+	h, err := handler.NewHandler(1024, 500, os.TempDir(), map[string]struct{}{}, map[string]struct{}{}, nil, p, mockLog, false)
 	assert.NoError(t, err)
 
 	hs := &http.Server{Addr: ":19658", Handler: h}
@@ -204,7 +188,7 @@ func TestHandler_Empty_User_Agent(t *testing.T) {
 }
 
 func TestHandler_User_Agent(t *testing.T) {
-	p, err := pool.Initialize(context.Background(),
+	p, err := pool.NewStaticPool(context.Background(),
 		func() *exec.Cmd {
 			return exec.Command("php", "../../php_test_files/http/client.php", "user-agent", "pipes")
 		},
@@ -221,7 +205,7 @@ func TestHandler_User_Agent(t *testing.T) {
 		p.Destroy(context.Background())
 	}()
 
-	h, err := handler.NewHandler(1024, 500, os.TempDir(), map[string]struct{}{}, map[string]struct{}{}, nil, p, &mockLog{}, false)
+	h, err := handler.NewHandler(1024, 500, os.TempDir(), map[string]struct{}{}, map[string]struct{}{}, nil, p, mockLog, false)
 	assert.NoError(t, err)
 
 	hs := &http.Server{Addr: ":25688", Handler: h}
@@ -263,7 +247,7 @@ func TestHandler_User_Agent(t *testing.T) {
 }
 
 func TestHandler_Cookies(t *testing.T) {
-	p, err := pool.Initialize(context.Background(),
+	p, err := pool.NewStaticPool(context.Background(),
 		func() *exec.Cmd {
 			return exec.Command("php", "../../php_test_files/http/client.php", "cookie", "pipes")
 		},
@@ -280,7 +264,7 @@ func TestHandler_Cookies(t *testing.T) {
 		p.Destroy(context.Background())
 	}()
 
-	h, err := handler.NewHandler(1024, 500, os.TempDir(), map[string]struct{}{}, map[string]struct{}{}, nil, p, &mockLog{}, false)
+	h, err := handler.NewHandler(1024, 500, os.TempDir(), map[string]struct{}{}, map[string]struct{}{}, nil, p, mockLog, false)
 	assert.NoError(t, err)
 
 	hs := &http.Server{Addr: ":8079", Handler: h}
@@ -327,7 +311,7 @@ func TestHandler_Cookies(t *testing.T) {
 }
 
 func TestHandler_JsonPayload_POST(t *testing.T) {
-	p, err := pool.Initialize(context.Background(),
+	p, err := pool.NewStaticPool(context.Background(),
 		func() *exec.Cmd {
 			return exec.Command("php", "../../php_test_files/http/client.php", "payload", "pipes")
 		},
@@ -344,7 +328,7 @@ func TestHandler_JsonPayload_POST(t *testing.T) {
 		p.Destroy(context.Background())
 	}()
 
-	h, err := handler.NewHandler(1024, 500, os.TempDir(), map[string]struct{}{}, map[string]struct{}{}, nil, p, &mockLog{}, false)
+	h, err := handler.NewHandler(1024, 500, os.TempDir(), map[string]struct{}{}, map[string]struct{}{}, nil, p, mockLog, false)
 	assert.NoError(t, err)
 
 	hs := &http.Server{Addr: ":8090", Handler: h}
@@ -390,7 +374,7 @@ func TestHandler_JsonPayload_POST(t *testing.T) {
 }
 
 func TestHandler_JsonPayload_PUT(t *testing.T) {
-	p, err := pool.Initialize(context.Background(),
+	p, err := pool.NewStaticPool(context.Background(),
 		func() *exec.Cmd {
 			return exec.Command("php", "../../php_test_files/http/client.php", "payload", "pipes")
 		},
@@ -407,7 +391,7 @@ func TestHandler_JsonPayload_PUT(t *testing.T) {
 		p.Destroy(context.Background())
 	}()
 
-	h, err := handler.NewHandler(1024, 500, os.TempDir(), map[string]struct{}{}, map[string]struct{}{}, nil, p, &mockLog{}, false)
+	h, err := handler.NewHandler(1024, 500, os.TempDir(), map[string]struct{}{}, map[string]struct{}{}, nil, p, mockLog, false)
 	assert.NoError(t, err)
 
 	hs := &http.Server{Addr: ":8081", Handler: h}
@@ -449,7 +433,7 @@ func TestHandler_JsonPayload_PUT(t *testing.T) {
 }
 
 func TestHandler_JsonPayload_PATCH(t *testing.T) {
-	p, err := pool.Initialize(context.Background(),
+	p, err := pool.NewStaticPool(context.Background(),
 		func() *exec.Cmd {
 			return exec.Command("php", "../../php_test_files/http/client.php", "payload", "pipes")
 		},
@@ -466,7 +450,7 @@ func TestHandler_JsonPayload_PATCH(t *testing.T) {
 		p.Destroy(context.Background())
 	}()
 
-	h, err := handler.NewHandler(1024, 500, os.TempDir(), map[string]struct{}{}, map[string]struct{}{}, nil, p, &mockLog{}, false)
+	h, err := handler.NewHandler(1024, 500, os.TempDir(), map[string]struct{}{}, map[string]struct{}{}, nil, p, mockLog, false)
 	assert.NoError(t, err)
 
 	hs := &http.Server{Addr: ":8082", Handler: h}
@@ -508,7 +492,7 @@ func TestHandler_JsonPayload_PATCH(t *testing.T) {
 }
 
 func TestHandler_FormData_POST(t *testing.T) {
-	p, err := pool.Initialize(context.Background(),
+	p, err := pool.NewStaticPool(context.Background(),
 		func() *exec.Cmd { return exec.Command("php", "../../php_test_files/http/client.php", "data", "pipes") },
 		pipe.NewPipeFactory(),
 		&pool.Config{
@@ -523,7 +507,7 @@ func TestHandler_FormData_POST(t *testing.T) {
 		p.Destroy(context.Background())
 	}()
 
-	h, err := handler.NewHandler(1024, 500, os.TempDir(), map[string]struct{}{}, map[string]struct{}{}, nil, p, &mockLog{}, false)
+	h, err := handler.NewHandler(1024, 500, os.TempDir(), map[string]struct{}{}, map[string]struct{}{}, nil, p, mockLog, false)
 	assert.NoError(t, err)
 
 	hs := &http.Server{Addr: ":10084", Handler: h}
@@ -588,7 +572,7 @@ func TestHandler_FormData_POST(t *testing.T) {
 }
 
 func TestHandler_FormData_POST_Overwrite(t *testing.T) {
-	p, err := pool.Initialize(context.Background(),
+	p, err := pool.NewStaticPool(context.Background(),
 		func() *exec.Cmd { return exec.Command("php", "../../php_test_files/http/client.php", "data", "pipes") },
 		pipe.NewPipeFactory(),
 		&pool.Config{
@@ -603,7 +587,7 @@ func TestHandler_FormData_POST_Overwrite(t *testing.T) {
 		p.Destroy(context.Background())
 	}()
 
-	h, err := handler.NewHandler(1024, 500, os.TempDir(), map[string]struct{}{}, map[string]struct{}{}, nil, p, &mockLog{}, false)
+	h, err := handler.NewHandler(1024, 500, os.TempDir(), map[string]struct{}{}, map[string]struct{}{}, nil, p, mockLog, false)
 	assert.NoError(t, err)
 
 	hs := &http.Server{Addr: ":8083", Handler: h}
@@ -669,7 +653,7 @@ func TestHandler_FormData_POST_Overwrite(t *testing.T) {
 }
 
 func TestHandler_FormData_POST_Form_UrlEncoded_Charset(t *testing.T) {
-	p, err := pool.Initialize(context.Background(),
+	p, err := pool.NewStaticPool(context.Background(),
 		func() *exec.Cmd { return exec.Command("php", "../../php_test_files/http/client.php", "data", "pipes") },
 		pipe.NewPipeFactory(),
 		&pool.Config{
@@ -684,7 +668,7 @@ func TestHandler_FormData_POST_Form_UrlEncoded_Charset(t *testing.T) {
 		p.Destroy(context.Background())
 	}()
 
-	h, err := handler.NewHandler(1024, 500, os.TempDir(), map[string]struct{}{}, map[string]struct{}{}, nil, p, &mockLog{}, false)
+	h, err := handler.NewHandler(1024, 500, os.TempDir(), map[string]struct{}{}, map[string]struct{}{}, nil, p, mockLog, false)
 	assert.NoError(t, err)
 
 	hs := &http.Server{Addr: ":8085", Handler: h}
@@ -749,7 +733,7 @@ func TestHandler_FormData_POST_Form_UrlEncoded_Charset(t *testing.T) {
 }
 
 func TestHandler_FormData_PUT(t *testing.T) {
-	p, err := pool.Initialize(context.Background(),
+	p, err := pool.NewStaticPool(context.Background(),
 		func() *exec.Cmd { return exec.Command("php", "../../php_test_files/http/client.php", "data", "pipes") },
 		pipe.NewPipeFactory(),
 		&pool.Config{
@@ -764,7 +748,7 @@ func TestHandler_FormData_PUT(t *testing.T) {
 		p.Destroy(context.Background())
 	}()
 
-	h, err := handler.NewHandler(1024, 500, os.TempDir(), map[string]struct{}{}, map[string]struct{}{}, nil, p, &mockLog{}, false)
+	h, err := handler.NewHandler(1024, 500, os.TempDir(), map[string]struct{}{}, map[string]struct{}{}, nil, p, mockLog, false)
 	assert.NoError(t, err)
 
 	hs := &http.Server{Addr: ":17834", Handler: h}
@@ -830,7 +814,7 @@ func TestHandler_FormData_PUT(t *testing.T) {
 }
 
 func TestHandler_FormData_PATCH(t *testing.T) {
-	p, err := pool.Initialize(context.Background(),
+	p, err := pool.NewStaticPool(context.Background(),
 		func() *exec.Cmd { return exec.Command("php", "../../php_test_files/http/client.php", "data", "pipes") },
 		pipe.NewPipeFactory(),
 		&pool.Config{
@@ -845,7 +829,7 @@ func TestHandler_FormData_PATCH(t *testing.T) {
 		p.Destroy(context.Background())
 	}()
 
-	h, err := handler.NewHandler(1024, 500, os.TempDir(), map[string]struct{}{}, map[string]struct{}{}, nil, p, &mockLog{}, false)
+	h, err := handler.NewHandler(1024, 500, os.TempDir(), map[string]struct{}{}, map[string]struct{}{}, nil, p, mockLog, false)
 	assert.NoError(t, err)
 
 	hs := &http.Server{Addr: ":8086", Handler: h}
@@ -910,7 +894,7 @@ func TestHandler_FormData_PATCH(t *testing.T) {
 }
 
 func TestHandler_Multipart_POST(t *testing.T) {
-	p, err := pool.Initialize(context.Background(),
+	p, err := pool.NewStaticPool(context.Background(),
 		func() *exec.Cmd { return exec.Command("php", "../../php_test_files/http/client.php", "data", "pipes") },
 		pipe.NewPipeFactory(),
 		&pool.Config{
@@ -925,7 +909,7 @@ func TestHandler_Multipart_POST(t *testing.T) {
 		p.Destroy(context.Background())
 	}()
 
-	h, err := handler.NewHandler(1024, 500, os.TempDir(), map[string]struct{}{}, map[string]struct{}{}, nil, p, &mockLog{}, false)
+	h, err := handler.NewHandler(1024, 500, os.TempDir(), map[string]struct{}{}, map[string]struct{}{}, nil, p, mockLog, false)
 	assert.NoError(t, err)
 
 	hs := &http.Server{Addr: ":8019", Handler: h}
@@ -1032,7 +1016,7 @@ func TestHandler_Multipart_POST(t *testing.T) {
 }
 
 func TestHandler_Multipart_PUT(t *testing.T) {
-	p, err := pool.Initialize(context.Background(),
+	p, err := pool.NewStaticPool(context.Background(),
 		func() *exec.Cmd { return exec.Command("php", "../../php_test_files/http/client.php", "data", "pipes") },
 		pipe.NewPipeFactory(),
 		&pool.Config{
@@ -1047,7 +1031,7 @@ func TestHandler_Multipart_PUT(t *testing.T) {
 		p.Destroy(context.Background())
 	}()
 
-	h, err := handler.NewHandler(1024, 500, os.TempDir(), map[string]struct{}{}, map[string]struct{}{}, nil, p, &mockLog{}, false)
+	h, err := handler.NewHandler(1024, 500, os.TempDir(), map[string]struct{}{}, map[string]struct{}{}, nil, p, mockLog, false)
 	assert.NoError(t, err)
 
 	hs := &http.Server{Addr: ":8020", Handler: h}
@@ -1154,7 +1138,7 @@ func TestHandler_Multipart_PUT(t *testing.T) {
 }
 
 func TestHandler_Multipart_PATCH(t *testing.T) {
-	p, err := pool.Initialize(context.Background(),
+	p, err := pool.NewStaticPool(context.Background(),
 		func() *exec.Cmd { return exec.Command("php", "../../php_test_files/http/client.php", "data", "pipes") },
 		pipe.NewPipeFactory(),
 		&pool.Config{
@@ -1169,7 +1153,7 @@ func TestHandler_Multipart_PATCH(t *testing.T) {
 		p.Destroy(context.Background())
 	}()
 
-	h, err := handler.NewHandler(1024, 500, os.TempDir(), map[string]struct{}{}, map[string]struct{}{}, nil, p, &mockLog{}, false)
+	h, err := handler.NewHandler(1024, 500, os.TempDir(), map[string]struct{}{}, map[string]struct{}{}, nil, p, mockLog, false)
 	assert.NoError(t, err)
 
 	hs := &http.Server{Addr: ":8021", Handler: h}
@@ -1278,7 +1262,7 @@ func TestHandler_Multipart_PATCH(t *testing.T) {
 }
 
 func TestHandler_Error(t *testing.T) {
-	p, err := pool.Initialize(context.Background(),
+	p, err := pool.NewStaticPool(context.Background(),
 		func() *exec.Cmd { return exec.Command("php", "../../php_test_files/http/client.php", "error", "pipes") },
 		pipe.NewPipeFactory(),
 		&pool.Config{
@@ -1293,7 +1277,7 @@ func TestHandler_Error(t *testing.T) {
 		p.Destroy(context.Background())
 	}()
 
-	h, err := handler.NewHandler(1024, 500, os.TempDir(), map[string]struct{}{}, map[string]struct{}{}, nil, p, &mockLog{}, false)
+	h, err := handler.NewHandler(1024, 500, os.TempDir(), map[string]struct{}{}, map[string]struct{}{}, nil, p, mockLog, false)
 	assert.NoError(t, err)
 
 	hs := &http.Server{Addr: ":8177", Handler: h}
@@ -1321,7 +1305,7 @@ func TestHandler_Error(t *testing.T) {
 }
 
 func TestHandler_Error2(t *testing.T) {
-	p, err := pool.Initialize(context.Background(),
+	p, err := pool.NewStaticPool(context.Background(),
 		func() *exec.Cmd {
 			return exec.Command("php", "../../php_test_files/http/client.php", "error2", "pipes")
 		},
@@ -1338,7 +1322,7 @@ func TestHandler_Error2(t *testing.T) {
 		p.Destroy(context.Background())
 	}()
 
-	h, err := handler.NewHandler(1024, 500, os.TempDir(), map[string]struct{}{}, map[string]struct{}{}, nil, p, &mockLog{}, false)
+	h, err := handler.NewHandler(1024, 500, os.TempDir(), map[string]struct{}{}, map[string]struct{}{}, nil, p, mockLog, false)
 	assert.NoError(t, err)
 
 	hs := &http.Server{Addr: ":8178", Handler: h}
@@ -1366,7 +1350,7 @@ func TestHandler_Error2(t *testing.T) {
 }
 
 func TestHandler_Error3(t *testing.T) {
-	p, err := pool.Initialize(context.Background(),
+	p, err := pool.NewStaticPool(context.Background(),
 		func() *exec.Cmd { return exec.Command("php", "../../php_test_files/http/client.php", "pid", "pipes") },
 		pipe.NewPipeFactory(),
 		&pool.Config{
@@ -1381,7 +1365,7 @@ func TestHandler_Error3(t *testing.T) {
 		p.Destroy(context.Background())
 	}()
 
-	h, err := handler.NewHandler(1, 500, os.TempDir(), map[string]struct{}{}, map[string]struct{}{}, nil, p, &mockLog{}, false)
+	h, err := handler.NewHandler(1, 500, os.TempDir(), map[string]struct{}{}, map[string]struct{}{}, nil, p, mockLog, false)
 	assert.NoError(t, err)
 
 	hs := &http.Server{Addr: ":8179", Handler: h}
@@ -1422,7 +1406,7 @@ func TestHandler_Error3(t *testing.T) {
 }
 
 func TestHandler_ResponseDuration(t *testing.T) {
-	p, err := pool.Initialize(context.Background(),
+	p, err := pool.NewStaticPool(context.Background(),
 		func() *exec.Cmd { return exec.Command("php", "../../php_test_files/http/client.php", "echo", "pipes") },
 		pipe.NewPipeFactory(),
 		&pool.Config{
@@ -1437,7 +1421,7 @@ func TestHandler_ResponseDuration(t *testing.T) {
 		p.Destroy(context.Background())
 	}()
 
-	h, err := handler.NewHandler(1024, 500, os.TempDir(), map[string]struct{}{}, map[string]struct{}{}, nil, p, &mockLog{}, false)
+	h, err := handler.NewHandler(1024, 500, os.TempDir(), map[string]struct{}{}, map[string]struct{}{}, nil, p, mockLog, false)
 	assert.NoError(t, err)
 
 	hs := &http.Server{Addr: ":8180", Handler: h}
@@ -1467,7 +1451,7 @@ func TestHandler_ResponseDuration(t *testing.T) {
 }
 
 func TestHandler_ResponseDurationDelayed(t *testing.T) {
-	p, err := pool.Initialize(context.Background(),
+	p, err := pool.NewStaticPool(context.Background(),
 		func() *exec.Cmd {
 			return exec.Command("php", "../../php_test_files/http/client.php", "echoDelay", "pipes")
 		},
@@ -1484,7 +1468,7 @@ func TestHandler_ResponseDurationDelayed(t *testing.T) {
 		p.Destroy(context.Background())
 	}()
 
-	h, err := handler.NewHandler(1024, 500, os.TempDir(), map[string]struct{}{}, map[string]struct{}{}, nil, p, &mockLog{}, false)
+	h, err := handler.NewHandler(1024, 500, os.TempDir(), map[string]struct{}{}, map[string]struct{}{}, nil, p, mockLog, false)
 	assert.NoError(t, err)
 
 	hs := &http.Server{Addr: ":8181", Handler: h}
@@ -1497,7 +1481,7 @@ func TestHandler_ResponseDurationDelayed(t *testing.T) {
 }
 
 func TestHandler_ErrorDuration(t *testing.T) {
-	p, err := pool.Initialize(context.Background(),
+	p, err := pool.NewStaticPool(context.Background(),
 		func() *exec.Cmd { return exec.Command("php", "../../php_test_files/http/client.php", "error", "pipes") },
 		pipe.NewPipeFactory(),
 		&pool.Config{
@@ -1512,7 +1496,7 @@ func TestHandler_ErrorDuration(t *testing.T) {
 		p.Destroy(context.Background())
 	}()
 
-	h, err := handler.NewHandler(1024, 500, os.TempDir(), map[string]struct{}{}, map[string]struct{}{}, nil, p, &mockLog{}, false)
+	h, err := handler.NewHandler(1024, 500, os.TempDir(), map[string]struct{}{}, map[string]struct{}{}, nil, p, mockLog, false)
 	assert.NoError(t, err)
 
 	hs := &http.Server{Addr: ":8182", Handler: h}
@@ -1555,7 +1539,7 @@ func TestHandler_IP(t *testing.T) {
 	assert.NoError(t, err)
 	assert.NotNil(t, cidrs)
 
-	p, err := pool.Initialize(context.Background(),
+	p, err := pool.NewStaticPool(context.Background(),
 		func() *exec.Cmd { return exec.Command("php", "../../php_test_files/http/client.php", "ip", "pipes") },
 		pipe.NewPipeFactory(),
 		&pool.Config{
@@ -1570,7 +1554,7 @@ func TestHandler_IP(t *testing.T) {
 		p.Destroy(context.Background())
 	}()
 
-	h, err := handler.NewHandler(1024, 500, os.TempDir(), map[string]struct{}{}, map[string]struct{}{}, cidrs, p, &mockLog{}, false)
+	h, err := handler.NewHandler(1024, 500, os.TempDir(), map[string]struct{}{}, map[string]struct{}{}, cidrs, p, mockLog, false)
 	assert.NoError(t, err)
 
 	hs := &http.Server{Addr: "127.0.0.1:8183", Handler: h}
@@ -1613,7 +1597,7 @@ func TestHandler_XRealIP(t *testing.T) {
 	assert.NoError(t, err)
 	assert.NotNil(t, cidrs)
 
-	p, err := pool.Initialize(context.Background(),
+	p, err := pool.NewStaticPool(context.Background(),
 		func() *exec.Cmd { return exec.Command("php", "../../php_test_files/http/client.php", "ip", "pipes") },
 		pipe.NewPipeFactory(),
 		&pool.Config{
@@ -1628,7 +1612,7 @@ func TestHandler_XRealIP(t *testing.T) {
 		p.Destroy(context.Background())
 	}()
 
-	h, err := handler.NewHandler(1024, 500, os.TempDir(), map[string]struct{}{}, map[string]struct{}{}, cidrs, p, &mockLog{}, false)
+	h, err := handler.NewHandler(1024, 500, os.TempDir(), map[string]struct{}{}, map[string]struct{}{}, cidrs, p, mockLog, false)
 	assert.NoError(t, err)
 
 	hs := &http.Server{Addr: "127.0.0.1:8184", Handler: h}
@@ -1676,7 +1660,7 @@ func TestHandler_XForwardedFor(t *testing.T) {
 	assert.NoError(t, err)
 	assert.NotNil(t, cidrs)
 
-	p, err := pool.Initialize(context.Background(),
+	p, err := pool.NewStaticPool(context.Background(),
 		func() *exec.Cmd { return exec.Command("php", "../../php_test_files/http/client.php", "ip", "pipes") },
 		pipe.NewPipeFactory(),
 		&pool.Config{
@@ -1691,7 +1675,7 @@ func TestHandler_XForwardedFor(t *testing.T) {
 		p.Destroy(context.Background())
 	}()
 
-	h, err := handler.NewHandler(1024, 500, os.TempDir(), map[string]struct{}{}, map[string]struct{}{}, cidrs, p, &mockLog{}, false)
+	h, err := handler.NewHandler(1024, 500, os.TempDir(), map[string]struct{}{}, map[string]struct{}{}, cidrs, p, mockLog, false)
 	assert.NoError(t, err)
 
 	hs := &http.Server{Addr: "127.0.0.1:8185", Handler: h}
@@ -1738,7 +1722,7 @@ func TestHandler_XForwardedFor_NotTrustedRemoteIp(t *testing.T) {
 	assert.NoError(t, err)
 	assert.NotNil(t, cidrs)
 
-	p, err := pool.Initialize(context.Background(),
+	p, err := pool.NewStaticPool(context.Background(),
 		func() *exec.Cmd { return exec.Command("php", "../../php_test_files/http/client.php", "ip", "pipes") },
 		pipe.NewPipeFactory(),
 		&pool.Config{
@@ -1753,7 +1737,7 @@ func TestHandler_XForwardedFor_NotTrustedRemoteIp(t *testing.T) {
 		p.Destroy(context.Background())
 	}()
 
-	h, err := handler.NewHandler(1024, 500, os.TempDir(), map[string]struct{}{}, map[string]struct{}{}, cidrs, p, &mockLog{}, false)
+	h, err := handler.NewHandler(1024, 500, os.TempDir(), map[string]struct{}{}, map[string]struct{}{}, cidrs, p, mockLog, false)
 	assert.NoError(t, err)
 
 	hs := &http.Server{Addr: "127.0.0.1:8186", Handler: h}
@@ -1783,7 +1767,7 @@ func TestHandler_XForwardedFor_NotTrustedRemoteIp(t *testing.T) {
 }
 
 func BenchmarkHandler_Listen_Echo(b *testing.B) {
-	p, err := pool.Initialize(context.Background(),
+	p, err := pool.NewStaticPool(context.Background(),
 		func() *exec.Cmd { return exec.Command("php", "../../php_test_files/http/client.php", "echo", "pipes") },
 		pipe.NewPipeFactory(),
 		&pool.Config{
@@ -1798,7 +1782,7 @@ func BenchmarkHandler_Listen_Echo(b *testing.B) {
 		p.Destroy(context.Background())
 	}()
 
-	h, err := handler.NewHandler(1024, 500, os.TempDir(), map[string]struct{}{}, map[string]struct{}{}, nil, p, &mockLog{}, false)
+	h, err := handler.NewHandler(1024, 500, os.TempDir(), map[string]struct{}{}, map[string]struct{}{}, nil, p, mockLog, false)
 	assert.NoError(b, err)
 
 	hs := &http.Server{Addr: ":8188", Handler: h}

@@ -2,18 +2,14 @@ package http
 
 import (
 	"net/http"
-
-	"github.com/spiral/roadrunner-plugins/v2/config"
 )
 
 // PluginMiddleware test
 type PluginMiddleware struct {
-	config config.Configurer
 }
 
 // Init test
-func (p *PluginMiddleware) Init(cfg config.Configurer) error {
-	p.config = cfg
+func (p *PluginMiddleware) Init() error {
 	return nil
 }
 
@@ -39,12 +35,10 @@ func (p *PluginMiddleware) Name() string {
 
 // PluginMiddleware2 test
 type PluginMiddleware2 struct {
-	config config.Configurer
 }
 
 // Init test
-func (p *PluginMiddleware2) Init(cfg config.Configurer) error {
-	p.config = cfg
+func (p *PluginMiddleware2) Init() error {
 	return nil
 }
 

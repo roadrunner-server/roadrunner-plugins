@@ -6,7 +6,7 @@ import (
 
 	json "github.com/json-iterator/go"
 	"github.com/nats-io/nats.go"
-	"github.com/spiral/roadrunner-plugins/v2/utils"
+	"github.com/spiral/roadrunner/v2/utils"
 )
 
 type Item struct {

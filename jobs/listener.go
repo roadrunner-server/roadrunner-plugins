@@ -4,7 +4,8 @@ import (
 	"sync/atomic"
 	"time"
 
-	"github.com/spiral/roadrunner-plugins/v2/api/jobs"
+	"github.com/spiral/roadrunner-plugins/v2/api/v2/jobs"
+	"go.uber.org/zap"
 )
 
 func (p *Plugin) listener() { //nolint:gocognit
@@ -13,7 +14,7 @@ func (p *Plugin) listener() { //nolint:gocognit
 			for {
 				select {
 				case <-p.stopCh:
-					p.log.Debug("------> job poller stopped <------")
+					p.log.Debug("------> job poller was stopped <------")
 					return
 				default:
 					start := time.Now()
@@ -30,16 +31,16 @@ func (p *Plugin) listener() { //nolint:gocognit
 						5. Pipeline name
 					*/
 
-					p.log.Debug("job processing started", "ID", jb.ID(), "start", start, "elapsed", time.Since(start))
+					p.log.Debug("job processing was started", zap.String("ID", jb.ID()), zap.Time("start", start), zap.Duration("elapsed", time.Since(start)))
 
 					ctx, err := jb.Context()
 					if err != nil {
 						atomic.AddUint64(p.metrics.jobsErr, 1)
-						p.log.Error("job marshal error", "error", err, "ID", jb.ID(), "start", start, "elapsed", time.Since(start))
+						p.log.Error("job marshal error", zap.Error(err), zap.String("ID", jb.ID()), zap.Time("start", start), zap.Duration("elapsed", time.Since(start)))
 
 						errNack := jb.(jobs.Acknowledger).Nack()
 						if errNack != nil {
-							p.log.Error("negatively acknowledge failed", "ID", jb.ID(), "error", errNack)
+							p.log.Error("negatively acknowledge was failed", zap.String("ID", jb.ID()), zap.Error(errNack))
 						}
 						continue
 					}
@@ -53,7 +54,7 @@ func (p *Plugin) listener() { //nolint:gocognit
 					p.RUnlock()
 					if err != nil {
 						atomic.AddUint64(p.metrics.jobsErr, 1)
-						p.log.Error("job processed with errors", "error", err, "ID", jb.ID(), "start", start, "elapsed", time.Since(start))
+						p.log.Error("job processed with errors", zap.Error(err), zap.String("ID", jb.ID()), zap.Time("start", start), zap.Duration("elapsed", time.Since(start)))
 						if _, ok := jb.(jobs.Acknowledger); !ok {
 							p.log.Error("job execute failed, job is not a Acknowledger, skipping Ack/Nack")
 							p.putPayload(exec)
@@ -62,10 +63,10 @@ func (p *Plugin) listener() { //nolint:gocognit
 						// RR protocol level error, Nack the job
 						errNack := jb.(jobs.Acknowledger).Nack()
 						if errNack != nil {
-							p.log.Error("negatively acknowledge failed", "ID", jb.ID(), "error", errNack)
+							p.log.Error("negatively acknowledge failed", zap.String("ID", jb.ID()), zap.Error(errNack))
 						}
 
-						p.log.Error("job execute failed", "error", err)
+						p.log.Error("job execute failed", zap.Error(err))
 						p.putPayload(exec)
 						jb = nil
 						continue
@@ -83,12 +84,12 @@ func (p *Plugin) listener() { //nolint:gocognit
 						err = jb.(jobs.Acknowledger).Ack()
 						if err != nil {
 							atomic.AddUint64(p.metrics.jobsErr, 1)
-							p.log.Error("acknowledge error, job might be missed", "error", err, "ID", jb.ID(), "start", start, "elapsed", time.Since(start))
+							p.log.Error("acknowledge error, job might be missed", zap.Error(err), zap.String("ID", jb.ID()), zap.Time("start", start), zap.Duration("elapsed", time.Since(start)))
 							jb = nil
 							continue
 						}
 
-						p.log.Debug("job processed successfully", "ID", jb.ID(), "start", start, "elapsed", time.Since(start))
+						p.log.Debug("job was processed successfully", zap.String("ID", jb.ID()), zap.Time("start", start), zap.Duration("elapsed", time.Since(start)))
 						// metrics
 						atomic.AddUint64(p.metrics.jobsOk, 1)
 
@@ -100,16 +101,16 @@ func (p *Plugin) listener() { //nolint:gocognit
 					err = p.respHandler.Handle(resp, jb.(jobs.Acknowledger))
 					if err != nil {
 						atomic.AddUint64(p.metrics.jobsErr, 1)
-						p.log.Error("response handler error", "error", err, "ID", jb.ID(), "start", start, "elapsed", time.Since(start))
+						p.log.Error("response handler error", zap.Error(err), zap.String("ID", jb.ID()), zap.Time("start", start), zap.Duration("elapsed", time.Since(start)))
 						p.putPayload(exec)
 						errNack := jb.(jobs.Acknowledger).Nack()
 						if errNack != nil {
-							p.log.Error("negatively acknowledge failed, job might be lost", "ID", jb.ID(), "root error", err, "error nack", errNack)
+							p.log.Error("negatively acknowledge failed, job might be lost", zap.String("ID", jb.ID()), zap.Error(err), zap.Error(errNack))
 							jb = nil
 							continue
 						}
 
-						p.log.Error("job negatively acknowledged", "error", err)
+						p.log.Error("job negatively acknowledged", zap.Error(err))
 						jb = nil
 						continue
 					}
@@ -117,7 +118,7 @@ func (p *Plugin) listener() { //nolint:gocognit
 					// metrics
 					atomic.AddUint64(p.metrics.jobsOk, 1)
 
-					p.log.Debug("job processed successfully", "ID", jb.ID(), "start", start, "elapsed", time.Since(start))
+					p.log.Debug("job was processed successfully", zap.String("ID", jb.ID()), zap.Time("start", start), zap.Duration("elapsed", time.Since(start)))
 
 					// return payload
 					p.putPayload(exec)

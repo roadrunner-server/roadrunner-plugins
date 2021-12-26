@@ -5,21 +5,21 @@ import (
 	"fmt"
 
 	"github.com/spiral/errors"
-	"github.com/spiral/roadrunner-plugins/v2/api/pubsub"
-	"github.com/spiral/roadrunner-plugins/v2/logger"
+	"github.com/spiral/roadrunner-plugins/v2/api/v2/pubsub"
+	"go.uber.org/zap"
 )
 
 const Plugin1Name = "plugin1"
 
 type Plugin1 struct {
-	log    logger.Logger
+	log    *zap.Logger
 	b      pubsub.Broadcaster
 	driver pubsub.SubReader
 	ctx    context.Context
 	cancel context.CancelFunc
 }
 
-func (p *Plugin1) Init(log logger.Logger, b pubsub.Broadcaster) error {
+func (p *Plugin1) Init(log *zap.Logger, b pubsub.Broadcaster) error {
 	p.log = log
 	p.b = b
 	p.ctx, p.cancel = context.WithCancel(context.Background())

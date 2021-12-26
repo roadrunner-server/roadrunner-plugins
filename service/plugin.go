@@ -4,9 +4,9 @@ import (
 	"sync"
 
 	"github.com/spiral/errors"
-	"github.com/spiral/roadrunner-plugins/v2/config"
-	"github.com/spiral/roadrunner-plugins/v2/logger"
+	"github.com/spiral/roadrunner-plugins/v2/api/v2/config"
 	"github.com/spiral/roadrunner/v2/state/process"
+	"go.uber.org/zap"
 )
 
 const PluginName string = "service"
@@ -14,14 +14,14 @@ const PluginName string = "service"
 type Plugin struct {
 	sync.Mutex
 
-	logger logger.Logger
+	logger *zap.Logger
 	cfg    Config
 
 	// all processes attached to the service
 	processes []*Process
 }
 
-func (service *Plugin) Init(cfg config.Configurer, log logger.Logger) error {
+func (service *Plugin) Init(cfg config.Configurer, log *zap.Logger) error {
 	const op = errors.Op("service_plugin_init")
 	if !cfg.Has(PluginName) {
 		return errors.E(errors.Disabled)
@@ -104,8 +104,4 @@ func (service *Plugin) Stop() error {
 // Name contains service name.
 func (service *Plugin) Name() string {
 	return PluginName
-}
-
-// Available interface implementation
-func (service *Plugin) Available() {
 }

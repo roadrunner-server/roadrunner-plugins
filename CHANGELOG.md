@@ -154,6 +154,14 @@ Now, pipelines have only `driver` key with the configuration under the `config` 
         delete_after_ack: false
 ```
 
+- ✏️ Logger unification. Starting this version we bound our logs to the `uber/zap` log library as one of the most popular and extensible.
+- ✏️ API stabilization. All `v2` api interfaces moved to the `api/v2/` directory. Except logger, all plugins depends only on the interfaces and don't import each other.
+- ✏️ `protoc` updated to the version `v3.19.1`.
+
+## 🩹 Fixes:
+
+- 🐛 Fix: 200 HTTP status code instead of 400 on readiness/health bad requests. [BUG](https://github.com/spiral/roadrunner-plugins/issues/180)
+
 ---
 
 ## v2.6.6 (15.12.2021)

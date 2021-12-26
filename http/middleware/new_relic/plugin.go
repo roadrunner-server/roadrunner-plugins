@@ -7,8 +7,8 @@ import (
 
 	"github.com/newrelic/go-agent/v3/newrelic"
 	"github.com/spiral/errors"
-	"github.com/spiral/roadrunner-plugins/v2/config"
-	"github.com/spiral/roadrunner-plugins/v2/utils"
+	"github.com/spiral/roadrunner-plugins/v2/api/v2/config"
+	"github.com/spiral/roadrunner/v2/utils"
 )
 
 const (

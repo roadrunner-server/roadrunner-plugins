@@ -73,11 +73,6 @@ func NewProxy(name string, metadata string, grpcPool pool.Pool, mu *sync.RWMutex
 	}
 }
 
-// UpdatePool should be called to update pool pointer
-func (p *Proxy) UpdatePool(grpcPool pool.Pool) {
-	p.grpcPool = grpcPool
-}
-
 // RegisterMethod registers new RPC method.
 func (p *Proxy) RegisterMethod(method string) {
 	p.methods = append(p.methods, method)

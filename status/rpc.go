@@ -2,42 +2,47 @@ package status
 
 import (
 	"github.com/spiral/errors"
-	"github.com/spiral/roadrunner-plugins/v2/logger"
+	"github.com/spiral/roadrunner-plugins/v2/api/v2/status"
+	"go.uber.org/zap"
 )
 
 type rpc struct {
 	srv *Plugin
-	log logger.Logger
+	log *zap.Logger
 }
 
 // Status return current status of the provided plugin
-func (rpc *rpc) Status(service string, status *Status) error {
+func (rpc *rpc) Status(service string, status *status.Status) error {
 	const op = errors.Op("checker_rpc_status")
-	rpc.log.Debug("started Status method", "service", service)
+	rpc.log.Debug("Status method was invoked", zap.String("plugin", service))
 	st, err := rpc.srv.status(service)
 	if err != nil {
 		return errors.E(op, err)
 	}
 
-	*status = st
+	if st != nil {
+		*status = *st
+	}
 
-	rpc.log.Debug("status code", "code", st.Code)
+	rpc.log.Debug("status code", zap.Int("code", st.Code))
 	rpc.log.Debug("successfully finished the Status method")
 	return nil
 }
 
-// Status return current status of the provided plugin
-func (rpc *rpc) Ready(service string, status *Status) error {
+// Ready return the readiness check of the provided plugin
+func (rpc *rpc) Ready(service string, status *status.Status) error {
 	const op = errors.Op("checker_rpc_ready")
-	rpc.log.Debug("started Ready method", "service", service)
+	rpc.log.Debug("Ready method was invoked", zap.String("plugin", service))
 	st, err := rpc.srv.ready(service)
 	if err != nil {
 		return errors.E(op, err)
 	}
 
-	*status = st
+	if st != nil {
+		*status = *st
+	}
 
-	rpc.log.Debug("status code", "code", st.Code)
+	rpc.log.Debug("status code", zap.Int("code", st.Code))
 	rpc.log.Debug("successfully finished the Ready method")
 	return nil
 }

@@ -8,13 +8,13 @@ import (
 
 	"github.com/google/uuid"
 	rrErrors "github.com/spiral/errors"
-	"github.com/spiral/roadrunner-plugins/v2/config"
-	"github.com/spiral/roadrunner-plugins/v2/logger"
-	"github.com/spiral/roadrunner-plugins/v2/server"
+	"github.com/spiral/roadrunner-plugins/v2/api/v2/config"
+	"github.com/spiral/roadrunner-plugins/v2/api/v2/server"
 	"github.com/spiral/roadrunner-plugins/v2/tcp/handler"
-	"github.com/spiral/roadrunner-plugins/v2/utils"
 	"github.com/spiral/roadrunner/v2/payload"
 	"github.com/spiral/roadrunner/v2/pool"
+	"github.com/spiral/roadrunner/v2/utils"
+	"go.uber.org/zap"
 )
 
 const (
@@ -25,7 +25,7 @@ const (
 type Plugin struct {
 	sync.RWMutex
 	cfg         *Config
-	log         logger.Logger
+	log         *zap.Logger
 	server      server.Server
 	connections sync.Map // uuid -> conn
 
@@ -38,7 +38,7 @@ type Plugin struct {
 	pldPool      sync.Pool
 }
 
-func (p *Plugin) Init(log logger.Logger, cfg config.Configurer, server server.Server) error {
+func (p *Plugin) Init(log *zap.Logger, cfg config.Configurer, server server.Server) error {
 	const op = rrErrors.Op("tcp_plugin_init")
 
 	if !cfg.Has(pluginName) {
@@ -111,9 +111,9 @@ func (p *Plugin) Serve() chan error {
 			p.listeners.Store(uuid.NewString(), l)
 
 			for {
-				conn, err := l.Accept()
-				if err != nil {
-					p.log.Warn("connection accept failed", "error", err)
+				conn, errA := l.Accept()
+				if errA != nil {
+					p.log.Warn("failed to accept the connection", zap.Error(errA))
 					// just stop
 					return
 				}
@@ -153,12 +153,14 @@ func (p *Plugin) Stop() error {
 func (p *Plugin) Reset() error {
 	p.Lock()
 	defer p.Unlock()
-
-	var err error
-	p.wPool, err = p.server.NewWorkerPool(context.Background(), p.cfg.Pool, map[string]string{RrMode: pluginName})
+	const op = rrErrors.Op("tcp_reset")
+	p.log.Info("reset signal was received")
+	err := p.wPool.Reset(context.Background())
 	if err != nil {
-		return err
+		return rrErrors.E(op, err)
 	}
+
+	p.log.Info("plugin was successfully reset")
 
 	return nil
 }

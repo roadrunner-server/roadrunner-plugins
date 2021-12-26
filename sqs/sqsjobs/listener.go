@@ -8,6 +8,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/sqs"
 	"github.com/aws/aws-sdk-go-v2/service/sqs/types"
 	"github.com/aws/smithy-go"
+	"go.uber.org/zap"
 )
 
 const (
@@ -22,7 +23,7 @@ func (c *consumer) listen(ctx context.Context) { //nolint:gocognit
 	for {
 		select {
 		case <-c.pauseCh:
-			c.log.Debug("sqs listener stopped")
+			c.log.Debug("sqs listener was stopped")
 			return
 		default:
 			message, err := c.client.ReceiveMessage(ctx, &sqs.ReceiveMessageInput{
@@ -42,10 +43,10 @@ func (c *consumer) listen(ctx context.Context) { //nolint:gocognit
 						if apiErr, ok := rErr.Err.(*smithy.GenericAPIError); ok {
 							// in case of NonExistentQueue - recreate the queue
 							if apiErr.Code == NonExistentQueue {
-								c.log.Error("receive message", "error code", apiErr.ErrorCode(), "message", apiErr.ErrorMessage(), "error fault", apiErr.ErrorFault())
+								c.log.Error("receive message", zap.String("error code", apiErr.ErrorCode()), zap.String("message", apiErr.ErrorMessage()), zap.String("error fault", apiErr.ErrorFault().String()))
 								_, err = c.client.CreateQueue(context.Background(), &sqs.CreateQueueInput{QueueName: c.queue, Attributes: c.attributes, Tags: c.tags})
 								if err != nil {
-									c.log.Error("create queue", "error", err)
+									c.log.Error("create queue", zap.Error(err))
 								}
 								// To successfully create a new queue, you must provide a
 								// queue name that adheres to the limits related to the queues
@@ -60,7 +61,7 @@ func (c *consumer) listen(ctx context.Context) { //nolint:gocognit
 					}
 				}
 
-				c.log.Error("receive message", "error", err)
+				c.log.Error("receive message", zap.Error(err))
 				continue
 			}
 
@@ -73,10 +74,10 @@ func (c *consumer) listen(ctx context.Context) { //nolint:gocognit
 						ReceiptHandle: m.ReceiptHandle,
 					})
 					if errD != nil {
-						c.log.Error("message unpack, failed to delete the message from the queue", "error", err)
+						c.log.Error("message unpack, failed to delete the message from the queue", zap.Error(err))
 					}
 
-					c.log.Error("message unpack", "error", err)
+					c.log.Error("message unpack", zap.Error(err))
 					continue
 				}
 

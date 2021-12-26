@@ -7,17 +7,17 @@ import (
 	"os/exec"
 	"strings"
 	"sync"
+	"time"
 
 	"github.com/spiral/errors"
-	"github.com/spiral/roadrunner-plugins/v2/config"
-	"github.com/spiral/roadrunner-plugins/v2/logger"
-	"github.com/spiral/roadrunner/v2/events"
+	"go.uber.org/zap"
 
-	"github.com/spiral/roadrunner-plugins/v2/utils"
+	"github.com/spiral/roadrunner-plugins/v2/api/v2/config"
 	"github.com/spiral/roadrunner/v2/pool"
 	"github.com/spiral/roadrunner/v2/transport"
 	"github.com/spiral/roadrunner/v2/transport/pipe"
 	"github.com/spiral/roadrunner/v2/transport/socket"
+	"github.com/spiral/roadrunner/v2/utils"
 	"github.com/spiral/roadrunner/v2/worker"
 )
 
@@ -33,13 +33,6 @@ const (
 
 	// RrRPC env variable key (internal) if the RPC presents
 	RrRPC string = "RR_RPC"
-
-	// Event types server subscribed. It listens only for the sdk system events.
-
-	poolEvents       string = "pool.*"
-	workerEvents     string = "worker.*"
-	watcherEvents    string = "worker_watcher.*"
-	supervisorEvents string = "supervisor.*"
 )
 
 // Plugin manages worker
@@ -51,13 +44,14 @@ type Plugin struct {
 	preparedCmd  []string
 	preparedEnvs []string
 
-	log     logger.Logger
+	log     *zap.Logger
 	factory transport.Factory
-	stopCh  chan struct{}
+
+	pools []pool.Pool
 }
 
 // Init application provider.
-func (p *Plugin) Init(cfg config.Configurer, log logger.Logger) error {
+func (p *Plugin) Init(cfg config.Configurer, log *zap.Logger) error {
 	const op = errors.Op("server_plugin_init")
 	if !cfg.Has(PluginName) {
 		return errors.E(op, errors.Disabled)
@@ -84,8 +78,6 @@ func (p *Plugin) Init(cfg config.Configurer, log logger.Logger) error {
 	}
 
 	p.log = log
-	p.stopCh = make(chan struct{})
-
 	p.preparedCmd = append(p.preparedCmd, strings.Split(p.cfg.Command, " ")...)
 
 	p.preparedEnvs = append(os.Environ(), fmt.Sprintf(RrRelay+"=%s", p.cfg.Relay))
@@ -100,6 +92,8 @@ func (p *Plugin) Init(cfg config.Configurer, log logger.Logger) error {
 		}
 	}
 
+	p.pools = make([]pool.Pool, 0, 4)
+
 	return nil
 }
 
@@ -112,12 +106,10 @@ func (p *Plugin) Name() string {
 func (p *Plugin) Serve() chan error {
 	errCh := make(chan error, 1)
 
-	go p.startEventsBus(errCh)
-
 	if p.cfg.OnInit != nil {
 		err := p.runOnInitCommand()
 		if err != nil {
-			p.log.Error("on_init finished with errors, RR continues to run", "error", err)
+			p.log.Error("on_init was finished with errors", zap.Error(err))
 		}
 	}
 
@@ -126,17 +118,23 @@ func (p *Plugin) Serve() chan error {
 
 // Stop used to close chosen in config factory
 func (p *Plugin) Stop() error {
-	if p.factory == nil {
-		return nil
+	p.Lock()
+	defer p.Unlock()
+
+	// destroy all pools
+	for i := 0; i < len(p.pools); i++ {
+		if p.pools[i] != nil {
+			p.pools[i].Destroy(context.Background())
+		}
 	}
 
-	p.stopCh <- struct{}{}
-
+	// just to be sure, that all logs are synced
+	time.Sleep(time.Second)
 	return p.factory.Close()
 }
 
 // CmdFactory provides worker command factory associated with given context.
-func (p *Plugin) CmdFactory(env Env) func() *exec.Cmd {
+func (p *Plugin) CmdFactory(env map[string]string) func() *exec.Cmd {
 	return func() *exec.Cmd {
 		var cmd *exec.Cmd
 
@@ -172,7 +170,7 @@ func (p *Plugin) CmdFactory(env Env) func() *exec.Cmd {
 }
 
 // NewWorker issues new standalone worker.
-func (p *Plugin) NewWorker(ctx context.Context, env Env) (*worker.Process, error) {
+func (p *Plugin) NewWorker(ctx context.Context, env map[string]string) (*worker.Process, error) {
 	const op = errors.Op("server_plugin_new_worker")
 
 	spawnCmd := p.CmdFactory(env)
@@ -186,10 +184,17 @@ func (p *Plugin) NewWorker(ctx context.Context, env Env) (*worker.Process, error
 }
 
 // NewWorkerPool issues new worker pool.
-func (p *Plugin) NewWorkerPool(ctx context.Context, opt *pool.Config, env Env) (pool.Pool, error) {
+func (p *Plugin) NewWorkerPool(ctx context.Context, opt *pool.Config, env map[string]string) (pool.Pool, error) {
 	p.Lock()
 	defer p.Unlock()
-	return pool.Initialize(ctx, p.CmdFactory(env), p.factory, opt)
+
+	pl, err := pool.NewStaticPool(ctx, p.CmdFactory(env), p.factory, opt, pool.WithLogger(p.log))
+	if err != nil {
+		return nil, err
+	}
+	p.pools = append(p.pools, pl)
+
+	return pl, nil
 }
 
 // creates relay and worker factory.
@@ -217,43 +222,5 @@ func (p *Plugin) initFactory() (transport.Factory, error) {
 		return socket.NewSocketServer(lsn, p.cfg.RelayTimeout), nil
 	default:
 		return nil, errors.E(op, errors.Network, errors.Str("invalid DSN (tcp://:6001, unix://file.sock)"))
-	}
-}
-
-func (p *Plugin) startEventsBus(errCh chan<- error) {
-	eb, id := events.Bus()
-	eventsCh := make(chan events.Event, 10)
-
-	err := eb.SubscribeP(id, poolEvents, eventsCh)
-	if err != nil {
-		errCh <- err
-		return
-	}
-
-	err = eb.SubscribeP(id, workerEvents, eventsCh)
-	if err != nil {
-		errCh <- err
-		return
-	}
-	err = eb.SubscribeP(id, watcherEvents, eventsCh)
-	if err != nil {
-		errCh <- err
-		return
-	}
-
-	err = eb.SubscribeP(id, supervisorEvents, eventsCh)
-	if err != nil {
-		errCh <- err
-		return
-	}
-
-	for {
-		select {
-		case event := <-eventsCh:
-			p.log.Info(event.Message())
-		case <-p.stopCh:
-			eb.Unsubscribe(id)
-			return
-		}
 	}
 }

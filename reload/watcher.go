@@ -8,7 +8,7 @@ import (
 	"time"
 
 	"github.com/spiral/errors"
-	"github.com/spiral/roadrunner-plugins/v2/logger"
+	"go.uber.org/zap"
 )
 
 // SimpleHook is used to filter by simple criteria, CONTAINS
@@ -63,23 +63,19 @@ type Watcher struct {
 	watcherConfigs map[string]WatcherConfig
 
 	// logger
-	log logger.Logger
+	log *zap.Logger
 }
 
 // Options is used to set Watcher Options
 type Options func(*Watcher)
 
 // NewWatcher returns new instance of File Watcher
-func NewWatcher(configs []WatcherConfig, log logger.Logger, options ...Options) (*Watcher, error) {
+func NewWatcher(configs []WatcherConfig, log *zap.Logger, options ...Options) (*Watcher, error) {
 	w := &Watcher{
-		Event: make(chan Event),
-		mu:    &sync.Mutex{},
-
-		log: log,
-
-		close: make(chan struct{}),
-
-		//workingDir:     workDir,
+		Event:          make(chan Event),
+		mu:             &sync.Mutex{},
+		log:            log,
+		close:          make(chan struct{}),
 		watcherConfigs: make(map[string]WatcherConfig),
 	}
 
@@ -313,7 +309,7 @@ func (w *Watcher) pollEvents(serviceName string, files map[string]os.FileInfo) {
 	for pth := range w.watcherConfigs[serviceName].Files {
 		if _, found := files[pth]; !found {
 			removes[pth] = w.watcherConfigs[serviceName].Files[pth]
-			w.log.Debug("file added to the list of removed files", "path", pth, "name", w.watcherConfigs[serviceName].Files[pth].Name(), "size", w.watcherConfigs[serviceName].Files[pth].Size())
+			w.log.Debug("file added to the list of removed files", zap.String("path", pth), zap.String("name", w.watcherConfigs[serviceName].Files[pth].Name()), zap.Int64("size", w.watcherConfigs[serviceName].Files[pth].Size()))
 		}
 	}
 
@@ -326,13 +322,13 @@ func (w *Watcher) pollEvents(serviceName string, files map[string]os.FileInfo) {
 		if !found {
 			// A file was created.
 			creates[pth] = files[pth]
-			w.log.Debug("file was created", "path", pth, "name", files[pth].Name(), "size", files[pth].Size())
+			w.log.Debug("file was created", zap.String("path", pth), zap.String("name", files[pth].Name()), zap.Int64("size", files[pth].Size()))
 			continue
 		}
 
 		if oldInfo.ModTime() != files[pth].ModTime() || oldInfo.Mode() != files[pth].Mode() {
 			w.watcherConfigs[serviceName].Files[pth] = files[pth]
-			w.log.Debug("file was updated", "path", pth, "name", files[pth].Name(), "size", files[pth].Size())
+			w.log.Debug("file was updated", zap.String("path", pth), zap.String("name", files[pth].Name()), zap.Int64("size", files[pth].Size()))
 			w.Event <- Event{
 				Path:    pth,
 				Info:    files[pth],
@@ -345,7 +341,7 @@ func (w *Watcher) pollEvents(serviceName string, files map[string]os.FileInfo) {
 	for pth := range creates {
 		// add file to the plugin watch files
 		w.watcherConfigs[serviceName].Files[pth] = creates[pth]
-		w.log.Debug("file was added to watcher", "path", pth, "name", creates[pth].Name(), "size", creates[pth].Size())
+		w.log.Debug("file was added to watcher", zap.String("path", pth), zap.String("name", creates[pth].Name()), zap.Int64("size", creates[pth].Size()))
 
 		w.Event <- Event{
 			Path:    pth,
@@ -357,7 +353,7 @@ func (w *Watcher) pollEvents(serviceName string, files map[string]os.FileInfo) {
 	for pth := range removes {
 		// delete path from the config
 		delete(w.watcherConfigs[serviceName].Files, pth)
-		w.log.Debug("file was removed from watcher", "path", pth, "name", removes[pth].Name(), "size", removes[pth].Size())
+		w.log.Debug("file was removed from watcher", zap.String("path", pth), zap.String("name", removes[pth].Name()), zap.Int64("size", removes[pth].Size()))
 
 		w.Event <- Event{
 			Path:    pth,

@@ -10,14 +10,12 @@ import (
 	"testing"
 	"time"
 
-	"github.com/golang/mock/gomock"
 	endure "github.com/spiral/endure/pkg/container"
 	"github.com/spiral/roadrunner-plugins/v2/config"
 	httpPlugin "github.com/spiral/roadrunner-plugins/v2/http"
 	"github.com/spiral/roadrunner-plugins/v2/logger"
 	"github.com/spiral/roadrunner-plugins/v2/rpc"
 	"github.com/spiral/roadrunner-plugins/v2/server"
-	"github.com/spiral/roadrunner-plugins/v2/tests/mocks"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -89,16 +87,9 @@ func TestLoggerRawErr(t *testing.T) {
 	cfg.Path = "configs/.rr-raw-mode.yaml"
 	cfg.Prefix = "rr"
 
-	controller := gomock.NewController(t)
-	mockLogger := mocks.NewMockLogger(controller)
-
-	mockLogger.EXPECT().Info(gomock.Any()).AnyTimes()
-	mockLogger.EXPECT().Info("event", "type", "EventWorkerStderr", "message", gomock.Any(), "plugin", "worker").AnyTimes()
-	mockLogger.EXPECT().Debug("http server is running", "address", gomock.Any()).AnyTimes()
-
 	err = cont.RegisterAll(
 		cfg,
-		mockLogger,
+		&logger.ZapLogger{},
 		&server.Plugin{},
 		&httpPlugin.Plugin{},
 	)

@@ -4,12 +4,12 @@ import (
 	"sync"
 
 	"github.com/spiral/errors"
-	"github.com/spiral/roadrunner-plugins/v2/api/kv"
-	"github.com/spiral/roadrunner-plugins/v2/api/pubsub"
-	"github.com/spiral/roadrunner-plugins/v2/config"
-	"github.com/spiral/roadrunner-plugins/v2/logger"
+	"github.com/spiral/roadrunner-plugins/v2/api/v2/config"
+	"github.com/spiral/roadrunner-plugins/v2/api/v2/kv"
+	"github.com/spiral/roadrunner-plugins/v2/api/v2/pubsub"
 	redis_kv "github.com/spiral/roadrunner-plugins/v2/redis/kv"
 	redis_pubsub "github.com/spiral/roadrunner-plugins/v2/redis/pubsub"
+	"go.uber.org/zap"
 )
 
 const PluginName = "redis"
@@ -19,10 +19,10 @@ type Plugin struct {
 	// config for RR integration
 	cfgPlugin config.Configurer
 	// logger
-	log logger.Logger
+	log *zap.Logger
 }
 
-func (p *Plugin) Init(cfg config.Configurer, log logger.Logger) error {
+func (p *Plugin) Init(cfg config.Configurer, log *zap.Logger) error {
 	p.log = log
 	p.cfgPlugin = cfg
 

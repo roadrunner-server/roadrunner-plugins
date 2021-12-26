@@ -10,7 +10,7 @@ import (
 	"sync"
 
 	json "github.com/json-iterator/go"
-	"github.com/spiral/roadrunner-plugins/v2/logger"
+	"go.uber.org/zap"
 )
 
 const (
@@ -48,7 +48,7 @@ func (u *Uploads) MarshalJSON() ([]byte, error) {
 
 // Open moves all uploaded files to temp directory, return error in case of issue with temp directory. File errors
 // will be handled individually.
-func (u *Uploads) Open(log logger.Logger, dir string, forbid, allow map[string]struct{}) {
+func (u *Uploads) Open(log *zap.Logger, dir string, forbid, allow map[string]struct{}) {
 	var wg sync.WaitGroup
 	for i := 0; i < len(u.list); i++ {
 		wg.Add(1)
@@ -56,7 +56,7 @@ func (u *Uploads) Open(log logger.Logger, dir string, forbid, allow map[string]s
 			defer wg.Done()
 			err := f.Open(dir, forbid, allow)
 			if err != nil && log != nil {
-				log.Error("error opening the file", "err", err)
+				log.Error("error opening the file", zap.Error(err))
 			}
 		}(u.list[i])
 	}
@@ -65,12 +65,12 @@ func (u *Uploads) Open(log logger.Logger, dir string, forbid, allow map[string]s
 }
 
 // Clear deletes all temporary files.
-func (u *Uploads) Clear(log logger.Logger) {
+func (u *Uploads) Clear(log *zap.Logger) {
 	for _, f := range u.list {
 		if f.TempFilename != "" && exists(f.TempFilename) {
 			err := os.Remove(f.TempFilename)
 			if err != nil && log != nil {
-				log.Error("error removing the file", "err", err)
+				log.Error("error removing the file", zap.Error(err))
 			}
 		}
 	}

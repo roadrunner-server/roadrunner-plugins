@@ -7,7 +7,7 @@ import (
 	"os"
 	"strings"
 
-	"github.com/spiral/roadrunner-plugins/v2/logger"
+	"go.uber.org/zap"
 )
 
 const (
@@ -19,10 +19,10 @@ const (
 )
 
 type Plugin struct {
-	log logger.Logger
+	log *zap.Logger
 }
 
-func (p *Plugin) Init(log logger.Logger) error {
+func (p *Plugin) Init(log *zap.Logger) error {
 	p.log = log
 	return nil
 }
@@ -87,7 +87,7 @@ func (p *Plugin) Middleware(next http.Handler) http.Handler { //nolint:gocognit
 				_, err = w.Write(buf)
 				if err != nil {
 					// we can't write response into the response writer
-					p.log.Error("write response", "error", err)
+					p.log.Error("write response", zap.Error(err))
 					return
 				}
 

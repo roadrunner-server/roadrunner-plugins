@@ -2,6 +2,7 @@ package http
 
 import (
 	"context"
+	stderr "errors"
 	"log"
 	"net/http"
 	"sync"
@@ -10,17 +11,18 @@ import (
 	"github.com/mholt/acmez"
 	endure "github.com/spiral/endure/pkg/container"
 	"github.com/spiral/errors"
-	"github.com/spiral/roadrunner-plugins/v2/config"
+	"github.com/spiral/roadrunner-plugins/v2/api/v2/config"
+	"github.com/spiral/roadrunner-plugins/v2/api/v2/middleware"
+	"github.com/spiral/roadrunner-plugins/v2/api/v2/server"
+	"github.com/spiral/roadrunner-plugins/v2/api/v2/status"
 	"github.com/spiral/roadrunner-plugins/v2/http/attributes"
 	httpConfig "github.com/spiral/roadrunner-plugins/v2/http/config"
 	"github.com/spiral/roadrunner-plugins/v2/http/handler"
 	"github.com/spiral/roadrunner-plugins/v2/logger"
-	"github.com/spiral/roadrunner-plugins/v2/server"
-	"github.com/spiral/roadrunner-plugins/v2/status"
-	"github.com/spiral/roadrunner/v2/events"
 	"github.com/spiral/roadrunner/v2/pool"
 	"github.com/spiral/roadrunner/v2/state/process"
 	"github.com/spiral/roadrunner/v2/worker"
+	"go.uber.org/zap"
 	"golang.org/x/net/http2"
 	"golang.org/x/net/http2/h2c"
 )
@@ -35,20 +37,13 @@ const (
 	Scheme = "https"
 )
 
-// Middleware interface
-type Middleware interface {
-	Middleware(f http.Handler) http.Handler
-}
-
-type middleware map[string]Middleware
-
 // Plugin manages pool, http servers. The main http plugin structure
 type Plugin struct {
 	mu sync.RWMutex
 
 	// plugins
 	server server.Server
-	log    logger.Logger
+	log    *zap.Logger
 	// stdlog passed to the http/https/fcgi servers to log their internal messages
 	stdLog *log.Logger
 
@@ -56,11 +51,7 @@ type Plugin struct {
 	cfg *httpConfig.HTTP `mapstructure:"http"`
 
 	// middlewares to chain
-	mdwr middleware
-
-	// events bus
-	events   events.EventBus
-	eventsID string
+	mdwr map[string]middleware.Middleware
 
 	// Pool which attached to all servers
 	pool pool.Pool
@@ -79,7 +70,7 @@ type Plugin struct {
 
 // Init must return configure svc and return true if svc hasStatus enabled. Must return error in case of
 // misconfiguration. Services must not be used without proper configuration pushed first.
-func (p *Plugin) Init(cfg config.Configurer, rrLogger logger.Logger, server server.Server) error {
+func (p *Plugin) Init(cfg config.Configurer, rrLogger *zap.Logger, server server.Server) error {
 	const op = errors.Op("http_plugin_init")
 	if !cfg.Has(PluginName) {
 		return errors.E(op, errors.Disabled)
@@ -99,9 +90,7 @@ func (p *Plugin) Init(cfg config.Configurer, rrLogger logger.Logger, server serv
 	p.log = rrLogger
 	// use time and date in UTC format
 	p.stdLog = log.New(logger.NewStdAdapter(p.log), "http_plugin: ", log.Ldate|log.Ltime|log.LUTC)
-
-	p.mdwr = make(map[string]Middleware)
-
+	p.mdwr = make(map[string]middleware.Middleware)
 	if !p.cfg.EnableHTTP() && !p.cfg.EnableTLS() && !p.cfg.EnableFCGI() {
 		return errors.E(op, errors.Disabled)
 	}
@@ -114,9 +103,7 @@ func (p *Plugin) Init(cfg config.Configurer, rrLogger logger.Logger, server serv
 
 	// initialize statsExporter
 	p.statsExporter = newWorkersExporter(p)
-
 	p.server = server
-	p.events, p.eventsID = events.Bus()
 
 	return nil
 }
@@ -256,27 +243,22 @@ func (p *Plugin) Stop() error {
 	if p.fcgi != nil {
 		err := p.fcgi.Shutdown(context.Background())
 		if err != nil && err != http.ErrServerClosed {
-			p.log.Error("fcgi shutdown", "error", err)
+			p.log.Error("fcgi shutdown", zap.Error(err))
 		}
 	}
 
 	if p.https != nil {
 		err := p.https.Shutdown(context.Background())
 		if err != nil && err != http.ErrServerClosed {
-			p.log.Error("https shutdown", "error", err)
+			p.log.Error("https shutdown", zap.Error(err))
 		}
 	}
 
 	if p.http != nil {
 		err := p.http.Shutdown(context.Background())
 		if err != nil && err != http.ErrServerClosed {
-			p.log.Error("http shutdown", "error", err)
+			p.log.Error("http shutdown", zap.Error(err))
 		}
-	}
-
-	// check for safety
-	if p.pool != nil {
-		p.pool.Destroy(context.Background())
 	}
 
 	return nil
@@ -284,25 +266,25 @@ func (p *Plugin) Stop() error {
 
 // ServeHTTP handles connection using set of middleware and pool PSR-7 server.
 func (p *Plugin) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	defer func() {
-		err := r.Body.Close()
-		if err != nil {
-			p.log.Error("body close", "error", err)
-		}
-	}()
-
+	// https://go-review.googlesource.com/c/go/+/30812/3/src/net/http/serve_test.go
 	if headerContainsUpgrade(r) {
+		// at this point the connection is hijacked, we can't write into the response writer
+		_, err := w.Write(nil)
+		if stderr.Is(err, http.ErrHijacked) {
+			p.log.Error("the connection has been hijacked", zap.Error(err))
+			return
+		}
+
 		http.Error(w, "server does not support upgrade header", http.StatusInternalServerError)
 		return
 	}
 
 	if p.https != nil && r.TLS == nil && p.cfg.SSLConfig.Redirect {
-		p.redirect(w, r)
-		return
-	}
-
-	if p.https != nil && r.TLS != nil {
 		w.Header().Add("Strict-Transport-Security", "max-age=31536000; includeSubDomains; preload")
+		if p.cfg.SSLConfig.Redirect {
+			p.redirect(w, r)
+		}
+		return
 	}
 
 	r = attributes.Init(r)
@@ -310,6 +292,8 @@ func (p *Plugin) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	p.mu.RLock()
 	p.handler.ServeHTTP(w, r)
 	p.mu.RUnlock()
+
+	_ = r.Body.Close()
 }
 
 // Workers returns slice with the process states for the workers
@@ -350,54 +334,24 @@ func (p *Plugin) Name() string {
 // Reset destroys the old pool and replaces it with new one, waiting for old pool to die
 func (p *Plugin) Reset() error {
 	const op = errors.Op("http_plugin_reset")
-	p.log.Info("HTTP plugin got restart request. Restarting...")
 	p.mu.Lock()
 	defer p.mu.Unlock()
 
+	p.log.Info("reset signal was received")
+
 	ctxTout, cancel := context.WithTimeout(context.Background(), time.Second*60)
+	defer cancel()
 	if p.pool == nil {
-		p.log.Info("pool is nil, nothing to restart")
-		cancel()
+		p.log.Info("pool is nil, nothing to reset")
 		return nil
 	}
 
-	p.pool.Destroy(ctxTout)
-	cancel()
-
-	p.pool = nil
-
-	var err error
-	p.pool, err = p.server.NewWorkerPool(context.Background(), &pool.Config{
-		Debug:           p.cfg.Pool.Debug,
-		NumWorkers:      p.cfg.Pool.NumWorkers,
-		MaxJobs:         p.cfg.Pool.MaxJobs,
-		AllocateTimeout: p.cfg.Pool.AllocateTimeout,
-		DestroyTimeout:  p.cfg.Pool.DestroyTimeout,
-		Supervisor:      p.cfg.Pool.Supervisor,
-	}, p.cfg.Env)
+	err := p.pool.Reset(ctxTout)
 	if err != nil {
 		return errors.E(op, err)
 	}
 
-	p.log.Info("HTTP workers Pool successfully restarted")
-
-	p.handler, err = handler.NewHandler(
-		p.cfg.MaxRequestSize,
-		p.cfg.InternalErrorCode,
-		p.cfg.Uploads.Dir,
-		p.cfg.Uploads.Allowed,
-		p.cfg.Uploads.Forbidden,
-		p.cfg.Cidrs,
-		p.pool,
-		p.log,
-		p.cfg.AccessLogs,
-	)
-
-	if err != nil {
-		return errors.E(op, err)
-	}
-
-	p.log.Info("HTTP plugin successfully restarted")
+	p.log.Info("plugin was successfully reset")
 	return nil
 }
 
@@ -409,31 +363,31 @@ func (p *Plugin) Collects() []interface{} {
 }
 
 // AddMiddleware is base requirement for the middleware (name and Middleware)
-func (p *Plugin) AddMiddleware(name endure.Named, m Middleware) {
+func (p *Plugin) AddMiddleware(name endure.Named, m middleware.Middleware) {
 	p.mdwr[name.Name()] = m
 }
 
 // Status return status of the particular plugin
-func (p *Plugin) Status() status.Status {
+func (p *Plugin) Status() (*status.Status, error) {
 	p.mu.RLock()
 	defer p.mu.RUnlock()
 
 	workers := p.workers()
 	for i := 0; i < len(workers); i++ {
 		if workers[i].State().IsActive() {
-			return status.Status{
+			return &status.Status{
 				Code: http.StatusOK,
-			}
+			}, nil
 		}
 	}
 	// if there are no workers, threat this as error
-	return status.Status{
+	return &status.Status{
 		Code: http.StatusServiceUnavailable,
-	}
+	}, nil
 }
 
 // Ready return readiness status of the particular plugin
-func (p *Plugin) Ready() status.Status {
+func (p *Plugin) Ready() (*status.Status, error) {
 	p.mu.RLock()
 	defer p.mu.RUnlock()
 
@@ -442,13 +396,13 @@ func (p *Plugin) Ready() status.Status {
 		// If state of the worker is ready (at least 1)
 		// we assume, that plugin's worker pool is ready
 		if workers[i].State().Value() == worker.StateReady {
-			return status.Status{
+			return &status.Status{
 				Code: http.StatusOK,
-			}
+			}, nil
 		}
 	}
 	// if there are no workers, threat this as no content error
-	return status.Status{
+	return &status.Status{
 		Code: http.StatusServiceUnavailable,
-	}
+	}, nil
 }

@@ -4,8 +4,9 @@ import (
 	"context"
 
 	"github.com/spiral/errors"
-	"github.com/spiral/roadrunner-plugins/v2/config"
-	"github.com/spiral/roadrunner-plugins/v2/server"
+	"github.com/spiral/roadrunner-plugins/v2/api/v2/config"
+	"github.com/spiral/roadrunner-plugins/v2/api/v2/server"
+	serverImpl "github.com/spiral/roadrunner-plugins/v2/server"
 	"github.com/spiral/roadrunner/v2/payload"
 	"github.com/spiral/roadrunner/v2/pool"
 	"github.com/spiral/roadrunner/v2/worker"
@@ -27,7 +28,7 @@ func (f *Foo3) Serve() chan error {
 	const op = errors.Op("serve")
 	var err error
 	errCh := make(chan error, 1)
-	conf := &server.Config{}
+	conf := &serverImpl.Config{}
 
 	// test payload for echo
 	r := &payload.Payload{
@@ -104,6 +105,5 @@ func (f *Foo3) Serve() chan error {
 }
 
 func (f *Foo3) Stop() error {
-	f.pool.Destroy(context.Background())
 	return nil
 }

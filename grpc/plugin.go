@@ -5,14 +5,14 @@ import (
 	"sync"
 
 	"github.com/spiral/errors"
-	"github.com/spiral/roadrunner-plugins/v2/config"
+	"github.com/spiral/roadrunner-plugins/v2/api/v2/config"
+	"github.com/spiral/roadrunner-plugins/v2/api/v2/server"
 	"github.com/spiral/roadrunner-plugins/v2/grpc/codec"
 	"github.com/spiral/roadrunner-plugins/v2/grpc/proxy"
-	"github.com/spiral/roadrunner-plugins/v2/logger"
-	"github.com/spiral/roadrunner-plugins/v2/server"
-	"github.com/spiral/roadrunner-plugins/v2/utils"
 	"github.com/spiral/roadrunner/v2/pool"
 	"github.com/spiral/roadrunner/v2/state/process"
+	"github.com/spiral/roadrunner/v2/utils"
+	"go.uber.org/zap"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/encoding"
 )
@@ -32,10 +32,10 @@ type Plugin struct {
 	rrServer  server.Server
 	proxyList []*proxy.Proxy
 
-	log logger.Logger
+	log *zap.Logger
 }
 
-func (p *Plugin) Init(cfg config.Configurer, log logger.Logger, server server.Server) error {
+func (p *Plugin) Init(cfg config.Configurer, log *zap.Logger, server server.Server) error {
 	const op = errors.Op("grpc_plugin_init")
 
 	if !cfg.Has(pluginName) {
@@ -104,7 +104,7 @@ func (p *Plugin) Serve() chan error {
 	}
 
 	go func() {
-		p.log.Info("GRPC server started", "address", p.config.Listen)
+		p.log.Info("grpc server was started", zap.String("address", p.config.Listen))
 		err = p.server.Serve(l)
 		if err != nil {
 			// skip errors when stopping the server
@@ -112,7 +112,7 @@ func (p *Plugin) Serve() chan error {
 				return
 			}
 
-			p.log.Error("grpc server stopped", "error", err)
+			p.log.Error("grpc server was stopped", zap.Error(err))
 			errCh <- errors.E(op, err)
 			return
 		}
@@ -139,27 +139,13 @@ func (p *Plugin) Reset() error {
 	p.mu.Lock()
 	defer p.mu.Unlock()
 	const op = errors.Op("grpc_plugin_reset")
-
+	p.log.Info("reset signal was received")
 	// destroy old pool
-	p.gPool.Destroy(context.Background())
-
-	var err error
-	p.gPool, err = p.rrServer.NewWorkerPool(context.Background(), &pool.Config{
-		Debug:           p.config.GrpcPool.Debug,
-		NumWorkers:      p.config.GrpcPool.NumWorkers,
-		MaxJobs:         p.config.GrpcPool.MaxJobs,
-		AllocateTimeout: p.config.GrpcPool.AllocateTimeout,
-		DestroyTimeout:  p.config.GrpcPool.DestroyTimeout,
-		Supervisor:      p.config.GrpcPool.Supervisor,
-	}, p.config.Env)
+	err := p.gPool.Reset(context.Background())
 	if err != nil {
 		return errors.E(op, err)
 	}
-
-	// update pointers to the pool
-	for i := 0; i < len(p.proxyList); i++ {
-		p.proxyList[i].UpdatePool(p.gPool)
-	}
+	p.log.Info("plugin was successfully reset")
 
 	return nil
 }

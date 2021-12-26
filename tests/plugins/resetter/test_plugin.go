@@ -4,8 +4,8 @@ import (
 	"context"
 	"time"
 
-	"github.com/spiral/roadrunner-plugins/v2/config"
-	"github.com/spiral/roadrunner-plugins/v2/server"
+	"github.com/spiral/roadrunner-plugins/v2/api/v2/config"
+	"github.com/spiral/roadrunner-plugins/v2/api/v2/server"
 	poolImpl "github.com/spiral/roadrunner/v2/pool"
 )
 
@@ -27,6 +27,8 @@ var testPoolConfig = &poolImpl.Config{
 type Plugin1 struct {
 	config config.Configurer
 	server server.Server
+
+	p poolImpl.Pool
 }
 
 func (p1 *Plugin1) Init(cfg config.Configurer, server server.Server) error {
@@ -37,6 +39,12 @@ func (p1 *Plugin1) Init(cfg config.Configurer, server server.Server) error {
 
 func (p1 *Plugin1) Serve() chan error {
 	errCh := make(chan error, 1)
+	var err error
+	p1.p, err = p1.server.NewWorkerPool(context.Background(), testPoolConfig, nil)
+	if err != nil {
+		errCh <- err
+		return errCh
+	}
 	return errCh
 }
 
@@ -49,18 +57,12 @@ func (p1 *Plugin1) Name() string {
 }
 
 func (p1 *Plugin1) Reset() error {
-	pool, err := p1.server.NewWorkerPool(context.Background(), testPoolConfig, nil)
-	if err != nil {
-		panic(err)
+	for i := 0; i < 10; i++ {
+		err := p1.p.Reset(context.Background())
+		if err != nil {
+			return err
+		}
 	}
-	pool.Destroy(context.Background())
-
-	pool, err = p1.server.NewWorkerPool(context.Background(), testPoolConfig, nil)
-	if err != nil {
-		panic(err)
-	}
-
-	_ = pool
 
 	return nil
 }

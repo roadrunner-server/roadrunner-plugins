@@ -10,11 +10,10 @@ import (
 	"testing"
 	"time"
 
-	"github.com/golang/mock/gomock"
 	endure "github.com/spiral/endure/pkg/container"
 	goridgeRpc "github.com/spiral/goridge/v3/pkg/rpc"
-	jobState "github.com/spiral/roadrunner-plugins/v2/api/jobs"
 	jobsv1beta "github.com/spiral/roadrunner-plugins/v2/api/proto/jobs/v1beta"
+	jobState "github.com/spiral/roadrunner-plugins/v2/api/v2/jobs"
 	"github.com/spiral/roadrunner-plugins/v2/config"
 	"github.com/spiral/roadrunner-plugins/v2/informer"
 	"github.com/spiral/roadrunner-plugins/v2/jobs"
@@ -23,8 +22,10 @@ import (
 	"github.com/spiral/roadrunner-plugins/v2/resetter"
 	rpcPlugin "github.com/spiral/roadrunner-plugins/v2/rpc"
 	"github.com/spiral/roadrunner-plugins/v2/server"
-	"github.com/spiral/roadrunner-plugins/v2/tests/mocks"
+	mocklogger "github.com/spiral/roadrunner-plugins/v2/tests/mock"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
+	"go.uber.org/zap"
 )
 
 func TestMemoryInit(t *testing.T) {
@@ -36,24 +37,12 @@ func TestMemoryInit(t *testing.T) {
 		Prefix: "rr",
 	}
 
-	controller := gomock.NewController(t)
-	mockLogger := mocks.NewMockLogger(controller)
-
-	// general
-	mockLogger.EXPECT().Debug("RPC plugin started", "address", "tcp://127.0.0.1:6001", "plugins", gomock.Any()).Times(1)
-
-	mockLogger.EXPECT().Debug("pipeline active", "driver", "memory", "pipeline", "test-1", "start", gomock.Any(), "elapsed", gomock.Any()).Times(1)
-	mockLogger.EXPECT().Debug("pipeline active", "driver", "memory", "pipeline", "test-2", "start", gomock.Any(), "elapsed", gomock.Any()).Times(1)
-	mockLogger.EXPECT().Debug("pipeline stopped", "driver", "memory", "pipeline", "test-1", "start", gomock.Any(), "elapsed", gomock.Any()).Times(1)
-	mockLogger.EXPECT().Debug("pipeline stopped", "driver", "memory", "pipeline", "test-2", "start", gomock.Any(), "elapsed", gomock.Any()).Times(1)
-
-	mockLogger.EXPECT().Info(gomock.Any()).AnyTimes()
-
+	l, oLogger := mocklogger.ZapTestLogger(zap.DebugLevel)
 	err = cont.RegisterAll(
 		cfg,
 		&server.Plugin{},
 		&rpcPlugin.Plugin{},
-		mockLogger,
+		l,
 		&jobs.Plugin{},
 		&resetter.Plugin{},
 		&informer.Plugin{},
@@ -109,6 +98,8 @@ func TestMemoryInit(t *testing.T) {
 	time.Sleep(time.Second * 1)
 	stopCh <- struct{}{}
 	wg.Wait()
+
+	require.Equal(t, 1, oLogger.FilterMessageSnippet("plugin was started").Len())
 }
 
 func TestMemoryInitV27(t *testing.T) {
@@ -120,30 +111,12 @@ func TestMemoryInitV27(t *testing.T) {
 		Prefix: "rr",
 	}
 
-	controller := gomock.NewController(t)
-	mockLogger := mocks.NewMockLogger(controller)
-
-	// general
-	mockLogger.EXPECT().Debug("RPC plugin started", "address", "tcp://127.0.0.1:6001", "plugins", gomock.Any()).Times(1)
-
-	mockLogger.EXPECT().Debug("job pushed successfully", "ID", gomock.Any(), "pipeline", "test-1", "driver", "memory", "start", gomock.Any(), "elapsed", gomock.Any()).Times(1)
-	mockLogger.EXPECT().Debug("job pushed successfully", "ID", gomock.Any(), "pipeline", "test-2", "driver", "memory", "start", gomock.Any(), "elapsed", gomock.Any()).Times(1)
-
-	mockLogger.EXPECT().Debug("job processed successfully", "ID", gomock.Any(), "start", gomock.Any(), "elapsed", gomock.Any()).Times(2)
-	mockLogger.EXPECT().Debug("job processing started", "ID", gomock.Any(), "start", gomock.Any(), "elapsed", gomock.Any()).Times(2)
-
-	mockLogger.EXPECT().Debug("pipeline active", "driver", "memory", "pipeline", "test-1", "start", gomock.Any(), "elapsed", gomock.Any()).Times(1)
-	mockLogger.EXPECT().Debug("pipeline active", "driver", "memory", "pipeline", "test-2", "start", gomock.Any(), "elapsed", gomock.Any()).Times(1)
-	mockLogger.EXPECT().Debug("pipeline stopped", "driver", "memory", "pipeline", "test-1", "start", gomock.Any(), "elapsed", gomock.Any()).Times(1)
-	mockLogger.EXPECT().Debug("pipeline stopped", "driver", "memory", "pipeline", "test-2", "start", gomock.Any(), "elapsed", gomock.Any()).Times(1)
-
-	mockLogger.EXPECT().Info(gomock.Any()).AnyTimes()
-
+	l, oLogger := mocklogger.ZapTestLogger(zap.DebugLevel)
 	err = cont.RegisterAll(
 		cfg,
 		&server.Plugin{},
 		&rpcPlugin.Plugin{},
-		mockLogger,
+		l,
 		&jobs.Plugin{},
 		&resetter.Plugin{},
 		&informer.Plugin{},
@@ -203,6 +176,11 @@ func TestMemoryInitV27(t *testing.T) {
 
 	stopCh <- struct{}{}
 	wg.Wait()
+
+	require.Equal(t, 2, oLogger.FilterMessageSnippet("pipeline was started").Len())
+	require.Equal(t, 2, oLogger.FilterMessageSnippet("pipeline was stopped").Len())
+	require.Equal(t, 2, oLogger.FilterMessageSnippet("job was pushed successfully").Len())
+	require.Equal(t, 2, oLogger.FilterMessageSnippet("job processing was started").Len())
 }
 
 func TestMemoryCreate(t *testing.T) {
@@ -287,27 +265,12 @@ func TestMemoryDeclare(t *testing.T) {
 		Prefix: "rr",
 	}
 
-	controller := gomock.NewController(t)
-	mockLogger := mocks.NewMockLogger(controller)
-
-	// general
-	mockLogger.EXPECT().Debug("RPC plugin started", "address", "tcp://127.0.0.1:6001", "plugins", gomock.Any()).Times(1)
-
-	mockLogger.EXPECT().Debug("job pushed successfully", "ID", gomock.Any(), "pipeline", "test-3", "driver", "memory", "start", gomock.Any(), "elapsed", gomock.Any()).MinTimes(1)
-	mockLogger.EXPECT().Debug("job processing started", "ID", gomock.Any(), "start", gomock.Any(), "elapsed", gomock.Any()).MinTimes(1)
-	mockLogger.EXPECT().Debug("job processed successfully", "ID", gomock.Any(), "start", gomock.Any(), "elapsed", gomock.Any()).MinTimes(1)
-
-	mockLogger.EXPECT().Debug("pipeline resumed", "driver", "memory", "pipeline", "test-3", "start", gomock.Any(), "elapsed", gomock.Any()).Times(1)
-	mockLogger.EXPECT().Debug("pipeline paused", "driver", "memory", "pipeline", "test-3", "start", gomock.Any(), "elapsed", gomock.Any()).Times(1)
-	mockLogger.EXPECT().Debug("pipeline stopped", "driver", "memory", "pipeline", "test-3", "start", gomock.Any(), "elapsed", gomock.Any()).Times(1)
-
-	mockLogger.EXPECT().Info(gomock.Any()).AnyTimes()
-
+	l, oLogger := mocklogger.ZapTestLogger(zap.DebugLevel)
 	err = cont.RegisterAll(
 		cfg,
 		&server.Plugin{},
 		&rpcPlugin.Plugin{},
-		mockLogger,
+		l,
 		&jobs.Plugin{},
 		&resetter.Plugin{},
 		&informer.Plugin{},
@@ -370,9 +333,14 @@ func TestMemoryDeclare(t *testing.T) {
 	time.Sleep(time.Second)
 	t.Run("DestroyPipeline", destroyPipelines("test-3"))
 
-	time.Sleep(time.Second * 5)
 	stopCh <- struct{}{}
 	wg.Wait()
+
+	require.Equal(t, 1, oLogger.FilterMessageSnippet("pipeline was resumed").Len())
+	require.Equal(t, 1, oLogger.FilterMessageSnippet("pipeline was stopped").Len())
+	require.Equal(t, 1, oLogger.FilterMessageSnippet("job was pushed successfully").Len())
+	require.Equal(t, 1, oLogger.FilterMessageSnippet("job processing was started").Len())
+	require.Equal(t, 1, oLogger.FilterMessageSnippet("job was processed successfully").Len())
 }
 
 func TestMemoryPauseResume(t *testing.T) {
@@ -384,33 +352,12 @@ func TestMemoryPauseResume(t *testing.T) {
 		Prefix: "rr",
 	}
 
-	controller := gomock.NewController(t)
-	mockLogger := mocks.NewMockLogger(controller)
-
-	// general
-	mockLogger.EXPECT().Debug("RPC plugin started", "address", "tcp://127.0.0.1:6001", "plugins", gomock.Any()).Times(1)
-
-	mockLogger.EXPECT().Debug("pipeline active", "driver", "memory", "pipeline", "test-local-2", "start", gomock.Any(), "elapsed", gomock.Any()).Times(1)
-	mockLogger.EXPECT().Debug("pipeline active", "driver", "memory", "pipeline", "test-local", "start", gomock.Any(), "elapsed", gomock.Any()).MinTimes(1)
-
-	mockLogger.EXPECT().Debug("pipeline paused", "driver", "memory", "pipeline", "test-local", "start", gomock.Any(), "elapsed", gomock.Any()).Times(1)
-	mockLogger.EXPECT().Debug("pipeline resumed", "driver", "memory", "pipeline", "test-local", "start", gomock.Any(), "elapsed", gomock.Any()).Times(1)
-
-	mockLogger.EXPECT().Debug("job pushed successfully", "ID", gomock.Any(), "pipeline", "test-local", "driver", "memory", "start", gomock.Any(), "elapsed", gomock.Any()).MinTimes(1)
-	mockLogger.EXPECT().Debug("job processing started", "ID", gomock.Any(), "start", gomock.Any(), "elapsed", gomock.Any()).MinTimes(1)
-	mockLogger.EXPECT().Debug("job processed successfully", "ID", gomock.Any(), "start", gomock.Any(), "elapsed", gomock.Any()).MinTimes(1)
-
-	mockLogger.EXPECT().Debug("pipeline stopped", "driver", "memory", "pipeline", "test-local-3", "start", gomock.Any(), "elapsed", gomock.Any()).Times(1)
-	mockLogger.EXPECT().Debug("pipeline stopped", "driver", "memory", "pipeline", "test-local-2", "start", gomock.Any(), "elapsed", gomock.Any()).Times(1)
-	mockLogger.EXPECT().Debug("pipeline stopped", "driver", "memory", "pipeline", "test-local", "start", gomock.Any(), "elapsed", gomock.Any()).Times(1)
-
-	mockLogger.EXPECT().Info(gomock.Any()).AnyTimes()
-
+	l, oLogger := mocklogger.ZapTestLogger(zap.DebugLevel)
 	err = cont.RegisterAll(
 		cfg,
 		&server.Plugin{},
 		&rpcPlugin.Plugin{},
-		mockLogger,
+		l,
 		&jobs.Plugin{},
 		&resetter.Plugin{},
 		&informer.Plugin{},
@@ -473,8 +420,13 @@ func TestMemoryPauseResume(t *testing.T) {
 	time.Sleep(time.Second * 1)
 
 	stopCh <- struct{}{}
-	time.Sleep(time.Second)
 	wg.Wait()
+
+	require.Equal(t, 1, oLogger.FilterMessageSnippet("pipeline was resumed").Len())
+	require.Equal(t, 3, oLogger.FilterMessageSnippet("pipeline was stopped").Len())
+	require.Equal(t, 2, oLogger.FilterMessageSnippet("job was pushed successfully").Len())
+	require.Equal(t, 2, oLogger.FilterMessageSnippet("job processing was started").Len())
+	require.Equal(t, 2, oLogger.FilterMessageSnippet("job was processed successfully").Len())
 }
 
 func TestMemoryJobsError(t *testing.T) {
@@ -486,29 +438,12 @@ func TestMemoryJobsError(t *testing.T) {
 		Prefix: "rr",
 	}
 
-	controller := gomock.NewController(t)
-	mockLogger := mocks.NewMockLogger(controller)
-
-	// general
-	mockLogger.EXPECT().Debug("RPC plugin started", "address", "tcp://127.0.0.1:6001", "plugins", gomock.Any()).Times(1)
-
-	mockLogger.EXPECT().Debug("job pushed successfully", "ID", gomock.Any(), "pipeline", "test-3", "driver", "memory", "start", gomock.Any(), "elapsed", gomock.Any()).MinTimes(1)
-	mockLogger.EXPECT().Debug("job processing started", "ID", gomock.Any(), "start", gomock.Any(), "elapsed", gomock.Any()).MinTimes(1)
-	mockLogger.EXPECT().Debug("job processed successfully", "ID", gomock.Any(), "start", gomock.Any(), "elapsed", gomock.Any()).MinTimes(1)
-
-	mockLogger.EXPECT().Debug("pipeline resumed", "driver", "memory", "pipeline", "test-3", "start", gomock.Any(), "elapsed", gomock.Any()).Times(1)
-	mockLogger.EXPECT().Debug("pipeline paused", "driver", "memory", "pipeline", "test-3", "start", gomock.Any(), "elapsed", gomock.Any()).Times(1)
-	mockLogger.EXPECT().Debug("pipeline stopped", "driver", "memory", "pipeline", "test-3", "start", gomock.Any(), "elapsed", gomock.Any()).Times(1)
-
-	mockLogger.EXPECT().Error("jobs protocol error", "error", "error", "delay", gomock.Any(), "requeue", gomock.Any()).Times(3)
-
-	mockLogger.EXPECT().Info(gomock.Any()).AnyTimes()
-
+	l, oLogger := mocklogger.ZapTestLogger(zap.DebugLevel)
 	err = cont.RegisterAll(
 		cfg,
 		&server.Plugin{},
 		&rpcPlugin.Plugin{},
-		mockLogger,
+		l,
 		&jobs.Plugin{},
 		&resetter.Plugin{},
 		&informer.Plugin{},
@@ -571,9 +506,16 @@ func TestMemoryJobsError(t *testing.T) {
 	time.Sleep(time.Second)
 	t.Run("DestroyPipeline", destroyPipelines("test-3"))
 
-	time.Sleep(time.Second * 5)
 	stopCh <- struct{}{}
 	wg.Wait()
+
+	require.Equal(t, 1, oLogger.FilterMessageSnippet("job was pushed successfully").Len())
+	require.Equal(t, 4, oLogger.FilterMessageSnippet("job processing was started").Len())
+	require.Equal(t, 4, oLogger.FilterMessageSnippet("job was processed successfully").Len())
+	require.Equal(t, 1, oLogger.FilterMessageSnippet("pipeline was paused").Len())
+	require.Equal(t, 1, oLogger.FilterMessageSnippet("pipeline was resumed").Len())
+	require.Equal(t, 1, oLogger.FilterMessageSnippet("pipeline was stopped").Len())
+	require.Equal(t, 3, oLogger.FilterMessageSnippet("jobs protocol error").Len())
 }
 
 func TestMemoryStats(t *testing.T) {
@@ -585,27 +527,12 @@ func TestMemoryStats(t *testing.T) {
 		Prefix: "rr",
 	}
 
-	controller := gomock.NewController(t)
-	mockLogger := mocks.NewMockLogger(controller)
-
-	// general
-	mockLogger.EXPECT().Debug("RPC plugin started", "address", "tcp://127.0.0.1:6001", "plugins", gomock.Any()).Times(1)
-
-	mockLogger.EXPECT().Debug("job pushed successfully", "ID", gomock.Any(), "pipeline", "test-3", "driver", "memory", "start", gomock.Any(), "elapsed", gomock.Any()).MinTimes(1)
-	mockLogger.EXPECT().Debug("job processing started", "ID", gomock.Any(), "start", gomock.Any(), "elapsed", gomock.Any()).MinTimes(1)
-	mockLogger.EXPECT().Debug("job processed successfully", "ID", gomock.Any(), "start", gomock.Any(), "elapsed", gomock.Any()).MinTimes(1)
-
-	mockLogger.EXPECT().Debug("pipeline resumed", "driver", "memory", "pipeline", "test-3", "start", gomock.Any(), "elapsed", gomock.Any()).Times(2)
-	mockLogger.EXPECT().Debug("pipeline paused", "driver", "memory", "pipeline", "test-3", "start", gomock.Any(), "elapsed", gomock.Any()).Times(1)
-	mockLogger.EXPECT().Debug("pipeline stopped", "driver", "memory", "pipeline", "test-3", "start", gomock.Any(), "elapsed", gomock.Any()).Times(1)
-
-	mockLogger.EXPECT().Info(gomock.Any()).AnyTimes()
-
+	l, oLogger := mocklogger.ZapTestLogger(zap.DebugLevel)
 	err = cont.RegisterAll(
 		cfg,
 		&server.Plugin{},
 		&rpcPlugin.Plugin{},
-		mockLogger,
+		l,
 		&jobs.Plugin{},
 		&resetter.Plugin{},
 		&informer.Plugin{},
@@ -699,9 +626,15 @@ func TestMemoryStats(t *testing.T) {
 
 	t.Run("DestroyEphemeralPipeline", destroyPipelines("test-3"))
 
-	time.Sleep(time.Second * 5)
 	stopCh <- struct{}{}
 	wg.Wait()
+
+	require.Equal(t, 3, oLogger.FilterMessageSnippet("job was pushed successfully").Len())
+	require.Equal(t, 3, oLogger.FilterMessageSnippet("job processing was started").Len())
+	require.Equal(t, 3, oLogger.FilterMessageSnippet("job was processed successfully").Len())
+	require.Equal(t, 1, oLogger.FilterMessageSnippet("pipeline was paused").Len())
+	require.Equal(t, 2, oLogger.FilterMessageSnippet("pipeline was resumed").Len())
+	require.Equal(t, 1, oLogger.FilterMessageSnippet("pipeline was stopped").Len())
 }
 
 func declareMemoryPipe(t *testing.T) {

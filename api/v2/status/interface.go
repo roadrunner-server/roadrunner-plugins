@@ -7,12 +7,12 @@ type Status struct {
 
 // Checker interface used to get latest status from plugin
 type Checker interface {
-	Status() Status
+	Status() (*Status, error)
 }
 
 // Readiness interface used to get readiness status from the plugin
 // that means, that worker poll inside the plugin has 1+ plugins which are ready to work
 // at the particular moment
 type Readiness interface {
-	Ready() Status
+	Ready() (*Status, error)
 }

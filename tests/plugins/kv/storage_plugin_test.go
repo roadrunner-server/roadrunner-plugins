@@ -10,7 +10,6 @@ import (
 	"testing"
 	"time"
 
-	"github.com/golang/mock/gomock"
 	endure "github.com/spiral/endure/pkg/container"
 	goridgeRpc "github.com/spiral/goridge/v3/pkg/rpc"
 	payload "github.com/spiral/roadrunner-plugins/v2/api/proto/kv/v1beta"
@@ -22,8 +21,10 @@ import (
 	"github.com/spiral/roadrunner-plugins/v2/memory"
 	"github.com/spiral/roadrunner-plugins/v2/redis"
 	rpcPlugin "github.com/spiral/roadrunner-plugins/v2/rpc"
-	"github.com/spiral/roadrunner-plugins/v2/tests/mocks"
+	mock_logger "github.com/spiral/roadrunner-plugins/v2/tests/mock"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
+	"go.uber.org/zap"
 )
 
 func TestKVInit(t *testing.T) {
@@ -1295,19 +1296,13 @@ func TestRedisNoConfig(t *testing.T) {
 		Prefix: "rr",
 	}
 
-	controller := gomock.NewController(t)
-	mockLogger := mocks.NewMockLogger(controller)
-
-	mockLogger.EXPECT().Debug("RPC plugin started", "address", "tcp://127.0.0.1:6001", "plugins", []string{"kv"}).AnyTimes()
-
-	mockLogger.EXPECT().Error(`can't find local or global configuration, this section will be skipped`, "local: ", "kv.redis-rr.config", "global: ", "redis-rr").Times(1)
-
+	l, oLogger := mock_logger.ZapTestLogger(zap.DebugLevel)
 	err = cont.RegisterAll(
 		cfg,
+		l,
 		&kv.Plugin{},
 		&redis.Plugin{},
 		&rpcPlugin.Plugin{},
-		mockLogger,
 		&memory.Plugin{},
 	)
 	assert.NoError(t, err)
@@ -1319,6 +1314,10 @@ func TestRedisNoConfig(t *testing.T) {
 
 	_, err = cont.Serve()
 	assert.NoError(t, err)
+	_ = cont.Stop()
+
+	require.Equal(t, 1, oLogger.FilterMessageSnippet("plugin was started").Len())
+	require.Equal(t, 1, oLogger.FilterMessageSnippet("can't find local or global configuration, this section will be skipped").Len())
 }
 
 func testRPCMethodsRedis(t *testing.T) {

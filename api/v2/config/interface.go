@@ -1,5 +1,11 @@
 package config
 
+import (
+	"time"
+
+	"github.com/hashicorp/go-version"
+)
+
 type Configurer interface {
 	// UnmarshalKey takes a single key and unmarshals it into a Struct.
 	//
@@ -26,4 +32,14 @@ type Configurer interface {
 
 	// GetCommonConfig returns General section. Read-only
 	GetCommonConfig() *General
+}
+
+// General is the part of the config plugin which contains general for the whole RR2 parameters
+// For example - http timeouts, headers sizes etc and also graceful shutdown timeout should be the same across whole application
+type General struct {
+	// GracefulTimeout for the temporal and http
+	GracefulTimeout time.Duration
+
+	// RRVersion passed from the rr-binary
+	RRVersion *version.Version
 }

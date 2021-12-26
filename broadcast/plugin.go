@@ -6,9 +6,9 @@ import (
 
 	endure "github.com/spiral/endure/pkg/container"
 	"github.com/spiral/errors"
-	"github.com/spiral/roadrunner-plugins/v2/api/pubsub"
-	"github.com/spiral/roadrunner-plugins/v2/config"
-	"github.com/spiral/roadrunner-plugins/v2/logger"
+	"github.com/spiral/roadrunner-plugins/v2/api/v2/config"
+	"github.com/spiral/roadrunner-plugins/v2/api/v2/pubsub"
+	"go.uber.org/zap"
 )
 
 const (
@@ -25,14 +25,14 @@ type Plugin struct {
 
 	cfg       *Config
 	cfgPlugin config.Configurer
-	log       logger.Logger
+	log       *zap.Logger
 	// publishers implement Publisher interface
 	// and able to receive a payload
 	publishers   map[string]pubsub.PubSub
 	constructors map[string]pubsub.Constructor
 }
 
-func (p *Plugin) Init(cfg config.Configurer, log logger.Logger) error {
+func (p *Plugin) Init(cfg config.Configurer, log *zap.Logger) error {
 	const op = errors.Op("broadcast_plugin_init")
 	if !cfg.Has(PluginName) {
 		return errors.E(op, errors.Disabled)
@@ -93,7 +93,7 @@ func (p *Plugin) Publish(m *pubsub.Message) error {
 		}
 		return nil
 	} else {
-		p.log.Warn("no publishers registered")
+		p.log.Warn("no publishers was registered")
 	}
 
 	return nil
@@ -109,7 +109,7 @@ func (p *Plugin) PublishAsync(m *pubsub.Message) {
 			for j := range p.publishers {
 				err := p.publishers[j].Publish(m)
 				if err != nil {
-					p.log.Error("publishAsync", "error", err)
+					p.log.Error("async publish is failed", zap.Error(err))
 					// continue publishing to the other registered publishers
 					continue
 				}
@@ -175,7 +175,7 @@ func (p *Plugin) GetDriver(key string) (pubsub.SubReader, error) {
 
 				return ps, nil
 			default:
-				p.log.Error("can't find local or global configuration, this section will be skipped", "local: ", configKey, "global: ", key)
+				p.log.Error("can't find local or global configuration, this section will be skipped", zap.String("local: ", configKey), zap.String("global: ", key))
 			}
 		}
 	}

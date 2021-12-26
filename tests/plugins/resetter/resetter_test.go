@@ -10,15 +10,16 @@ import (
 	"testing"
 	"time"
 
-	"github.com/golang/mock/gomock"
 	endure "github.com/spiral/endure/pkg/container"
 	goridgeRpc "github.com/spiral/goridge/v3/pkg/rpc"
 	"github.com/spiral/roadrunner-plugins/v2/config"
 	"github.com/spiral/roadrunner-plugins/v2/resetter"
 	rpcPlugin "github.com/spiral/roadrunner-plugins/v2/rpc"
 	"github.com/spiral/roadrunner-plugins/v2/server"
-	"github.com/spiral/roadrunner-plugins/v2/tests/mocks"
+	mocklogger "github.com/spiral/roadrunner-plugins/v2/tests/mock"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
+	"go.uber.org/zap"
 )
 
 func TestResetterInit(t *testing.T) {
@@ -32,16 +33,11 @@ func TestResetterInit(t *testing.T) {
 		Prefix: "rr",
 	}
 
-	controller := gomock.NewController(t)
-	mockLogger := mocks.NewMockLogger(controller)
-
-	mockLogger.EXPECT().Info(gomock.Any()).AnyTimes()
-	mockLogger.EXPECT().Debug("RPC plugin started", "address", "tcp://127.0.0.1:6001", "plugins", gomock.Any()).Times(1)
-
+	l, oLogger := mocklogger.ZapTestLogger(zap.DebugLevel)
 	err = cont.RegisterAll(
 		cfg,
 		&server.Plugin{},
-		mockLogger,
+		l,
 		&resetter.Plugin{},
 		&rpcPlugin.Plugin{},
 		&Plugin1{},
@@ -96,6 +92,8 @@ func TestResetterInit(t *testing.T) {
 	t.Run("ResetterRpcTest", resetterRPCTest)
 	stopCh <- struct{}{}
 	wg.Wait()
+
+	require.Equal(t, 1, oLogger.FilterMessageSnippet("plugin was started").Len())
 }
 
 func resetterRPCTest(t *testing.T) {

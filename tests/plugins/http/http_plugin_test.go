@@ -19,25 +19,24 @@ import (
 	"testing"
 	"time"
 
-	"github.com/golang/mock/gomock"
 	endure "github.com/spiral/endure/pkg/container"
 	goridgeRpc "github.com/spiral/goridge/v3/pkg/rpc"
 	"github.com/spiral/roadrunner-plugins/v2/config"
+	httpPlugin "github.com/spiral/roadrunner-plugins/v2/http"
 	"github.com/spiral/roadrunner-plugins/v2/http/middleware/gzip"
 	"github.com/spiral/roadrunner-plugins/v2/http/middleware/send"
 	"github.com/spiral/roadrunner-plugins/v2/http/middleware/static"
 	"github.com/spiral/roadrunner-plugins/v2/informer"
 	"github.com/spiral/roadrunner-plugins/v2/logger"
 	"github.com/spiral/roadrunner-plugins/v2/resetter"
+	rpcPlugin "github.com/spiral/roadrunner-plugins/v2/rpc"
 	"github.com/spiral/roadrunner-plugins/v2/server"
-	"github.com/spiral/roadrunner-plugins/v2/tests/mocks"
+	mock_logger "github.com/spiral/roadrunner-plugins/v2/tests/mock"
 	"github.com/spiral/roadrunner/v2/state/process"
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"github.com/yookoala/gofast"
-
-	httpPlugin "github.com/spiral/roadrunner-plugins/v2/http"
-	rpcPlugin "github.com/spiral/roadrunner-plugins/v2/rpc"
-	"github.com/stretchr/testify/assert"
+	"go.uber.org/zap"
 )
 
 var sslClient = &http.Client{
@@ -121,31 +120,9 @@ func TestHTTPAccessLogs(t *testing.T) {
 		Prefix: "rr",
 	}
 
-	controller := gomock.NewController(t)
-	mockLogger := mocks.NewMockLogger(controller)
-
-	mockLogger.EXPECT().Info(gomock.Any()).AnyTimes()
-	mockLogger.EXPECT().Debug("http server is running", "address", gomock.Any()).Times(1)
-	mockLogger.EXPECT().Info(
-		gomock.Any(),
-		"status", gomock.Any(),
-		"method", gomock.Any(),
-		"URI", gomock.Any(),
-		"remote_address", gomock.Any(),
-		"query", gomock.Any(),
-		"request_length", gomock.Any(),
-		"bytes_sent", gomock.Any(),
-		"host", gomock.Any(),
-		"user_agent", "Go-http-client/1.1",
-		"referer", gomock.Any(),
-		"time_local", gomock.Any(),
-		"request_time", gomock.Any(),
-		"start", gomock.Any(),
-		"elapsed", gomock.Any()).MinTimes(1)
-
 	err = cont.RegisterAll(
 		cfg,
-		mockLogger,
+		&logger.ZapLogger{},
 		&server.Plugin{},
 		&httpPlugin.Plugin{},
 	)
@@ -937,24 +914,19 @@ func fcgiReqURI(t *testing.T) {
 }
 
 func TestH2CUpgrade(t *testing.T) {
-	cont, err := endure.NewContainer(nil, endure.SetLogLevel(endure.ErrorLevel))
+	cont, err := endure.NewContainer(nil, endure.SetLogLevel(endure.ErrorLevel), endure.GracefulShutdownTimeout(time.Second*5))
 	assert.NoError(t, err)
 
 	cfg := &config.Plugin{
 		Path:   "configs/.rr-h2c.yaml",
 		Prefix: "rr",
 	}
-	controller := gomock.NewController(t)
-	mockLogger := mocks.NewMockLogger(controller)
 
-	mockLogger.EXPECT().Info(gomock.Any()).AnyTimes()
-	mockLogger.EXPECT().Error("server internal error", "message", gomock.Any()).MinTimes(1)
-	mockLogger.EXPECT().Debug("http server is running", "address", gomock.Any()).AnyTimes()
-
+	l, oLogger := mock_logger.ZapTestLogger(zap.DebugLevel)
 	err = cont.RegisterAll(
 		cfg,
 		&rpcPlugin.Plugin{},
-		mockLogger,
+		l,
 		&server.Plugin{},
 		&httpPlugin.Plugin{},
 	)
@@ -1008,6 +980,9 @@ func TestH2CUpgrade(t *testing.T) {
 
 	stopCh <- struct{}{}
 	wg.Wait()
+
+	require.Equal(t, 1, oLogger.FilterMessageSnippet("http server was started").Len())
+	require.Equal(t, 1, oLogger.FilterMessageSnippet("hijacked").Len())
 }
 
 func h2cUpgrade(t *testing.T) {
@@ -2222,25 +2197,10 @@ func TestStaticFilesForbid(t *testing.T) {
 		Prefix: "rr",
 	}
 
-	controller := gomock.NewController(t)
-	mockLogger := mocks.NewMockLogger(controller)
-
-	mockLogger.EXPECT().Info(gomock.Any()).AnyTimes()
-
-	mockLogger.EXPECT().Info("http log", "status", 201, "method", "GET", "URI", "http://127.0.0.1:34653/http?hello=world", "remote_address", "127.0.0.1", "start", gomock.Any(), "elapsed", gomock.Any()).MinTimes(1)
-	mockLogger.EXPECT().Info("http log", "status", 201, "method", "GET", "URI", "http://127.0.0.1:34653/client.XXX?hello=world", "remote_address", "127.0.0.1", "start", gomock.Any(), "elapsed", gomock.Any()).MinTimes(1)
-	mockLogger.EXPECT().Info("http log", "status", 201, "method", "GET", "URI", "http://127.0.0.1:34653/client.php?hello=world", "remote_address", "127.0.0.1", "start", gomock.Any(), "elapsed", gomock.Any()).MinTimes(1)
-
-	mockLogger.EXPECT().Error("file open error", "error", gomock.Any()).AnyTimes()
-	mockLogger.EXPECT().Debug("no such file or directory", "error", gomock.Any()).AnyTimes()
-	mockLogger.EXPECT().Debug("possible path to dir provided").AnyTimes()
-	mockLogger.EXPECT().Debug("file extension is forbidden", gomock.Any(), gomock.Any()).AnyTimes()
-	mockLogger.EXPECT().Error(gomock.Any(), gomock.Any(), gomock.Any()).AnyTimes() // placeholder for the workerlogerror
-	mockLogger.EXPECT().Debug("http server is running", "address", gomock.Any()).AnyTimes()
-
+	l, oLogger := mock_logger.ZapTestLogger(zap.DebugLevel)
 	err = cont.RegisterAll(
 		cfg,
-		mockLogger,
+		l,
 		&server.Plugin{},
 		&httpPlugin.Plugin{},
 		&gzip.Plugin{},
@@ -2298,6 +2258,14 @@ func TestStaticFilesForbid(t *testing.T) {
 
 	stopCh <- struct{}{}
 	wg.Wait()
+	time.Sleep(time.Second)
+
+	o1 := oLogger.FilterMessageSnippet("http server was started")
+	o3 := oLogger.FilterMessageSnippet("http log")
+
+	require.Equal(t, 1, o1.Len())
+	require.Equal(t, 3, o3.Len())
+	require.Equal(t, 1, oLogger.FilterMessageSnippet("file extension is forbidden").Len())
 }
 
 func staticTestFilesDir(t *testing.T) {
@@ -2399,17 +2367,10 @@ func TestHTTPIPv6Long(t *testing.T) {
 		Prefix: "rr",
 	}
 
-	controller := gomock.NewController(t)
-	mockLogger := mocks.NewMockLogger(controller)
-	mockLogger.EXPECT().Info(gomock.Any()).AnyTimes()
-	mockLogger.EXPECT().Debug("RPC plugin started", "address", "tcp://[0:0:0:0:0:0:0:1]:6005", "plugins", gomock.Any()).Times(1)
-	mockLogger.EXPECT().Info("http log", "status", 201, "method", "GET", "URI", "http://[0:0:0:0:0:0:0:1]:10684/?hello=world", "remote_address", "::1", "start", gomock.Any(), "elapsed", gomock.Any()).MinTimes(1)
-	mockLogger.EXPECT().Debug("http server is running", "address", gomock.Any()).AnyTimes()
-
 	err = cont.RegisterAll(
 		cfg,
 		&rpcPlugin.Plugin{},
-		mockLogger,
+		&logger.ZapLogger{},
 		&server.Plugin{},
 		&httpPlugin.Plugin{},
 	)
@@ -2475,18 +2436,10 @@ func TestHTTPIPv6Short(t *testing.T) {
 		Prefix: "rr",
 	}
 
-	controller := gomock.NewController(t)
-	mockLogger := mocks.NewMockLogger(controller)
-
-	mockLogger.EXPECT().Info(gomock.Any()).AnyTimes()
-	mockLogger.EXPECT().Debug("RPC plugin started", "address", "tcp://[::1]:6003", "plugins", gomock.Any()).Times(1)
-	mockLogger.EXPECT().Info("http log", "status", 201, "method", "GET", "URI", "http://[::1]:10784/?hello=world", "remote_address", "::1", "start", gomock.Any(), "elapsed", gomock.Any()).MinTimes(1)
-	mockLogger.EXPECT().Debug("http server is running", "address", gomock.Any()).AnyTimes()
-
 	err = cont.RegisterAll(
 		cfg,
 		&rpcPlugin.Plugin{},
-		mockLogger,
+		&logger.ZapLogger{},
 		&server.Plugin{},
 		&httpPlugin.Plugin{},
 	)

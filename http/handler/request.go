@@ -10,8 +10,8 @@ import (
 
 	json "github.com/json-iterator/go"
 	"github.com/spiral/errors"
-	"github.com/spiral/roadrunner-plugins/v2/logger"
 	"github.com/spiral/roadrunner/v2/payload"
+	"go.uber.org/zap"
 )
 
 const (
@@ -103,7 +103,7 @@ func request(r *http.Request, req *Request) error {
 }
 
 // Open moves all uploaded files to temporary directory so it can be given to php later.
-func (r *Request) Open(log logger.Logger, dir string, forbid, allow map[string]struct{}) {
+func (r *Request) Open(log *zap.Logger, dir string, forbid, allow map[string]struct{}) {
 	if r.Uploads == nil {
 		return
 	}
@@ -112,7 +112,7 @@ func (r *Request) Open(log logger.Logger, dir string, forbid, allow map[string]s
 }
 
 // Close clears all temp file uploads
-func (r *Request) Close(log logger.Logger) {
+func (r *Request) Close(log *zap.Logger) {
 	if r.Uploads == nil {
 		return
 	}
@@ -168,12 +168,18 @@ func (r *Request) contentType() int {
 
 // URI fetches full uri from request in a form of string (including https scheme if TLS connection is enabled).
 func URI(r *http.Request) string {
+	// CWE: https://github.com/spiral/roadrunner-plugins/pull/184/checks?check_run_id=4635904339
+	uri := r.URL.String()
+	uri = strings.ReplaceAll(uri, "\n", "")
+	uri = strings.ReplaceAll(uri, "\r", "")
+
 	if r.URL.Host != "" {
-		return r.URL.String()
-	}
-	if r.TLS != nil {
-		return fmt.Sprintf("https://%s%s", r.Host, r.URL.String())
+		return uri
 	}
 
-	return fmt.Sprintf("http://%s%s", r.Host, r.URL.String())
+	if r.TLS != nil {
+		return fmt.Sprintf("https://%s%s", r.Host, uri)
+	}
+
+	return fmt.Sprintf("http://%s%s", r.Host, uri)
 }

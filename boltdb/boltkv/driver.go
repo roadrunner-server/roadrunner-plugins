@@ -10,10 +10,10 @@ import (
 
 	"github.com/spiral/errors"
 	kvv1 "github.com/spiral/roadrunner-plugins/v2/api/proto/kv/v1beta"
-	"github.com/spiral/roadrunner-plugins/v2/config"
-	"github.com/spiral/roadrunner-plugins/v2/logger"
-	"github.com/spiral/roadrunner-plugins/v2/utils"
+	"github.com/spiral/roadrunner-plugins/v2/api/v2/config"
+	"github.com/spiral/roadrunner/v2/utils"
 	bolt "go.etcd.io/bbolt"
+	"go.uber.org/zap"
 )
 
 const (
@@ -26,7 +26,7 @@ type Driver struct {
 	DB *bolt.DB
 	// name should be UTF-8
 	bucket []byte
-	log    logger.Logger
+	log    *zap.Logger
 	cfg    *Config
 
 	// gc contains keys with timeouts
@@ -38,7 +38,7 @@ type Driver struct {
 	stop chan struct{}
 }
 
-func NewBoltDBDriver(log logger.Logger, key string, cfgPlugin config.Configurer) (*Driver, error) {
+func NewBoltDBDriver(log *zap.Logger, key string, cfgPlugin config.Configurer) (*Driver, error) {
 	const op = errors.Op("new_boltdb_driver")
 
 	if !cfgPlugin.Has(RootPluginName) {
@@ -98,7 +98,7 @@ func NewBoltDBDriver(log logger.Logger, key string, cfgPlugin config.Configurer)
 
 func (d *Driver) Has(keys ...string) (map[string]bool, error) {
 	const op = errors.Op("boltdb_driver_has")
-	d.log.Debug("boltdb HAS method called", "args", keys)
+	d.log.Debug("boltdb HAS method called", zap.Strings("args", keys))
 	if keys == nil {
 		return nil, errors.E(op, errors.NoKeys)
 	}
@@ -245,7 +245,7 @@ func (d *Driver) Set(items ...*kvv1.Item) error {
 		if err != nil {
 			errRb := tx.Rollback()
 			if errRb != nil {
-				d.log.Error("during the commit, Rollback error occurred", "commit error", err, "rollback error", errRb)
+				d.log.Error("during the commit, Rollback error occurred", zap.Error(err), zap.Error(errRb))
 			}
 		}
 	}()
@@ -317,7 +317,7 @@ func (d *Driver) Delete(keys ...string) error {
 		if err != nil {
 			errRb := tx.Rollback()
 			if errRb != nil {
-				d.log.Error("during the commit, Rollback error occurred", "commit error", err, "rollback error", errRb)
+				d.log.Error("during the commit, Rollback error occurred", zap.Error(err), zap.Error(errRb))
 			}
 		}
 	}()
@@ -386,13 +386,13 @@ func (d *Driver) Clear() error {
 	err := d.DB.Update(func(tx *bolt.Tx) error {
 		err := tx.DeleteBucket(d.bucket)
 		if err != nil {
-			d.log.Error("boltdb delete bucket", "error", err)
+			d.log.Error("boltdb delete bucket", zap.Error(err))
 			return err
 		}
 
 		_, err = tx.CreateBucket(d.bucket)
 		if err != nil {
-			d.log.Error("boltdb create bucket", "error", err)
+			d.log.Error("boltdb create bucket", zap.Error(err))
 			return err
 		}
 
@@ -400,7 +400,7 @@ func (d *Driver) Clear() error {
 	})
 
 	if err != nil {
-		d.log.Error("clear transaction failed", "error", err)
+		d.log.Error("clear transaction failed", zap.Error(err))
 		return err
 	}
 
@@ -439,7 +439,7 @@ func (d *Driver) startGCLoop() { //nolint:gocognit
 					if now.After(v) {
 						// time expired
 						d.gc.Delete(k)
-						d.log.Debug("key deleted", "key", k)
+						d.log.Debug("key deleted", zap.String("key", k))
 						err := d.DB.Update(func(tx *bolt.Tx) error {
 							b := tx.Bucket(d.bucket)
 							if b == nil {
@@ -452,7 +452,7 @@ func (d *Driver) startGCLoop() { //nolint:gocognit
 							return nil
 						})
 						if err != nil {
-							d.log.Error("error during the gc phase of update", "error", err)
+							d.log.Error("error during the gc phase of update", zap.Error(err))
 							return false
 						}
 					}

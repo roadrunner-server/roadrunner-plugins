@@ -9,13 +9,13 @@ import (
 	"github.com/beanstalkd/go-beanstalk"
 	"github.com/cenkalti/backoff/v4"
 	"github.com/spiral/errors"
-	"github.com/spiral/roadrunner-plugins/v2/logger"
+	"go.uber.org/zap"
 )
 
 type ConnPool struct {
 	sync.RWMutex
 
-	log logger.Logger
+	log *zap.Logger
 
 	conn  *beanstalk.Conn
 	connT *beanstalk.Conn
@@ -28,7 +28,7 @@ type ConnPool struct {
 	tout    time.Duration
 }
 
-func NewConnPool(network, address, tName string, tout time.Duration, log logger.Logger) (*ConnPool, error) {
+func NewConnPool(network, address, tName string, tout time.Duration, log *zap.Logger) (*ConnPool, error) {
 	connT, err := beanstalk.DialTimeout(network, address, tout)
 	if err != nil {
 		return nil, err

@@ -59,7 +59,7 @@ $worker = match ($env->getMode()) {
         }
     },
 
-    'tcp' => new class($worker) {
+    RoadRunner\Environment\Mode::MODE_TCP => new class($worker) {
         private RoadRunner\Tcp\TcpWorker $worker;
 
         public function __construct(WorkerInterface $worker)

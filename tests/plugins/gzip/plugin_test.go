@@ -9,16 +9,16 @@ import (
 	"testing"
 	"time"
 
-	"github.com/golang/mock/gomock"
 	endure "github.com/spiral/endure/pkg/container"
 	"github.com/spiral/roadrunner-plugins/v2/config"
 	httpPlugin "github.com/spiral/roadrunner-plugins/v2/http"
 	"github.com/spiral/roadrunner-plugins/v2/http/middleware/gzip"
 	"github.com/spiral/roadrunner-plugins/v2/logger"
 	"github.com/spiral/roadrunner-plugins/v2/server"
-	"github.com/spiral/roadrunner-plugins/v2/tests/mocks"
+	mock_logger "github.com/spiral/roadrunner-plugins/v2/tests/mock"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"go.uber.org/zap"
 )
 
 func TestGzipPlugin(t *testing.T) {
@@ -115,18 +115,10 @@ func TestMiddlewareNotExist(t *testing.T) {
 		Prefix: "rr",
 	}
 
-	controller := gomock.NewController(t)
-	mockLogger := mocks.NewMockLogger(controller)
-
-	mockLogger.EXPECT().Warn("requested middleware does not exist", "requested", "foo").MinTimes(1)
-	mockLogger.EXPECT().Error(gomock.Any(), gomock.Any(), gomock.Any()).AnyTimes() // placeholder for the workerlogerror
-	mockLogger.EXPECT().Debug("http server is running", "address", gomock.Any()).AnyTimes()
-
-	mockLogger.EXPECT().Info(gomock.Any()).AnyTimes()
-
+	l, oLogger := mock_logger.ZapTestLogger(zap.DebugLevel)
 	err = cont.RegisterAll(
 		cfg,
-		mockLogger,
+		l,
 		&server.Plugin{},
 		&httpPlugin.Plugin{},
 		&gzip.Plugin{},
@@ -179,4 +171,7 @@ func TestMiddlewareNotExist(t *testing.T) {
 	time.Sleep(time.Second)
 	stopCh <- struct{}{}
 	wg.Wait()
+
+	require.Equal(t, 1, oLogger.FilterMessageSnippet("http server was started").Len())
+	require.Equal(t, 1, oLogger.FilterMessageSnippet("requested middleware does not exist").Len())
 }

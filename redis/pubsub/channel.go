@@ -6,9 +6,9 @@ import (
 
 	"github.com/go-redis/redis/v8"
 	"github.com/spiral/errors"
-	"github.com/spiral/roadrunner-plugins/v2/api/pubsub"
-	"github.com/spiral/roadrunner-plugins/v2/logger"
-	"github.com/spiral/roadrunner-plugins/v2/utils"
+	"github.com/spiral/roadrunner-plugins/v2/api/v2/pubsub"
+	"github.com/spiral/roadrunner/v2/utils"
+	"go.uber.org/zap"
 )
 
 type redisChannel struct {
@@ -18,7 +18,7 @@ type redisChannel struct {
 	client redis.UniversalClient
 	pubsub *redis.PubSub
 
-	log logger.Logger
+	log *zap.Logger
 
 	// out channel with all subs
 	out chan *pubsub.Message
@@ -26,7 +26,7 @@ type redisChannel struct {
 	exit chan struct{}
 }
 
-func newRedisChannel(redisClient redis.UniversalClient, log logger.Logger) *redisChannel {
+func newRedisChannel(redisClient redis.UniversalClient, log *zap.Logger) *redisChannel {
 	out := make(chan *pubsub.Message, 100)
 	fi := &redisChannel{
 		out:    out,

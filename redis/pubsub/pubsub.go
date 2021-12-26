@@ -6,22 +6,22 @@ import (
 
 	"github.com/go-redis/redis/v8"
 	"github.com/spiral/errors"
-	"github.com/spiral/roadrunner-plugins/v2/api/pubsub"
-	"github.com/spiral/roadrunner-plugins/v2/config"
-	"github.com/spiral/roadrunner-plugins/v2/logger"
+	"github.com/spiral/roadrunner-plugins/v2/api/v2/config"
+	"github.com/spiral/roadrunner-plugins/v2/api/v2/pubsub"
+	"go.uber.org/zap"
 )
 
 type driver struct {
 	sync.RWMutex
 	cfg *Config
 
-	log             logger.Logger
+	log             *zap.Logger
 	channel         *redisChannel
 	universalClient redis.UniversalClient
 	stopCh          chan struct{}
 }
 
-func NewPubSubDriver(log logger.Logger, key string, cfgPlugin config.Configurer) (*driver, error) {
+func NewPubSubDriver(log *zap.Logger, key string, cfgPlugin config.Configurer) (*driver, error) {
 	const op = errors.Op("new_pub_sub_driver")
 	ps := &driver{
 		log: log,
@@ -102,7 +102,7 @@ func (p *driver) PublishAsync(msg *pubsub.Message) {
 
 		f := p.universalClient.Publish(context.Background(), msg.Topic, msg.Payload)
 		if f.Err() != nil {
-			p.log.Error("redis publish", "error", f.Err())
+			p.log.Error("redis publish", zap.Error(f.Err()))
 		}
 	}()
 }
@@ -118,7 +118,7 @@ func (p *driver) Subscribe(connectionID string, topics ...string) error {
 			return err
 		}
 		if res == 0 {
-			p.log.Warn("could not subscribe to the provided topic, you might be already subscribed to it", "connectionID", connectionID, "topic", topics[i])
+			p.log.Warn("could not subscribe to the provided topic, you might be already subscribed to it", zap.String("connectionID", connectionID), zap.String("topic", topics[i]))
 			continue
 		}
 	}

@@ -8,20 +8,20 @@ import (
 	"sync"
 	"time"
 
-	json "github.com/json-iterator/go"
 	"github.com/spiral/errors"
 	"github.com/spiral/roadrunner-plugins/v2/http/attributes"
 	"github.com/spiral/roadrunner-plugins/v2/http/config"
-	"github.com/spiral/roadrunner-plugins/v2/logger"
-	"github.com/spiral/roadrunner/v2/events"
 	"github.com/spiral/roadrunner/v2/payload"
 	"github.com/spiral/roadrunner/v2/pool"
+	"go.uber.org/zap"
 )
 
 const (
 	// MB is 1024 bytes
 	MB         uint64 = 1024 * 1024
 	ContentLen string = "Content-Length"
+	noWorkers  string = "No-Workers"
+	trueStr    string = "true"
 )
 
 type uploads struct {
@@ -36,11 +36,8 @@ type Handler struct {
 	maxRequestSize uint64
 	uploads        *uploads
 	trusted        config.Cidrs
-	log            logger.Logger
+	log            *zap.Logger
 	pool           pool.Pool
-
-	events   events.EventBus
-	eventsID string
 
 	accessLogs       bool
 	internalHTTPCode uint64
@@ -52,12 +49,10 @@ type Handler struct {
 }
 
 // NewHandler return handle interface implementation
-func NewHandler(maxReqSize uint64, internalHTTPCode uint64, dir string, allow, forbid map[string]struct{}, trusted config.Cidrs, pool pool.Pool, log logger.Logger, accessLogs bool) (*Handler, error) {
+func NewHandler(maxReqSize uint64, internalHTTPCode uint64, dir string, allow, forbid map[string]struct{}, trusted config.Cidrs, pool pool.Pool, log *zap.Logger, accessLogs bool) (*Handler, error) {
 	if pool == nil {
 		return nil, errors.E(errors.Str("pool should be initialized"))
 	}
-
-	eb, id := events.Bus()
 
 	return &Handler{
 		maxRequestSize: maxReqSize * MB,
@@ -69,8 +64,6 @@ func NewHandler(maxReqSize uint64, internalHTTPCode uint64, dir string, allow, f
 		pool:             pool,
 		log:              log,
 		trusted:          trusted,
-		events:           eb,
-		eventsID:         id,
 		internalHTTPCode: internalHTTPCode,
 		accessLogs:       accessLogs,
 		reqPool: sync.Pool{
@@ -115,12 +108,12 @@ func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			if err != nil {
 				// if got an error while parsing -> assign 500 code to the writer and return
 				http.Error(w, "", 500)
-				h.log.Error("error while parsing value from the content-length header", "start", start, "elapsed", time.Since(start))
+				h.log.Error("error while parsing value from the content-length header", zap.Time("start", start), zap.Duration("elapsed", time.Since(start)))
 				return
 			}
 
 			if size > int64(h.maxRequestSize) {
-				h.log.Error("request body max size is exceeded", "allowed_size", h.maxRequestSize, "actual_size", size, "start", start, "elapsed", time.Since(start))
+				h.log.Error("request max body size is exceeded", zap.Uint64("allowed_size", h.maxRequestSize), zap.Int64("actual_size", size), zap.Time("start", start), zap.Duration("elapsed", time.Since(start)))
 				http.Error(w, errors.E(op, errors.Str("request body max size is exceeded")).Error(), http.StatusBadRequest)
 				return
 			}
@@ -128,20 +121,19 @@ func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 
 	req := h.getReq(r)
-
 	err := request(r, req)
 	if err != nil {
 		// if pipe is broken, there is no sense to write the header
 		// in this case we just report about error
 		if err == errEPIPE {
 			h.putReq(req)
-			h.log.Error("write response error", "error", err, "start", start, "elapsed", time.Since(start))
+			h.log.Error("write response error", zap.Time("start", start), zap.Duration("elapsed", time.Since(start)), zap.Error(err))
 			return
 		}
 
 		h.putReq(req)
 		http.Error(w, errors.E(op, err).Error(), 500)
-		h.log.Error("request forming error", "error", err, "start", start, "elapsed", time.Since(start))
+		h.log.Error("request forming error", zap.Time("start", start), zap.Duration("elapsed", time.Since(start)), zap.Error(err))
 		return
 	}
 
@@ -156,8 +148,8 @@ func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		req.Close(h.log)
 		h.putReq(req)
 		h.putPld(pld)
-		h.handleError(w, start, err)
-		h.log.Error("payload forming error", "error", err, "start", start, "elapsed", time.Since(start))
+		h.handleError(w, err)
+		h.log.Error("payload forming error", zap.Time("start", start), zap.Duration("elapsed", time.Since(start)), zap.Error(err))
 		return
 	}
 
@@ -166,8 +158,8 @@ func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		req.Close(h.log)
 		h.putReq(req)
 		h.putPld(pld)
-		h.handleError(w, start, err)
-		h.log.Error("execute error", "error", err, "start", start, "elapsed", time.Since(start))
+		h.handleError(w, err)
+		h.log.Error("execute", zap.Time("start", start), zap.Duration("elapsed", time.Since(start)), zap.Error(err))
 		return
 	}
 
@@ -176,22 +168,44 @@ func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		req.Close(h.log)
 		h.putReq(req)
 		h.putPld(pld)
-		h.handleError(w, start, err)
-		h.log.Error("write response error", "error", err, "start", start, "elapsed", time.Since(start))
+		h.handleError(w, err)
+		h.log.Error("write response error", zap.Time("start", start), zap.Duration("elapsed", time.Since(start)), zap.Error(err))
 		return
 	}
 
-	if !h.accessLogs {
-		h.log.Info("http log", "status", status, "method", req.Method, "URI", req.URI, "remote_address", req.RemoteAddr, "start", start, "elapsed", time.Since(start))
-	} else {
-		body, err := json.Marshal(r.Header)
-		if err != nil {
-			h.log.Error("can't calculate body length", "error", err)
-		}
+	switch h.accessLogs {
+	case false:
+		h.log.Info("http log",
+			zap.Int("status", status),
+			zap.String("method", req.Method),
+			zap.String("URI", req.URI),
+			zap.String("remote_address", req.RemoteAddr),
+			zap.Time("start", start),
+			zap.Duration("elapsed", time.Since(start)))
+	case true:
+		// external/cwe/cwe-117
+		usrA := r.UserAgent()
+		usrA = strings.ReplaceAll(usrA, "\n", "")
+		usrA = strings.ReplaceAll(usrA, "\r", "")
 
-		reqLen := len(body) + int(r.ContentLength)
+		rfr := r.Referer()
+		rfr = strings.ReplaceAll(rfr, "\n", "")
+		rfr = strings.ReplaceAll(rfr, "\r", "")
 
-		h.log.Info("http access log", "status", status, "method", req.Method, "URI", req.URI, "remote_address", req.RemoteAddr, "query", req.RawQuery, "request_length", reqLen, "bytes_sent", r.ContentLength, "host", r.Host, "user_agent", r.UserAgent(), "referer", r.Referer(), "time_local", time.Now().Format("02/Jan/06:15:04:05 -0700"), "request_time", time.Now(), "start", start, "elapsed", time.Since(start))
+		h.log.Info("http access log",
+			zap.Int("status", status),
+			zap.String("method", req.Method),
+			zap.String("URI", req.URI),
+			zap.String("remote_address", req.RemoteAddr),
+			zap.String("query", req.RawQuery),
+			zap.Int64("content_len", r.ContentLength),
+			zap.String("host", r.Host),
+			zap.String("user_agent", usrA),
+			zap.String("referer", rfr),
+			zap.String("time_local", time.Now().Format("02/Jan/06:15:04:05 -0700")),
+			zap.Time("request_time", time.Now()),
+			zap.Time("start", start),
+			zap.Duration("elapsed", time.Since(start)))
 	}
 
 	h.putPld(pld)
@@ -199,17 +213,20 @@ func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	h.putReq(req)
 }
 
-func (h *Handler) Dispose() {
-	h.events.Unsubscribe(h.eventsID)
-}
+func (h *Handler) Dispose() {}
 
 // handleError will handle internal RR errors and return 500
-func (h *Handler) handleError(w http.ResponseWriter, start time.Time, err error) {
+func (h *Handler) handleError(w http.ResponseWriter, err error) {
+	if errors.Is(errors.NoFreeWorkers, err) {
+		// set header for the prometheus
+		w.Header().Set(noWorkers, trueStr)
+		// write an internal server error
+		w.WriteHeader(int(h.internalHTTPCode))
+	}
 	// internal error types, user should not see them
 	if errors.Is(errors.SoftJob, err) ||
 		errors.Is(errors.WatcherStopped, err) ||
 		errors.Is(errors.WorkerAllocate, err) ||
-		errors.Is(errors.NoFreeWorkers, err) ||
 		errors.Is(errors.ExecTTL, err) ||
 		errors.Is(errors.IdleTTL, err) ||
 		errors.Is(errors.TTL, err) ||
@@ -264,18 +281,33 @@ func (h *Handler) resolveIP(r *Request) {
 }
 
 func (h *Handler) putReq(req *Request) {
+	req.RawQuery = ""
+	req.RemoteAddr = ""
+	req.Protocol = ""
+	req.Method = ""
+	req.URI = ""
+	req.Header = nil
+	req.Cookies = nil
+	req.Attributes = nil
+	req.Parsed = false
+	req.body = nil
 	h.reqPool.Put(req)
 }
 
 func (h *Handler) getReq(r *http.Request) *Request {
 	req := h.reqPool.Get().(*Request)
+
+	rq := r.URL.RawQuery
+	rq = strings.ReplaceAll(rq, "\n", "")
+	rq = strings.ReplaceAll(rq, "\r", "")
+
+	req.RawQuery = rq
 	req.RemoteAddr = FetchIP(r.RemoteAddr)
 	req.Protocol = r.Proto
 	req.Method = r.Method
 	req.URI = URI(r)
 	req.Header = r.Header
 	req.Cookies = make(map[string]string)
-	req.RawQuery = r.URL.RawQuery
 	req.Attributes = attributes.All(r)
 
 	req.Parsed = false

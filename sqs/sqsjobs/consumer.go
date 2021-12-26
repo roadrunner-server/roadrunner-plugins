@@ -15,11 +15,11 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/sqs/types"
 	"github.com/google/uuid"
 	"github.com/spiral/errors"
-	"github.com/spiral/roadrunner-plugins/v2/api/jobs"
-	"github.com/spiral/roadrunner-plugins/v2/api/jobs/pipeline"
-	cfgPlugin "github.com/spiral/roadrunner-plugins/v2/config"
-	"github.com/spiral/roadrunner-plugins/v2/logger"
+	cfgPlugin "github.com/spiral/roadrunner-plugins/v2/api/v2/config"
+	"github.com/spiral/roadrunner-plugins/v2/api/v2/jobs"
+	"github.com/spiral/roadrunner-plugins/v2/api/v2/jobs/pipeline"
 	priorityqueue "github.com/spiral/roadrunner/v2/priority_queue"
+	"go.uber.org/zap"
 )
 
 const (
@@ -29,7 +29,7 @@ const (
 type consumer struct {
 	sync.Mutex
 	pq       priorityqueue.Queue
-	log      logger.Logger
+	log      *zap.Logger
 	pipeline atomic.Value
 
 	// connection info
@@ -57,7 +57,7 @@ type consumer struct {
 	pauseCh chan struct{}
 }
 
-func NewSQSConsumer(configKey string, log logger.Logger, cfg cfgPlugin.Configurer, pq priorityqueue.Queue) (*consumer, error) {
+func NewSQSConsumer(configKey string, log *zap.Logger, cfg cfgPlugin.Configurer, pq priorityqueue.Queue) (*consumer, error) {
 	const op = errors.Op("new_sqs_consumer")
 
 	// if no such key - error
@@ -140,7 +140,7 @@ func NewSQSConsumer(configKey string, log logger.Logger, cfg cfgPlugin.Configure
 	return jb, nil
 }
 
-func FromPipeline(pipe *pipeline.Pipeline, log logger.Logger, cfg cfgPlugin.Configurer, pq priorityqueue.Queue) (*consumer, error) {
+func FromPipeline(pipe *pipeline.Pipeline, log *zap.Logger, cfg cfgPlugin.Configurer, pq priorityqueue.Queue) (*consumer, error) {
 	const op = errors.Op("new_sqs_consumer")
 
 	// if no global section
@@ -311,7 +311,7 @@ func (c *consumer) Run(_ context.Context, p *pipeline.Pipeline) error {
 	// TODO(rustatian) context with cancel to cancel receive operation on stop
 	go c.listen(context.Background())
 
-	c.log.Debug("pipeline active", "driver", pipe.Driver(), "pipeline", pipe.Name(), "start", start, "elapsed", time.Since(start))
+	c.log.Debug("pipeline is active", zap.String("driver", pipe.Driver()), zap.String("pipeline", pipe.Name()), zap.Time("start", start), zap.Duration("elapsed", time.Since(start)))
 	return nil
 }
 
@@ -322,7 +322,7 @@ func (c *consumer) Stop(context.Context) error {
 	}
 
 	pipe := c.pipeline.Load().(*pipeline.Pipeline)
-	c.log.Debug("pipeline stopped", "driver", pipe.Driver(), "pipeline", pipe.Name(), "start", time.Now(), "elapsed", time.Since(start))
+	c.log.Debug("pipeline was stopped", zap.String("driver", pipe.Driver()), zap.String("pipeline", pipe.Name()), zap.Time("start", time.Now()), zap.Duration("elapsed", time.Since(start)))
 	return nil
 }
 
@@ -331,7 +331,7 @@ func (c *consumer) Pause(_ context.Context, p string) {
 	// load atomic value
 	pipe := c.pipeline.Load().(*pipeline.Pipeline)
 	if pipe.Name() != p {
-		c.log.Error("no such pipeline", "requested", p, "actual", pipe.Name())
+		c.log.Error("no such pipeline", zap.String("requested", p), zap.String("actual", pipe.Name()))
 		return
 	}
 
@@ -346,7 +346,7 @@ func (c *consumer) Pause(_ context.Context, p string) {
 
 	// stop consume
 	c.pauseCh <- struct{}{}
-	c.log.Debug("pipeline paused", "driver", pipe.Driver(), "pipeline", pipe.Name(), "start", time.Now(), "elapsed", time.Since(start))
+	c.log.Debug("pipeline was paused", zap.String("driver", pipe.Driver()), zap.String("pipeline", pipe.Name()), zap.Time("start", time.Now()), zap.Duration("elapsed", time.Since(start)))
 }
 
 func (c *consumer) Resume(_ context.Context, p string) {
@@ -354,7 +354,7 @@ func (c *consumer) Resume(_ context.Context, p string) {
 	// load atomic value
 	pipe := c.pipeline.Load().(*pipeline.Pipeline)
 	if pipe.Name() != p {
-		c.log.Error("no such pipeline", "requested", p, "actual", pipe.Name())
+		c.log.Error("no such pipeline", zap.String("requested", p), zap.String("actual", pipe.Name()))
 		return
 	}
 
@@ -370,7 +370,7 @@ func (c *consumer) Resume(_ context.Context, p string) {
 
 	// increase num of listeners
 	atomic.AddUint32(&c.listeners, 1)
-	c.log.Debug("pipeline resumed", "driver", pipe.Driver(), "pipeline", pipe.Name(), "start", time.Now(), "elapsed", time.Since(start))
+	c.log.Debug("pipeline was resumed", zap.String("driver", pipe.Driver()), zap.String("pipeline", pipe.Name()), zap.Time("start", time.Now()), zap.Duration("elapsed", time.Since(start)))
 }
 
 func (c *consumer) handleItem(ctx context.Context, msg *Item) error {

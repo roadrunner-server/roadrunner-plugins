@@ -29,7 +29,7 @@ import (
 	"github.com/spiral/roadrunner-plugins/v2/redis"
 	rpcPlugin "github.com/spiral/roadrunner-plugins/v2/rpc"
 	"github.com/spiral/roadrunner-plugins/v2/server"
-	"github.com/spiral/roadrunner-plugins/v2/utils"
+	"github.com/spiral/roadrunner/v2/utils"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -681,11 +681,6 @@ func RPCWsPubAsync(port string) func(t *testing.T) {
 		// TRY TO PUBLISH TO UNSUBSCRIBED TOPIC
 		publishAsync(t, "foo")
 
-		go func() {
-			time.Sleep(time.Second * 5)
-			publishAsync(t, "foo2")
-		}()
-
 		err = conn.Close()
 		assert.NoError(t, err)
 	}
@@ -746,11 +741,6 @@ func RPCWsPub(port string) func(t *testing.T) {
 
 		// TRY TO PUBLISH TO UNSUBSCRIBED TOPIC
 		publish("", "foo")
-
-		go func() {
-			time.Sleep(time.Second * 5)
-			publish2(t, "", "foo2")
-		}()
 
 		err = conn.Close()
 		assert.NoError(t, err)

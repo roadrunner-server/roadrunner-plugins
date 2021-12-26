@@ -2,7 +2,7 @@ package pipeline
 
 import (
 	json "github.com/json-iterator/go"
-	"github.com/spiral/roadrunner-plugins/v2/utils"
+	"github.com/spiral/roadrunner/v2/utils"
 )
 
 // Pipeline defines pipeline options.

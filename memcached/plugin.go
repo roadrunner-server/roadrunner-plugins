@@ -2,10 +2,10 @@ package memcached
 
 import (
 	"github.com/spiral/errors"
-	"github.com/spiral/roadrunner-plugins/v2/api/kv"
-	"github.com/spiral/roadrunner-plugins/v2/config"
-	"github.com/spiral/roadrunner-plugins/v2/logger"
+	"github.com/spiral/roadrunner-plugins/v2/api/v2/config"
+	"github.com/spiral/roadrunner-plugins/v2/api/v2/kv"
 	"github.com/spiral/roadrunner-plugins/v2/memcached/memcachedkv"
+	"go.uber.org/zap"
 )
 
 const (
@@ -17,10 +17,10 @@ type Plugin struct {
 	// config plugin
 	cfgPlugin config.Configurer
 	// logger
-	log logger.Logger
+	log *zap.Logger
 }
 
-func (p *Plugin) Init(log logger.Logger, cfg config.Configurer) error {
+func (p *Plugin) Init(log *zap.Logger, cfg config.Configurer) error {
 	if !cfg.Has(RootPluginName) {
 		return errors.E(errors.Disabled)
 	}

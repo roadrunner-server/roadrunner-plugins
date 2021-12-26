@@ -29,7 +29,7 @@ const (
 
 func main() {
 	wg := &sync.WaitGroup{}
-	wg.Add(43)
+	wg.Add(33)
 
 	rate := uint64(0)
 	delayedCloseCh := make(chan string, 1000000)
@@ -55,26 +55,26 @@ func main() {
 		}
 	}()
 
-	go func() {
-		conn, err := net.Dial("tcp", "127.0.0.1:6001")
-		if err != nil {
-			log.Fatal(err)
-		}
-		client := rpc.NewClientWithCodec(goridgeRpc.NewClientCodec(conn))
-		for i := 0; i < 10; i++ {
-			go func() {
-				for j := 0; j < 10; j++ {
-					n := uuid.NewString()
-					declareBeanstalkPipe(client, n)
-					startPipelines(client, n)
-					push100(client, n)
-					atomic.AddUint64(&rate, 1)
-					delayedCloseCh <- n
-				}
-				wg.Done()
-			}()
-		}
-	}()
+	//go func() {
+	//	conn, err := net.Dial("tcp", "127.0.0.1:6001")
+	//	if err != nil {
+	//		log.Fatal(err)
+	//	}
+	//	client := rpc.NewClientWithCodec(goridgeRpc.NewClientCodec(conn))
+	//	for i := 0; i < 10; i++ {
+	//		go func() {
+	//			for j := 0; j < 10; j++ {
+	//				n := uuid.NewString()
+	//				declareBeanstalkPipe(client, n)
+	//				startPipelines(client, n)
+	//				push100(client, n)
+	//				atomic.AddUint64(&rate, 1)
+	//				delayedCloseCh <- n
+	//			}
+	//			wg.Done()
+	//		}()
+	//	}
+	//}()
 
 	go func() {
 		conn, err := net.Dial("tcp", "127.0.0.1:6001")

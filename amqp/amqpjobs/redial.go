@@ -6,7 +6,8 @@ import (
 	"github.com/cenkalti/backoff/v4"
 	amqp "github.com/rabbitmq/amqp091-go"
 	"github.com/spiral/errors"
-	"github.com/spiral/roadrunner-plugins/v2/api/jobs/pipeline"
+	"github.com/spiral/roadrunner-plugins/v2/api/v2/jobs/pipeline"
+	"go.uber.org/zap"
 )
 
 // redialer used to redial to the rabbitmq in case of the connection interrupts
@@ -29,25 +30,25 @@ func (c *consumer) redialer() { //nolint:gocognit
 				t := time.Now().UTC()
 				pipe := c.pipeline.Load().(*pipeline.Pipeline)
 
-				c.log.Error("pipeline connection closed, redialing", "error", err, "pipeline", pipe.Name(), "driver", pipe.Driver(), "start", t)
+				c.log.Error("pipeline connection was closed, redialing", zap.Error(err), zap.String("pipeline", pipe.Name()), zap.String("driver", pipe.Driver()), zap.Time("start", t))
 
 				expb := backoff.NewExponentialBackOff()
 				// set the retry timeout (minutes)
 				expb.MaxElapsedTime = c.retryTimeout
 				operation := func() error {
-					c.log.Warn("rabbitmq reconnecting, caused by", "error", err)
+					c.log.Warn("reconnecting", zap.Error(err))
 					var dialErr error
 					c.conn, dialErr = amqp.Dial(c.connStr)
 					if dialErr != nil {
 						return errors.E(op, dialErr)
 					}
 
-					c.log.Info("rabbitmq dial succeed. trying to redeclare queues and subscribers")
+					c.log.Info("rabbitmq dial was succeed. trying to redeclare queues and subscribers")
 
 					// re-init connection
 					errInit := c.initRabbitMQ()
 					if errInit != nil {
-						c.log.Error("rabbitmq dial", "error", errInit)
+						c.log.Error("rabbitmq dial", zap.Error(errInit))
 						return errInit
 					}
 
@@ -83,7 +84,7 @@ func (c *consumer) redialer() { //nolint:gocognit
 					// restart listener
 					c.listener(deliv)
 
-					c.log.Info("queues and subscribers redeclared successfully")
+					c.log.Info("queues and subscribers was redeclared successfully")
 
 					return nil
 				}
@@ -91,30 +92,30 @@ func (c *consumer) redialer() { //nolint:gocognit
 				retryErr := backoff.Retry(operation, expb)
 				if retryErr != nil {
 					c.Unlock()
-					c.log.Error("backoff failed", "error", retryErr)
+					c.log.Error("backoff operation failed", zap.Error(retryErr))
 					return
 				}
 
-				c.log.Info("pipeline redialed successfully", "pipeline", pipe.Name(), "driver", pipe.Driver(), "start", t, "elapsed", time.Since(t))
+				c.log.Info("connection was successfully restored", zap.String("pipeline", pipe.Name()), zap.String("driver", pipe.Driver()), zap.Time("start", t), zap.Duration("elapsed", time.Since(t)))
 				c.Unlock()
 
 			case <-c.stopCh:
 				pch := <-c.publishChan
 				err := pch.Close()
 				if err != nil {
-					c.log.Error("publish channel close", "error", err)
+					c.log.Error("publish channel close", zap.Error(err))
 				}
 
 				if c.consumeChan != nil {
 					err = c.consumeChan.Close()
 					if err != nil {
-						c.log.Error("consume channel close", "error", err)
+						c.log.Error("consume channel close", zap.Error(err))
 					}
 				}
 
 				err = c.conn.Close()
 				if err != nil {
-					c.log.Error("amqp connection close", "error", err)
+					c.log.Error("amqp connection close", zap.Error(err))
 				}
 
 				return
