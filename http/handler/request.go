@@ -169,7 +169,8 @@ func (r *Request) contentType() int {
 // URI fetches full uri from request in a form of string (including https scheme if TLS connection is enabled).
 func URI(r *http.Request) string {
 	// CVE: https://github.com/spiral/roadrunner-plugins/pull/184/checks?check_run_id=4635904339
-	uri := strings.ReplaceAll(r.URL.String(), "\n", "")
+	uri := r.URL.String()
+	uri = strings.ReplaceAll(uri, "\n", "")
 	uri = strings.ReplaceAll(uri, "\r", "")
 
 	if r.URL.Host != "" {

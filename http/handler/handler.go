@@ -175,17 +175,38 @@ func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 	switch h.accessLogs {
 	case false:
-		h.log.Info("http log", zap.Int("status", status), zap.String("method", req.Method), zap.String("URI", req.URI), zap.String("remote_address", req.RemoteAddr), zap.Time("start", start), zap.Duration("elapsed", time.Since(start)))
+		h.log.Info("http log",
+			zap.Int("status", status),
+			zap.String("method", req.Method),
+			zap.String("URI", req.URI),
+			zap.String("remote_address", req.RemoteAddr),
+			zap.Time("start", start),
+			zap.Duration("elapsed", time.Since(start)))
 	case true:
 
 		// external/cwe/cwe-117
-		usrA := strings.ReplaceAll(r.UserAgent(), "\n", "")
+		usrA := r.UserAgent()
+		usrA = strings.ReplaceAll(usrA, "\n", "")
 		usrA = strings.ReplaceAll(usrA, "\r", "")
 
-		rfr := strings.ReplaceAll(r.Referer(), "\n", "")
+		rfr := r.Referer()
+		rfr = strings.ReplaceAll(rfr, "\n", "")
 		rfr = strings.ReplaceAll(rfr, "\r", "")
 
-		h.log.Info("http access log", zap.Int("status", status), zap.String("method", req.Method), zap.String("URI", req.URI), zap.String("remote_address", req.RemoteAddr), zap.String("query", req.RawQuery), zap.Int64("content_len", r.ContentLength), zap.String("host", r.Host), zap.String("user_agent", usrA), zap.String("referer", rfr), zap.String("time_local", time.Now().Format("02/Jan/06:15:04:05 -0700")), zap.Time("request_time", time.Now()), zap.Time("start", start), zap.Duration("elapsed", time.Since(start)))
+		h.log.Info("http access log",
+			zap.Int("status", status),
+			zap.String("method", req.Method),
+			zap.String("URI", req.URI),
+			zap.String("remote_address", req.RemoteAddr),
+			zap.String("query", req.RawQuery),
+			zap.Int64("content_len", r.ContentLength),
+			zap.String("host", r.Host),
+			zap.String("user_agent", usrA),
+			zap.String("referer", rfr),
+			zap.String("time_local", time.Now().Format("02/Jan/06:15:04:05 -0700")),
+			zap.Time("request_time", time.Now()),
+			zap.Time("start", start),
+			zap.Duration("elapsed", time.Since(start)))
 	}
 
 	h.putPld(pld)
@@ -267,16 +288,17 @@ func (h *Handler) putReq(req *Request) {
 func (h *Handler) getReq(r *http.Request) *Request {
 	req := h.reqPool.Get().(*Request)
 
-	rq := strings.ReplaceAll(r.URL.RawQuery, "\n", "")
+	rq := r.URL.RawQuery
+	rq = strings.ReplaceAll(rq, "\n", "")
 	rq = strings.ReplaceAll(rq, "\r", "")
 
+	req.RawQuery = rq
 	req.RemoteAddr = FetchIP(r.RemoteAddr)
 	req.Protocol = r.Proto
 	req.Method = r.Method
 	req.URI = URI(r)
 	req.Header = r.Header
 	req.Cookies = make(map[string]string)
-	req.RawQuery = rq
 	req.Attributes = attributes.All(r)
 
 	req.Parsed = false
