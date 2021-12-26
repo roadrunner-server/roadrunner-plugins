@@ -170,8 +170,8 @@ func (r *Request) contentType() int {
 func URI(r *http.Request) string {
 	// CVE: https://github.com/spiral/roadrunner-plugins/pull/184/checks?check_run_id=4635904339
 	uri := r.URL.String()
-	uri = strings.ReplaceAll(uri, "\n", "")
-	uri = strings.ReplaceAll(uri, "\r", "")
+	uri = strings.Replace(uri, "\n", "", -1) //nolint:gocritic
+	uri = strings.Replace(uri, "\r", "", -1) //nolint:gocritic
 
 	if r.URL.Host != "" {
 		return uri

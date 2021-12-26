@@ -183,15 +183,14 @@ func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			zap.Time("start", start),
 			zap.Duration("elapsed", time.Since(start)))
 	case true:
-
 		// external/cwe/cwe-117
 		usrA := r.UserAgent()
-		usrA = strings.ReplaceAll(usrA, "\n", "")
-		usrA = strings.ReplaceAll(usrA, "\r", "")
+		usrA = strings.Replace(usrA, "\n", "", -1) //nolint:gocritic
+		usrA = strings.Replace(usrA, "\r", "", -1) //nolint:gocritic
 
 		rfr := r.Referer()
-		rfr = strings.ReplaceAll(rfr, "\n", "")
-		rfr = strings.ReplaceAll(rfr, "\r", "")
+		rfr = strings.Replace(rfr, "\n", "", -1) //nolint:gocritic
+		rfr = strings.Replace(rfr, "\r", "", -1) //nolint:gocritic
 
 		h.log.Info("http access log",
 			zap.Int("status", status),
@@ -282,6 +281,16 @@ func (h *Handler) resolveIP(r *Request) {
 }
 
 func (h *Handler) putReq(req *Request) {
+	req.RawQuery = ""
+	req.RemoteAddr = ""
+	req.Protocol = ""
+	req.Method = ""
+	req.URI = ""
+	req.Header = nil
+	req.Cookies = nil
+	req.Attributes = nil
+	req.Parsed = false
+	req.body = nil
 	h.reqPool.Put(req)
 }
 
@@ -289,8 +298,8 @@ func (h *Handler) getReq(r *http.Request) *Request {
 	req := h.reqPool.Get().(*Request)
 
 	rq := r.URL.RawQuery
-	rq = strings.ReplaceAll(rq, "\n", "")
-	rq = strings.ReplaceAll(rq, "\r", "")
+	rq = strings.Replace(rq, "\n", "", -1) //nolint:gocritic
+	rq = strings.Replace(rq, "\r", "", -1) //nolint:gocritic
 
 	req.RawQuery = rq
 	req.RemoteAddr = FetchIP(r.RemoteAddr)
