@@ -8,18 +8,18 @@ import (
 	"github.com/go-redis/redis/v8"
 	"github.com/spiral/errors"
 	kvv1 "github.com/spiral/roadrunner-plugins/v2/api/proto/kv/v1beta"
-	"github.com/spiral/roadrunner-plugins/v2/config"
-	"github.com/spiral/roadrunner-plugins/v2/logger"
-	"github.com/spiral/roadrunner-plugins/v2/utils"
+	"github.com/spiral/roadrunner-plugins/v2/api/v2/config"
+	"github.com/spiral/roadrunner/v2/utils"
+	"go.uber.org/zap"
 )
 
 type driver struct {
 	universalClient redis.UniversalClient
-	log             logger.Logger
+	log             *zap.Logger
 	cfg             *Config
 }
 
-func NewRedisDriver(log logger.Logger, key string, cfgPlugin config.Configurer) (*driver, error) {
+func NewRedisDriver(log *zap.Logger, key string, cfgPlugin config.Configurer) (*driver, error) {
 	const op = errors.Op("new_redis_driver")
 
 	d := &driver{

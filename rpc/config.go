@@ -5,7 +5,7 @@ import (
 	"net"
 	"strings"
 
-	"github.com/spiral/roadrunner-plugins/v2/utils"
+	"github.com/spiral/roadrunner/v2/utils"
 )
 
 // Config defines RPC service config.

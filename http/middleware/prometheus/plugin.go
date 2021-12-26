@@ -7,19 +7,20 @@ import (
 	"time"
 
 	"github.com/prometheus/client_golang/prometheus"
-	"github.com/spiral/roadrunner/v2/events"
 )
 
 const (
 	pluginName string = "http_metrics"
 	namespace  string = "rr_http"
+
+	// should be in sync with the http/handler.go constants
+	noWorkers string = "No-Workers"
+	trueStr   string = "true"
 )
 
 type Plugin struct {
 	writersPool sync.Pool
 	stopCh      chan struct{}
-	id          string
-	bus         events.EventBus
 
 	queueSize       prometheus.Gauge
 	noFreeWorkers   *prometheus.CounterVec
@@ -36,9 +37,7 @@ func (p *Plugin) Init() error {
 		},
 	}
 
-	p.bus, p.id = events.Bus()
 	p.stopCh = make(chan struct{}, 1)
-
 	p.queueSize = prometheus.NewGauge(prometheus.GaugeOpts{
 		Namespace: namespace,
 		Name:      "requests_queue",
@@ -70,28 +69,7 @@ func (p *Plugin) Init() error {
 }
 
 func (p *Plugin) Serve() chan error {
-	errCh := make(chan error, 1)
-
-	eventsCh := make(chan events.Event, 10)
-	err := p.bus.SubscribeP(p.id, "pool.EventNoFreeWorkers", eventsCh)
-	if err != nil {
-		errCh <- err
-		return errCh
-	}
-
-	go func() {
-		for {
-			select {
-			case <-eventsCh:
-				// increment no free workers event
-				p.noFreeWorkers.With(nil).Inc()
-			case <-p.stopCh:
-				p.bus.Unsubscribe(p.id)
-			}
-		}
-	}()
-
-	return errCh
+	return make(chan error, 1)
 }
 
 func (p *Plugin) Stop() error {
@@ -110,6 +88,10 @@ func (p *Plugin) Middleware(next http.Handler) http.Handler {
 		p.queueSize.Inc()
 
 		next.ServeHTTP(rrWriter, r)
+
+		if w.Header().Get(noWorkers) == trueStr {
+			p.noFreeWorkers.With(nil).Inc()
+		}
 
 		p.requestCounter.With(prometheus.Labels{
 			"status": strconv.Itoa(rrWriter.code),

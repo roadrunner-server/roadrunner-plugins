@@ -11,8 +11,7 @@ import (
 	"time"
 
 	"github.com/spiral/errors"
-	"github.com/spiral/roadrunner-plugins/v2/logger"
-	"github.com/spiral/roadrunner-plugins/v2/utils"
+	"go.uber.org/zap"
 )
 
 // Process structure contains an information about process, restart information, log, errors, etc
@@ -27,7 +26,7 @@ type Process struct {
 	// root plugin error chan
 	errCh chan error
 	// logger
-	log logger.Logger
+	log *zap.Logger
 
 	ExecTimeout     time.Duration
 	RemainAfterExit bool
@@ -40,7 +39,7 @@ type Process struct {
 }
 
 // NewServiceProcess constructs service process structure
-func NewServiceProcess(restartAfterExit bool, execTimeout time.Duration, restartDelay uint64, command string, env Env, l logger.Logger, errCh chan error) *Process {
+func NewServiceProcess(restartAfterExit bool, execTimeout time.Duration, restartDelay uint64, command string, env Env, l *zap.Logger, errCh chan error) *Process {
 	return &Process{
 		rawCmd:          command,
 		RestartSec:      restartDelay,
@@ -54,7 +53,7 @@ func NewServiceProcess(restartAfterExit bool, execTimeout time.Duration, restart
 
 // write message to the log (stderr)
 func (p *Process) Write(b []byte) (int, error) {
-	p.log.Info(utils.AsString(b))
+	p.log.Info(string(b))
 	return len(b), nil
 }
 
@@ -103,7 +102,7 @@ func (p *Process) wait() {
 	// Wait error doesn't matter here
 	err := p.command.Wait()
 	if err != nil {
-		p.log.Error("process wait error", "error", err)
+		p.log.Error("process wait error", zap.Error(err))
 	}
 	// wait for restart delay
 	if p.RemainAfterExit {

@@ -15,6 +15,7 @@ import (
 	"time"
 
 	"github.com/spiral/roadrunner-plugins/v2/tests/plugins/grpc/proto/health"
+	"google.golang.org/grpc/credentials/insecure"
 
 	endure "github.com/spiral/endure/pkg/container"
 	goridgeRpc "github.com/spiral/goridge/v3/pkg/rpc"
@@ -323,7 +324,7 @@ func TestGrpcRqRs(t *testing.T) {
 
 	time.Sleep(time.Second * 1)
 
-	conn, err := grpc.Dial("127.0.0.1:9001", grpc.WithInsecure())
+	conn, err := grpc.Dial("127.0.0.1:9001", grpc.WithTransportCredentials(insecure.NewCredentials()))
 	require.NoError(t, err)
 	require.NotNil(t, conn)
 
@@ -400,7 +401,7 @@ func TestGrpcRqRsMultiple(t *testing.T) {
 
 	time.Sleep(time.Second * 1)
 
-	conn, err := grpc.Dial("127.0.0.1:9001", grpc.WithInsecure())
+	conn, err := grpc.Dial("127.0.0.1:9001", grpc.WithTransportCredentials(insecure.NewCredentials()))
 	require.NoError(t, err)
 	require.NotNil(t, conn)
 

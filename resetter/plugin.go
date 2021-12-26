@@ -3,16 +3,17 @@ package resetter
 import (
 	endure "github.com/spiral/endure/pkg/container"
 	"github.com/spiral/errors"
+	"github.com/spiral/roadrunner-plugins/v2/api/v2/resetter"
 )
 
 const PluginName = "resetter"
 
 type Plugin struct {
-	registry map[string]Resetter
+	registry map[string]resetter.Resetter
 }
 
 func (p *Plugin) Init() error {
-	p.registry = make(map[string]Resetter)
+	p.registry = make(map[string]resetter.Resetter)
 	return nil
 }
 
@@ -28,7 +29,7 @@ func (p *Plugin) Reset(name string) error {
 }
 
 // RegisterTarget resettable service.
-func (p *Plugin) RegisterTarget(name endure.Named, r Resetter) error {
+func (p *Plugin) RegisterTarget(name endure.Named, r resetter.Resetter) error {
 	p.registry[name.Name()] = r
 	return nil
 }

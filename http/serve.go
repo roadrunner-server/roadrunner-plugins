@@ -11,8 +11,9 @@ import (
 	"strings"
 
 	"github.com/spiral/errors"
-	"github.com/spiral/roadrunner-plugins/v2/logger"
-	"github.com/spiral/roadrunner-plugins/v2/utils"
+	"github.com/spiral/roadrunner-plugins/v2/api/v2/middleware"
+	"github.com/spiral/roadrunner/v2/utils"
+	"go.uber.org/zap"
 	"golang.org/x/net/http2"
 	"golang.org/x/sys/cpu"
 )
@@ -51,7 +52,6 @@ func (p *Plugin) redirect(w http.ResponseWriter, r *http.Request) {
 }
 
 // https://golang.org/pkg/net/http/#Hijacker
-//go:inline
 func headerContainsUpgrade(r *http.Request) bool {
 	if _, ok := r.Header["Upgrade"]; ok {
 		return true
@@ -179,12 +179,12 @@ func (p *Plugin) tlsAddr(host string, forcePort bool) string {
 	return host
 }
 
-func applyMiddlewares(server *http.Server, middlewares map[string]Middleware, order []string, log logger.Logger) {
+func applyMiddlewares(server *http.Server, middlewares map[string]middleware.Middleware, order []string, log *zap.Logger) {
 	for i := len(order) - 1; i >= 0; i-- {
 		if mdwr, ok := middlewares[order[i]]; ok {
 			server.Handler = mdwr.Middleware(server.Handler)
 		} else {
-			log.Warn("requested middleware does not exist", "requested", order[i])
+			log.Warn("requested middleware does not exist", zap.String("requested", order[i]))
 		}
 	}
 }

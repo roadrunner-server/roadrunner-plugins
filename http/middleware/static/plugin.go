@@ -7,8 +7,8 @@ import (
 	"strings"
 
 	"github.com/spiral/errors"
-	"github.com/spiral/roadrunner-plugins/v2/config"
-	"github.com/spiral/roadrunner-plugins/v2/logger"
+	"github.com/spiral/roadrunner-plugins/v2/api/v2/config"
+	"go.uber.org/zap"
 )
 
 // PluginName contains default service name.
@@ -21,7 +21,7 @@ type Plugin struct {
 	// server configuration (location, forbidden files and etc)
 	cfg *Config
 
-	log logger.Logger
+	log *zap.Logger
 
 	// root is initiated http directory
 	root http.Dir
@@ -35,7 +35,7 @@ type Plugin struct {
 
 // Init must return configure service and return true if service hasStatus enabled. Must return error in case of
 // misconfiguration. Services must not be used without proper configuration pushed first.
-func (s *Plugin) Init(cfg config.Configurer, log logger.Logger) error {
+func (s *Plugin) Init(cfg config.Configurer, log *zap.Logger) error {
 	const op = errors.Op("static_plugin_init")
 	if !cfg.Has(RootPluginName) {
 		return errors.E(op, errors.Disabled)
@@ -119,7 +119,7 @@ func (s *Plugin) Middleware(next http.Handler) http.Handler {
 
 		// check that file extension in the forbidden list
 		if _, ok := s.forbiddenExtensions[ext]; ok {
-			s.log.Debug("file extension is forbidden", "ext", ext)
+			s.log.Debug("file extension is forbidden", zap.String("ext", ext))
 			next.ServeHTTP(w, r)
 			return
 		}
@@ -141,7 +141,7 @@ func (s *Plugin) Middleware(next http.Handler) http.Handler {
 		f, err := s.root.Open(fPath)
 		if err != nil {
 			// else no such file, show error in logs only in debug mode
-			s.log.Debug("no such file or directory", "error", err)
+			s.log.Debug("no such file or directory", zap.Error(err))
 			// pass request to the worker
 			next.ServeHTTP(w, r)
 			return
@@ -152,7 +152,7 @@ func (s *Plugin) Middleware(next http.Handler) http.Handler {
 		finfo, err := f.Stat()
 		if err != nil {
 			// else no such file, show error in logs only in debug mode
-			s.log.Debug("no such file or directory", "error", err)
+			s.log.Debug("no such file or directory", zap.Error(err))
 			// pass request to the worker
 			next.ServeHTTP(w, r)
 			return
@@ -161,7 +161,7 @@ func (s *Plugin) Middleware(next http.Handler) http.Handler {
 		defer func() {
 			err = f.Close()
 			if err != nil {
-				s.log.Error("file close error", "error", err)
+				s.log.Error("file close error", zap.Error(err))
 			}
 		}()
 

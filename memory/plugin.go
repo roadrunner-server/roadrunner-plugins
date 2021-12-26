@@ -2,26 +2,26 @@ package memory
 
 import (
 	"github.com/spiral/errors"
-	"github.com/spiral/roadrunner-plugins/v2/api/jobs"
-	"github.com/spiral/roadrunner-plugins/v2/api/jobs/pipeline"
-	"github.com/spiral/roadrunner-plugins/v2/api/kv"
-	"github.com/spiral/roadrunner-plugins/v2/api/pubsub"
-	"github.com/spiral/roadrunner-plugins/v2/config"
-	"github.com/spiral/roadrunner-plugins/v2/logger"
+	"github.com/spiral/roadrunner-plugins/v2/api/v2/config"
+	"github.com/spiral/roadrunner-plugins/v2/api/v2/jobs"
+	"github.com/spiral/roadrunner-plugins/v2/api/v2/jobs/pipeline"
+	"github.com/spiral/roadrunner-plugins/v2/api/v2/kv"
+	"github.com/spiral/roadrunner-plugins/v2/api/v2/pubsub"
 	"github.com/spiral/roadrunner-plugins/v2/memory/memoryjobs"
 	"github.com/spiral/roadrunner-plugins/v2/memory/memorykv"
 	"github.com/spiral/roadrunner-plugins/v2/memory/memorypubsub"
 	priorityqueue "github.com/spiral/roadrunner/v2/priority_queue"
+	"go.uber.org/zap"
 )
 
 const PluginName string = "memory"
 
 type Plugin struct {
-	log logger.Logger
+	log *zap.Logger
 	cfg config.Configurer
 }
 
-func (p *Plugin) Init(log logger.Logger, cfg config.Configurer) error {
+func (p *Plugin) Init(log *zap.Logger, cfg config.Configurer) error {
 	p.log = log
 	p.cfg = cfg
 	return nil

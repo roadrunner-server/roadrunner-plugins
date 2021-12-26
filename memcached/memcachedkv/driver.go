@@ -7,20 +7,20 @@ import (
 	"github.com/bradfitz/gomemcache/memcache"
 	"github.com/spiral/errors"
 	kvv1 "github.com/spiral/roadrunner-plugins/v2/api/proto/kv/v1beta"
-	"github.com/spiral/roadrunner-plugins/v2/config"
-	"github.com/spiral/roadrunner-plugins/v2/logger"
+	"github.com/spiral/roadrunner-plugins/v2/api/v2/config"
+	"go.uber.org/zap"
 )
 
 type driver struct {
 	client *memcache.Client
-	log    logger.Logger
+	log    *zap.Logger
 	cfg    *Config
 }
 
 // NewMemcachedDriver returns a memcache client using the provided server(s)
 // with equal weight. If a server is listed multiple times,
 // it gets a proportional amount of weight.
-func NewMemcachedDriver(log logger.Logger, key string, cfgPlugin config.Configurer) (*driver, error) {
+func NewMemcachedDriver(log *zap.Logger, key string, cfgPlugin config.Configurer) (*driver, error) {
 	const op = errors.Op("new_memcached_driver")
 
 	s := &driver{
@@ -243,7 +243,7 @@ func (d *driver) Delete(keys ...string) error {
 func (d *driver) Clear() error {
 	err := d.client.DeleteAll()
 	if err != nil {
-		d.log.Error("flush_all operation failed", "error", err)
+		d.log.Error("flush_all operation failed", zap.Error(err))
 		return err
 	}
 

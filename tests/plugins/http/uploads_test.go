@@ -27,7 +27,7 @@ var json = j.ConfigCompatibleWithStandardLibrary
 const testFile = "uploads_test.go"
 
 func TestHandler_Upload_File(t *testing.T) {
-	pool, err := poolImpl.Initialize(context.Background(),
+	pool, err := poolImpl.NewStaticPool(context.Background(),
 		func() *exec.Cmd {
 			return exec.Command("php", "../../php_test_files/http/client.php", "upload", "pipes")
 		},
@@ -41,7 +41,7 @@ func TestHandler_Upload_File(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	h, err := handler.NewHandler(1024, 500, os.TempDir(), map[string]struct{}{".go": {}}, map[string]struct{}{}, nil, pool, &mockLog{}, false)
+	h, err := handler.NewHandler(1024, 500, os.TempDir(), map[string]struct{}{".go": {}}, map[string]struct{}{}, nil, pool, mockLog, false)
 	assert.NoError(t, err)
 
 	hs := &http.Server{Addr: ":9021", Handler: h}
@@ -109,7 +109,7 @@ func TestHandler_Upload_File(t *testing.T) {
 }
 
 func TestHandler_Upload_NestedFile(t *testing.T) {
-	pool, err := poolImpl.Initialize(context.Background(),
+	pool, err := poolImpl.NewStaticPool(context.Background(),
 		func() *exec.Cmd {
 			return exec.Command("php", "../../php_test_files/http/client.php", "upload", "pipes")
 		},
@@ -123,7 +123,7 @@ func TestHandler_Upload_NestedFile(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	h, err := handler.NewHandler(1024, 500, os.TempDir(), map[string]struct{}{".go": {}}, map[string]struct{}{}, nil, pool, &mockLog{}, false)
+	h, err := handler.NewHandler(1024, 500, os.TempDir(), map[string]struct{}{".go": {}}, map[string]struct{}{}, nil, pool, mockLog, false)
 
 	assert.NoError(t, err)
 
@@ -192,7 +192,7 @@ func TestHandler_Upload_NestedFile(t *testing.T) {
 }
 
 func TestHandler_Upload_File_NoTmpDir(t *testing.T) {
-	pool, err := poolImpl.Initialize(context.Background(),
+	pool, err := poolImpl.NewStaticPool(context.Background(),
 		func() *exec.Cmd {
 			return exec.Command("php", "../../php_test_files/http/client.php", "upload", "pipes")
 		},
@@ -206,7 +206,7 @@ func TestHandler_Upload_File_NoTmpDir(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	h, err := handler.NewHandler(1024, 500, "--------", map[string]struct{}{".go": {}}, map[string]struct{}{}, nil, pool, &mockLog{}, false)
+	h, err := handler.NewHandler(1024, 500, "--------", map[string]struct{}{".go": {}}, map[string]struct{}{}, nil, pool, mockLog, false)
 	assert.NoError(t, err)
 
 	hs := &http.Server{Addr: ":9023", Handler: h}
@@ -274,7 +274,7 @@ func TestHandler_Upload_File_NoTmpDir(t *testing.T) {
 }
 
 func TestHandler_Upload_File_Forbids(t *testing.T) {
-	pool, err := poolImpl.Initialize(context.Background(),
+	pool, err := poolImpl.NewStaticPool(context.Background(),
 		func() *exec.Cmd {
 			return exec.Command("php", "../../php_test_files/http/client.php", "upload", "pipes")
 		},
@@ -288,7 +288,7 @@ func TestHandler_Upload_File_Forbids(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	h, err := handler.NewHandler(1024, 500, os.TempDir(), map[string]struct{}{}, map[string]struct{}{".go": {}}, nil, pool, &mockLog{}, false)
+	h, err := handler.NewHandler(1024, 500, os.TempDir(), map[string]struct{}{}, map[string]struct{}{".go": {}}, nil, pool, mockLog, false)
 	assert.NoError(t, err)
 
 	hs := &http.Server{Addr: ":9024", Handler: h}
@@ -356,7 +356,7 @@ func TestHandler_Upload_File_Forbids(t *testing.T) {
 }
 
 func TestHandler_Upload_File_NotAllowed(t *testing.T) {
-	pool, err := poolImpl.Initialize(context.Background(),
+	pool, err := poolImpl.NewStaticPool(context.Background(),
 		func() *exec.Cmd {
 			return exec.Command("php", "../../php_test_files/http/client.php", "upload", "pipes")
 		},
@@ -370,7 +370,7 @@ func TestHandler_Upload_File_NotAllowed(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	h, err := handler.NewHandler(1024, 500, os.TempDir(), map[string]struct{}{".php": {}}, map[string]struct{}{}, nil, pool, &mockLog{}, false)
+	h, err := handler.NewHandler(1024, 500, os.TempDir(), map[string]struct{}{".php": {}}, map[string]struct{}{}, nil, pool, mockLog, false)
 	assert.NoError(t, err)
 
 	hs := &http.Server{Addr: ":9024", Handler: h}

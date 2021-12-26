@@ -12,7 +12,6 @@ import (
 	"time"
 
 	goRedis "github.com/go-redis/redis/v8"
-	"github.com/golang/mock/gomock"
 	endure "github.com/spiral/endure/pkg/container"
 	goridgeRpc "github.com/spiral/goridge/v3/pkg/rpc"
 	websocketsv1 "github.com/spiral/roadrunner-plugins/v2/api/proto/websockets/v1beta"
@@ -25,9 +24,11 @@ import (
 	"github.com/spiral/roadrunner-plugins/v2/redis"
 	rpcPlugin "github.com/spiral/roadrunner-plugins/v2/rpc"
 	"github.com/spiral/roadrunner-plugins/v2/server"
-	"github.com/spiral/roadrunner-plugins/v2/tests/mocks"
+	mock_logger "github.com/spiral/roadrunner-plugins/v2/tests/mock"
 	"github.com/spiral/roadrunner-plugins/v2/tests/plugins/broadcast/plugins"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
+	"go.uber.org/zap"
 )
 
 func TestBroadcastInit(t *testing.T) {
@@ -147,18 +148,12 @@ func TestBroadcastNoConfig(t *testing.T) {
 		Prefix: "rr",
 	}
 
-	controller := gomock.NewController(t)
-	mockLogger := mocks.NewMockLogger(controller)
-
-	mockLogger.EXPECT().Info(gomock.Any()).AnyTimes()
-	mockLogger.EXPECT().Debug("RPC plugin started", "address", "tcp://127.0.0.1:6001", "plugins", gomock.Any()).Times(1)
-	mockLogger.EXPECT().Debug("http server is running", "address", gomock.Any()).AnyTimes()
-
+	l, oLogger := mock_logger.ZapTestLogger(zap.DebugLevel)
 	err = cont.RegisterAll(
 		cfg,
 		&broadcast.Plugin{},
 		&rpcPlugin.Plugin{},
-		mockLogger,
+		l,
 		&server.Plugin{},
 		&redis.Plugin{},
 		&websockets.Plugin{},
@@ -177,13 +172,16 @@ func TestBroadcastNoConfig(t *testing.T) {
 	_, err = cont.Serve()
 	assert.NoError(t, err)
 	_ = cont.Stop()
+
+	require.Equal(t, 1, oLogger.FilterMessageSnippet("http server was started").Len())
+	require.Equal(t, 1, oLogger.FilterMessageSnippet("plugin was started").Len())
 }
 
 func TestBroadcastSameSubscriber(t *testing.T) {
 	t.Run("RedisFlush", redisFlushAll("127.0.0.1:6379"))
 	t.Run("RedisFlush", redisFlushAll("127.0.0.1:6378"))
 
-	cont, err := endure.NewContainer(nil, endure.SetLogLevel(endure.ErrorLevel), endure.GracefulShutdownTimeout(time.Second))
+	cont, err := endure.NewContainer(nil, endure.SetLogLevel(endure.ErrorLevel))
 	assert.NoError(t, err)
 
 	cfg := &config.Plugin{
@@ -191,30 +189,12 @@ func TestBroadcastSameSubscriber(t *testing.T) {
 		Prefix: "rr",
 	}
 
-	controller := gomock.NewController(t)
-	mockLogger := mocks.NewMockLogger(controller)
-
-	mockLogger.EXPECT().Debug("RPC plugin started", "address", "tcp://127.0.0.1:6002", "plugins", gomock.Any()).Times(1)
-
-	mockLogger.EXPECT().Debug("message published", "msg", gomock.Any()).MinTimes(1)
-	mockLogger.EXPECT().Debug("http server is running", "address", gomock.Any()).MinTimes(1)
-
-	mockLogger.EXPECT().Info(`plugin1: {foo hello}`).Times(3)
-	mockLogger.EXPECT().Info(`plugin1: {foo2 hello}`).Times(2)
-	mockLogger.EXPECT().Info(`plugin1: {foo3 hello}`).Times(3)
-	mockLogger.EXPECT().Info(`plugin2: {foo hello}`).Times(3)
-	mockLogger.EXPECT().Info(`plugin3: {foo hello}`).Times(3)
-	mockLogger.EXPECT().Info(`plugin4: {foo hello}`).Times(3)
-	mockLogger.EXPECT().Info(`plugin5: {foo hello}`).Times(3)
-	mockLogger.EXPECT().Info(`plugin6: {foo hello}`).Times(3)
-
-	mockLogger.EXPECT().Info(gomock.Any()).Times(2)
-
+	l, oLogger := mock_logger.ZapTestLogger(zap.DebugLevel)
 	err = cont.RegisterAll(
 		cfg,
 		&broadcast.Plugin{},
 		&rpcPlugin.Plugin{},
-		mockLogger,
+		l,
 		&server.Plugin{},
 		&redis.Plugin{},
 		&websockets.Plugin{},
@@ -291,22 +271,31 @@ func TestBroadcastSameSubscriber(t *testing.T) {
 	t.Run("PublishAsyncHelloFooFoo2Foo3", BroadcastPublishAsyncFooFoo2Foo3("6002"))
 
 	time.Sleep(time.Second * 5)
-
 	stopCh <- struct{}{}
-
 	wg.Wait()
 
 	t.Run("RedisFlush", redisFlushAll("127.0.0.1:6379"))
 	t.Run("RedisFlush", redisFlushAll("127.0.0.1:6378"))
 
-	time.Sleep(time.Second * 5)
+	require.Equal(t, 1, oLogger.FilterMessageSnippet("http server was started").Len())
+	require.Equal(t, 1, oLogger.FilterMessageSnippet("plugin was started").Len())
+
+	require.Equal(t, 3, oLogger.FilterMessageSnippet("plugin1: {foo hello}").Len())
+	require.Equal(t, 2, oLogger.FilterMessageSnippet("plugin1: {foo2 hello}").Len())
+	require.Equal(t, 3, oLogger.FilterMessageSnippet("plugin1: {foo3 hello}").Len())
+
+	require.Equal(t, 3, oLogger.FilterMessageSnippet("plugin2: {foo hello}").Len())
+	require.Equal(t, 3, oLogger.FilterMessageSnippet("plugin3: {foo hello}").Len())
+	require.Equal(t, 3, oLogger.FilterMessageSnippet("plugin4: {foo hello}").Len())
+	require.Equal(t, 3, oLogger.FilterMessageSnippet("plugin5: {foo hello}").Len())
+	require.Equal(t, 3, oLogger.FilterMessageSnippet("plugin6: {foo hello}").Len())
 }
 
 func TestBroadcastSameSubscriberGlobal(t *testing.T) {
 	t.Run("RedisFlush", redisFlushAll("127.0.0.1:6379"))
 	t.Run("RedisFlush", redisFlushAll("127.0.0.1:6378"))
 
-	cont, err := endure.NewContainer(nil, endure.SetLogLevel(endure.ErrorLevel), endure.GracefulShutdownTimeout(time.Second))
+	cont, err := endure.NewContainer(nil, endure.SetLogLevel(endure.ErrorLevel))
 	assert.NoError(t, err)
 
 	cfg := &config.Plugin{
@@ -314,30 +303,12 @@ func TestBroadcastSameSubscriberGlobal(t *testing.T) {
 		Prefix: "rr",
 	}
 
-	controller := gomock.NewController(t)
-	mockLogger := mocks.NewMockLogger(controller)
-
-	mockLogger.EXPECT().Debug("RPC plugin started", "address", "tcp://127.0.0.1:6003", "plugins", gomock.Any()).Times(1)
-
-	mockLogger.EXPECT().Debug("message published", "msg", gomock.Any()).AnyTimes()
-	mockLogger.EXPECT().Debug("http server is running", "address", gomock.Any()).AnyTimes()
-
-	mockLogger.EXPECT().Info(`plugin1: {foo hello}`).Times(3)
-	mockLogger.EXPECT().Info(`plugin1: {foo2 hello}`).Times(2)
-	mockLogger.EXPECT().Info(`plugin1: {foo3 hello}`).Times(3)
-	mockLogger.EXPECT().Info(`plugin2: {foo hello}`).Times(3)
-	mockLogger.EXPECT().Info(`plugin3: {foo hello}`).Times(3)
-	mockLogger.EXPECT().Info(`plugin4: {foo hello}`).Times(3)
-	mockLogger.EXPECT().Info(`plugin5: {foo hello}`).Times(3)
-	mockLogger.EXPECT().Info(`plugin6: {foo hello}`).Times(3)
-
-	mockLogger.EXPECT().Info(gomock.Any()).AnyTimes()
-
+	l, oLogger := mock_logger.ZapTestLogger(zap.DebugLevel)
 	err = cont.RegisterAll(
 		cfg,
 		&broadcast.Plugin{},
 		&rpcPlugin.Plugin{},
-		mockLogger,
+		l,
 		&server.Plugin{},
 		&redis.Plugin{},
 		&websockets.Plugin{},
@@ -414,15 +385,24 @@ func TestBroadcastSameSubscriberGlobal(t *testing.T) {
 	t.Run("PublishAsyncHelloFooFoo2Foo3", BroadcastPublishAsyncFooFoo2Foo3("6003"))
 
 	time.Sleep(time.Second * 4)
-
 	stopCh <- struct{}{}
-
 	wg.Wait()
-
-	time.Sleep(time.Second * 5)
 
 	t.Run("RedisFlush", redisFlushAll("127.0.0.1:6379"))
 	t.Run("RedisFlush", redisFlushAll("127.0.0.1:6378"))
+
+	require.Equal(t, 1, oLogger.FilterMessageSnippet("http server was started").Len())
+	require.Equal(t, 1, oLogger.FilterMessageSnippet("plugin was started").Len())
+
+	require.Equal(t, 3, oLogger.FilterMessageSnippet("plugin1: {foo hello}").Len())
+	require.Equal(t, 2, oLogger.FilterMessageSnippet("plugin1: {foo2 hello}").Len())
+	require.Equal(t, 3, oLogger.FilterMessageSnippet("plugin1: {foo3 hello}").Len())
+
+	require.Equal(t, 3, oLogger.FilterMessageSnippet("plugin2: {foo hello}").Len())
+	require.Equal(t, 3, oLogger.FilterMessageSnippet("plugin3: {foo hello}").Len())
+	require.Equal(t, 3, oLogger.FilterMessageSnippet("plugin4: {foo hello}").Len())
+	require.Equal(t, 3, oLogger.FilterMessageSnippet("plugin5: {foo hello}").Len())
+	require.Equal(t, 3, oLogger.FilterMessageSnippet("plugin6: {foo hello}").Len())
 }
 
 func BroadcastPublishFooFoo2Foo3(port string) func(t *testing.T) {

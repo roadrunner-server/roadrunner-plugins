@@ -10,8 +10,8 @@ import (
 
 	json "github.com/json-iterator/go"
 	"github.com/spiral/errors"
-	"github.com/spiral/roadrunner-plugins/v2/logger"
 	"github.com/spiral/roadrunner/v2/payload"
+	"go.uber.org/zap"
 )
 
 const (
@@ -103,7 +103,7 @@ func request(r *http.Request, req *Request) error {
 }
 
 // Open moves all uploaded files to temporary directory so it can be given to php later.
-func (r *Request) Open(log logger.Logger, dir string, forbid, allow map[string]struct{}) {
+func (r *Request) Open(log *zap.Logger, dir string, forbid, allow map[string]struct{}) {
 	if r.Uploads == nil {
 		return
 	}
@@ -112,7 +112,7 @@ func (r *Request) Open(log logger.Logger, dir string, forbid, allow map[string]s
 }
 
 // Close clears all temp file uploads
-func (r *Request) Close(log logger.Logger) {
+func (r *Request) Close(log *zap.Logger) {
 	if r.Uploads == nil {
 		return
 	}

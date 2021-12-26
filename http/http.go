@@ -4,7 +4,8 @@ import (
 	"net/http"
 
 	"github.com/spiral/errors"
-	"github.com/spiral/roadrunner-plugins/v2/utils"
+	"github.com/spiral/roadrunner/v2/utils"
+	"go.uber.org/zap"
 )
 
 func (p *Plugin) serveHTTP(errCh chan error) {
@@ -20,7 +21,7 @@ func (p *Plugin) serveHTTP(errCh chan error) {
 		return
 	}
 
-	p.log.Debug("http server is running", "address", p.cfg.Address)
+	p.log.Debug("http server was started", zap.String("address", p.cfg.Address))
 	err = p.http.Serve(l)
 	if err != nil && err != http.ErrServerClosed {
 		errCh <- errors.E(op, err)

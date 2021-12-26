@@ -3,14 +3,14 @@ package broadcast
 import (
 	"github.com/spiral/errors"
 	websocketsv1 "github.com/spiral/roadrunner-plugins/v2/api/proto/websockets/v1beta"
-	"github.com/spiral/roadrunner-plugins/v2/api/pubsub"
-	"github.com/spiral/roadrunner-plugins/v2/logger"
+	"github.com/spiral/roadrunner-plugins/v2/api/v2/pubsub"
+	"go.uber.org/zap"
 )
 
 // rpc collectors struct
 type rpc struct {
 	plugin *Plugin
-	log    logger.Logger
+	log    *zap.Logger
 }
 
 // Publish ... msg is a protobuf decoded payload
@@ -24,7 +24,7 @@ func (r *rpc) Publish(in *websocketsv1.Request, out *websocketsv1.Response) erro
 		return nil
 	}
 
-	r.log.Debug("message published", "msg", in.String())
+	r.log.Debug("message was published", zap.String("msg", in.String()))
 	msgLen := len(in.GetMessages())
 
 	for i := 0; i < msgLen; i++ {
@@ -61,7 +61,7 @@ func (r *rpc) PublishAsync(in *websocketsv1.Request, out *websocketsv1.Response)
 		return nil
 	}
 
-	r.log.Debug("message published", "msg", in.GetMessages())
+	r.log.Debug("message was published", zap.Any("msg", in.GetMessages()))
 
 	msgLen := len(in.GetMessages())
 

@@ -11,8 +11,9 @@ import (
 	"github.com/prometheus/client_golang/prometheus/collectors"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/spiral/errors"
-	"github.com/spiral/roadrunner-plugins/v2/config"
-	"github.com/spiral/roadrunner-plugins/v2/logger"
+	"github.com/spiral/roadrunner-plugins/v2/api/v2/config"
+	"github.com/spiral/roadrunner-plugins/v2/api/v2/metrics"
+	"go.uber.org/zap"
 	"golang.org/x/sys/cpu"
 )
 
@@ -26,18 +27,18 @@ const (
 // Plugin to manage application metrics using Prometheus.
 type Plugin struct {
 	cfg        *Config
-	log        logger.Logger
+	log        *zap.Logger
 	mu         sync.Mutex // all receivers are pointers
 	http       *http.Server
 	collectors sync.Map // all receivers are pointers
 	registry   *prometheus.Registry
 
 	// prometheus Collectors
-	statProviders []StatProvider
+	statProviders []metrics.StatProvider
 }
 
 // Init service.
-func (p *Plugin) Init(cfg config.Configurer, log logger.Logger) error {
+func (p *Plugin) Init(cfg config.Configurer, log *zap.Logger) error {
 	const op = errors.Op("metrics_plugin_init")
 	if !cfg.Has(PluginName) {
 		return errors.E(op, errors.Disabled)
@@ -75,7 +76,7 @@ func (p *Plugin) Init(cfg config.Configurer, log logger.Logger) error {
 		p.collectors.Store(k, v)
 	}
 
-	p.statProviders = make([]StatProvider, 0, 2)
+	p.statProviders = make([]metrics.StatProvider, 0, 2)
 
 	return nil
 }
@@ -205,7 +206,7 @@ func (p *Plugin) Stop() error {
 		err := p.http.Shutdown(ctx)
 		if err != nil {
 			// Function should be Stop() error
-			p.log.Error("stop error", "error", errors.Errorf("error shutting down the metrics server: error %v", err))
+			p.log.Error("stop error", zap.Error(errors.Errorf("error shutting down the metrics server: error %v", err)))
 		}
 	}
 	return nil
@@ -219,7 +220,7 @@ func (p *Plugin) Collects() []interface{} {
 }
 
 // AddStatProvider adds a metrics provider
-func (p *Plugin) AddStatProvider(stat StatProvider) error {
+func (p *Plugin) AddStatProvider(stat metrics.StatProvider) error {
 	p.statProviders = append(p.statProviders, stat)
 
 	return nil

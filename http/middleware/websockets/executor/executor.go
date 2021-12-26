@@ -9,11 +9,11 @@ import (
 	json "github.com/json-iterator/go"
 	"github.com/spiral/errors"
 	websocketsv1 "github.com/spiral/roadrunner-plugins/v2/api/proto/websockets/v1beta"
-	"github.com/spiral/roadrunner-plugins/v2/api/pubsub"
+	"github.com/spiral/roadrunner-plugins/v2/api/v2/pubsub"
 	"github.com/spiral/roadrunner-plugins/v2/http/middleware/websockets/commands"
 	"github.com/spiral/roadrunner-plugins/v2/http/middleware/websockets/connection"
 	"github.com/spiral/roadrunner-plugins/v2/http/middleware/websockets/validator"
-	"github.com/spiral/roadrunner-plugins/v2/logger"
+	"go.uber.org/zap"
 )
 
 const (
@@ -31,7 +31,7 @@ type Executor struct {
 	sync.Mutex
 	// raw ws connection
 	conn *connection.Connection
-	log  logger.Logger
+	log  *zap.Logger
 
 	// associated connection ID
 	connID string
@@ -45,7 +45,7 @@ type Executor struct {
 }
 
 // NewExecutor creates protected connection and starts command loop
-func NewExecutor(conn *connection.Connection, log logger.Logger,
+func NewExecutor(conn *connection.Connection, log *zap.Logger,
 	connID string, sub pubsub.Subscriber, av validator.AccessValidatorFn, r *http.Request) *Executor {
 	return &Executor{
 		conn:            conn,
@@ -67,7 +67,7 @@ func (e *Executor) StartCommandLoop() error { //nolint:gocognit
 		}
 
 		if opCode == ws.OpClose {
-			e.log.Debug("socket was closed", "reason", err)
+			e.log.Debug("socket was closed", zap.Error(err))
 			return nil
 		}
 
@@ -75,7 +75,7 @@ func (e *Executor) StartCommandLoop() error { //nolint:gocognit
 
 		err = json.Unmarshal(data, msg)
 		if err != nil {
-			e.log.Error("unmarshal message", "error", err)
+			e.log.Error("unmarshal message", zap.Error(err))
 			continue
 		}
 
@@ -88,12 +88,12 @@ func (e *Executor) StartCommandLoop() error { //nolint:gocognit
 		switch msg.Command {
 		// handle leave
 		case commands.Join:
-			e.log.Debug("received join command", "msg", msg)
+			e.log.Debug("join command is received", zap.Any("msg", msg))
 
 			val, err := e.accessValidator(e.req, msg.Topics...)
 			if err != nil {
 				if val != nil {
-					e.log.Debug("validation error", "status", val.Status, "headers", val.Header, "body", val.Body)
+					e.log.Debug("validation error", zap.Int("status", val.Status), zap.Any("headers", val.Header), zap.ByteString("body", val.Body))
 				}
 
 				resp := &Response{
@@ -103,13 +103,13 @@ func (e *Executor) StartCommandLoop() error { //nolint:gocognit
 
 				packet, errJ := json.Marshal(resp)
 				if errJ != nil {
-					e.log.Error("marshal the body", "error", errJ)
+					e.log.Error("marshal the body", zap.Error(errJ))
 					return errors.E(op, fmt.Errorf("%v,%v", err, errJ))
 				}
 
 				errW := e.conn.Write(packet)
 				if errW != nil {
-					e.log.Error("write payload to the connection", "payload", packet, "error", errW)
+					e.log.Error("write payload to the connection", zap.ByteString("payload", packet), zap.Error(errW))
 					return errors.E(op, fmt.Errorf("%v,%v", err, errW))
 				}
 
@@ -121,15 +121,15 @@ func (e *Executor) StartCommandLoop() error { //nolint:gocognit
 				Payload: msg.Topics,
 			}
 
-			packet, err := json.Marshal(resp)
-			if err != nil {
-				e.log.Error("marshal the body", "error", err)
+			packet, errM := json.Marshal(resp)
+			if errM != nil {
+				e.log.Error("marshal the body", zap.Error(errM))
 				return errors.E(op, err)
 			}
 
 			err = e.conn.Write(packet)
 			if err != nil {
-				e.log.Error("write payload to the connection", "payload", packet, "error", err)
+				e.log.Error("write payload to the connection", zap.ByteString("payload", packet), zap.Error(err))
 				return errors.E(op, err)
 			}
 
@@ -141,7 +141,7 @@ func (e *Executor) StartCommandLoop() error { //nolint:gocognit
 
 		// handle leave
 		case commands.Leave:
-			e.log.Debug("received leave command", "msg", msg)
+			e.log.Debug("received leave command", zap.Any("msg", msg))
 
 			// prepare response
 			resp := &Response{
@@ -151,13 +151,13 @@ func (e *Executor) StartCommandLoop() error { //nolint:gocognit
 
 			packet, err := json.Marshal(resp)
 			if err != nil {
-				e.log.Error("marshal the body", "error", err)
+				e.log.Error("marshal the body", zap.Error(err))
 				return errors.E(op, err)
 			}
 
 			err = e.conn.Write(packet)
 			if err != nil {
-				e.log.Error("write payload to the connection", "payload", packet, "error", err)
+				e.log.Error("write payload to the connection", zap.ByteString("payload", packet), zap.Error(err))
 				return errors.E(op, err)
 			}
 
@@ -169,7 +169,7 @@ func (e *Executor) StartCommandLoop() error { //nolint:gocognit
 		case commands.Headers:
 
 		default:
-			e.log.Warn("unknown command", "command", msg.Command)
+			e.log.Warn("unknown command", zap.String("command", msg.Command))
 		}
 	}
 }
@@ -178,7 +178,7 @@ func (e *Executor) Set(topics []string) error {
 	// associate connection with topics
 	err := e.sub.Subscribe(e.connID, topics...)
 	if err != nil {
-		e.log.Error("subscribe to the provided topics", "topics", topics, "error", err.Error())
+		e.log.Error("subscribe to the provided topics", zap.Strings("topics", topics), zap.Error(err))
 		// in case of error, unsubscribe connection from the dead topics
 		_ = e.sub.Unsubscribe(e.connID, topics...)
 		return err
@@ -196,7 +196,7 @@ func (e *Executor) Leave(topics []string) error {
 	// remove associated connections from the storage
 	err := e.sub.Unsubscribe(e.connID, topics...)
 	if err != nil {
-		e.log.Error("subscribe to the provided topics", "topics", topics, "error", err.Error())
+		e.log.Error("subscribe to the provided topics", zap.Strings("topics", topics), zap.Error(err))
 		return err
 	}
 

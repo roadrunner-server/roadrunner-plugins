@@ -12,7 +12,6 @@ import (
 	"testing"
 	"time"
 
-	"github.com/golang/mock/gomock"
 	endure "github.com/spiral/endure/pkg/container"
 	goridgeRpc "github.com/spiral/goridge/v3/pkg/rpc"
 	"github.com/spiral/roadrunner-plugins/v2/config"
@@ -22,8 +21,10 @@ import (
 	"github.com/spiral/roadrunner-plugins/v2/metrics"
 	rpcPlugin "github.com/spiral/roadrunner-plugins/v2/rpc"
 	"github.com/spiral/roadrunner-plugins/v2/server"
-	"github.com/spiral/roadrunner-plugins/v2/tests/mocks"
+	mocklogger "github.com/spiral/roadrunner-plugins/v2/tests/mock"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
+	"go.uber.org/zap"
 )
 
 const dialAddr = "127.0.0.1:6001"
@@ -107,28 +108,13 @@ func TestMetricsIssue571(t *testing.T) {
 	cfg.Prefix = "rr"
 	cfg.Path = "configs/.rr-issue-571.yaml"
 
-	controller := gomock.NewController(t)
-	mockLogger := mocks.NewMockLogger(controller)
-
-	mockLogger.EXPECT().Info(gomock.Any()).AnyTimes()
-	mockLogger.EXPECT().Debug("RPC plugin started", "address", "tcp://127.0.0.1:6001", "plugins", gomock.Any()).Times(1)
-
-	mockLogger.EXPECT().Info("http log", "status", 200, "method", "GET", "URI", "http://127.0.0.1:56444/", "remote_address", "127.0.0.1", "start", gomock.Any(), "elapsed", gomock.Any()).MinTimes(1)
-
-	mockLogger.EXPECT().Info("declaring new metric", "name", "test", "type", gomock.Any(), "namespace", gomock.Any()).MinTimes(1)
-	mockLogger.EXPECT().Info("metric successfully added", "name", "test", "type", gomock.Any(), "namespace", gomock.Any()).MinTimes(1)
-	mockLogger.EXPECT().Info("metric successfully added", "name", "test", "labels", []string{}, "value", gomock.Any()).MinTimes(1)
-	mockLogger.EXPECT().Info("adding metric", "name", "test", "value", gomock.Any(), "labels", []string{}).MinTimes(1)
-	mockLogger.EXPECT().Error("metric with provided name already exist", "name", "test", "type", gomock.Any(), "namespace", gomock.Any()).MinTimes(3)
-	mockLogger.EXPECT().Debug("http server is running", "address", gomock.Any()).AnyTimes()
-	mockLogger.EXPECT().Info("scan command", gomock.Any()).AnyTimes()
-
+	l, oLogger := mocklogger.ZapTestLogger(zap.DebugLevel)
 	err = cont.RegisterAll(
 		cfg,
 		&metrics.Plugin{},
 		&rpcPlugin.Plugin{},
 		&server.Plugin{},
-		mockLogger,
+		l,
 		&httpPlugin.Plugin{},
 	)
 	assert.NoError(t, err)
@@ -187,9 +173,18 @@ func TestMetricsIssue571(t *testing.T) {
 		}
 	}()
 
-	time.Sleep(time.Second * 2)
+	time.Sleep(time.Second)
 	stopCh <- struct{}{}
 	wg.Wait()
+
+	require.Equal(t, 1, oLogger.FilterMessageSnippet("http server was started").Len())
+	require.Equal(t, 1, oLogger.FilterMessageSnippet("http log").Len())
+
+	require.Equal(t, 5, oLogger.FilterMessageSnippet("declaring new metric").Len())
+	require.Equal(t, 2, oLogger.FilterMessageSnippet("metric successfully added").Len())
+	require.Equal(t, 1, oLogger.FilterMessageSnippet("adding metric").Len())
+	require.Equal(t, 4, oLogger.FilterMessageSnippet("metric with provided name already exist").Len())
+	require.Equal(t, 0, oLogger.FilterMessageSnippet("scan command").Len())
 }
 
 // get request and return body
@@ -311,80 +306,12 @@ func TestMetricsDifferentRPCCalls(t *testing.T) {
 	cfg.Prefix = "rr"
 	cfg.Path = "configs/.rr-test.yaml"
 
-	controller := gomock.NewController(t)
-	mockLogger := mocks.NewMockLogger(controller)
-
-	mockLogger.EXPECT().Info(gomock.Any()).AnyTimes()
-	mockLogger.EXPECT().Debug("RPC plugin started", "address", "tcp://127.0.0.1:6001", "plugins", gomock.Any()).Times(1)
-
-	mockLogger.EXPECT().Debug("http server is running", "address", gomock.Any()).AnyTimes()
-
-	mockLogger.EXPECT().Info("adding metric", "name", "counter_CounterMetric", "value", gomock.Any(), "labels", []string{"type2", "section2"}).MinTimes(1)
-	mockLogger.EXPECT().Info("adding metric", "name", "histogram_registerHistogram", "value", gomock.Any(), "labels", gomock.Any()).MinTimes(1)
-	mockLogger.EXPECT().Info("adding metric", "name", "sub_gauge_subVector", "value", gomock.Any(), "labels", []string{"core", "first"}).MinTimes(1)
-	mockLogger.EXPECT().Info("adding metric", "name", "sub_gauge_subMetric", "value", gomock.Any(), "labels", gomock.Any()).MinTimes(1)
-	mockLogger.EXPECT().Info("adding metric", "name", "test_metrics_named_collector", "value", gomock.Any(), "labels", gomock.Any()).MinTimes(1)
-	mockLogger.EXPECT().Info("adding metric", "name", "app_metric_counter", "value", gomock.Any(), "labels", gomock.Any()).MinTimes(1)
-
-	mockLogger.EXPECT().Info("metric successfully added", "name", "observe_observeMetricNotEnoughLabels", "type", gomock.Any(), "namespace", gomock.Any()).MinTimes(1)
-	mockLogger.EXPECT().Info("metric successfully added", "name", "observe_observeMetric", "type", gomock.Any(), "namespace", gomock.Any()).MinTimes(1)
-	mockLogger.EXPECT().Info("metric successfully added", "name", "counter_CounterMetric", "labels", []string{"type2", "section2"}, "value", gomock.Any()).MinTimes(1)
-	mockLogger.EXPECT().Info("metric successfully added", "name", "counter_CounterMetric", "type", gomock.Any(), "namespace", gomock.Any()).MinTimes(1)
-	mockLogger.EXPECT().Info("metric successfully added", "name", "histogram_registerHistogram", "type", gomock.Any(), "namespace", gomock.Any()).MinTimes(1)
-	mockLogger.EXPECT().Info("metric successfully added", "name", "sub_gauge_subVector", "labels", []string{"core", "first"}, "value", gomock.Any()).MinTimes(1)
-	mockLogger.EXPECT().Info("metric successfully added", "name", "sub_gauge_subVector", "type", gomock.Any(), "namespace", gomock.Any()).MinTimes(1)
-	mockLogger.EXPECT().Info("metric successfully added", "name", "sub_gauge_subMetric", "type", gomock.Any(), "namespace", gomock.Any()).MinTimes(1)
-	mockLogger.EXPECT().Info("metric successfully added", "name", "sub_gauge_subMetric", "labels", gomock.Any(), "value", gomock.Any()).MinTimes(1)
-	mockLogger.EXPECT().Info("metric successfully added", "name", "histogram_setOnHistogram", "type", gomock.Any(), "namespace", gomock.Any()).MinTimes(1)
-	mockLogger.EXPECT().Info("metric successfully added", "name", "gauge_setWithoutLabels", "type", gomock.Any(), "namespace", gomock.Any()).MinTimes(1)
-	mockLogger.EXPECT().Info("metric successfully added", "name", "gauge_missing_section_collector", "type", gomock.Any(), "namespace", gomock.Any()).MinTimes(1)
-	mockLogger.EXPECT().Info("metric successfully added", "name", "gauge_2_collector", "type", gomock.Any(), "namespace", gomock.Any()).MinTimes(1)
-	mockLogger.EXPECT().Info("metric successfully added", "name", "test_metrics_named_collector", "type", gomock.Any(), "namespace", gomock.Any()).MinTimes(1)
-	mockLogger.EXPECT().Info("metric successfully added", "name", "test_metrics_named_collector", "labels", gomock.Any(), "value", gomock.Any()).MinTimes(1)
-	mockLogger.EXPECT().Info("metric successfully added", "name", "user_gauge_collector", "type", gomock.Any(), "namespace", gomock.Any()).MinTimes(1)
-	mockLogger.EXPECT().Info("metric successfully added", "name", "app_metric_counter", "labels", gomock.Any(), "value", gomock.Any()).MinTimes(1)
-
-	mockLogger.EXPECT().Info("declaring new metric", "name", "observe_observeMetricNotEnoughLabels", "type", gomock.Any(), "namespace", gomock.Any()).MinTimes(1)
-	mockLogger.EXPECT().Info("declaring new metric", "name", "observe_observeMetric", "type", gomock.Any(), "namespace", gomock.Any()).MinTimes(1)
-	mockLogger.EXPECT().Info("declaring new metric", "name", "counter_CounterMetric", "type", gomock.Any(), "namespace", gomock.Any()).MinTimes(1)
-	mockLogger.EXPECT().Info("declaring new metric", "name", "histogram_registerHistogram", "type", gomock.Any(), "namespace", gomock.Any()).MinTimes(1)
-	mockLogger.EXPECT().Info("declaring new metric", "name", "sub_gauge_subVector", "type", gomock.Any(), "namespace", gomock.Any()).MinTimes(1)
-	mockLogger.EXPECT().Info("declaring new metric", "name", "sub_gauge_subMetric", "type", gomock.Any(), "namespace", gomock.Any()).MinTimes(1)
-	mockLogger.EXPECT().Info("declaring new metric", "name", "histogram_setOnHistogram", "type", gomock.Any(), "namespace", gomock.Any()).MinTimes(1)
-	mockLogger.EXPECT().Info("declaring new metric", "name", "gauge_setWithoutLabels", "type", gomock.Any(), "namespace", gomock.Any()).MinTimes(1)
-	mockLogger.EXPECT().Info("declaring new metric", "name", "gauge_missing_section_collector", "type", gomock.Any(), "namespace", gomock.Any()).MinTimes(1)
-	mockLogger.EXPECT().Info("declaring new metric", "name", "test_metrics_named_collector", "type", gomock.Any(), "namespace", gomock.Any()).MinTimes(1)
-	mockLogger.EXPECT().Info("declaring new metric", "name", "gauge_2_collector", "type", gomock.Any(), "namespace", gomock.Any()).MinTimes(1)
-	mockLogger.EXPECT().Info("declaring new metric", "name", "user_gauge_collector", "type", gomock.Any(), "namespace", gomock.Any()).MinTimes(1)
-
-	mockLogger.EXPECT().Info("observing metric", "name", "observe_observeMetric", "value", gomock.Any(), "labels", []string{"test"}).MinTimes(1)
-	mockLogger.EXPECT().Info("observing metric", "name", "observe_observeMetric", "value", gomock.Any(), "labels", []string{"test", "test2"}).MinTimes(1)
-	mockLogger.EXPECT().Info("observing metric", "name", "gauge_setOnHistogram", "value", gomock.Any(), "labels", gomock.Any()).MinTimes(1)
-	mockLogger.EXPECT().Info("observing metric", "name", "gauge_setWithoutLabels", "value", gomock.Any(), "labels", gomock.Any()).MinTimes(1)
-	mockLogger.EXPECT().Info("observing metric", "name", "gauge_missing_section_collector", "value", gomock.Any(), "labels", []string{"missing"}).MinTimes(1)
-	mockLogger.EXPECT().Info("observing metric", "name", "user_gauge_collector", "value", gomock.Any(), "labels", gomock.Any()).MinTimes(1)
-	mockLogger.EXPECT().Info("observing metric", "name", "gauge_2_collector", "value", gomock.Any(), "labels", []string{"core", "first"}).MinTimes(1)
-
-	mockLogger.EXPECT().Info("observe operation finished successfully", "name", "observe_observeMetric", "labels", []string{"test", "test2"}, "value", gomock.Any()).MinTimes(1)
-
-	mockLogger.EXPECT().Info("set operation finished successfully", "name", "gauge_2_collector", "labels", []string{"core", "first"}, "value", gomock.Any()).MinTimes(1)
-	mockLogger.EXPECT().Info("set operation finished successfully", "name", "user_gauge_collector", "labels", gomock.Any(), "value", gomock.Any()).MinTimes(1)
-
-	mockLogger.EXPECT().Info("subtracting value from metric", "name", "sub_gauge_subVector", "value", gomock.Any(), "labels", gomock.Any()).MinTimes(1)
-	mockLogger.EXPECT().Info("subtracting value from metric", "name", "sub_gauge_subMetric", "value", gomock.Any(), "labels", gomock.Any()).MinTimes(1)
-
-	mockLogger.EXPECT().Info("subtracting operation finished successfully", "name", "sub_gauge_subVector", "labels", gomock.Any(), "value", gomock.Any()).MinTimes(1)
-	mockLogger.EXPECT().Info("subtracting operation finished successfully", "name", "sub_gauge_subMetric", "labels", gomock.Any(), "value", gomock.Any()).MinTimes(1)
-
-	mockLogger.EXPECT().Error("failed to get metrics with label values", "collector", "gauge_missing_section_collector", "labels", []string{"missing"}).MinTimes(1)
-	mockLogger.EXPECT().Error("required labels for collector", "collector", "gauge_setWithoutLabels").MinTimes(1)
-	mockLogger.EXPECT().Error("failed to get metrics with label values", "collector", "observe_observeMetric", "labels", []string{"test"}).MinTimes(1)
-
+	l, oLogger := mocklogger.ZapTestLogger(zap.DebugLevel)
 	err = cont.RegisterAll(
 		cfg,
 		&metrics.Plugin{},
 		&rpcPlugin.Plugin{},
-		mockLogger,
+		l,
 	)
 	assert.NoError(t, err)
 
@@ -401,8 +328,11 @@ func TestMetricsDifferentRPCCalls(t *testing.T) {
 
 	tt := time.NewTimer(time.Minute * 3)
 	defer tt.Stop()
+	wg := &sync.WaitGroup{}
+	wg.Add(1)
 
 	go func() {
+		defer wg.Done()
 		for {
 			select {
 			case e := <-ch:
@@ -496,6 +426,23 @@ func TestMetricsDifferentRPCCalls(t *testing.T) {
 	assert.Contains(t, genericOut, `app_metric_counter 100`)
 
 	close(sig)
+	wg.Wait()
+
+	require.Equal(t, 0, oLogger.FilterMessageSnippet("http server was started").Len())
+	require.Equal(t, 0, oLogger.FilterMessageSnippet("http log").Len())
+
+	require.Equal(t, 6, oLogger.FilterMessageSnippet("adding metric").Len())
+	require.Equal(t, 17, oLogger.FilterMessageSnippet("metric successfully added").Len())
+	require.Equal(t, 12, oLogger.FilterMessageSnippet("declaring new metric").Len())
+	require.Equal(t, 7, oLogger.FilterMessageSnippet("observing metric").Len())
+	require.Equal(t, 1, oLogger.FilterMessageSnippet("observe operation finished successfully").Len())
+
+	require.Equal(t, 2, oLogger.FilterMessageSnippet("set operation finished successfully").Len())
+	require.Equal(t, 2, oLogger.FilterMessageSnippet("subtracting value from metric").Len())
+	require.Equal(t, 2, oLogger.FilterMessageSnippet("subtracting operation finished successfully").Len())
+	require.Equal(t, 2, oLogger.FilterMessageSnippet("failed to get metrics with label values").Len())
+	require.Equal(t, 1, oLogger.FilterMessageSnippet("required labels for collector").Len())
+	require.Equal(t, 2, oLogger.FilterMessageSnippet("failed to get metrics with label values").Len())
 }
 
 func configuredCounterMetric(t *testing.T) {

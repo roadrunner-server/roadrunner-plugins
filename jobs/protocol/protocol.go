@@ -5,9 +5,9 @@ import (
 
 	json "github.com/json-iterator/go"
 	"github.com/spiral/errors"
-	"github.com/spiral/roadrunner-plugins/v2/api/jobs"
-	"github.com/spiral/roadrunner-plugins/v2/logger"
+	"github.com/spiral/roadrunner-plugins/v2/api/v2/jobs"
 	"github.com/spiral/roadrunner/v2/payload"
+	"go.uber.org/zap"
 )
 
 type Type uint32
@@ -27,14 +27,14 @@ type protocol struct {
 }
 
 type RespHandler struct {
-	log logger.Logger
+	log *zap.Logger
 	// response pools
 	qPool sync.Pool
 	ePool sync.Pool
 	pPool sync.Pool
 }
 
-func NewResponseHandler(log logger.Logger) *RespHandler {
+func NewResponseHandler(log *zap.Logger) *RespHandler {
 	return &RespHandler{
 		log: log,
 

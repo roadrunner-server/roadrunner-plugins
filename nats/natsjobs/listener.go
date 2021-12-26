@@ -3,6 +3,7 @@ package natsjobs
 import (
 	json "github.com/json-iterator/go"
 	"github.com/nats-io/nats.go"
+	"go.uber.org/zap"
 )
 
 // blocking
@@ -31,14 +32,14 @@ func (c *consumer) listenerStart() {
 			// only JS messages
 			meta, err := m.Metadata()
 			if err != nil {
-				c.log.Info("not JS message", "error", err)
+				c.log.Info("can't get message metadata", zap.Error(err))
 				continue
 			}
 
 			item := new(Item)
 			err = json.Unmarshal(m.Data, item)
 			if err != nil {
-				c.log.Error("unmarshal nats payload", "error", err)
+				c.log.Error("unmarshal nats payload", zap.Error(err))
 				continue
 			}
 

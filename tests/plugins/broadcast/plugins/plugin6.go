@@ -5,21 +5,21 @@ import (
 	"fmt"
 
 	"github.com/spiral/errors"
-	"github.com/spiral/roadrunner-plugins/v2/api/pubsub"
-	"github.com/spiral/roadrunner-plugins/v2/logger"
+	"github.com/spiral/roadrunner-plugins/v2/api/v2/pubsub"
+	"go.uber.org/zap"
 )
 
 const Plugin6Name = "plugin6"
 
 type Plugin6 struct {
-	log    logger.Logger
+	log    *zap.Logger
 	b      pubsub.Broadcaster
 	driver pubsub.SubReader
 	ctx    context.Context
 	cancel context.CancelFunc
 }
 
-func (p *Plugin6) Init(log logger.Logger, b pubsub.Broadcaster) error {
+func (p *Plugin6) Init(log *zap.Logger, b pubsub.Broadcaster) error {
 	p.log = log
 	p.b = b
 	p.ctx, p.cancel = context.WithCancel(context.Background())
@@ -42,12 +42,12 @@ func (p *Plugin6) Serve() chan error {
 
 	go func() {
 		for {
-			msg, err := p.driver.Next(p.ctx)
-			if err != nil {
-				if errors.Is(errors.TimeOut, err) {
+			msg, errD := p.driver.Next(p.ctx)
+			if errD != nil {
+				if errors.Is(errors.TimeOut, errD) {
 					return
 				}
-				errCh <- err
+				errCh <- errD
 				return
 			}
 

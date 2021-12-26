@@ -6,9 +6,9 @@ import (
 	"time"
 
 	"github.com/spiral/errors"
-	"github.com/spiral/roadrunner-plugins/v2/config"
-	"github.com/spiral/roadrunner-plugins/v2/logger"
+	"github.com/spiral/roadrunner-plugins/v2/api/v2/config"
 	"github.com/spiral/roadrunner-plugins/v2/resetter"
+	"go.uber.org/zap"
 )
 
 // PluginName contains default plugin name.
@@ -19,7 +19,7 @@ const (
 
 type Plugin struct {
 	cfg      *Config
-	log      logger.Logger
+	log      *zap.Logger
 	watcher  *Watcher
 	services map[string]interface{}
 	res      *resetter.Plugin
@@ -27,7 +27,7 @@ type Plugin struct {
 }
 
 // Init controller service
-func (s *Plugin) Init(cfg config.Configurer, log logger.Logger, res *resetter.Plugin) error {
+func (s *Plugin) Init(cfg config.Configurer, log *zap.Logger, res *resetter.Plugin) error {
 	const op = errors.Op("reload_plugin_init")
 	if !cfg.Has(PluginName) {
 		return errors.E(op, errors.Disabled)

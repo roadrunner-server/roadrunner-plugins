@@ -10,13 +10,13 @@ import (
 	"time"
 
 	"github.com/spiral/errors"
-	"github.com/spiral/roadrunner-plugins/v2/api/jobs"
-	"github.com/spiral/roadrunner-plugins/v2/api/jobs/pipeline"
-	cfgPlugin "github.com/spiral/roadrunner-plugins/v2/config"
-	"github.com/spiral/roadrunner-plugins/v2/logger"
-	"github.com/spiral/roadrunner-plugins/v2/utils"
+	cfgPlugin "github.com/spiral/roadrunner-plugins/v2/api/v2/config"
+	"github.com/spiral/roadrunner-plugins/v2/api/v2/jobs"
+	"github.com/spiral/roadrunner-plugins/v2/api/v2/jobs/pipeline"
 	priorityqueue "github.com/spiral/roadrunner/v2/priority_queue"
+	"github.com/spiral/roadrunner/v2/utils"
 	bolt "go.etcd.io/bbolt"
+	"go.uber.org/zap"
 )
 
 const (
@@ -37,7 +37,7 @@ type consumer struct {
 	db *bolt.DB
 
 	bPool    sync.Pool
-	log      logger.Logger
+	log      *zap.Logger
 	pq       priorityqueue.Queue
 	pipeline atomic.Value
 	cond     *sync.Cond
@@ -49,7 +49,7 @@ type consumer struct {
 	stopCh chan struct{}
 }
 
-func NewBoltDBJobs(configKey string, log logger.Logger, cfg cfgPlugin.Configurer, pq priorityqueue.Queue) (*consumer, error) {
+func NewBoltDBJobs(configKey string, log *zap.Logger, cfg cfgPlugin.Configurer, pq priorityqueue.Queue) (*consumer, error) {
 	const op = errors.Op("init_boltdb_jobs")
 
 	if !cfg.Has(configKey) {
@@ -144,7 +144,7 @@ func NewBoltDBJobs(configKey string, log logger.Logger, cfg cfgPlugin.Configurer
 	}, nil
 }
 
-func FromPipeline(pipeline *pipeline.Pipeline, log logger.Logger, cfg cfgPlugin.Configurer, pq priorityqueue.Queue) (*consumer, error) {
+func FromPipeline(pipeline *pipeline.Pipeline, log *zap.Logger, cfg cfgPlugin.Configurer, pq priorityqueue.Queue) (*consumer, error) {
 	const op = errors.Op("init_boltdb_jobs")
 
 	// if no global section
@@ -305,7 +305,7 @@ func (c *consumer) Run(_ context.Context, p *pipeline.Pipeline) error {
 
 	// increase number of listeners
 	atomic.AddUint32(&c.listeners, 1)
-	c.log.Debug("pipeline active", "driver", pipe.Driver(), "pipeline", pipe.Name(), "start", start, "elapsed", time.Since(start))
+	c.log.Debug("pipeline is active", zap.String("driver", pipe.Driver()), zap.String("pipeline", pipe.Name()), zap.Time("start", start), zap.Duration("elapsed", time.Since(start)))
 	return nil
 }
 
@@ -317,7 +317,7 @@ func (c *consumer) Stop(_ context.Context) error {
 	}
 
 	pipe := c.pipeline.Load().(*pipeline.Pipeline)
-	c.log.Debug("pipeline stopped", "driver", pipe.Driver(), "pipeline", pipe.Name(), "start", start, "elapsed", time.Since(start))
+	c.log.Debug("pipeline was stopped", zap.String("driver", pipe.Driver()), zap.String("pipeline", pipe.Name()), zap.Time("start", start), zap.Duration("elapsed", time.Since(start)))
 	return c.db.Close()
 }
 
@@ -325,7 +325,7 @@ func (c *consumer) Pause(_ context.Context, p string) {
 	start := time.Now()
 	pipe := c.pipeline.Load().(*pipeline.Pipeline)
 	if pipe.Name() != p {
-		c.log.Error("no such pipeline", "requested pause on: ", p)
+		c.log.Error("no such pipeline", zap.String("pause was requested", p))
 	}
 
 	l := atomic.LoadUint32(&c.listeners)
@@ -340,14 +340,14 @@ func (c *consumer) Pause(_ context.Context, p string) {
 
 	atomic.AddUint32(&c.listeners, ^uint32(0))
 
-	c.log.Debug("pipeline paused", "driver", pipe.Driver(), "pipeline", pipe.Name(), "start", start, "elapsed", time.Since(start))
+	c.log.Debug("pipeline was paused", zap.String("driver", pipe.Driver()), zap.String("pipeline", pipe.Name()), zap.Time("start", start), zap.Duration("elapsed", time.Since(start)))
 }
 
 func (c *consumer) Resume(_ context.Context, p string) {
 	start := time.Now()
 	pipe := c.pipeline.Load().(*pipeline.Pipeline)
 	if pipe.Name() != p {
-		c.log.Error("no such pipeline", "requested resume on: ", p)
+		c.log.Error("no such pipeline", zap.String("resume was requested", p))
 	}
 
 	l := atomic.LoadUint32(&c.listeners)
@@ -364,7 +364,7 @@ func (c *consumer) Resume(_ context.Context, p string) {
 	// increase number of listeners
 	atomic.AddUint32(&c.listeners, 1)
 
-	c.log.Debug("pipeline resumed", "driver", pipe.Driver(), "pipeline", pipe.Name(), "start", start, "elapsed", time.Since(start))
+	c.log.Debug("pipeline was resumed", zap.String("driver", pipe.Driver()), zap.String("pipeline", pipe.Name()), zap.Time("start", start), zap.Duration("elapsed", time.Since(start)))
 }
 
 func (c *consumer) State(_ context.Context) (*jobs.State, error) {

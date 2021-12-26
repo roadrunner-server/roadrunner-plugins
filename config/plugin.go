@@ -9,6 +9,7 @@ import (
 	"github.com/hashicorp/go-version"
 	"github.com/spf13/viper"
 	"github.com/spiral/errors"
+	"github.com/spiral/roadrunner-plugins/v2/api/v2/config"
 )
 
 const (
@@ -32,7 +33,7 @@ type Plugin struct {
 	RRVersion string
 
 	// All plugins common parameters
-	CommonConfig *General
+	CommonConfig *config.General
 }
 
 // Init config provider.
@@ -128,7 +129,7 @@ func (p *Plugin) Init() error {
 	}
 
 	if p.CommonConfig == nil {
-		p.CommonConfig = &General{}
+		p.CommonConfig = &config.General{}
 	}
 
 	p.CommonConfig.RRVersion = rrV
@@ -193,7 +194,7 @@ func (p *Plugin) Has(name string) bool {
 }
 
 // GetCommonConfig Returns common config parameters
-func (p *Plugin) GetCommonConfig() *General {
+func (p *Plugin) GetCommonConfig() *config.General {
 	return p.CommonConfig
 }
 

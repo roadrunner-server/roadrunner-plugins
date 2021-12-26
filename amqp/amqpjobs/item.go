@@ -9,8 +9,9 @@ import (
 	json "github.com/json-iterator/go"
 	amqp "github.com/rabbitmq/amqp091-go"
 	"github.com/spiral/errors"
-	"github.com/spiral/roadrunner-plugins/v2/api/jobs"
-	"github.com/spiral/roadrunner-plugins/v2/utils"
+	"github.com/spiral/roadrunner-plugins/v2/api/v2/jobs"
+	"github.com/spiral/roadrunner/v2/utils"
+	"go.uber.org/zap"
 )
 
 var _ jobs.Acknowledger = (*Item)(nil)
@@ -195,7 +196,7 @@ func fromJob(job *jobs.Job) *Item {
 
 // pack job metadata into headers
 func pack(id string, j *Item) (amqp.Table, error) {
-	headers, err := json.Marshal(j.Headers)
+	h, err := json.Marshal(j.Headers)
 	if err != nil {
 		return nil, err
 	}
@@ -203,7 +204,7 @@ func pack(id string, j *Item) (amqp.Table, error) {
 		jobs.RRID:       id,
 		jobs.RRJob:      j.Job,
 		jobs.RRPipeline: j.Options.Pipeline,
-		jobs.RRHeaders:  headers,
+		jobs.RRHeaders:  h,
 		jobs.RRDelay:    j.Options.Delay,
 		jobs.RRPriority: j.Options.Priority,
 	}, nil
@@ -245,7 +246,7 @@ func (c *consumer) unpack(d amqp.Delivery) (*Item, error) {
 		case int, int16, int32, int64:
 			item.Options.Delay = t.(int64)
 		default:
-			c.log.Warn("unknown delay type", "want:", "int, int16, int32, int64", "actual", t)
+			c.log.Warn("unknown delay type", zap.Strings("want", []string{"int, int16, int32, int64"}), zap.Any("actual", t))
 		}
 	}
 
@@ -257,7 +258,7 @@ func (c *consumer) unpack(d amqp.Delivery) (*Item, error) {
 		case int, int16, int32, int64:
 			item.Options.Priority = t.(int64)
 		default:
-			c.log.Warn("unknown priority type", "want:", "int, int16, int32, int64", "actual", t)
+			c.log.Warn("unknown priority type", zap.Strings("want", []string{"int, int16, int32, int64"}), zap.Any("actual", t))
 		}
 	}
 

@@ -12,6 +12,7 @@ import (
 	"github.com/spiral/errors"
 	"github.com/spiral/roadrunner-plugins/v2/grpc/parser"
 	"github.com/spiral/roadrunner-plugins/v2/grpc/proxy"
+	"go.uber.org/zap"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
 	"google.golang.org/grpc/keepalive"
@@ -60,12 +61,12 @@ func (p *Plugin) interceptor(ctx context.Context, req interface{}, info *grpc.Un
 	start := time.Now()
 	resp, err := handler(ctx, req)
 	if err != nil {
-		p.log.Error("method call finished with error", "error", err, "method", info.FullMethod, "start", start, "elapsed", time.Since(start))
+		p.log.Error("method call was finished with error", zap.Error(err), zap.String("method", info.FullMethod), zap.Time("start", start), zap.Duration("elapsed", time.Since(start)))
 
 		return nil, err
 	}
 
-	p.log.Debug("method called successfully", "method", info.FullMethod, "start", start, "elapsed", time.Since(start))
+	p.log.Debug("method was called successfully", zap.String("method", info.FullMethod), zap.Time("start", start), zap.Duration("elapsed", time.Since(start)))
 	return resp, nil
 }
 

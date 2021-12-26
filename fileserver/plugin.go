@@ -7,9 +7,9 @@ import (
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/etag"
 	"github.com/spiral/errors"
-	"github.com/spiral/roadrunner-plugins/v2/config"
-	"github.com/spiral/roadrunner-plugins/v2/logger"
-	"github.com/spiral/roadrunner-plugins/v2/utils"
+	"github.com/spiral/roadrunner-plugins/v2/api/v2/config"
+	"github.com/spiral/roadrunner/v2/utils"
+	"go.uber.org/zap"
 )
 
 const (
@@ -20,11 +20,11 @@ type Plugin struct {
 	sync.Mutex
 	config *Config
 
-	log logger.Logger
+	log *zap.Logger
 	app *fiber.App
 }
 
-func (p *Plugin) Init(cfg config.Configurer, log logger.Logger) error {
+func (p *Plugin) Init(cfg config.Configurer, log *zap.Logger) error {
 	const op = errors.Op("file_server_init")
 
 	if !cfg.Has(pluginName) {
@@ -85,7 +85,7 @@ func (p *Plugin) Serve() chan error {
 
 	go func() {
 		p.Unlock()
-		p.log.Info("file server started", "address", p.config.Address)
+		p.log.Info("file server started", zap.String("address", p.config.Address))
 		err = p.app.Listener(ln)
 		if err != nil {
 			errCh <- err

@@ -9,17 +9,17 @@ import (
 
 	endure "github.com/spiral/endure/pkg/container"
 	"github.com/spiral/errors"
-	"github.com/spiral/roadrunner-plugins/v2/api/jobs"
-	"github.com/spiral/roadrunner-plugins/v2/api/jobs/pipeline"
-	"github.com/spiral/roadrunner-plugins/v2/config"
+	"github.com/spiral/roadrunner-plugins/v2/api/v2/config"
+	"github.com/spiral/roadrunner-plugins/v2/api/v2/jobs"
+	"github.com/spiral/roadrunner-plugins/v2/api/v2/jobs/pipeline"
+	"github.com/spiral/roadrunner-plugins/v2/api/v2/server"
 	rh "github.com/spiral/roadrunner-plugins/v2/jobs/protocol"
-	"github.com/spiral/roadrunner-plugins/v2/logger"
-	"github.com/spiral/roadrunner-plugins/v2/server"
-	"github.com/spiral/roadrunner-plugins/v2/utils"
 	"github.com/spiral/roadrunner/v2/payload"
 	"github.com/spiral/roadrunner/v2/pool"
 	pq "github.com/spiral/roadrunner/v2/priority_queue"
 	"github.com/spiral/roadrunner/v2/state/process"
+	"github.com/spiral/roadrunner/v2/utils"
+	"go.uber.org/zap"
 )
 
 const (
@@ -43,7 +43,7 @@ type Plugin struct {
 
 	// Jobs plugin configuration
 	cfg         *Config `structure:"jobs"`
-	log         logger.Logger
+	log         *zap.Logger
 	workersPool pool.Pool
 	server      server.Server
 
@@ -70,7 +70,7 @@ type Plugin struct {
 	respHandler   *rh.RespHandler
 }
 
-func (p *Plugin) Init(cfg config.Configurer, log logger.Logger, server server.Server) error {
+func (p *Plugin) Init(cfg config.Configurer, log *zap.Logger, server server.Server) error {
 	const op = errors.Op("jobs_plugin_init")
 	if !cfg.Has(PluginName) {
 		return errors.E(op, errors.Disabled)
@@ -185,7 +185,7 @@ func (p *Plugin) Serve() chan error {
 			return true
 		}
 
-		p.log.Debug("driver ready", "pipeline", pipe.Name(), "driver", pipe.Driver(), "start", t, "elapsed", time.Since(t))
+		p.log.Debug("driver ready", zap.String("pipeline", pipe.Name()), zap.String("driver", pipe.Driver()), zap.Time("start", t), zap.Duration("elapsed", time.Since(t)))
 		return true
 	})
 
@@ -230,18 +230,12 @@ func (p *Plugin) Stop() error {
 		err := consumer.Stop(ctx)
 		if err != nil {
 			cancel()
-			p.log.Error("stop job driver", "error", err, "driver", key)
+			p.log.Error("stop job driver", zap.Any("driver", key), zap.Error(err))
 			return true
 		}
 		cancel()
 		return true
 	})
-
-	p.Lock()
-	if p.workersPool != nil {
-		p.workersPool.Destroy(context.Background())
-	}
-	p.Unlock()
 
 	p.pipelines.Range(func(key, _ interface{}) bool {
 		p.pipelines.Delete(key)
@@ -271,7 +265,7 @@ func (p *Plugin) Workers() []*process.State {
 	for i := 0; i < len(wrk); i++ {
 		st, err := process.WorkerProcessState(wrk[i])
 		if err != nil {
-			p.log.Error("jobs workers state", "error", err)
+			p.log.Error("jobs workers state", zap.Error(err))
 			return nil
 		}
 
@@ -316,17 +310,12 @@ func (p *Plugin) Reset() error {
 	defer p.Unlock()
 
 	const op = errors.Op("jobs_plugin_reset")
-	p.log.Info("JOBS plugin received restart request. Restarting...")
-	p.workersPool.Destroy(context.Background())
-	p.workersPool = nil
-
-	var err error
-	p.workersPool, err = p.server.NewWorkerPool(context.Background(), p.cfg.Pool, map[string]string{RrMode: RrModeJobs})
+	p.log.Info("reset signal was received")
+	err := p.workersPool.Reset(context.Background())
 	if err != nil {
 		return errors.E(op, err)
 	}
-
-	p.log.Info("JOBS workers pool successfully restarted")
+	p.log.Info("plugin was successfully reset")
 
 	return nil
 }
@@ -360,12 +349,12 @@ func (p *Plugin) Push(j *jobs.Job) error {
 	err := d.(jobs.Consumer).Push(ctx, j)
 	if err != nil {
 		atomic.AddUint64(p.metrics.pushErr, 1)
-		p.log.Error("job push error", "error", err, "ID", j.Ident, "pipeline", ppl.Name(), "driver", ppl.Driver(), "start", start, "elapsed", time.Since(start))
+		p.log.Error("job push error", zap.String("ID", j.Ident), zap.String("pipeline", ppl.Name()), zap.String("driver", ppl.Driver()), zap.Time("start", start), zap.Duration("elapsed", time.Since(start)), zap.Error(err))
 		return errors.E(op, err)
 	}
 
 	atomic.AddUint64(p.metrics.pushOk, 1)
-	p.log.Debug("job pushed successfully", "ID", j.Ident, "pipeline", ppl.Name(), "driver", ppl.Driver(), "start", start, "elapsed", time.Since(start))
+	p.log.Debug("job was pushed successfully", zap.String("ID", j.Ident), zap.String("pipeline", ppl.Name()), zap.String("driver", ppl.Driver()), zap.Time("start", start), zap.Duration("elapsed", time.Since(start)))
 
 	return nil
 }
@@ -398,7 +387,7 @@ func (p *Plugin) PushBatch(j []*jobs.Job) error {
 		if err != nil {
 			cancel()
 			atomic.AddUint64(p.metrics.pushErr, 1)
-			p.log.Error("job push batch error", "error", err, "ID", j[i].Ident, "pipeline", ppl.Name(), "driver", ppl.Driver(), "start", start, "elapsed", time.Since(start))
+			p.log.Error("job push batch error", zap.String("ID", j[i].Ident), zap.String("pipeline", ppl.Name()), zap.String("driver", ppl.Driver()), zap.Time("start", start), zap.Duration("elapsed", time.Since(start)), zap.Error(err))
 			return errors.E(op, err)
 		}
 
@@ -412,7 +401,7 @@ func (p *Plugin) Pause(pp string) {
 	pipe, ok := p.pipelines.Load(pp)
 
 	if !ok {
-		p.log.Error("no such pipeline", "requested", pp)
+		p.log.Error("no such pipeline", zap.Any("requested", pp))
 	}
 
 	if pipe == nil {
@@ -424,7 +413,7 @@ func (p *Plugin) Pause(pp string) {
 
 	d, ok := p.consumers.Load(ppl.Name())
 	if !ok {
-		p.log.Warn("driver for the pipeline not found", "pipeline", pp)
+		p.log.Warn("driver for the pipeline not found", zap.String("pipeline", pp))
 		return
 	}
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second*time.Duration(p.cfg.Timeout))
@@ -436,7 +425,7 @@ func (p *Plugin) Pause(pp string) {
 func (p *Plugin) Resume(pp string) {
 	pipe, ok := p.pipelines.Load(pp)
 	if !ok {
-		p.log.Error("no such pipeline", "requested", pp)
+		p.log.Error("no such pipeline", zap.String("requested", pp))
 	}
 
 	if pipe == nil {
@@ -448,7 +437,7 @@ func (p *Plugin) Resume(pp string) {
 
 	d, ok := p.consumers.Load(ppl.Name())
 	if !ok {
-		p.log.Warn("driver for the pipeline not found", "pipeline", pp)
+		p.log.Warn("driver for the pipeline not found", zap.String("pipeline", pp))
 		return
 	}
 
@@ -551,8 +540,7 @@ func (p *Plugin) List() []string {
 
 func (p *Plugin) RPC() interface{} {
 	return &rpc{
-		log: p.log,
-		p:   p,
+		p: p,
 	}
 }
 

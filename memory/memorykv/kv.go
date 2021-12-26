@@ -7,8 +7,8 @@ import (
 
 	"github.com/spiral/errors"
 	kvv1 "github.com/spiral/roadrunner-plugins/v2/api/proto/kv/v1beta"
-	"github.com/spiral/roadrunner-plugins/v2/config"
-	"github.com/spiral/roadrunner-plugins/v2/logger"
+	"github.com/spiral/roadrunner-plugins/v2/api/v2/config"
+	"go.uber.org/zap"
 )
 
 type Driver struct {
@@ -16,11 +16,11 @@ type Driver struct {
 	heap    sync.Map
 	// stop is used to stop keys GC and close boltdb connection
 	stop chan struct{}
-	log  logger.Logger
+	log  *zap.Logger
 	cfg  *Config
 }
 
-func NewInMemoryDriver(key string, log logger.Logger, cfgPlugin config.Configurer) (*Driver, error) {
+func NewInMemoryDriver(key string, log *zap.Logger, cfgPlugin config.Configurer) (*Driver, error) {
 	const op = errors.Op("new_in_memory_driver")
 
 	d := &Driver{
@@ -245,7 +245,7 @@ func (d *Driver) gc() {
 				}
 
 				if now.After(t) {
-					d.log.Debug("key deleted", "key", key)
+					d.log.Debug("key was deleted", zap.Any("key", key))
 					d.heap.Delete(key)
 				}
 				return true

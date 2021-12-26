@@ -9,11 +9,11 @@ import (
 	json "github.com/json-iterator/go"
 	"github.com/nats-io/nats.go"
 	"github.com/spiral/errors"
-	"github.com/spiral/roadrunner-plugins/v2/api/jobs"
-	"github.com/spiral/roadrunner-plugins/v2/api/jobs/pipeline"
-	cfgPlugin "github.com/spiral/roadrunner-plugins/v2/config"
-	"github.com/spiral/roadrunner-plugins/v2/logger"
+	cfgPlugin "github.com/spiral/roadrunner-plugins/v2/api/v2/config"
+	"github.com/spiral/roadrunner-plugins/v2/api/v2/jobs"
+	"github.com/spiral/roadrunner-plugins/v2/api/v2/jobs/pipeline"
 	priorityqueue "github.com/spiral/roadrunner/v2/priority_queue"
+	"go.uber.org/zap"
 )
 
 const (
@@ -24,7 +24,7 @@ const (
 type consumer struct {
 	// system
 	sync.RWMutex
-	log       logger.Logger
+	log       *zap.Logger
 	queue     priorityqueue.Queue
 	listeners uint32
 	pipeline  atomic.Value
@@ -47,7 +47,7 @@ type consumer struct {
 	deleteStreamOnStop bool
 }
 
-func FromConfig(configKey string, log logger.Logger, cfg cfgPlugin.Configurer, queue priorityqueue.Queue) (*consumer, error) {
+func FromConfig(configKey string, log *zap.Logger, cfg cfgPlugin.Configurer, queue priorityqueue.Queue) (*consumer, error) {
 	const op = errors.Op("new_nats_consumer")
 
 	if !cfg.Has(configKey) {
@@ -131,7 +131,7 @@ func FromConfig(configKey string, log logger.Logger, cfg cfgPlugin.Configurer, q
 	return cs, nil
 }
 
-func FromPipeline(pipe *pipeline.Pipeline, log logger.Logger, cfg cfgPlugin.Configurer, queue priorityqueue.Queue) (*consumer, error) {
+func FromPipeline(pipe *pipeline.Pipeline, log *zap.Logger, cfg cfgPlugin.Configurer, queue priorityqueue.Queue) (*consumer, error) {
 	const op = errors.Op("new_nats_consumer")
 
 	// if no global section -- error
@@ -249,7 +249,7 @@ func (c *consumer) Run(_ context.Context, p *pipeline.Pipeline) error {
 
 	go c.listenerStart()
 
-	c.log.Debug("pipeline started", "driver", pipe.Driver(), "pipeline", pipe.Name(), "start", start, "elapsed", time.Since(start))
+	c.log.Debug("pipeline was started", zap.String("driver", pipe.Driver()), zap.String("pipeline", pipe.Name()), zap.Time("start", start), zap.Duration("elapsed", time.Since(start)))
 	return nil
 }
 
@@ -258,7 +258,7 @@ func (c *consumer) Pause(_ context.Context, p string) {
 
 	pipe := c.pipeline.Load().(*pipeline.Pipeline)
 	if pipe.Name() != p {
-		c.log.Error("no such pipeline", "requested pause on: ", p)
+		c.log.Error("no such pipeline", zap.String("pause was requested", p))
 	}
 
 	l := atomic.LoadUint32(&c.listeners)
@@ -274,33 +274,33 @@ func (c *consumer) Pause(_ context.Context, p string) {
 	if c.sub != nil {
 		err := c.sub.Drain()
 		if err != nil {
-			c.log.Error("drain error", "error", err)
+			c.log.Error("drain error", zap.Error(err))
 		}
 	}
 
 	c.stopCh <- struct{}{}
 	c.sub = nil
 
-	c.log.Debug("pipeline paused", "driver", pipe.Driver(), "pipeline", pipe.Name(), "start", start, "elapsed", time.Since(start))
+	c.log.Debug("pipeline was paused", zap.String("driver", pipe.Driver()), zap.String("pipeline", pipe.Name()), zap.Time("start", start), zap.Duration("elapsed", time.Since(start)))
 }
 
 func (c *consumer) Resume(_ context.Context, p string) {
 	start := time.Now()
 	pipe := c.pipeline.Load().(*pipeline.Pipeline)
 	if pipe.Name() != p {
-		c.log.Error("no such pipeline", "requested resume on: ", p)
+		c.log.Error("no such pipeline", zap.String("resume was requested", p))
 	}
 
 	l := atomic.LoadUint32(&c.listeners)
 	// no active listeners
 	if l == 1 {
-		c.log.Warn("nats listener already in the active state")
+		c.log.Warn("nats listener is already in the active state")
 		return
 	}
 
 	err := c.listenerInit()
 	if err != nil {
-		c.log.Error("failed to resume NATS pipeline", "error", err, "pipeline", pipe.Name())
+		c.log.Error("failed to resume NATS pipeline", zap.Error(err), zap.String("pipeline", pipe.Name()))
 		return
 	}
 
@@ -308,7 +308,7 @@ func (c *consumer) Resume(_ context.Context, p string) {
 
 	atomic.AddUint32(&c.listeners, 1)
 
-	c.log.Debug("pipeline resumed", "driver", pipe.Driver(), "pipeline", pipe.Name(), "start", start, "elapsed", time.Since(start))
+	c.log.Debug("pipeline was resumed", zap.String("driver", pipe.Driver()), zap.String("pipeline", pipe.Name()), zap.Time("start", start), zap.Duration("elapsed", time.Since(start)))
 }
 
 func (c *consumer) State(_ context.Context) (*jobs.State, error) {
@@ -344,7 +344,7 @@ func (c *consumer) Stop(_ context.Context) error {
 		if c.sub != nil {
 			err := c.sub.Drain()
 			if err != nil {
-				c.log.Error("drain error", "error", err)
+				c.log.Error("drain error", zap.Error(err))
 			}
 		}
 
@@ -366,7 +366,7 @@ func (c *consumer) Stop(_ context.Context) error {
 
 	c.conn.Close()
 	c.msgCh = nil
-	c.log.Debug("pipeline stopped", "driver", pipe.Driver(), "pipeline", pipe.Name(), "start", start, "elapsed", time.Since(start))
+	c.log.Debug("pipeline was stopped", zap.String("driver", pipe.Driver()), zap.String("pipeline", pipe.Name()), zap.Time("start", start), zap.Duration("elapsed", time.Since(start)))
 
 	return nil
 }
@@ -405,16 +405,16 @@ func (c *consumer) respond(data []byte, subject string) error {
 	return nil
 }
 
-func reconnectHandler(log logger.Logger) func(*nats.Conn) {
+func reconnectHandler(log *zap.Logger) func(*nats.Conn) {
 	return func(conn *nats.Conn) {
-		log.Warn("connection lost, reconnecting", "url", conn.ConnectedUrl())
+		log.Warn("connection lost, reconnecting", zap.String("url", conn.ConnectedUrl()))
 	}
 }
 
-func disconnectHandler(log logger.Logger) func(*nats.Conn, error) {
+func disconnectHandler(log *zap.Logger) func(*nats.Conn, error) {
 	return func(_ *nats.Conn, err error) {
 		if err != nil {
-			log.Error("nast disconnected", "error", err)
+			log.Error("nast disconnected", zap.Error(err))
 			return
 		}
 

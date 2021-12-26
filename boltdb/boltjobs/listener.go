@@ -6,8 +6,9 @@ import (
 	"sync/atomic"
 	"time"
 
-	"github.com/spiral/roadrunner-plugins/v2/utils"
+	"github.com/spiral/roadrunner/v2/utils"
 	bolt "go.etcd.io/bbolt"
+	"go.uber.org/zap"
 )
 
 func (c *consumer) listener() {
@@ -25,7 +26,7 @@ func (c *consumer) listener() {
 			}
 			tx, err := c.db.Begin(true)
 			if err != nil {
-				c.log.Error("failed to begin writable transaction", "error", err)
+				c.log.Error("failed to begin writable transaction", zap.Error(err))
 				continue
 			}
 
@@ -87,7 +88,7 @@ func (c *consumer) delayedJobsListener() {
 	// just some 90's
 	loc, err := time.LoadLocation("UTC")
 	if err != nil {
-		c.log.Error("failed to load location, delayed jobs won't work", "error", err)
+		c.log.Error("failed to load location, delayed jobs won't work", zap.Error(err))
 		return
 	}
 
@@ -101,7 +102,7 @@ func (c *consumer) delayedJobsListener() {
 		case <-tt.C:
 			tx, err := c.db.Begin(true)
 			if err != nil {
-				c.log.Error("failed to begin writable transaction, job will be read on the next attempt", "error", err)
+				c.log.Error("failed to begin writable transaction, job will be read on the next attempt", zap.Error(err))
 				continue
 			}
 
@@ -157,9 +158,9 @@ func (c *consumer) delayedJobsListener() {
 func (c *consumer) rollback(err error, tx *bolt.Tx) {
 	errR := tx.Rollback()
 	if errR != nil {
-		c.log.Error("transaction commit error, rollback failed", "error", err, "rollback error", errR)
+		c.log.Error("transaction commit error, rollback failed", zap.Error(err), zap.Error(errR))
 		return
 	}
 
-	c.log.Error("transaction commit error, rollback succeed", "error", err)
+	c.log.Error("transaction commit error, rollback succeed", zap.Error(err))
 }

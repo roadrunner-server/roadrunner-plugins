@@ -8,15 +8,12 @@ import (
 	"github.com/spiral/roadrunner/v2/worker"
 )
 
-// Env variables type alias
-type Env map[string]string
-
 // Server creates workers for the application.
 type Server interface {
 	// CmdFactory return a new command based on the .rr.yaml server.command section
-	CmdFactory(env Env) func() *exec.Cmd
+	CmdFactory(env map[string]string) func() *exec.Cmd
 	// NewWorker return a new worker with provided and attached by the user listeners and environment variables
-	NewWorker(ctx context.Context, env Env) (*worker.Process, error)
+	NewWorker(ctx context.Context, env map[string]string) (*worker.Process, error)
 	// NewWorkerPool return new pool of workers (PHP) with attached events listeners, env variables and based on the provided configuration
-	NewWorkerPool(ctx context.Context, opt *pool.Config, env Env) (pool.Pool, error)
+	NewWorkerPool(ctx context.Context, opt *pool.Config, env map[string]string) (pool.Pool, error)
 }

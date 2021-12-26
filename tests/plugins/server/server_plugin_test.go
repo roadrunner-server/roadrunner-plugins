@@ -8,14 +8,14 @@ import (
 	"testing"
 	"time"
 
-	"github.com/golang/mock/gomock"
 	endure "github.com/spiral/endure/pkg/container"
 	"github.com/spiral/roadrunner-plugins/v2/config"
 	"github.com/spiral/roadrunner-plugins/v2/logger"
 	"github.com/spiral/roadrunner-plugins/v2/server"
-	"github.com/spiral/roadrunner-plugins/v2/tests/mocks"
+	mock_logger "github.com/spiral/roadrunner-plugins/v2/tests/mock"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"go.uber.org/zap"
 )
 
 func TestAppPipes(t *testing.T) {
@@ -138,21 +138,9 @@ func TestAppTCPOnInit(t *testing.T) {
 	err = container.Register(vp)
 	require.NoError(t, err)
 
-	controller := gomock.NewController(t)
-	mockLogger := mocks.NewMockLogger(controller)
-
-	// process interrupt error
-	mockLogger.EXPECT().Info("The number is: 0\n").Times(1)
-	mockLogger.EXPECT().Info("The number is: 1\n").Times(1)
-	mockLogger.EXPECT().Info("The number is: 2\n").Times(1)
-	mockLogger.EXPECT().Info("The number is: 3\n").Times(1)
-	mockLogger.EXPECT().Info("The number is: 4\n").Times(1)
-	mockLogger.EXPECT().Info("The number is: 5\n").Times(1)
-
-	mockLogger.EXPECT().Info(gomock.Any()).AnyTimes()
-
+	l, oLogger := mock_logger.ZapTestLogger(zap.DebugLevel)
 	err = container.RegisterAll(
-		mockLogger,
+		l,
 		&server.Plugin{},
 		&Foo2{},
 	)
@@ -202,6 +190,13 @@ func TestAppTCPOnInit(t *testing.T) {
 	time.Sleep(time.Second * 10)
 	stopCh <- struct{}{}
 	wg.Wait()
+
+	require.Equal(t, 1, oLogger.FilterMessageSnippet("The number is: 0").Len())
+	require.Equal(t, 1, oLogger.FilterMessageSnippet("The number is: 1").Len())
+	require.Equal(t, 1, oLogger.FilterMessageSnippet("The number is: 2").Len())
+	require.Equal(t, 1, oLogger.FilterMessageSnippet("The number is: 3").Len())
+	require.Equal(t, 1, oLogger.FilterMessageSnippet("The number is: 4").Len())
+	require.Equal(t, 1, oLogger.FilterMessageSnippet("The number is: 5").Len())
 }
 
 func TestAppSocketsOnInit(t *testing.T) {
@@ -216,21 +211,9 @@ func TestAppSocketsOnInit(t *testing.T) {
 	err = container.Register(vp)
 	require.NoError(t, err)
 
-	controller := gomock.NewController(t)
-	mockLogger := mocks.NewMockLogger(controller)
-
-	// process interrupt error
-	mockLogger.EXPECT().Info("The number is: 0\n").Times(1)
-	mockLogger.EXPECT().Info("The number is: 1\n").Times(1)
-	mockLogger.EXPECT().Info("The number is: 2\n").Times(1)
-	mockLogger.EXPECT().Info("The number is: 3\n").Times(1)
-	mockLogger.EXPECT().Info("The number is: 4\n").Times(1)
-	mockLogger.EXPECT().Info("The number is: 5\n").Times(1)
-
-	mockLogger.EXPECT().Info(gomock.Any()).AnyTimes()
-
+	l, oLogger := mock_logger.ZapTestLogger(zap.DebugLevel)
 	err = container.RegisterAll(
-		mockLogger,
+		l,
 		&server.Plugin{},
 		&Foo2{},
 	)
@@ -280,6 +263,13 @@ func TestAppSocketsOnInit(t *testing.T) {
 	time.Sleep(time.Second * 10)
 	stopCh <- struct{}{}
 	wg.Wait()
+
+	require.Equal(t, 1, oLogger.FilterMessageSnippet("The number is: 0\n").Len())
+	require.Equal(t, 1, oLogger.FilterMessageSnippet("The number is: 1\n").Len())
+	require.Equal(t, 1, oLogger.FilterMessageSnippet("The number is: 2\n").Len())
+	require.Equal(t, 1, oLogger.FilterMessageSnippet("The number is: 3\n").Len())
+	require.Equal(t, 1, oLogger.FilterMessageSnippet("The number is: 4\n").Len())
+	require.Equal(t, 1, oLogger.FilterMessageSnippet("The number is: 5\n").Len())
 }
 
 func TestAppSocketsOnInitFastClose(t *testing.T) {
@@ -294,15 +284,9 @@ func TestAppSocketsOnInitFastClose(t *testing.T) {
 	err = container.Register(vp)
 	require.NoError(t, err)
 
-	controller := gomock.NewController(t)
-	mockLogger := mocks.NewMockLogger(controller)
-
-	// process interrupt error
-	mockLogger.EXPECT().Info(gomock.Any()).AnyTimes()
-	mockLogger.EXPECT().Error("process wait", "error", gomock.Any()).Times(1)
-
+	l, oLogger := mock_logger.ZapTestLogger(zap.DebugLevel)
 	err = container.RegisterAll(
-		mockLogger,
+		l,
 		&server.Plugin{},
 		&Foo2{},
 	)
@@ -352,6 +336,8 @@ func TestAppSocketsOnInitFastClose(t *testing.T) {
 	time.Sleep(time.Second * 10)
 	stopCh <- struct{}{}
 	wg.Wait()
+
+	require.Equal(t, 1, oLogger.FilterMessageSnippet("process wait").Len())
 }
 
 func TestAppTCP(t *testing.T) {

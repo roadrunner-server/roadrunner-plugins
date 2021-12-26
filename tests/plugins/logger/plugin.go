@@ -4,26 +4,25 @@ import (
 	"strings"
 
 	"github.com/spiral/errors"
-	"github.com/spiral/roadrunner-plugins/v2/config"
-	"github.com/spiral/roadrunner-plugins/v2/logger"
+	"github.com/spiral/roadrunner-plugins/v2/api/v2/config"
 	"go.uber.org/zap"
-	core "go.uber.org/zap/zapcore"
+	"go.uber.org/zap/zapcore"
 )
 
 type Plugin struct {
 	config config.Configurer
-	log    logger.Logger
+	log    *zap.Logger
 }
 
 type Loggable struct {
 }
 
-func (l *Loggable) MarshalLogObject(encoder core.ObjectEncoder) error {
+func (l *Loggable) MarshalLogObject(encoder zapcore.ObjectEncoder) error {
 	encoder.AddString("error", "Example marshaller error")
 	return nil
 }
 
-func (p1 *Plugin) Init(cfg config.Configurer, log logger.Logger) error {
+func (p1 *Plugin) Init(cfg config.Configurer, log *zap.Logger) error {
 	p1.config = cfg
 	p1.log = log
 	return nil
@@ -31,10 +30,10 @@ func (p1 *Plugin) Init(cfg config.Configurer, log logger.Logger) error {
 
 func (p1 *Plugin) Serve() chan error {
 	errCh := make(chan error, 1)
-	p1.log.Error("error", "test", errors.E(errors.Str("test")))
-	p1.log.Info("error", "test", errors.E(errors.Str("test")))
-	p1.log.Debug("error", "test", errors.E(errors.Str("test")))
-	p1.log.Warn("error", "test", errors.E(errors.Str("test")))
+	p1.log.Error("error", zap.Error(errors.E(errors.Str("test"))))
+	p1.log.Info("error", zap.Error(errors.E(errors.Str("test"))))
+	p1.log.Debug("error", zap.Error(errors.E(errors.Str("test"))))
+	p1.log.Warn("error", zap.Error(errors.E(errors.Str("test"))))
 
 	field := zap.String("error", "Example field error")
 
@@ -45,15 +44,15 @@ func (p1 *Plugin) Serve() chan error {
 
 	marshalledObject := &Loggable{}
 
-	p1.log.Error("error", marshalledObject)
-	p1.log.Info("error", marshalledObject)
-	p1.log.Debug("error", marshalledObject)
-	p1.log.Warn("error", marshalledObject)
+	p1.log.Error("error", zap.Any("object", marshalledObject))
+	p1.log.Info("error", zap.Any("object", marshalledObject))
+	p1.log.Debug("error", zap.Any("object", marshalledObject))
+	p1.log.Warn("error", zap.Any("object", marshalledObject))
 
-	p1.log.Error("error", "test")
-	p1.log.Info("error", "test")
-	p1.log.Debug("error", "test")
-	p1.log.Warn("error", "test")
+	p1.log.Error("error", zap.String("test", ""))
+	p1.log.Info("error", zap.String("test", ""))
+	p1.log.Debug("error", zap.String("test", ""))
+	p1.log.Warn("error", zap.String("test", ""))
 
 	// test the `raw` mode
 	messageJSON := []byte(`{"field": "value"}`)

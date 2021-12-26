@@ -7,7 +7,7 @@ import (
 
 	"github.com/gobwas/ws"
 	"github.com/spiral/errors"
-	"github.com/spiral/roadrunner-plugins/v2/logger"
+	"go.uber.org/zap"
 )
 
 const EOF string = "EOF"
@@ -15,11 +15,11 @@ const EOF string = "EOF"
 // Connection represents wrapped and safe to use from the different threads websocket connection
 type Connection struct {
 	sync.RWMutex
-	log  logger.Logger
+	log  *zap.Logger
 	conn net.Conn
 }
 
-func NewConnection(wsConn net.Conn, log logger.Logger) *Connection {
+func NewConnection(wsConn net.Conn, log *zap.Logger) *Connection {
 	return &Connection{
 		conn: wsConn,
 		log:  log,

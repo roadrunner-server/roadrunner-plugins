@@ -5,8 +5,8 @@ import (
 	"sync"
 	"time"
 
-	"github.com/spiral/roadrunner-plugins/v2/config"
-	"github.com/spiral/roadrunner-plugins/v2/server"
+	"github.com/spiral/roadrunner-plugins/v2/api/v2/config"
+	"github.com/spiral/roadrunner-plugins/v2/api/v2/server"
 	"github.com/spiral/roadrunner/v2/pool"
 	"github.com/spiral/roadrunner/v2/state/process"
 )

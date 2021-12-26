@@ -8,8 +8,9 @@ import (
 	"github.com/gofiber/fiber/v2"
 	endure "github.com/spiral/endure/pkg/container"
 	"github.com/spiral/errors"
-	"github.com/spiral/roadrunner-plugins/v2/config"
-	"github.com/spiral/roadrunner-plugins/v2/logger"
+	"github.com/spiral/roadrunner-plugins/v2/api/v2/config"
+	"github.com/spiral/roadrunner-plugins/v2/api/v2/status"
+	"go.uber.org/zap"
 )
 
 const (
@@ -19,15 +20,15 @@ const (
 
 type Plugin struct {
 	// plugins which needs to be checked just as Status
-	statusRegistry map[string]Checker
+	statusRegistry map[string]status.Checker
 	// plugins which needs to send Readiness status
-	readyRegistry map[string]Readiness
+	readyRegistry map[string]status.Readiness
 	server        *fiber.App
-	log           logger.Logger
+	log           *zap.Logger
 	cfg           *Config
 }
 
-func (c *Plugin) Init(log logger.Logger, cfg config.Configurer) error {
+func (c *Plugin) Init(log *zap.Logger, cfg config.Configurer) error {
 	const op = errors.Op("checker_plugin_init")
 	if !cfg.Has(PluginName) {
 		return errors.E(op, errors.Disabled)
@@ -40,8 +41,8 @@ func (c *Plugin) Init(log logger.Logger, cfg config.Configurer) error {
 	// init defaults for the status plugin
 	c.cfg.InitDefaults()
 
-	c.readyRegistry = make(map[string]Readiness)
-	c.statusRegistry = make(map[string]Checker)
+	c.readyRegistry = make(map[string]status.Readiness)
+	c.statusRegistry = make(map[string]status.Checker)
 
 	c.log = log
 
@@ -81,35 +82,35 @@ func (c *Plugin) Stop() error {
 
 // status returns a Checker interface implementation
 // Reset named service. This is not an Status interface implementation
-func (c *Plugin) status(name string) (Status, error) {
+func (c *Plugin) status(name string) (*status.Status, error) {
 	const op = errors.Op("checker_plugin_status")
 	svc, ok := c.statusRegistry[name]
 	if !ok {
-		return Status{}, errors.E(op, errors.Errorf("no such plugin: %s", name))
+		return nil, errors.E(op, errors.Errorf("no such plugin: %s", name))
 	}
 
-	return svc.Status(), nil
+	return svc.Status()
 }
 
 // ready used to provide a readiness check for the plugin
-func (c *Plugin) ready(name string) (Status, error) {
+func (c *Plugin) ready(name string) (*status.Status, error) {
 	const op = errors.Op("checker_plugin_ready")
 	svc, ok := c.readyRegistry[name]
 	if !ok {
-		return Status{}, errors.E(op, errors.Errorf("no such plugin: %s", name))
+		return nil, errors.E(op, errors.Errorf("no such plugin: %s", name))
 	}
 
-	return svc.Ready(), nil
+	return svc.Ready()
 }
 
 // CollectCheckerImpls collects services which can provide Status.
-func (c *Plugin) CollectCheckerImpls(name endure.Named, r Checker) error {
+func (c *Plugin) CollectCheckerImpls(name endure.Named, r status.Checker) error {
 	c.statusRegistry[name.Name()] = r
 	return nil
 }
 
 // CollectReadinessImpls collects services which can provide Readiness check.
-func (c *Plugin) CollectReadinessImpls(name endure.Named, r Readiness) error {
+func (c *Plugin) CollectReadinessImpls(name endure.Named, r status.Readiness) error {
 	c.readyRegistry[name.Name()] = r
 	return nil
 }
@@ -147,7 +148,7 @@ func (c *Plugin) healthHandler(ctx *fiber.Ctx) error {
 	}
 
 	if len(plugins.Plugins) == 0 {
-		ctx.Status(http.StatusOK)
+		ctx.Status(http.StatusBadRequest)
 		_, _ = ctx.WriteString("No plugins provided in query. Query should be in form of: health?plugin=plugin1&plugin=plugin2 \n")
 		return nil
 	}
@@ -156,7 +157,15 @@ func (c *Plugin) healthHandler(ctx *fiber.Ctx) error {
 	for i := 0; i < len(plugins.Plugins); i++ {
 		// check if the plugin exists
 		if plugin, ok := c.statusRegistry[plugins.Plugins[i]]; ok {
-			st := plugin.Status()
+			st, errS := plugin.Status()
+			if errS != nil {
+				return errS
+			}
+			if st == nil {
+				// nil can be only if the service unavailable
+				ctx.Status(fiber.StatusServiceUnavailable)
+				return nil
+			}
 			if st.Code >= 500 {
 				// if there is 500 or 503 status code return immediately
 				ctx.Status(c.cfg.UnavailableStatusCode)
@@ -184,7 +193,7 @@ func (c *Plugin) readinessHandler(ctx *fiber.Ctx) error {
 	}
 
 	if len(plugins.Plugins) == 0 {
-		ctx.Status(http.StatusOK)
+		ctx.Status(http.StatusBadRequest)
 		_, _ = ctx.WriteString("No plugins provided in query. Query should be in form of: ready?plugin=plugin1&plugin=plugin2 \n")
 		return nil
 	}
@@ -193,7 +202,15 @@ func (c *Plugin) readinessHandler(ctx *fiber.Ctx) error {
 	for i := 0; i < len(plugins.Plugins); i++ {
 		// check if the plugin exists
 		if plugin, ok := c.readyRegistry[plugins.Plugins[i]]; ok {
-			st := plugin.Ready()
+			st, errS := plugin.Ready()
+			if errS != nil {
+				return errS
+			}
+			if st == nil {
+				// nil can be only if the service unavailable
+				ctx.Status(fiber.StatusServiceUnavailable)
+				return nil
+			}
 			if st.Code >= 500 {
 				// if there is 500 or 503 status code return immediately
 				ctx.Status(c.cfg.UnavailableStatusCode)

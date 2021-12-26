@@ -22,7 +22,7 @@ type Config struct {
 	Group string `mapstructure:"group"`
 
 	// Env represents application environment.
-	Env Env `mapstructure:"env"`
+	Env map[string]string `mapstructure:"env"`
 
 	// Relay defines connection method and factory to be used to connect to workers:
 	// "pipes", "tcp://:6001", "unix://rr.sock"
@@ -42,7 +42,7 @@ type OnInitConfig struct {
 	ExecTimeout time.Duration `mapstructure:"exec_timeout"`
 
 	// Env represents application environment.
-	Env Env `mapstructure:"env"`
+	Env map[string]string `mapstructure:"env"`
 }
 
 // RPCConfig should be in sync with rpc/config.go

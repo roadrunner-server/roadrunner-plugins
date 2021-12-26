@@ -4,7 +4,7 @@ import (
 	"strings"
 
 	"github.com/newrelic/go-agent/v3/newrelic"
-	"github.com/spiral/roadrunner-plugins/v2/utils"
+	"github.com/spiral/roadrunner/v2/utils"
 )
 
 const (

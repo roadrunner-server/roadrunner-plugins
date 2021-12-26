@@ -4,8 +4,8 @@ import (
 	"context"
 
 	endure "github.com/spiral/endure/pkg/container"
-	"github.com/spiral/roadrunner-plugins/v2/api/informer"
-	"github.com/spiral/roadrunner-plugins/v2/api/jobs"
+	"github.com/spiral/roadrunner-plugins/v2/api/v2/informer"
+	"github.com/spiral/roadrunner-plugins/v2/api/v2/jobs"
 	"github.com/spiral/roadrunner/v2/state/process"
 )
 

@@ -3,7 +3,7 @@ package logger
 import (
 	endure "github.com/spiral/endure/pkg/container"
 	"github.com/spiral/errors"
-	"github.com/spiral/roadrunner-plugins/v2/config"
+	"github.com/spiral/roadrunner-plugins/v2/api/v2/config"
 	"go.uber.org/zap"
 )
 
@@ -53,21 +53,30 @@ func (z *ZapLogger) Init(cfg config.Configurer) error {
 	return nil
 }
 
+func (z *ZapLogger) Serve() chan error {
+	return make(chan error, 1)
+}
+
+func (z *ZapLogger) Stop() error {
+	_ = z.base.Sync()
+	return nil
+}
+
 // NamedLogger returns logger dedicated to the specific channel. Similar to Named() but also reads the core params.
-func (z *ZapLogger) NamedLogger(name string) (Logger, error) {
+func (z *ZapLogger) NamedLogger(name string) (*zap.Logger, error) {
 	if cfg, ok := z.channels.Channels[name]; ok {
 		l, err := cfg.BuildLogger()
 		if err != nil {
 			return nil, err
 		}
-		return NewZapAdapter(l.Named(name)), nil
+		return l.Named(name), nil
 	}
 
-	return NewZapAdapter(z.base.Named(name)), nil
+	return z.base.Named(name), nil
 }
 
 // ServiceLogger returns logger dedicated to the specific channel. Similar to Named() but also reads the core params.
-func (z *ZapLogger) ServiceLogger(n endure.Named) (Logger, error) {
+func (z *ZapLogger) ServiceLogger(n endure.Named) (*zap.Logger, error) {
 	return z.NamedLogger(n.Name())
 }
 
@@ -81,8 +90,4 @@ func (z *ZapLogger) Provides() []interface{} {
 // Name returns user-friendly plugin name
 func (z *ZapLogger) Name() string {
 	return PluginName
-}
-
-// Available interface implementation
-func (z *ZapLogger) Available() {
 }

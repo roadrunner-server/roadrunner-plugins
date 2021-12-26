@@ -9,19 +9,19 @@ import (
 	"github.com/google/uuid"
 	json "github.com/json-iterator/go"
 	"github.com/spiral/errors"
-	"github.com/spiral/roadrunner-plugins/v2/api/pubsub"
-	"github.com/spiral/roadrunner-plugins/v2/config"
+	"github.com/spiral/roadrunner-plugins/v2/api/v2/config"
+	"github.com/spiral/roadrunner-plugins/v2/api/v2/pubsub"
+	"github.com/spiral/roadrunner-plugins/v2/api/v2/server"
 	"github.com/spiral/roadrunner-plugins/v2/http/attributes"
 	"github.com/spiral/roadrunner-plugins/v2/http/middleware/websockets/connection"
 	"github.com/spiral/roadrunner-plugins/v2/http/middleware/websockets/executor"
 	"github.com/spiral/roadrunner-plugins/v2/http/middleware/websockets/pool"
 	"github.com/spiral/roadrunner-plugins/v2/http/middleware/websockets/validator"
-	"github.com/spiral/roadrunner-plugins/v2/logger"
-	"github.com/spiral/roadrunner-plugins/v2/server"
 	"github.com/spiral/roadrunner/v2/payload"
 	phpPool "github.com/spiral/roadrunner/v2/pool"
 	"github.com/spiral/roadrunner/v2/state/process"
 	"github.com/spiral/roadrunner/v2/worker"
+	"go.uber.org/zap"
 )
 
 const (
@@ -41,7 +41,7 @@ type Plugin struct {
 	broadcaster pubsub.Broadcaster
 
 	cfg *Config
-	log logger.Logger
+	log *zap.Logger
 
 	// global connections map
 	connections sync.Map
@@ -66,7 +66,7 @@ type Plugin struct {
 	accessValidator validator.AccessValidatorFn
 }
 
-func (p *Plugin) Init(cfg config.Configurer, log logger.Logger, server server.Server, b pubsub.Broadcaster) error {
+func (p *Plugin) Init(cfg config.Configurer, log *zap.Logger, server server.Server, b pubsub.Broadcaster) error {
 	const op = errors.Op("websockets_plugin_init")
 	if !cfg.Has(PluginName) {
 		return errors.E(op, errors.Disabled)
@@ -132,7 +132,7 @@ func (p *Plugin) Serve() chan error {
 			return
 		}
 
-		p.accessValidator = p.defaultAccessValidator(p.phpPool)
+		p.accessValidator = p.defaultAccessValidator()
 	}()
 
 	p.workersPool = pool.NewWorkersPool(p.subReader, &p.connections, p.log)
@@ -164,14 +164,6 @@ func (p *Plugin) Stop() error {
 	}
 	// cancel context
 	p.cancel()
-	p.Lock()
-	if p.phpPool == nil {
-		p.Unlock()
-		return nil
-	}
-	p.phpPool.Destroy(context.Background())
-	p.Unlock()
-
 	return nil
 }
 
@@ -215,7 +207,7 @@ func (p *Plugin) Middleware(next http.Handler) http.Handler {
 
 		_conn, _, _, err := ws.UpgradeHTTP(r, w)
 		if err != nil {
-			p.log.Error("upgrade connection", "error", err)
+			p.log.Error("upgrade connection", zap.Error(err))
 			return
 		}
 
@@ -228,11 +220,11 @@ func (p *Plugin) Middleware(next http.Handler) http.Handler {
 
 		// Executor wraps a connection to have a safe abstraction
 		e := executor.NewExecutor(safeConn, p.log, connectionID, p.subReader, p.accessValidator, r)
-		p.log.Debug("websocket client connected", "uuid", connectionID)
+		p.log.Debug("websocket client connected", zap.String("uuid", connectionID))
 
 		err = e.StartCommandLoop()
 		if err != nil {
-			p.log.Error("command loop error, disconnecting", "error", err.Error())
+			p.log.Error("command loop error, disconnecting", zap.Error(err))
 			return
 		}
 
@@ -244,17 +236,17 @@ func (p *Plugin) Middleware(next http.Handler) http.Handler {
 
 		err = r.Body.Close()
 		if err != nil {
-			p.log.Error("body close", "error", err)
+			p.log.Error("body close", zap.Error(err))
 		}
 
 		// close the connection on exit
 		err = safeConn.Close()
 		if err != nil {
-			p.log.Error("connection close", "error", err)
+			p.log.Error("connection close", zap.Error(err))
 		}
 
 		safeConn = nil
-		p.log.Debug("disconnected", "connectionID", connectionID)
+		p.log.Debug("disconnected", zap.String("connectionID", connectionID))
 	})
 }
 
@@ -287,35 +279,21 @@ func (p *Plugin) Reset() error {
 	p.Lock()
 	defer p.Unlock()
 	const op = errors.Op("ws_plugin_reset")
-	p.log.Info("WS plugin got restart request. Restarting...")
-	p.phpPool.Destroy(context.Background())
-	p.phpPool = nil
-
-	var err error
-	p.phpPool, err = p.server.NewWorkerPool(context.Background(), &phpPool.Config{
-		Debug:           p.cfg.Pool.Debug,
-		NumWorkers:      p.cfg.Pool.NumWorkers,
-		MaxJobs:         p.cfg.Pool.MaxJobs,
-		AllocateTimeout: p.cfg.Pool.AllocateTimeout,
-		DestroyTimeout:  p.cfg.Pool.DestroyTimeout,
-		Supervisor:      p.cfg.Pool.Supervisor,
-	}, map[string]string{RrMode: "http", RrBroadcastPath: p.cfg.Path})
+	p.log.Info("reset signal was received")
+	err := p.phpPool.Reset(context.Background())
 	if err != nil {
 		return errors.E(op, err)
 	}
 
-	// attach validators
-	p.accessValidator = p.defaultAccessValidator(p.phpPool)
-
-	p.log.Info("WS plugin successfully restarted")
+	p.log.Info("plugin was successfully reset")
 	return nil
 }
 
-func (p *Plugin) defaultAccessValidator(pool phpPool.Pool) validator.AccessValidatorFn {
+func (p *Plugin) defaultAccessValidator() validator.AccessValidatorFn {
 	return func(r *http.Request, topics ...string) (*validator.AccessValidator, error) {
 		const op = errors.Op("access_validator")
 
-		p.log.Debug("validation", "topics", topics)
+		p.log.Debug("validation", zap.Strings("topics", topics))
 		r = attributes.Init(r)
 
 		// if channels len is eq to 0, we use serverValidator
@@ -325,7 +303,7 @@ func (p *Plugin) defaultAccessValidator(pool phpPool.Pool) validator.AccessValid
 				return nil, errors.E(op, err)
 			}
 
-			val, err := p.exec(ctx, pool)
+			val, err := p.exec(ctx)
 			if err != nil {
 				return nil, errors.E(err)
 			}
@@ -338,7 +316,7 @@ func (p *Plugin) defaultAccessValidator(pool phpPool.Pool) validator.AccessValid
 			return nil, errors.E(op, err)
 		}
 
-		val, err := p.exec(ctx, pool)
+		val, err := p.exec(ctx)
 		if err != nil {
 			return nil, errors.E(op)
 		}
@@ -361,14 +339,16 @@ func (p *Plugin) getPld() *payload.Payload {
 	return p.pldPool.Get().(*payload.Payload)
 }
 
-func (p *Plugin) exec(ctx []byte, pool phpPool.Pool) (*validator.AccessValidator, error) {
+func (p *Plugin) exec(ctx []byte) (*validator.AccessValidator, error) {
 	const op = errors.Op("exec")
 	pd := p.getPld()
 	defer p.putPld(pd)
 
 	pd.Context = ctx
 
-	rsp, err := pool.Exec(pd)
+	p.RLock()
+	rsp, err := p.phpPool.Exec(pd)
+	p.RUnlock()
 	if err != nil {
 		return nil, errors.E(op, err)
 	}

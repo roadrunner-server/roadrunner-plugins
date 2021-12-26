@@ -4,7 +4,8 @@ import (
 	"net/http"
 
 	"github.com/spiral/errors"
-	"github.com/spiral/roadrunner-plugins/v2/utils"
+	"github.com/spiral/roadrunner/v2/utils"
+	"go.uber.org/zap"
 )
 
 func (p *Plugin) serveHTTPS(errCh chan error) {
@@ -23,7 +24,7 @@ func (p *Plugin) serveHTTPS(errCh chan error) {
 		ACME powered server
 	*/
 	if p.cfg.EnableACME() {
-		p.log.Debug("https(acme) server is running", "address", p.cfg.SSLConfig.Address)
+		p.log.Debug("https(acme) server was started", zap.String("address", p.cfg.SSLConfig.Address))
 		err = p.https.ServeTLS(
 			l,
 			"",
@@ -36,7 +37,7 @@ func (p *Plugin) serveHTTPS(errCh chan error) {
 		return
 	}
 
-	p.log.Debug("https server is running", "address", p.cfg.SSLConfig.Address)
+	p.log.Debug("https server was started", zap.String("address", p.cfg.SSLConfig.Address))
 	err = p.https.ServeTLS(
 		l,
 		p.cfg.SSLConfig.Cert,

@@ -14,6 +14,7 @@ import (
 
 	endure "github.com/spiral/endure/pkg/container"
 	goridgeRpc "github.com/spiral/goridge/v3/pkg/rpc"
+	statusImpl "github.com/spiral/roadrunner-plugins/v2/api/v2/status"
 	"github.com/spiral/roadrunner-plugins/v2/config"
 	httpPlugin "github.com/spiral/roadrunner-plugins/v2/http"
 	"github.com/spiral/roadrunner-plugins/v2/logger"
@@ -182,7 +183,7 @@ func checkRPCStatus(t *testing.T) {
 	assert.NoError(t, err)
 	client := rpc.NewClientWithCodec(goridgeRpc.NewClientCodec(conn))
 
-	st := &status.Status{}
+	st := &statusImpl.Status{}
 
 	err = client.Call("status.Status", "http", &st)
 	assert.NoError(t, err)
@@ -380,7 +381,7 @@ func checkRPCReadiness(t *testing.T) {
 	assert.NoError(t, err)
 	client := rpc.NewClientWithCodec(goridgeRpc.NewClientCodec(conn))
 
-	st := &status.Status{}
+	st := &statusImpl.Status{}
 
 	err = client.Call("status.Ready", "http", &st)
 	assert.NoError(t, err)

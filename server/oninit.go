@@ -8,7 +8,7 @@ import (
 	"time"
 
 	"github.com/spiral/errors"
-	"github.com/spiral/roadrunner-plugins/v2/utils"
+	"go.uber.org/zap"
 )
 
 func (p *Plugin) runOnInitCommand() error {
@@ -26,7 +26,7 @@ func (p *Plugin) runOnInitCommand() error {
 	go func() {
 		errW := cmd.Wait()
 		if errW != nil {
-			p.log.Error("process wait", "error", errW)
+			p.log.Error("process wait", zap.Error(errW))
 		}
 
 		stopCh <- struct{}{}
@@ -36,7 +36,7 @@ func (p *Plugin) runOnInitCommand() error {
 	case <-timer.C:
 		err = cmd.Process.Kill()
 		if err != nil {
-			p.log.Error("process killed", "error", err)
+			p.log.Error("process killed", zap.Error(err))
 		}
 		return nil
 
@@ -47,12 +47,12 @@ func (p *Plugin) runOnInitCommand() error {
 }
 
 func (p *Plugin) Write(data []byte) (int, error) {
-	p.log.Info(utils.AsString(data))
+	p.log.Info(string(data))
 	return len(data), nil
 }
 
 // create command for the process
-func (p *Plugin) createProcess(env Env, cmd string) *exec.Cmd {
+func (p *Plugin) createProcess(env map[string]string, cmd string) *exec.Cmd {
 	// cmdArgs contain command arguments if the command in form of: php <command> or ls <command> -i -b
 	var cmdArgs []string
 	var command *exec.Cmd

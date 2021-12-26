@@ -6,12 +6,12 @@ import (
 	"time"
 
 	"github.com/spiral/errors"
-	"github.com/spiral/roadrunner-plugins/v2/api/jobs"
-	"github.com/spiral/roadrunner-plugins/v2/api/jobs/pipeline"
-	"github.com/spiral/roadrunner-plugins/v2/config"
-	"github.com/spiral/roadrunner-plugins/v2/logger"
-	"github.com/spiral/roadrunner-plugins/v2/utils"
+	"github.com/spiral/roadrunner-plugins/v2/api/v2/config"
+	"github.com/spiral/roadrunner-plugins/v2/api/v2/jobs"
+	"github.com/spiral/roadrunner-plugins/v2/api/v2/jobs/pipeline"
 	priorityqueue "github.com/spiral/roadrunner/v2/priority_queue"
+	"github.com/spiral/roadrunner/v2/utils"
+	"go.uber.org/zap"
 )
 
 const (
@@ -26,7 +26,7 @@ type Config struct {
 
 type consumer struct {
 	cfg           *Config
-	log           logger.Logger
+	log           *zap.Logger
 	pipeline      atomic.Value
 	pq            priorityqueue.Queue
 	localPrefetch chan *Item
@@ -42,7 +42,7 @@ type consumer struct {
 	stopCh    chan struct{}
 }
 
-func FromConfig(configKey string, log logger.Logger, cfg config.Configurer, pq priorityqueue.Queue) (*consumer, error) {
+func FromConfig(configKey string, log *zap.Logger, cfg config.Configurer, pq priorityqueue.Queue) (*consumer, error) {
 	const op = errors.Op("new_ephemeral_pipeline")
 
 	jb := &consumer{
@@ -79,7 +79,7 @@ func FromConfig(configKey string, log logger.Logger, cfg config.Configurer, pq p
 	return jb, nil
 }
 
-func FromPipeline(pipeline *pipeline.Pipeline, log logger.Logger, pq priorityqueue.Queue) (*consumer, error) {
+func FromPipeline(pipeline *pipeline.Pipeline, log *zap.Logger, pq priorityqueue.Queue) (*consumer, error) {
 	return &consumer{
 		log:           log,
 		pq:            pq,
@@ -139,7 +139,7 @@ func (c *consumer) Run(_ context.Context, pipe *pipeline.Pipeline) error {
 	c.consume()
 	atomic.StoreUint32(&c.listeners, 1)
 
-	c.log.Debug("pipeline active", "driver", pipe.Driver(), "pipeline", pipe.Name(), "start", time.Now(), "elapsed", time.Since(t))
+	c.log.Debug("pipeline was started", zap.String("driver", pipe.Driver()), zap.String("pipeline", pipe.Name()), zap.String("start", time.Now().String()), zap.String("elapsed", time.Since(t).String()))
 	return nil
 }
 
@@ -147,7 +147,7 @@ func (c *consumer) Pause(_ context.Context, p string) {
 	start := time.Now()
 	pipe := c.pipeline.Load().(*pipeline.Pipeline)
 	if pipe.Name() != p {
-		c.log.Error("no such pipeline", "requested pause on: ", p)
+		c.log.Error("no such pipeline", zap.String("pause was requested: ", p))
 	}
 
 	l := atomic.LoadUint32(&c.listeners)
@@ -162,14 +162,14 @@ func (c *consumer) Pause(_ context.Context, p string) {
 	// stop the consumer
 	c.stopCh <- struct{}{}
 
-	c.log.Debug("pipeline paused", "driver", pipe.Driver(), "pipeline", pipe.Name(), "start", time.Now(), "elapsed", time.Since(start))
+	c.log.Debug("pipeline was paused", zap.String("driver", pipe.Driver()), zap.String("pipeline", pipe.Name()), zap.String("start", time.Now().String()), zap.String("elapsed", time.Since(start).String()))
 }
 
 func (c *consumer) Resume(_ context.Context, p string) {
 	start := time.Now()
 	pipe := c.pipeline.Load().(*pipeline.Pipeline)
 	if pipe.Name() != p {
-		c.log.Error("no such pipeline", "requested resume on: ", p)
+		c.log.Error("no such pipeline", zap.String("resume was requested: ", p))
 	}
 
 	l := atomic.LoadUint32(&c.listeners)
@@ -183,7 +183,7 @@ func (c *consumer) Resume(_ context.Context, p string) {
 	c.consume()
 
 	atomic.StoreUint32(&c.listeners, 1)
-	c.log.Debug("pipeline resumed", "driver", pipe.Driver(), "pipeline", pipe.Name(), "start", time.Now(), "elapsed", time.Since(start))
+	c.log.Debug("pipeline was resumed", zap.String("driver", pipe.Driver()), zap.String("pipeline", pipe.Name()), zap.String("start", time.Now().String()), zap.String("elapsed", time.Since(start).String()))
 }
 
 func (c *consumer) Stop(_ context.Context) error {
@@ -203,7 +203,7 @@ func (c *consumer) Stop(_ context.Context) error {
 
 	c.localPrefetch = nil
 
-	c.log.Debug("pipeline stopped", "driver", pipe.Driver(), "pipeline", pipe.Name(), "start", time.Now(), "elapsed", time.Since(start))
+	c.log.Debug("pipeline was stopped", zap.String("driver", pipe.Driver()), zap.String("pipeline", pipe.Name()), zap.String("start", time.Now().String()), zap.String("elapsed", time.Since(start).String()))
 	return nil
 }
 
@@ -228,7 +228,7 @@ func (c *consumer) handleItem(ctx context.Context, msg *Item) error {
 			case c.localPrefetch <- jj:
 				atomic.AddUint64(&c.goroutines, ^uint64(0))
 			default:
-				c.log.Warn("can't push job", "error", "local queue closed or full")
+				c.log.Warn("can't push job", zap.String("error", "local queue closed or full"))
 			}
 		}(msg)
 

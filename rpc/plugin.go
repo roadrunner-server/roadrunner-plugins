@@ -8,8 +8,9 @@ import (
 	endure "github.com/spiral/endure/pkg/container"
 	"github.com/spiral/errors"
 	goridgeRpc "github.com/spiral/goridge/v3/pkg/rpc"
-	"github.com/spiral/roadrunner-plugins/v2/config"
-	"github.com/spiral/roadrunner-plugins/v2/logger"
+	"github.com/spiral/roadrunner-plugins/v2/api/v2/config"
+	api "github.com/spiral/roadrunner-plugins/v2/api/v2/rpc"
+	"go.uber.org/zap"
 )
 
 // PluginName contains default plugin name.
@@ -18,16 +19,16 @@ const PluginName = "rpc"
 // Plugin is RPC service.
 type Plugin struct {
 	cfg Config
-	log logger.Logger
+	log *zap.Logger
 	rpc *rpc.Server
 	// set of the plugins, which are implement RPCer interface and can be plugged into the RR via RPC
-	plugins  map[string]RPCer
+	plugins  map[string]api.RPCer
 	listener net.Listener
 	closed   uint32
 }
 
 // Init rpc service. Must return true if service is enabled.
-func (s *Plugin) Init(cfg config.Configurer, log logger.Logger) error {
+func (s *Plugin) Init(cfg config.Configurer, log *zap.Logger) error {
 	const op = errors.Op("rpc_plugin_init")
 
 	if !cfg.Has(PluginName) {
@@ -42,7 +43,7 @@ func (s *Plugin) Init(cfg config.Configurer, log logger.Logger) error {
 	// Init defaults
 	s.cfg.InitDefaults()
 	// Init pluggable plugins map
-	s.plugins = make(map[string]RPCer, 1)
+	s.plugins = make(map[string]api.RPCer, 1)
 	// init logs
 	s.log = log
 
@@ -84,20 +85,19 @@ func (s *Plugin) Serve() chan error {
 		return errCh
 	}
 
-	s.log.Debug("RPC plugin started", "address", s.cfg.Listen, "plugins", plugins)
+	s.log.Debug("plugin was started", zap.String("address", s.cfg.Listen), zap.Strings("list of the plugins with RPC methods:", plugins))
 
 	go func() {
 		for {
-			conn, err := s.listener.Accept()
-			if err != nil {
+			conn, errA := s.listener.Accept()
+			if errA != nil {
 				if atomic.LoadUint32(&s.closed) == 1 {
 					// just continue, this is not a critical issue, we just called Stop
 					return
 				}
 
-				s.log.Error("listener accept error", "error", err)
-				errCh <- errors.E(errors.Op("listener accept"), errors.Serve, err)
-				return
+				s.log.Error("failed to accept the connection", zap.Error(errA))
+				continue
 			}
 
 			go s.rpc.ServeCodec(goridgeRpc.NewCodec(conn))
@@ -132,7 +132,7 @@ func (s *Plugin) Collects() []interface{} {
 }
 
 // RegisterPlugin registers RPC service plugin.
-func (s *Plugin) RegisterPlugin(name endure.Named, p RPCer) {
+func (s *Plugin) RegisterPlugin(name endure.Named, p api.RPCer) {
 	s.plugins[name.Name()] = p
 }
 

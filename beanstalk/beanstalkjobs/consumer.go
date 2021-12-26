@@ -11,12 +11,12 @@ import (
 
 	"github.com/beanstalkd/go-beanstalk"
 	"github.com/spiral/errors"
-	"github.com/spiral/roadrunner-plugins/v2/api/jobs"
-	"github.com/spiral/roadrunner-plugins/v2/api/jobs/pipeline"
-	cfgPlugin "github.com/spiral/roadrunner-plugins/v2/config"
-	"github.com/spiral/roadrunner-plugins/v2/logger"
-	"github.com/spiral/roadrunner-plugins/v2/utils"
+	cfgPlugin "github.com/spiral/roadrunner-plugins/v2/api/v2/config"
+	"github.com/spiral/roadrunner-plugins/v2/api/v2/jobs"
+	"github.com/spiral/roadrunner-plugins/v2/api/v2/jobs/pipeline"
 	priorityqueue "github.com/spiral/roadrunner/v2/priority_queue"
+	"github.com/spiral/roadrunner/v2/utils"
+	"go.uber.org/zap"
 )
 
 const (
@@ -24,7 +24,7 @@ const (
 )
 
 type consumer struct {
-	log logger.Logger
+	log *zap.Logger
 	pq  priorityqueue.Queue
 
 	pipeline  atomic.Value
@@ -45,7 +45,7 @@ type consumer struct {
 	stopCh chan struct{}
 }
 
-func NewBeanstalkConsumer(configKey string, log logger.Logger, cfg cfgPlugin.Configurer, pq priorityqueue.Queue) (*consumer, error) {
+func NewBeanstalkConsumer(configKey string, log *zap.Logger, cfg cfgPlugin.Configurer, pq priorityqueue.Queue) (*consumer, error) {
 	const op = errors.Op("new_beanstalk_consumer")
 
 	// PARSE CONFIGURATION -------
@@ -104,14 +104,14 @@ func NewBeanstalkConsumer(configKey string, log logger.Logger, cfg cfgPlugin.Con
 	return jc, nil
 }
 
-func FromPipeline(pipe *pipeline.Pipeline, log logger.Logger, cfg cfgPlugin.Configurer, pq priorityqueue.Queue) (*consumer, error) {
+func FromPipeline(pipe *pipeline.Pipeline, log *zap.Logger, cfg cfgPlugin.Configurer, pq priorityqueue.Queue) (*consumer, error) {
 	const op = errors.Op("new_beanstalk_consumer")
 
 	// PARSE CONFIGURATION -------
 	var conf config
 	// if no global section
 	if !cfg.Has(pluginName) {
-		return nil, errors.E(op, errors.Str("no global beanstalk configuration, global configuration should contain beanstalk addrs and timeout"))
+		return nil, errors.E(op, errors.Str("no global beanstalk configuration, global configuration should contain beanstalk 'addrs' and timeout"))
 	}
 
 	err := cfg.UnmarshalKey(pluginName, &conf)
@@ -228,7 +228,7 @@ func (c *consumer) Run(_ context.Context, p *pipeline.Pipeline) error {
 
 	go c.listen()
 
-	c.log.Debug("pipeline started", "driver", pipe.Driver(), "pipeline", pipe.Name(), "start", start, "elapsed", time.Since(start))
+	c.log.Debug("pipeline was started", zap.String("driver", pipe.Driver()), zap.String("pipeline", pipe.Name()), zap.Time("start", start), zap.Duration("elapsed", time.Since(start)))
 	return nil
 }
 
@@ -243,7 +243,7 @@ func (c *consumer) Stop(context.Context) error {
 	// release associated resources
 	c.pool.Stop()
 
-	c.log.Debug("pipeline stopped", "driver", pipe.Driver(), "pipeline", pipe.Name(), "start", start, "elapsed", time.Since(start))
+	c.log.Debug("pipeline was stopped", zap.String("driver", pipe.Driver()), zap.String("pipeline", pipe.Name()), zap.Time("start", start), zap.Duration("elapsed", time.Since(start)))
 	return nil
 }
 
@@ -252,7 +252,7 @@ func (c *consumer) Pause(_ context.Context, p string) {
 	// load atomic value
 	pipe := c.pipeline.Load().(*pipeline.Pipeline)
 	if pipe.Name() != p {
-		c.log.Error("no such pipeline", "requested", p, "actual", pipe.Name())
+		c.log.Error("no such pipeline", zap.String("requested", p), zap.String("actual", pipe.Name()))
 		return
 	}
 
@@ -267,7 +267,7 @@ func (c *consumer) Pause(_ context.Context, p string) {
 
 	c.stopCh <- struct{}{}
 
-	c.log.Debug("pipeline paused", "driver", pipe.Driver(), "pipeline", pipe.Name(), "start", start, "elapsed", time.Since(start))
+	c.log.Debug("pipeline was paused", zap.String("driver", pipe.Driver()), zap.String("pipeline", pipe.Name()), zap.Time("start", start), zap.Duration("elapsed", time.Since(start)))
 }
 
 func (c *consumer) Resume(_ context.Context, p string) {
@@ -275,7 +275,7 @@ func (c *consumer) Resume(_ context.Context, p string) {
 	// load atomic value
 	pipe := c.pipeline.Load().(*pipeline.Pipeline)
 	if pipe.Name() != p {
-		c.log.Error("no such pipeline", "requested", p, "actual", pipe.Name())
+		c.log.Error("no such pipeline", zap.String("requested", p), zap.String("actual", pipe.Name()))
 		return
 	}
 
@@ -292,7 +292,7 @@ func (c *consumer) Resume(_ context.Context, p string) {
 	// increase num of listeners
 	atomic.AddUint32(&c.listeners, 1)
 
-	c.log.Debug("pipeline resumed", "driver", pipe.Driver(), "pipeline", pipe.Name(), "start", start, "elapsed", time.Since(start))
+	c.log.Debug("pipeline was resumed", zap.String("driver", pipe.Driver()), zap.String("pipeline", pipe.Name()), zap.Time("start", start), zap.Duration("elapsed", time.Since(start)))
 }
 
 func (c *consumer) handleItem(ctx context.Context, item *Item) error {

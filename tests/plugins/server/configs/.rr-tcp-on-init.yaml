@@ -1,13 +1,9 @@
 server:
   on_init:
     command: "php ../../php_test_files/loop.php"
-    exec_timeout: 20s
+    exec_timeout: 200s
 
   command: "php tcp-on-init.php"
-  env:
-    - RR_CONFIG: "/some/place/on/the/C134"
-    - RR_CONFIG2: "C138"
-
   relay: "tcp://127.0.0.1:10118"
   relay_timeout: "20s"
 

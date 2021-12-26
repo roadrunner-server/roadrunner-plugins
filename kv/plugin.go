@@ -5,9 +5,9 @@ import (
 
 	endure "github.com/spiral/endure/pkg/container"
 	"github.com/spiral/errors"
-	"github.com/spiral/roadrunner-plugins/v2/api/kv"
-	"github.com/spiral/roadrunner-plugins/v2/config"
-	"github.com/spiral/roadrunner-plugins/v2/logger"
+	"github.com/spiral/roadrunner-plugins/v2/api/v2/config"
+	"github.com/spiral/roadrunner-plugins/v2/api/v2/kv"
+	"go.uber.org/zap"
 )
 
 const (
@@ -21,7 +21,7 @@ const (
 
 // Plugin for the unified storage
 type Plugin struct {
-	log logger.Logger
+	log *zap.Logger
 	// constructors contains general storage constructors, such as boltdb, memory, memcached, redis.
 	constructors map[string]kv.Constructor
 	// storages contains user-defined storages, such as boltdb-north, memcached-us and so on.
@@ -31,7 +31,7 @@ type Plugin struct {
 	cfgPlugin config.Configurer
 }
 
-func (p *Plugin) Init(cfg config.Configurer, log logger.Logger) error {
+func (p *Plugin) Init(cfg config.Configurer, log *zap.Logger) error {
 	const op = errors.Op("kv_plugin_init")
 	if !cfg.Has(PluginName) {
 		return errors.E(errors.Disabled)
@@ -87,7 +87,7 @@ func (p *Plugin) Serve() chan error {
 			// local configuration section key
 			case p.cfgPlugin.Has(configKey):
 				if _, ok := p.constructors[drStr]; !ok {
-					p.log.Warn("no constructors registered", "requested constructor", drStr, "registered", p.constructors)
+					p.log.Warn("no such constructor was registered", zap.String("requested", drStr), zap.Any("registered", p.constructors))
 					continue
 				}
 
@@ -102,7 +102,7 @@ func (p *Plugin) Serve() chan error {
 				// try global then
 			case p.cfgPlugin.Has(k):
 				if _, ok := p.constructors[drStr]; !ok {
-					p.log.Warn("no constructors registered", "requested constructor", drStr, "registered", p.constructors)
+					p.log.Warn("no such constructor was registered", zap.String("requested", drStr), zap.Any("registered", p.constructors))
 					continue
 				}
 
@@ -116,7 +116,7 @@ func (p *Plugin) Serve() chan error {
 				// save the storage
 				p.storages[k] = storage
 			default:
-				p.log.Error("can't find local or global configuration, this section will be skipped", "local: ", configKey, "global: ", k)
+				p.log.Error("can't find local or global configuration, this section will be skipped", zap.String("local", configKey), zap.String("global", k))
 				continue
 			}
 		}
@@ -161,5 +161,5 @@ func (p *Plugin) GetAllStorageDrivers(name endure.Named, constructor kv.Construc
 
 // RPC returns associated rpc service.
 func (p *Plugin) RPC() interface{} {
-	return &rpc{srv: p, log: p.log, storages: p.storages}
+	return &rpc{srv: p, storages: p.storages}
 }
