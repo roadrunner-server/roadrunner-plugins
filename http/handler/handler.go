@@ -185,12 +185,12 @@ func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	case true:
 		// external/cwe/cwe-117
 		usrA := r.UserAgent()
-		usrA = strings.Replace(usrA, "\n", "", -1) //nolint:gocritic
-		usrA = strings.Replace(usrA, "\r", "", -1) //nolint:gocritic
+		usrA = strings.ReplaceAll(usrA, "\n", "")
+		usrA = strings.ReplaceAll(usrA, "\r", "")
 
 		rfr := r.Referer()
-		rfr = strings.Replace(rfr, "\n", "", -1) //nolint:gocritic
-		rfr = strings.Replace(rfr, "\r", "", -1) //nolint:gocritic
+		rfr = strings.ReplaceAll(rfr, "\n", "")
+		rfr = strings.ReplaceAll(rfr, "\r", "")
 
 		h.log.Info("http access log",
 			zap.Int("status", status),
@@ -298,8 +298,8 @@ func (h *Handler) getReq(r *http.Request) *Request {
 	req := h.reqPool.Get().(*Request)
 
 	rq := r.URL.RawQuery
-	rq = strings.Replace(rq, "\n", "", -1) //nolint:gocritic
-	rq = strings.Replace(rq, "\r", "", -1) //nolint:gocritic
+	rq = strings.ReplaceAll(rq, "\n", "")
+	rq = strings.ReplaceAll(rq, "\r", "")
 
 	req.RawQuery = rq
 	req.RemoteAddr = FetchIP(r.RemoteAddr)

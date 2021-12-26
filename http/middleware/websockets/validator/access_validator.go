@@ -33,6 +33,10 @@ func ServerAccessValidator(r *http.Request) ([]byte, error) {
 
 	defer delete(attributes.All(r), joinServer)
 
+	rq := r.URL.RawQuery
+	rq = strings.ReplaceAll(rq, "\n", "")
+	rq = strings.ReplaceAll(rq, "\r", "")
+
 	req := &handler.Request{
 		RemoteAddr: handler.FetchIP(r.RemoteAddr),
 		Protocol:   r.Proto,
@@ -40,7 +44,7 @@ func ServerAccessValidator(r *http.Request) ([]byte, error) {
 		URI:        handler.URI(r),
 		Header:     r.Header,
 		Cookies:    make(map[string]string),
-		RawQuery:   r.URL.RawQuery,
+		RawQuery:   rq,
 		Attributes: attributes.All(r),
 	}
 
@@ -61,6 +65,10 @@ func TopicsAccessValidator(r *http.Request, topics ...string) ([]byte, error) {
 
 	defer delete(attributes.All(r), joinTopics)
 
+	rq := r.URL.RawQuery
+	rq = strings.ReplaceAll(rq, "\n", "")
+	rq = strings.ReplaceAll(rq, "\r", "")
+
 	req := &handler.Request{
 		RemoteAddr: handler.FetchIP(r.RemoteAddr),
 		Protocol:   r.Proto,
@@ -68,7 +76,7 @@ func TopicsAccessValidator(r *http.Request, topics ...string) ([]byte, error) {
 		URI:        handler.URI(r),
 		Header:     r.Header,
 		Cookies:    make(map[string]string),
-		RawQuery:   r.URL.RawQuery,
+		RawQuery:   rq,
 		Attributes: attributes.All(r),
 	}
 

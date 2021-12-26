@@ -108,8 +108,10 @@ func (s *Plugin) Middleware(next http.Handler) http.Handler {
 		}
 
 		// first - create a proper file path
-		fPath := path.Clean(r.URL.Path)
-		ext := strings.ToLower(path.Ext(fPath))
+		fp := r.URL.Path
+		fp = strings.ReplaceAll(fp, "\n", "")
+		fp = strings.ReplaceAll(fp, "\r", "")
+		ext := strings.ToLower(path.Ext(fp))
 
 		// files w/o extensions are not allowed
 		if ext == "" {
@@ -119,8 +121,8 @@ func (s *Plugin) Middleware(next http.Handler) http.Handler {
 
 		// check that file extension in the forbidden list
 		if _, ok := s.forbiddenExtensions[ext]; ok {
-			ext = strings.Replace(ext, "\n", "", -1) //nolint:gocritic
-			ext = strings.Replace(ext, "\r", "", -1) //nolint:gocritic
+			ext = strings.ReplaceAll(ext, "\n", "")
+			ext = strings.ReplaceAll(ext, "\r", "")
 			s.log.Debug("file extension is forbidden", zap.String("ext", ext))
 			next.ServeHTTP(w, r)
 			return
@@ -140,7 +142,7 @@ func (s *Plugin) Middleware(next http.Handler) http.Handler {
 
 		// ok, file is not in the forbidden list
 		// Stat it and get file info
-		f, err := s.root.Open(fPath)
+		f, err := s.root.Open(fp)
 		if err != nil {
 			// else no such file, show error in logs only in debug mode
 			s.log.Debug("no such file or directory", zap.Error(err))
