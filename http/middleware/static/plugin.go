@@ -119,6 +119,8 @@ func (s *Plugin) Middleware(next http.Handler) http.Handler {
 
 		// check that file extension in the forbidden list
 		if _, ok := s.forbiddenExtensions[ext]; ok {
+			ext = strings.ReplaceAll(ext, "\n", "")
+			ext = strings.ReplaceAll(ext, "\r", "")
 			s.log.Debug("file extension is forbidden", zap.String("ext", ext))
 			next.ServeHTTP(w, r)
 			return
