@@ -16,6 +16,7 @@ import (
 	"github.com/spiral/roadrunner-plugins/v2/config"
 	"github.com/spiral/roadrunner-plugins/v2/fileserver"
 	httpPlugin "github.com/spiral/roadrunner-plugins/v2/http"
+	newrelic "github.com/spiral/roadrunner-plugins/v2/http/middleware/new_relic"
 	"github.com/spiral/roadrunner-plugins/v2/logger"
 	rpcPlugin "github.com/spiral/roadrunner-plugins/v2/rpc"
 	"github.com/spiral/roadrunner-plugins/v2/server"
@@ -313,4 +314,84 @@ func serveStaticSampleEtag2(t *testing.T) {
 	assert.Nil(t, err)
 	assert.Equal(t, http.StatusNotModified, resp.StatusCode)
 	_ = resp.Body.Close()
+}
+
+func TestHTTPNewRelic(t *testing.T) {
+	cont, err := endure.NewContainer(nil, endure.SetLogLevel(endure.ErrorLevel))
+	assert.NoError(t, err)
+
+	cfg := &config.Plugin{
+		Path:   "configs/.rr-http-new-relic.yaml",
+		Prefix: "rr",
+	}
+
+	err = cont.RegisterAll(
+		cfg,
+		&newrelic.Plugin{},
+		&rpcPlugin.Plugin{},
+		&logger.ZapLogger{},
+		&server.Plugin{},
+		&httpPlugin.Plugin{},
+	)
+	assert.NoError(t, err)
+
+	err = cont.Init()
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	ch, err := cont.Serve()
+	assert.NoError(t, err)
+
+	sig := make(chan os.Signal, 1)
+	signal.Notify(sig, os.Interrupt, syscall.SIGINT, syscall.SIGTERM)
+
+	wg := &sync.WaitGroup{}
+	wg.Add(1)
+
+	stopCh := make(chan struct{}, 1)
+
+	go func() {
+		defer wg.Done()
+		for {
+			select {
+			case e := <-ch:
+				assert.Fail(t, "error", e.Error.Error())
+				err = cont.Stop()
+				if err != nil {
+					assert.FailNow(t, "error", err.Error())
+				}
+			case <-sig:
+				err = cont.Stop()
+				if err != nil {
+					assert.FailNow(t, "error", err.Error())
+				}
+				return
+			case <-stopCh:
+				// timeout
+				err = cont.Stop()
+				if err != nil {
+					assert.FailNow(t, "error", err.Error())
+				}
+				return
+			}
+		}
+	}()
+
+	time.Sleep(time.Second * 1)
+	req, err := http.NewRequest("GET", "http://127.0.0.1:19999", nil)
+	assert.NoError(t, err)
+
+	resp, err := http.DefaultClient.Do(req)
+	assert.NoError(t, err)
+	defer func() {
+		_ = resp.Body.Close()
+	}()
+
+	require.Nil(t, resp.Header["Rr_newrelic"])
+	require.Equal(t, []string{"application/json"}, resp.Header["Content-Type"])
+
+	stopCh <- struct{}{}
+
+	wg.Wait()
 }
