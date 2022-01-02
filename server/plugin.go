@@ -77,7 +77,8 @@ func (p *Plugin) Init(cfg config.Configurer, log *zap.Logger) error {
 		return errors.E(op, err)
 	}
 
-	p.log = log
+	p.log = new(zap.Logger)
+	*p.log = *log
 	p.preparedCmd = append(p.preparedCmd, strings.Split(p.cfg.Command, " ")...)
 
 	p.preparedEnvs = append(os.Environ(), fmt.Sprintf(RrRelay+"=%s", p.cfg.Relay))

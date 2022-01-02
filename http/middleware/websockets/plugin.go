@@ -84,7 +84,8 @@ func (p *Plugin) Init(cfg config.Configurer, log *zap.Logger, server server.Serv
 
 	p.serveExit = make(chan struct{})
 	p.server = server
-	p.log = log
+	p.log = new(zap.Logger)
+	*p.log = *log
 	p.broadcaster = b
 
 	ctx, cancel := context.WithCancel(context.Background())

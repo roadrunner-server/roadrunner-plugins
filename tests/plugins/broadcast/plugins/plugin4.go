@@ -20,7 +20,8 @@ type Plugin4 struct {
 }
 
 func (p *Plugin4) Init(log *zap.Logger, b pubsub.Broadcaster) error {
-	p.log = log
+	p.log = new(zap.Logger)
+	*p.log = *log
 	p.b = b
 	p.ctx, p.cancel = context.WithCancel(context.Background())
 	return nil

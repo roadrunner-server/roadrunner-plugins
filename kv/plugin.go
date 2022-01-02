@@ -43,7 +43,8 @@ func (p *Plugin) Init(cfg config.Configurer, log *zap.Logger) error {
 	}
 	p.constructors = make(map[string]kv.Constructor, 5)
 	p.storages = make(map[string]kv.Storage, 5)
-	p.log = log
+	p.log = new(zap.Logger)
+	*p.log = *log
 	p.cfgPlugin = cfg
 	return nil
 }

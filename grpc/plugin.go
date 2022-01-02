@@ -67,7 +67,8 @@ func (p *Plugin) Init(cfg config.Configurer, log *zap.Logger, server server.Serv
 	}
 	p.config.Env[RrMode] = pluginName
 
-	p.log = log
+	p.log = new(zap.Logger)
+	*p.log = *log
 	p.mu = &sync.RWMutex{}
 
 	return nil

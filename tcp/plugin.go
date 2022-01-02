@@ -84,7 +84,8 @@ func (p *Plugin) Init(log *zap.Logger, cfg config.Configurer, server server.Serv
 		},
 	}
 
-	p.log = log
+	p.log = new(zap.Logger)
+	*p.log = *log
 	p.server = server
 	return nil
 }

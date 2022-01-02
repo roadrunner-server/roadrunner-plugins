@@ -36,7 +36,8 @@ func (p *Plugin) Init(cfg config.Configurer, log *zap.Logger) error {
 		return errors.E(op, err)
 	}
 
-	p.log = log
+	p.log = new(zap.Logger)
+	*p.log = *log
 
 	return nil
 }

@@ -107,7 +107,8 @@ func (p *Plugin) Init(cfg config.Configurer, log *zap.Logger, server server.Serv
 
 	// initialize priority queue
 	p.queue = pq.NewBinHeap(p.cfg.PipelineSize)
-	p.log = log
+	p.log = new(zap.Logger)
+	*p.log = *log
 	p.metrics = &metrics{
 		jobsOk:  utils.Uint64(0),
 		pushOk:  utils.Uint64(0),

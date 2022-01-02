@@ -19,7 +19,8 @@ type Plugin struct {
 }
 
 func (p *Plugin) Init(log *zap.Logger, cfg config.Configurer) error {
-	p.log = log
+	p.log = new(zap.Logger)
+	*p.log = *log
 	p.cfg = cfg
 	return nil
 }

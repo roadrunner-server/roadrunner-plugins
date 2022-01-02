@@ -26,7 +26,8 @@ func (p *Plugin) Init(log *zap.Logger, cfg config.Configurer) error {
 	}
 
 	p.cfgPlugin = cfg
-	p.log = log
+	p.log = new(zap.Logger)
+	*p.log = *log
 	return nil
 }
 

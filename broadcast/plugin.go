@@ -47,7 +47,8 @@ func (p *Plugin) Init(cfg config.Configurer, log *zap.Logger) error {
 	p.publishers = make(map[string]pubsub.PubSub)
 	p.constructors = make(map[string]pubsub.Constructor)
 
-	p.log = log
+	p.log = new(zap.Logger)
+	*p.log = *log
 	p.cfgPlugin = cfg
 	return nil
 }

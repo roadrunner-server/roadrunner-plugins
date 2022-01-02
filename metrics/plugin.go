@@ -51,7 +51,8 @@ func (p *Plugin) Init(cfg config.Configurer, log *zap.Logger) error {
 
 	p.cfg.InitDefaults()
 
-	p.log = log
+	p.log = new(zap.Logger)
+	*p.log = *log
 	p.registry = prometheus.NewRegistry()
 
 	// Default
