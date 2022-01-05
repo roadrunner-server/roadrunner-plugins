@@ -1,7 +1,7 @@
 package pipeline
 
 import (
-	json "github.com/json-iterator/go"
+	json "github.com/goccy/go-json"
 	"github.com/spiral/roadrunner/v2/utils"
 )
 

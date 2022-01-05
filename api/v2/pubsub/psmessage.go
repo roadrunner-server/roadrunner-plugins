@@ -1,6 +1,6 @@
 package pubsub
 
-import json "github.com/json-iterator/go"
+import json "github.com/goccy/go-json"
 
 // Message represents a single message with payload bound to a particular topic
 type Message struct {

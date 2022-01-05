@@ -6,8 +6,8 @@ import (
 	"sync"
 
 	"github.com/gobwas/ws"
+	json "github.com/goccy/go-json"
 	"github.com/google/uuid"
-	json "github.com/json-iterator/go"
 	"github.com/spiral/errors"
 	"github.com/spiral/roadrunner-plugins/v2/api/v2/config"
 	"github.com/spiral/roadrunner-plugins/v2/api/v2/pubsub"

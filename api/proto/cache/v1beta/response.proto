@@ -1,0 +1,15 @@
+syntax = "proto3";
+
+package cache.v1beta;
+option go_package = "./;cacheV1beta";
+
+
+message Response {
+  bytes data = 1;
+  uint64 code = 2;
+  map<string, HeaderValue> headers = 3;
+}
+
+message HeaderValue {
+  repeated string value = 1;
+}

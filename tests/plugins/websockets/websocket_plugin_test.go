@@ -16,7 +16,7 @@ import (
 	"github.com/gobwas/ws/wsutil"
 	"github.com/stretchr/testify/require"
 
-	json "github.com/json-iterator/go"
+	json "github.com/goccy/go-json"
 	endure "github.com/spiral/endure/pkg/container"
 	goridgeRpc "github.com/spiral/goridge/v3/pkg/rpc"
 	websocketsv1 "github.com/spiral/roadrunner-plugins/v2/api/proto/websockets/v1beta"

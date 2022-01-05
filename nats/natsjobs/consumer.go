@@ -6,7 +6,7 @@ import (
 	"sync/atomic"
 	"time"
 
-	json "github.com/json-iterator/go"
+	json "github.com/goccy/go-json"
 	"github.com/nats-io/nats.go"
 	"github.com/spiral/errors"
 	cfgPlugin "github.com/spiral/roadrunner-plugins/v2/api/v2/config"

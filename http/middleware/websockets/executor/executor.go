@@ -6,7 +6,7 @@ import (
 	"sync"
 
 	"github.com/gobwas/ws"
-	json "github.com/json-iterator/go"
+	json "github.com/goccy/go-json"
 	"github.com/spiral/errors"
 	websocketsv1 "github.com/spiral/roadrunner-plugins/v2/api/proto/websockets/v1beta"
 	"github.com/spiral/roadrunner-plugins/v2/api/v2/pubsub"
