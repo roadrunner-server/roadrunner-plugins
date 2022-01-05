@@ -12,28 +12,23 @@ Types are:
 2 - RESPONSE
 ```
 
-- `NO_ERROR`: contains only `type` - 0, and empty `data`.
-- `ERROR` : contains `type` - 1, and `data` field with: `message` describing the error, `requeue` flag to requeue the
-  job,
-  `delay_seconds`: to delay a queue for a provided amount of seconds, `headers` - job's headers represented as hashmap
-  with string key and array of strings as a value.
-
-- `RESPONSE`: response message type. Message type - 2. Contains `queue` (eg. tube, subject) name. Payload should be sent via response `Context`. 
-
-For example:
-
-`NO_ERROR`:
-For example:
-
+#### `NO_ERROR`: contains only `type` - 0, and empty `data`.  
+example:
 ```json
 {
   "type": 0,
   "data": {}
 }
 ```
+---
 
-`ERROR`:
+#### `ERROR` : contains `type` - 1, and `data` field with: 
+- `message` describing the error.  
+- `requeue` flag to requeue the job.  
+- `delay_seconds`: to delay a queue for a provided amount of seconds.   
+- `headers` - job's headers represented as hashmap with string key and array of strings as a value.  
 
+example:
 ```json
 {
   "type": 1,
@@ -54,8 +49,15 @@ For example:
 }
 ```
 
-`RESPONSE`:
 
+---
+
+#### `RESPONSE`: response message type. Message type - 2, with:
+
+- `queue` (eg. tube, subject) name.
+- `payload` which should be sent via response `Context`.   
+
+example:
 ```json
 {
   "type": 2,
