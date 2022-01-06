@@ -11,9 +11,8 @@ import (
 	cacheV1beta "github.com/spiral/roadrunner-plugins/v2/api/proto/cache/v1beta"
 	"github.com/spiral/roadrunner-plugins/v2/api/v2/cache"
 	"github.com/spiral/roadrunner-plugins/v2/api/v2/config"
-	"github.com/spiral/roadrunner/v2/utils"
+	"github.com/spiral/roadrunner-plugins/v2/http/middleware/cache/directives"
 	"go.uber.org/zap"
-	"google.golang.org/protobuf/proto"
 )
 
 const (
@@ -26,6 +25,7 @@ type Plugin struct {
 	hashPool    sync.Pool
 	writersPool sync.Pool
 	rspPool     sync.Pool
+	rqPool      sync.Pool
 
 	log   *zap.Logger
 	cfg   *Config
@@ -65,6 +65,10 @@ func (p *Plugin) Init(cfg config.Configurer, log *zap.Logger) error {
 
 	p.rspPool = sync.Pool{New: func() interface{} {
 		return &cacheV1beta.Response{}
+	}}
+
+	p.rqPool = sync.Pool{New: func() interface{} {
+		return &directives.Req{}
 	}}
 
 	l := new(zap.Logger)
@@ -107,20 +111,19 @@ func (p *Plugin) Middleware(next http.Handler) http.Handler {
 			return
 		}
 
-		// get Cache-Control header
-		switch r.Header.Get(cacheControl) {
+		rq := p.getRq()
+		defer p.putRq(rq)
+
+		directives.ParseRequest(r.Header.Get(cacheControl), p.log, rq)
 		// https://datatracker.ietf.org/doc/html/rfc7234#section-5.2.1.5
 		/*
 			The "no-store" request directive indicates that a cache MUST NOT
 			store any part of either this request or any response to it.
 		*/
-		case noStore, empty:
+		if rq.NoCache {
 			next.ServeHTTP(w, r)
 			return
 		}
-
-		wr := p.getWriter()
-		defer p.putWriter(wr)
 
 		switch r.Method {
 		/*
@@ -128,68 +131,18 @@ func (p *Plugin) Middleware(next http.Handler) http.Handler {
 			cacheable methods: https://www.rfc-editor.org/rfc/rfc7231#section-4.2.3 (GET, HEAD, POST (Responses to POST requests are only cacheable when they include explicit freshness information))
 		*/
 		case http.MethodGet:
-			h := p.getHash()
-			defer p.putHash(h)
-
-			// write the data to the hash function
-			_, err := h.Write(utils.AsBytes(r.RequestURI))
-			if err != nil {
-				http.Error(w, "failed to write the hash", http.StatusInternalServerError)
-				return
-			}
-
-			// try to get the data from cache
-			out, err := p.cache.Get(h.Sum64())
-			if err != nil {
-				// cache miss, no data
-				if errors.Is(errors.EmptyItem, err) {
-					// forward the
-					next.ServeHTTP(wr, r)
-
-					// send original data
-					for k := range wr.HdrToSend {
-						for kk := range wr.HdrToSend[k] {
-							w.Header().Add(k, wr.HdrToSend[k][kk])
-						}
-					}
-
-					w.WriteHeader(wr.Code)
-					_, _ = w.Write(wr.Data)
-
-					p.handleCacheMiss(wr, h.Sum64())
-					return
-				}
-
-				http.Error(w, "get hash", http.StatusInternalServerError)
-				return
-			}
-
-			msg := p.getRsp()
-			defer p.putRsp(msg)
-
-			err = proto.Unmarshal(out, msg)
-			if err != nil {
-				http.Error(w, "cache data unpack", http.StatusInternalServerError)
-				return
-			}
-
-			// send original data
-			for k := range msg.Headers {
-				for i := 0; i < len(msg.Headers[k].Value); i++ {
-					w.Header().Add(k, msg.Headers[k].Value[i])
-				}
-			}
-
-			w.WriteHeader(int(msg.Code))
-			_, _ = w.Write(msg.Data)
+			p.handleGET(w, r, next, rq)
 			return
 		case http.MethodHead:
+			// TODO(rustatian): HEAD method is not supported
+			fallthrough
 		case http.MethodPost:
+			// TODO(rustatian): POST method is not supported
+			fallthrough
 		default:
-			panic("non-cacheable")
+			// passthrough request to the worker for other methods
+			next.ServeHTTP(w, r)
 		}
-
-		next.ServeHTTP(w, r)
 	})
 }
 

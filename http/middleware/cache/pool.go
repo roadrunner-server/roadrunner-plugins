@@ -4,6 +4,7 @@ import (
 	"hash"
 
 	cacheV1beta "github.com/spiral/roadrunner-plugins/v2/api/proto/cache/v1beta"
+	"github.com/spiral/roadrunner-plugins/v2/http/middleware/cache/directives"
 )
 
 func (p *Plugin) getHash() hash.Hash64 {
@@ -38,4 +39,13 @@ func (p *Plugin) getRsp() *cacheV1beta.Response {
 func (p *Plugin) putRsp(r *cacheV1beta.Response) {
 	r.Reset()
 	p.rspPool.Put(r)
+}
+
+func (p *Plugin) getRq() *directives.Req {
+	return p.rqPool.Get().(*directives.Req)
+}
+
+func (p *Plugin) putRq(r *directives.Req) {
+	r.Reset()
+	p.rqPool.Put(r)
 }

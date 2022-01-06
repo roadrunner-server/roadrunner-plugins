@@ -7,9 +7,12 @@ import (
 	"google.golang.org/protobuf/proto"
 )
 
-func (p *Plugin) handleCacheMiss(wr *writer, id uint64) {
-	// cache only 200OK responses
-	if wr.Code == http.StatusOK {
+func (p *Plugin) handleResponse(wr *writer, id uint64) {
+	/*
+		First - check the status code, should be only 200, 203, 204, 206, 300, 301, 404, 405, 410, 414, and 501
+	*/
+	switch wr.Code {
+	case http.StatusOK:
 		payload := p.getRsp()
 		defer p.putRsp(payload)
 
@@ -30,5 +33,15 @@ func (p *Plugin) handleCacheMiss(wr *writer, id uint64) {
 		}
 
 		_ = p.cache.Set(id, data)
+	case http.StatusNonAuthoritativeInfo:
+	case http.StatusNoContent:
+	case http.StatusPartialContent:
+	case http.StatusMultipleChoices:
+	case http.StatusMovedPermanently:
+	case http.StatusNotFound:
+	case http.StatusMethodNotAllowed:
+	case http.StatusGone:
+	case http.StatusRequestURITooLong:
+	case http.StatusNotImplemented:
 	}
 }

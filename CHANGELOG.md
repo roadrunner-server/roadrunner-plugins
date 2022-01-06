@@ -161,7 +161,7 @@ Now, pipelines have only `driver` key with the configuration under the `config` 
 ## 🩹 Fixes:
 
 - 🐛 Fix: 200 HTTP status code instead of 400 on readiness/health bad requests. [BUG](https://github.com/spiral/roadrunner-plugins/issues/180)
-
+- 🐛 Fix: 
 ---
 
 ## v2.6.6 (15.12.2021)

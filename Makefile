@@ -15,6 +15,7 @@ test_coverage:
 	go test -v -race -cover -tags=debug -coverpkg=./... -failfast -coverprofile=./coverage-ci/struct_jobs.out -covermode=atomic ./jobs
 	go test -v -race -cover -tags=debug -coverpkg=./... -failfast -coverprofile=./coverage-ci/pipeline_jobs.out -covermode=atomic ./api/v2/jobs/pipeline
 	go test -v -race -cover -tags=debug -coverpkg=./... -failfast -coverprofile=./coverage-ci/service.out -covermode=atomic ./tests/plugins/service
+	go test -v -race -cover -tags=debug -coverpkg=./... -failfast -coverprofile=./coverage-ci/directives.out -covermode=atomic ./http/middleware/cache/directives
 	go test -timeout 20m -v -race -cover -tags=debug -failfast -coverpkg=./... -coverprofile=./coverage-ci/jobs_core.out -covermode=atomic ./tests/plugins/jobs
 	go test -v -race -cover -tags=debug -coverpkg=./... -failfast -coverprofile=./coverage-ci/kv_plugin.out -covermode=atomic ./tests/plugins/kv
 	go test -v -race -cover -tags=debug -coverpkg=./... -failfast -coverprofile=./coverage-ci/tcp_plugin.out -covermode=atomic ./tests/plugins/tcp
@@ -50,6 +51,7 @@ test: ## Run application tests
 	go test -v -race -tags=debug ./server
 	go test -v -race -tags=debug ./grpc/codec
 	go test -v -race -tags=debug ./grpc/parser
+	go test -v -race -tags=debug ./http/middleware/cache/directives
 	go test -timeout 20m -v -race -tags=debug ./tests/plugins/jobs
 	go test -v -race -tags=debug ./tests/plugins/kv
 	go test -v -race -tags=debug ./tests/plugins/tcp
