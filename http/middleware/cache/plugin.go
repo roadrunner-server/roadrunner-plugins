@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"hash/fnv"
 	"net/http"
+	"strings"
 	"sync"
 
 	endure "github.com/spiral/endure/pkg/container"
@@ -114,7 +115,12 @@ func (p *Plugin) Middleware(next http.Handler) http.Handler {
 		rq := p.getRq()
 		defer p.putRq(rq)
 
-		directives.ParseRequest(r.Header.Get(cacheControl), p.log, rq)
+		// cwe-117
+		cc := r.Header.Get(cacheControl)
+		cc = strings.ReplaceAll(cc, "\n", "")
+		cc = strings.ReplaceAll(cc, "\r", "")
+
+		directives.ParseRequest(cc, p.log, rq)
 		// https://datatracker.ietf.org/doc/html/rfc7234#section-5.2.1.5
 		/*
 			The "no-store" request directive indicates that a cache MUST NOT
