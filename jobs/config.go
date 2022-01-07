@@ -3,7 +3,7 @@ package jobs
 import (
 	"runtime"
 
-	"github.com/spiral/roadrunner-plugins/v2/api/v2/jobs/pipeline"
+	"github.com/roadrunner-server/api/plugins/v2/jobs/pipeline"
 	poolImpl "github.com/spiral/roadrunner/v2/pool"
 )
 

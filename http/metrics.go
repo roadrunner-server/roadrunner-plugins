@@ -2,7 +2,7 @@ package http
 
 import (
 	"github.com/prometheus/client_golang/prometheus"
-	"github.com/spiral/roadrunner-plugins/v2/api/v2/informer"
+	"github.com/roadrunner-server/api/plugins/v2/informer"
 )
 
 func (p *Plugin) MetricsCollector() []prometheus.Collector {

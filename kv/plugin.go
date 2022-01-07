@@ -3,10 +3,10 @@ package kv
 import (
 	"fmt"
 
+	"github.com/roadrunner-server/api/plugins/v2/config"
+	"github.com/roadrunner-server/api/plugins/v2/kv"
 	endure "github.com/spiral/endure/pkg/container"
 	"github.com/spiral/errors"
-	"github.com/spiral/roadrunner-plugins/v2/api/v2/config"
-	"github.com/spiral/roadrunner-plugins/v2/api/v2/kv"
 	"go.uber.org/zap"
 )
 

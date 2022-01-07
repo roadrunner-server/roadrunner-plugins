@@ -5,8 +5,8 @@ import (
 
 	"github.com/cenkalti/backoff/v4"
 	amqp "github.com/rabbitmq/amqp091-go"
+	"github.com/roadrunner-server/api/plugins/v2/jobs/pipeline"
 	"github.com/spiral/errors"
-	"github.com/spiral/roadrunner-plugins/v2/api/v2/jobs/pipeline"
 	"go.uber.org/zap"
 )
 

@@ -5,11 +5,11 @@ import (
 	"net/rpc"
 	"sync/atomic"
 
+	"github.com/roadrunner-server/api/plugins/v2/config"
+	api "github.com/roadrunner-server/api/plugins/v2/rpc"
 	endure "github.com/spiral/endure/pkg/container"
 	"github.com/spiral/errors"
 	goridgeRpc "github.com/spiral/goridge/v3/pkg/rpc"
-	"github.com/spiral/roadrunner-plugins/v2/api/v2/config"
-	api "github.com/spiral/roadrunner-plugins/v2/api/v2/rpc"
 	"go.uber.org/zap"
 )
 

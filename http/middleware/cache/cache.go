@@ -3,7 +3,7 @@ package cache
 import (
 	"net/http"
 
-	cacheV1beta "github.com/spiral/roadrunner-plugins/v2/api/proto/cache/v1beta"
+	cacheV1beta "github.com/roadrunner-server/api/proto/cache/v1beta"
 	"google.golang.org/protobuf/proto"
 )
 

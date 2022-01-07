@@ -1,7 +1,7 @@
 package http
 
 import (
-	"github.com/spiral/roadrunner-plugins/v2/api/v2/config"
+	"github.com/roadrunner-server/api/plugins/v2/config"
 )
 
 type Plugin1 struct {

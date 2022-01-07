@@ -3,7 +3,7 @@ package cache
 import (
 	"hash"
 
-	cacheV1beta "github.com/spiral/roadrunner-plugins/v2/api/proto/cache/v1beta"
+	cacheV1beta "github.com/roadrunner-server/api/proto/cache/v1beta"
 	"github.com/spiral/roadrunner-plugins/v2/http/middleware/cache/directives"
 )
 

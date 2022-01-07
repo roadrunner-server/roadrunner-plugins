@@ -10,10 +10,10 @@ import (
 	"testing"
 	"time"
 
+	jobState "github.com/roadrunner-server/api/plugins/v2/jobs"
+	jobsv1beta "github.com/roadrunner-server/api/proto/jobs/v1beta"
 	endure "github.com/spiral/endure/pkg/container"
 	goridgeRpc "github.com/spiral/goridge/v3/pkg/rpc"
-	jobsv1beta "github.com/spiral/roadrunner-plugins/v2/api/proto/jobs/v1beta"
-	jobState "github.com/spiral/roadrunner-plugins/v2/api/v2/jobs"
 	"github.com/spiral/roadrunner-plugins/v2/boltdb"
 	"github.com/spiral/roadrunner-plugins/v2/config"
 	"github.com/spiral/roadrunner-plugins/v2/informer"

@@ -10,9 +10,9 @@ import (
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/collectors"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
+	"github.com/roadrunner-server/api/plugins/v2/config"
+	"github.com/roadrunner-server/api/plugins/v2/metrics"
 	"github.com/spiral/errors"
-	"github.com/spiral/roadrunner-plugins/v2/api/v2/config"
-	"github.com/spiral/roadrunner-plugins/v2/api/v2/metrics"
 	"go.uber.org/zap"
 	"golang.org/x/sys/cpu"
 )

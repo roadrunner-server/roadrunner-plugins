@@ -7,9 +7,9 @@ import (
 	"strings"
 
 	"github.com/hashicorp/go-version"
+	"github.com/roadrunner-server/api/plugins/v2/config"
 	"github.com/spf13/viper"
 	"github.com/spiral/errors"
-	"github.com/spiral/roadrunner-plugins/v2/api/v2/config"
 )
 
 const (

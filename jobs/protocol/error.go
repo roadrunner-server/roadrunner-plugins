@@ -2,8 +2,8 @@ package protocol
 
 import (
 	json "github.com/goccy/go-json"
+	"github.com/roadrunner-server/api/plugins/v2/jobs"
 	"github.com/spiral/errors"
-	"github.com/spiral/roadrunner-plugins/v2/api/v2/jobs"
 	"go.uber.org/zap"
 )
 

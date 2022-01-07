@@ -16,10 +16,10 @@ import (
 	"github.com/gobwas/ws/wsutil"
 	"github.com/stretchr/testify/require"
 
-	json "github.com/goccy/go-json"
+	"github.com/goccy/go-json"
+	websocketsv1 "github.com/roadrunner-server/api/proto/websockets/v1beta"
 	endure "github.com/spiral/endure/pkg/container"
 	goridgeRpc "github.com/spiral/goridge/v3/pkg/rpc"
-	websocketsv1 "github.com/spiral/roadrunner-plugins/v2/api/proto/websockets/v1beta"
 	"github.com/spiral/roadrunner-plugins/v2/broadcast"
 	"github.com/spiral/roadrunner-plugins/v2/config"
 	httpPlugin "github.com/spiral/roadrunner-plugins/v2/http"

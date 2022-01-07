@@ -4,9 +4,9 @@ import (
 	"context"
 	"sync"
 
+	"github.com/roadrunner-server/api/plugins/v2/config"
+	"github.com/roadrunner-server/api/plugins/v2/server"
 	"github.com/spiral/errors"
-	"github.com/spiral/roadrunner-plugins/v2/api/v2/config"
-	"github.com/spiral/roadrunner-plugins/v2/api/v2/server"
 	"github.com/spiral/roadrunner-plugins/v2/grpc/codec"
 	"github.com/spiral/roadrunner-plugins/v2/grpc/proxy"
 	"github.com/spiral/roadrunner/v2/pool"

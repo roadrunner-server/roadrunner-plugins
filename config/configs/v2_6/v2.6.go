@@ -1,7 +1,7 @@
 package v2_6 //nolint:stylecheck
 
 import (
-	"github.com/spiral/roadrunner-plugins/v2/api/v2/jobs/pipeline"
+	"github.com/roadrunner-server/api/plugins/v2/jobs/pipeline"
 	"github.com/spiral/roadrunner/v2/pool"
 )
 

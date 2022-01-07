@@ -3,10 +3,10 @@ package redis
 import (
 	"sync"
 
+	"github.com/roadrunner-server/api/plugins/v2/config"
+	"github.com/roadrunner-server/api/plugins/v2/kv"
+	"github.com/roadrunner-server/api/plugins/v2/pubsub"
 	"github.com/spiral/errors"
-	"github.com/spiral/roadrunner-plugins/v2/api/v2/config"
-	"github.com/spiral/roadrunner-plugins/v2/api/v2/kv"
-	"github.com/spiral/roadrunner-plugins/v2/api/v2/pubsub"
 	redis_kv "github.com/spiral/roadrunner-plugins/v2/redis/kv"
 	redis_pubsub "github.com/spiral/roadrunner-plugins/v2/redis/pubsub"
 	"go.uber.org/zap"

@@ -14,7 +14,6 @@ coverage:
 # do not include tests folders
 ignore:
   - ".github"
-  - "api"
   - "config/configs"
   - "grpc/parser/parse_test.go"
   - "grpc/codec/codec_test.go"

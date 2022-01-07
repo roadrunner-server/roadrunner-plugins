@@ -7,11 +7,11 @@ import (
 	"strings"
 	"sync"
 
+	"github.com/roadrunner-server/api/plugins/v2/cache"
+	"github.com/roadrunner-server/api/plugins/v2/config"
+	cacheV1beta "github.com/roadrunner-server/api/proto/cache/v1beta"
 	endure "github.com/spiral/endure/pkg/container"
 	"github.com/spiral/errors"
-	cacheV1beta "github.com/spiral/roadrunner-plugins/v2/api/proto/cache/v1beta"
-	"github.com/spiral/roadrunner-plugins/v2/api/v2/cache"
-	"github.com/spiral/roadrunner-plugins/v2/api/v2/config"
 	"github.com/spiral/roadrunner-plugins/v2/http/middleware/cache/directives"
 	"go.uber.org/zap"
 )

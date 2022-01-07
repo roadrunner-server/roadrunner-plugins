@@ -13,7 +13,6 @@ test_coverage:
 	go test -v -race -cover -tags=debug -coverpkg=./... -failfast -coverprofile=./coverage-ci/http_config.out -covermode=atomic ./http/config
 	go test -v -race -cover -tags=debug -coverpkg=./... -failfast -coverprofile=./coverage-ci/server_cmd.out -covermode=atomic ./server
 	go test -v -race -cover -tags=debug -coverpkg=./... -failfast -coverprofile=./coverage-ci/struct_jobs.out -covermode=atomic ./jobs
-	go test -v -race -cover -tags=debug -coverpkg=./... -failfast -coverprofile=./coverage-ci/pipeline_jobs.out -covermode=atomic ./api/v2/jobs/pipeline
 	go test -v -race -cover -tags=debug -coverpkg=./... -failfast -coverprofile=./coverage-ci/service.out -covermode=atomic ./tests/plugins/service
 	go test -v -race -cover -tags=debug -coverpkg=./... -failfast -coverprofile=./coverage-ci/directives.out -covermode=atomic ./http/middleware/cache/directives
 	go test -timeout 20m -v -race -cover -tags=debug -failfast -coverpkg=./... -coverprofile=./coverage-ci/jobs_core.out -covermode=atomic ./tests/plugins/jobs
@@ -43,7 +42,6 @@ test_coverage:
 test: ## Run application tests
 	docker compose -f tests/env/docker-compose.yaml up -d --remove-orphans
 	sleep 10
-	go test -v -race -tags=debug ./api/v2/jobs/pipeline
 	go test -v -race -tags=debug ./jobs
 	go test -v -race -tags=debug ./http/config
 	go test -v -race -tags=debug ./http/middleware/new_relic
