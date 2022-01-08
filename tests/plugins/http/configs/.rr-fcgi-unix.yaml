@@ -30,7 +30,7 @@ http:
     destroy_timeout: 60s
 
   fcgi:
-    address: tcp://0.0.0.0:6920
+    address: unix://rr.sock
   http2:
     h2c: false
     max_concurrent_streams: 128

@@ -824,7 +824,97 @@ func fcgiEcho1(t *testing.T) {
 
 	_, err := ioutil.ReadAll(w.Result().Body) //nolint:bodyclose
 	assert.NoError(t, err)
-	assert.Equal(t, 201, w.Result().StatusCode) //nolint:bodyclose
+	assert.Equal(t, 200, w.Result().StatusCode) //nolint:bodyclose
+}
+
+func TestFastCGI_EchoUnix(t *testing.T) {
+	cont, err := endure.NewContainer(nil, endure.SetLogLevel(endure.ErrorLevel))
+	assert.NoError(t, err)
+
+	cfg := &config.Plugin{
+		Path:   "configs/.rr-fcgi-unix.yaml",
+		Prefix: "rr",
+	}
+
+	err = cont.RegisterAll(
+		cfg,
+		&logger.ZapLogger{},
+		&server.Plugin{},
+		&httpPlugin.Plugin{},
+		&static.Plugin{},
+	)
+	assert.NoError(t, err)
+
+	err = cont.Init()
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	ch, err := cont.Serve()
+	assert.NoError(t, err)
+
+	sig := make(chan os.Signal, 1)
+	signal.Notify(sig, os.Interrupt, syscall.SIGINT, syscall.SIGTERM)
+
+	wg := &sync.WaitGroup{}
+	wg.Add(1)
+
+	stopCh := make(chan struct{}, 1)
+
+	go func() {
+		defer wg.Done()
+		for {
+			select {
+			case e := <-ch:
+				assert.Fail(t, "error", e.Error.Error())
+				err = cont.Stop()
+				if err != nil {
+					assert.FailNow(t, "error", err.Error())
+				}
+			case <-sig:
+				err = cont.Stop()
+				if err != nil {
+					assert.FailNow(t, "error", err.Error())
+				}
+				return
+			case <-stopCh:
+				// timeout
+				err = cont.Stop()
+				if err != nil {
+					assert.FailNow(t, "error", err.Error())
+				}
+				return
+			}
+		}
+	}()
+
+	time.Sleep(time.Second * 1)
+	t.Run("FastCGIEcho", fcgiEchoUnix)
+
+	stopCh <- struct{}{}
+	wg.Wait()
+
+	t.Cleanup(func() {
+		_ = os.RemoveAll("rr.sock")
+	})
+}
+
+func fcgiEchoUnix(t *testing.T) {
+	time.Sleep(time.Second * 2)
+	fcgiConnFactory := gofast.SimpleConnFactory("unix", "rr.sock")
+
+	fcgiHandler := gofast.NewHandler(
+		gofast.BasicParamsMap(gofast.BasicSession),
+		gofast.SimpleClientFactory(fcgiConnFactory),
+	)
+
+	w := httptest.NewRecorder()
+	req := httptest.NewRequest("GET", "http://site.local/hello-world", nil)
+	fcgiHandler.ServeHTTP(w, req)
+
+	_, err := ioutil.ReadAll(w.Result().Body) //nolint:bodyclose
+	assert.NoError(t, err)
+	assert.Equal(t, 200, w.Result().StatusCode) //nolint:bodyclose
 }
 
 func TestFastCGI_RequestUri(t *testing.T) {
@@ -910,7 +1000,7 @@ func fcgiReqURI(t *testing.T) {
 	body, err := ioutil.ReadAll(w.Result().Body) //nolint:bodyclose
 	assert.NoError(t, err)
 	assert.Equal(t, 200, w.Result().StatusCode) //nolint:bodyclose
-	assert.Equal(t, "http://site.local/hello-world", string(body))
+	assert.Contains(t, string(body), "ddddd")
 }
 
 func TestH2CUpgrade(t *testing.T) {
