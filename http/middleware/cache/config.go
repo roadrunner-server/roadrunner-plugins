@@ -5,15 +5,16 @@ import (
 )
 
 type Config struct {
-	CacheMinUses int `mapstructure:"cache_min_uses"`
+	// Driver name
+	Driver string `mapstructure:"driver"`
+
 	// Only get by default
 	CacheMethods []string `mapstructure:"cache_methods"`
 }
 
 func (c *Config) InitDefaults() {
-	// save every request by default
-	if c.CacheMinUses == 0 {
-		c.CacheMinUses = 1
+	if c.Driver == "" {
+		c.Driver = "memory"
 	}
 
 	// cache only GET requests

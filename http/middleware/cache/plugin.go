@@ -22,15 +22,15 @@ const (
 )
 
 type Plugin struct {
-	// methods mask
 	hashPool    sync.Pool
 	writersPool sync.Pool
 	rspPool     sync.Pool
 	rqPool      sync.Pool
 
-	log   *zap.Logger
-	cfg   *Config
-	cache cache.Cache
+	log             *zap.Logger
+	cfg             *Config
+	cache           cache.Cache
+	collectedCaches map[string]cache.HTTPCacheFromConfig
 }
 
 func (p *Plugin) Init(cfg config.Configurer, log *zap.Logger) error {
@@ -75,12 +75,21 @@ func (p *Plugin) Init(cfg config.Configurer, log *zap.Logger) error {
 	l := new(zap.Logger)
 	*l = *log
 	p.log = l
+	p.collectedCaches = make(map[string]cache.HTTPCacheFromConfig, 1)
 
 	return nil
 }
 
 func (p *Plugin) Serve() chan error {
-	return make(chan error, 1)
+	errCh := make(chan error, 1)
+
+	if _, ok := p.collectedCaches[p.cfg.Driver]; ok {
+		p.cache, _ = p.collectedCaches[p.cfg.Driver].FromConfig(p.log)
+		return errCh
+	}
+
+	errCh <- errors.E("no cache drivers registered")
+	return errCh
 }
 
 func (p *Plugin) Stop() error {
@@ -93,12 +102,8 @@ func (p *Plugin) Collects() []interface{} {
 	}
 }
 
-func (p *Plugin) CollectCaches(_ endure.Named, cache cache.HTTPCacheFromConfig) {
-	c, err := cache.FromConfig(p.log)
-	if err != nil {
-		panic(err)
-	}
-	p.cache = c
+func (p *Plugin) CollectCaches(name endure.Named, cache cache.HTTPCacheFromConfig) {
+	p.collectedCaches[name.Name()] = cache
 }
 
 func (p *Plugin) Middleware(next http.Handler) http.Handler {

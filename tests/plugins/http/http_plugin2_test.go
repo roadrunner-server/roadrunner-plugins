@@ -461,6 +461,7 @@ func TestHTTPCache(t *testing.T) {
 		}
 	}()
 
+	time.Sleep(time.Second * 100)
 	stopCh <- struct{}{}
 	wg.Wait()
 }

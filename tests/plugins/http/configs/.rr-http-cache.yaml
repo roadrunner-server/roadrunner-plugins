@@ -11,7 +11,7 @@ http:
   max_request_size: 1024
   middleware: ["cache"]
   cache:
-    cache_min_uses: 1
+    cache_min_uses: 10
 
   pool:
     num_workers: 2
