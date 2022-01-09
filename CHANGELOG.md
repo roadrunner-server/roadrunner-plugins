@@ -7,7 +7,7 @@
 - ✏️ `.rr.yaml` now support versions. You may safely use your old configurations w/o specifying versions. Configuration w/o version will be treated as `2.6`. It is safe to use configuration w/o version or with version `2.6` with RR `2.7` because RR is able to automatically transform the old configuration.
 But if you use configuration version `2.7` you must update the `jobs` pipelines config.  
 **At this point we can guarantee, that no breaking changes will be introduced in the configuration w/o auto-convert from the older configuration version**  
-  For example, if we introduce a configuration update let's say in version `2.10`, we will support automatic conversion from at least 2 previous versions w/o involving the user into the process. In the example case, versions `2.9` and `2.8` will be automatically converted. From our release cycle, you will have at least 2 months to update the configuration from version `2.8` and 3 months from `2.9`.Version located at the top of the `.rr.yaml`:
+  For example, if we introduce a configuration update let's say in version `2.10`, we will support automatic conversion from at least 2 previous versions w/o involving the user into the process. In the example case, versions `2.9` and `2.8` will be automatically converted. From our release cycle, you will have at least 3 months to update the configuration from version `2.8` and 2 months from `2.9`.Version located at the top of the `.rr.yaml`:
 
 Compatibility matrix located here: TODO
 Configuration changelog: TODO
@@ -154,14 +154,15 @@ Now, pipelines have only `driver` key with the configuration under the `config` 
         delete_after_ack: false
 ```
 
+- ✏️ **[ALPHA]** New cache http middleware. It is still in alpha, but we started implementing the [rfc-7234](https://httpwg.org/specs/rfc7234.html) to support `Cache-Control` and caching in general. In the first alpha you may see the `max-age`, `Age` and `Authorization` support via the in-memory driver.  
 - ✏️ Logger unification. Starting this version we bound our logs to the `uber/zap` log library as one of the most popular and extensible.
-- ✏️ API stabilization. All `v2` api interfaces moved to the `api/v2/` directory. Except logger, all plugins depends only on the interfaces and don't import each other.
-- ✏️ `protoc` updated to the version `v3.19.1`.
+- ✏️ API stabilization. All `v2` api interfaces moved to the `https://github.com/roadrunner-server/api` repository. Except logger (structure), all plugins depends only on the interfaces and don't import each other.
+- ✏️ `protoc` updated to the version `v3.19.2`.
 
 ## 🩹 Fixes:
 
 - 🐛 Fix: 200 HTTP status code instead of 400 on readiness/health bad requests. [BUG](https://github.com/spiral/roadrunner-plugins/issues/180)
-- 🐛 Fix: 
+- 🐛 Fix: `new_relic` plugin removes/modifies more headers than it should. [BUG](https://github.com/spiral/roadrunner-plugins/issues/185) (reporter: @arku31)
 ---
 
 ## v2.6.6 (15.12.2021)
