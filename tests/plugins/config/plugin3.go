@@ -21,7 +21,7 @@ func (f *Foo3) Serve() chan error {
 	const op = errors.Op("foo_plugin_serve")
 	errCh := make(chan error, 1)
 
-	if f.configProvider.GetCommonConfig().GracefulTimeout != time.Second*10 {
+	if f.configProvider.GracefulTimeout() != time.Second*10 {
 		errCh <- errors.E(op, errors.Str("GracefulTimeout should be eq to 10 seconds"))
 		return errCh
 	}

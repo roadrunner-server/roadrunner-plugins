@@ -110,9 +110,9 @@ func TestBeanstalkInitV27(t *testing.T) {
 	assert.NoError(t, err)
 
 	cfg := &config.Plugin{
-		Path:      "beanstalk/.rr-beanstalk-init-v27.yaml",
-		Prefix:    "rr",
-		RRVersion: "2.7.0",
+		Path:    "beanstalk/.rr-beanstalk-init-v27.yaml",
+		Prefix:  "rr",
+		Version: "2.7.0",
 	}
 
 	l, oLogger := mocklogger.ZapTestLogger(zap.DebugLevel)

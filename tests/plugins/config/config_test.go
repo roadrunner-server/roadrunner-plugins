@@ -8,7 +8,6 @@ import (
 	"testing"
 	"time"
 
-	"github.com/roadrunner-server/api/plugins/v2/config"
 	endure "github.com/spiral/endure/pkg/container"
 	"github.com/spiral/roadrunner-plugins/v2/amqp"
 	"github.com/spiral/roadrunner-plugins/v2/beanstalk"
@@ -277,7 +276,7 @@ func TestConfigProvider_GeneralSection(t *testing.T) {
 	vp.Path = "configs/.rr.yaml"
 	vp.Prefix = "rr"
 	vp.Flags = nil
-	vp.CommonConfig = &config.General{GracefulTimeout: time.Second * 10}
+	vp.Timeout = time.Second * 10
 
 	err = container.Register(vp)
 	if err != nil {
@@ -335,7 +334,7 @@ func TestViperProvider_Init_Version(t *testing.T) {
 	vp.Path = "configs/.rr-init-version.yaml"
 	vp.Prefix = "rr"
 	vp.Flags = nil
-	vp.RRVersion = "2.7.2"
+	vp.Version = "2.7.2"
 
 	err = container.RegisterAll(
 		&jobs.Plugin{},

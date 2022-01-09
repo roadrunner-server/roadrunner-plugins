@@ -5,9 +5,9 @@ import (
 	"fmt"
 	"os"
 	"strings"
+	"time"
 
 	"github.com/hashicorp/go-version"
-	"github.com/roadrunner-server/api/plugins/v2/config"
 	"github.com/spf13/viper"
 	"github.com/spiral/errors"
 )
@@ -29,11 +29,10 @@ type Plugin struct {
 	// which overwrites initial config key
 	Flags []string
 
+	// Timeout ...
+	Timeout time.Duration
 	// RRVersion passed from the Endure.
-	RRVersion string
-
-	// All plugins common parameters
-	CommonConfig *config.General
+	Version string
 }
 
 // Init config provider.
@@ -78,8 +77,8 @@ func (p *Plugin) Init() error {
 
 	// RR gets config feature starting v2.7, so, it's default
 	// but this only needed for tests, because starting v2.7 rr-binary will pass the version automatically.
-	if p.RRVersion == "" || p.RRVersion == "local" {
-		p.RRVersion = defaultRRVersion
+	if p.Version == "" || p.Version == "local" {
+		p.Version = defaultRRVersion
 	}
 
 	// configuration version
@@ -89,7 +88,7 @@ func (p *Plugin) Init() error {
 	}
 
 	// RR version
-	rrV, err := version.NewSemver(p.RRVersion)
+	rrV, err := version.NewSemver(p.Version)
 	if err != nil {
 		return errors.E(op, err)
 	}
@@ -107,7 +106,7 @@ func (p *Plugin) Init() error {
 
 	// if RR version is less than configuration version (2.6 RR and 2.7 config)
 	if rrV.LessThan(cfgV) {
-		return errors.E(op, errors.Errorf("RR version is older than configuration version, RR version: %s, configuration version: %s", p.RRVersion, ver.(string)))
+		return errors.E(op, errors.Errorf("RR version is older than configuration version, RR version: %s, configuration version: %s", p.Version, ver.(string)))
 	}
 
 	if !rrV.GreaterThanOrEqual(cfgV) {
@@ -127,12 +126,6 @@ func (p *Plugin) Init() error {
 			}
 		}
 	}
-
-	if p.CommonConfig == nil {
-		p.CommonConfig = &config.General{}
-	}
-
-	p.CommonConfig.RRVersion = rrV
 
 	// automatically inject ENV variables using ${ENV} pattern
 	for _, key := range p.viper.AllKeys() {
@@ -193,9 +186,13 @@ func (p *Plugin) Has(name string) bool {
 	return p.viper.IsSet(name)
 }
 
-// GetCommonConfig Returns common config parameters
-func (p *Plugin) GetCommonConfig() *config.General {
-	return p.CommonConfig
+// RRVersion returns current RR version
+func (p *Plugin) RRVersion() string {
+	return p.Version
+}
+
+func (p *Plugin) GracefulTimeout() time.Duration {
+	return p.Timeout
 }
 
 func (p *Plugin) Serve() chan error {
