@@ -7,7 +7,7 @@ server:
   relay_timeout: "20s"
 
 http:
-  address: 127.0.0.1:53123
+  address: 127.0.0.1:32111
   max_request_size: 1024
   middleware: ["cache"]
   cache:

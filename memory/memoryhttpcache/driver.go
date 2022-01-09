@@ -35,3 +35,8 @@ func (c *Cache) Set(id uint64, value []byte) error {
 	c.data.Store(id, value)
 	return nil
 }
+
+func (c *Cache) Delete(id uint64) {
+	c.log.Debug("cache_delete", zap.Uint64("id", id))
+	c.data.Delete(id)
+}

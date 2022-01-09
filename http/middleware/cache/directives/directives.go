@@ -50,7 +50,7 @@ func (r *Req) Reset() {
 	r.OnlyIfCached = false
 }
 
-func ParseRequest(directives string, log *zap.Logger, r *Req) {
+func ParseRequestCacheControl(directives string, log *zap.Logger, r *Req) {
 	split := strings.Split(directives, ",")
 
 	// a lot of allocations here - 14 todo(rustatian): FIXME
