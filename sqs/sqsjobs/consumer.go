@@ -2,6 +2,7 @@ package sqsjobs
 
 import (
 	"context"
+	"os"
 	"strconv"
 	"sync"
 	"sync/atomic"
@@ -33,11 +34,6 @@ type consumer struct {
 	pipeline atomic.Value
 
 	// connection info
-	key               string
-	secret            string
-	sessionToken      string
-	region            string
-	endpoint          string
 	queue             *string
 	messageGroupID    string
 	waitTime          int32
@@ -60,13 +56,23 @@ type consumer struct {
 func NewSQSConsumer(configKey string, log *zap.Logger, cfg cfgPlugin.Configurer, pq priorityqueue.Queue) (*consumer, error) {
 	const op = errors.Op("new_sqs_consumer")
 
+	/*
+		we need to determine in what environment we are running
+		1. Non-AWS - global sqs config should be set
+		2. AWS - configuration should be obtained from the env
+	*/
+	insideAWS := false
+	if isInAWS() {
+		insideAWS = true
+	}
+
 	// if no such key - error
 	if !cfg.Has(configKey) {
 		return nil, errors.E(op, errors.Errorf("no configuration by provided key: %s", configKey))
 	}
 
-	// if no global section
-	if !cfg.Has(pluginName) {
+	// if no global section - try to fetch IAM creds
+	if !cfg.Has(pluginName) && !insideAWS {
 		return nil, errors.E(op, errors.Str("no global sqs configuration, global configuration should contain sqs section"))
 	}
 
@@ -77,11 +83,12 @@ func NewSQSConsumer(configKey string, log *zap.Logger, cfg cfgPlugin.Configurer,
 		return nil, errors.E(op, err)
 	}
 
-	conf.InitDefault()
-
-	err = cfg.UnmarshalKey(pluginName, &conf)
-	if err != nil {
-		return nil, errors.E(op, err)
+	// parse global config for the local env
+	if !insideAWS {
+		err = cfg.UnmarshalKey(pluginName, &conf)
+		if err != nil {
+			return nil, errors.E(op, err)
+		}
 	}
 
 	conf.InitDefault()
@@ -97,29 +104,39 @@ func NewSQSConsumer(configKey string, log *zap.Logger, cfg cfgPlugin.Configurer,
 		prefetch:          conf.Prefetch,
 		visibilityTimeout: conf.VisibilityTimeout,
 		waitTime:          conf.WaitTimeSeconds,
-		region:            conf.Region,
-		key:               conf.Key,
-		sessionToken:      conf.SessionToken,
-		secret:            conf.Secret,
-		endpoint:          conf.Endpoint,
 		pauseCh:           make(chan struct{}, 1),
 	}
 
 	// PARSE CONFIGURATION -------
+	var awsConf aws.Config
 
-	awsConf, err := config.LoadDefaultConfig(context.Background(),
-		config.WithRegion(conf.Region),
-		config.WithCredentialsProvider(credentials.NewStaticCredentialsProvider(jb.key, jb.secret, jb.sessionToken)))
-	if err != nil {
-		return nil, errors.E(op, err)
-	}
+	switch insideAWS {
+	case true:
+		awsConf, err = config.LoadDefaultConfig(context.Background())
+		if err != nil {
+			return nil, errors.E(op, err)
+		}
 
-	// config with retries
-	jb.client = sqs.NewFromConfig(awsConf, sqs.WithEndpointResolver(sqs.EndpointResolverFromURL(jb.endpoint)), func(o *sqs.Options) {
-		o.Retryer = retry.NewStandard(func(opts *retry.StandardOptions) {
-			opts.MaxAttempts = 60
+		// config with retries
+		jb.client = sqs.NewFromConfig(awsConf, func(o *sqs.Options) {
+			o.Retryer = retry.NewStandard(func(opts *retry.StandardOptions) {
+				opts.MaxAttempts = 60
+			})
 		})
-	})
+	case false:
+		awsConf, err = config.LoadDefaultConfig(context.Background(),
+			config.WithRegion(conf.Region),
+			config.WithCredentialsProvider(credentials.NewStaticCredentialsProvider(conf.Key, conf.Secret, conf.SessionToken)))
+		if err != nil {
+			return nil, errors.E(op, err)
+		}
+		// config with retries
+		jb.client = sqs.NewFromConfig(awsConf, sqs.WithEndpointResolver(sqs.EndpointResolverFromURL(conf.Endpoint)), func(o *sqs.Options) {
+			o.Retryer = retry.NewStandard(func(opts *retry.StandardOptions) {
+				opts.MaxAttempts = 60
+			})
+		})
+	}
 
 	out, err := jb.client.CreateQueue(context.Background(), &sqs.CreateQueueInput{QueueName: jb.queue, Attributes: jb.attributes, Tags: jb.tags})
 	if err != nil {
@@ -143,21 +160,34 @@ func NewSQSConsumer(configKey string, log *zap.Logger, cfg cfgPlugin.Configurer,
 func FromPipeline(pipe *pipeline.Pipeline, log *zap.Logger, cfg cfgPlugin.Configurer, pq priorityqueue.Queue) (*consumer, error) {
 	const op = errors.Op("new_sqs_consumer")
 
+	/*
+		we need to determine in what environment we are running
+		1. Non-AWS - global sqs config should be set
+		2. AWS - configuration should be obtained from the env
+	*/
+	insideAWS := false
+	if isInAWS() {
+		insideAWS = true
+	}
+
 	// if no global section
-	if !cfg.Has(pluginName) {
+	if !cfg.Has(pluginName) && !insideAWS {
 		return nil, errors.E(op, errors.Str("no global sqs configuration, global configuration should contain sqs section"))
 	}
 
 	// PARSE CONFIGURATION -------
-	var conf Config
-	err := cfg.UnmarshalKey(pluginName, &conf)
-	if err != nil {
-		return nil, errors.E(op, err)
+	conf := &Config{}
+	if !insideAWS {
+		err := cfg.UnmarshalKey(pluginName, &conf)
+		if err != nil {
+			return nil, errors.E(op, err)
+		}
 	}
+
 	conf.InitDefault()
 
 	attr := make(map[string]string)
-	err = pipe.Map(attributes, attr)
+	err := pipe.Map(attributes, attr)
 	if err != nil {
 		return nil, errors.E(op, err)
 	}
@@ -179,29 +209,40 @@ func FromPipeline(pipe *pipeline.Pipeline, log *zap.Logger, cfg cfgPlugin.Config
 		prefetch:          int32(pipe.Int(pref, 10)),
 		visibilityTimeout: int32(pipe.Int(visibility, 0)),
 		waitTime:          int32(pipe.Int(waitTime, 0)),
-		region:            conf.Region,
-		key:               conf.Key,
-		sessionToken:      conf.SessionToken,
-		secret:            conf.Secret,
-		endpoint:          conf.Endpoint,
 		pauseCh:           make(chan struct{}, 1),
 	}
 
 	// PARSE CONFIGURATION -------
 
-	awsConf, err := config.LoadDefaultConfig(context.Background(),
-		config.WithRegion(conf.Region),
-		config.WithCredentialsProvider(credentials.NewStaticCredentialsProvider(jb.key, jb.secret, jb.sessionToken)))
-	if err != nil {
-		return nil, errors.E(op, err)
-	}
+	var awsConf aws.Config
 
-	// config with retries
-	jb.client = sqs.NewFromConfig(awsConf, sqs.WithEndpointResolver(sqs.EndpointResolverFromURL(jb.endpoint)), func(o *sqs.Options) {
-		o.Retryer = retry.NewStandard(func(opts *retry.StandardOptions) {
-			opts.MaxAttempts = 60
+	switch insideAWS {
+	case true:
+		awsConf, err = config.LoadDefaultConfig(context.Background())
+		if err != nil {
+			return nil, errors.E(op, err)
+		}
+
+		// config with retries
+		jb.client = sqs.NewFromConfig(awsConf, func(o *sqs.Options) {
+			o.Retryer = retry.NewStandard(func(opts *retry.StandardOptions) {
+				opts.MaxAttempts = 60
+			})
 		})
-	})
+	case false:
+		awsConf, err = config.LoadDefaultConfig(context.Background(),
+			config.WithRegion(conf.Region),
+			config.WithCredentialsProvider(credentials.NewStaticCredentialsProvider(conf.Key, conf.Secret, conf.SessionToken)))
+		if err != nil {
+			return nil, errors.E(op, err)
+		}
+		// config with retries
+		jb.client = sqs.NewFromConfig(awsConf, sqs.WithEndpointResolver(sqs.EndpointResolverFromURL(conf.Endpoint)), func(o *sqs.Options) {
+			o.Retryer = retry.NewStandard(func(opts *retry.StandardOptions) {
+				opts.MaxAttempts = 60
+			})
+		})
+	}
 
 	out, err := jb.client.CreateQueue(context.Background(), &sqs.CreateQueueInput{QueueName: jb.queue, Attributes: jb.attributes, Tags: jb.tags})
 	if err != nil {
@@ -217,7 +258,7 @@ func FromPipeline(pipe *pipeline.Pipeline, log *zap.Logger, cfg cfgPlugin.Config
 	// and is unique within the scope of your queues. After you create a queue, you
 	// must wait at least one second after the queue is created to be able to use the <------------
 	// queue. To get the queue URL, use the GetQueueUrl action. GetQueueUrl require
-	time.Sleep(time.Second * 2)
+	time.Sleep(time.Second)
 
 	return jb, nil
 }
@@ -388,4 +429,14 @@ func (c *consumer) handleItem(ctx context.Context, msg *Item) error {
 
 func ready(r uint32) bool {
 	return r > 0
+}
+
+// aws/env_config.go
+func isInAWS() bool {
+	if (os.Getenv("AWS_ACCESS_KEY") != "" || os.Getenv("AWS_ACCESS_KEY_ID") != "") &&
+		(os.Getenv("AWS_SECRET_KEY") != "" || os.Getenv("AWS_SECRET_ACCESS_KEY") != "") &&
+		(os.Getenv("AWS_REGION") != "" || os.Getenv("AWS_DEFAULT_REGION") != "") {
+		return true
+	}
+	return false
 }
