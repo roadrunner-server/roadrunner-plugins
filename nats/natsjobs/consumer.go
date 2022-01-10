@@ -6,13 +6,13 @@ import (
 	"sync/atomic"
 	"time"
 
-	json "github.com/goccy/go-json"
+	"github.com/goccy/go-json"
 	"github.com/nats-io/nats.go"
 	cfgPlugin "github.com/roadrunner-server/api/v2/plugins/config"
 	"github.com/roadrunner-server/api/v2/plugins/jobs"
 	"github.com/roadrunner-server/api/v2/plugins/jobs/pipeline"
 	"github.com/spiral/errors"
-	priorityqueue "github.com/spiral/roadrunner/v2/priority_queue"
+	pq "github.com/spiral/roadrunner/v2/priority_queue"
 	"go.uber.org/zap"
 )
 
@@ -25,7 +25,7 @@ type consumer struct {
 	// system
 	sync.RWMutex
 	log       *zap.Logger
-	queue     priorityqueue.Queue
+	queue     pq.Queue
 	listeners uint32
 	pipeline  atomic.Value
 	stopCh    chan struct{}
@@ -47,7 +47,7 @@ type consumer struct {
 	deleteStreamOnStop bool
 }
 
-func FromConfig(configKey string, log *zap.Logger, cfg cfgPlugin.Configurer, queue priorityqueue.Queue) (*consumer, error) {
+func FromConfig(configKey string, log *zap.Logger, cfg cfgPlugin.Configurer, queue pq.Queue) (*consumer, error) {
 	const op = errors.Op("new_nats_consumer")
 
 	if !cfg.Has(configKey) {
@@ -131,7 +131,7 @@ func FromConfig(configKey string, log *zap.Logger, cfg cfgPlugin.Configurer, que
 	return cs, nil
 }
 
-func FromPipeline(pipe *pipeline.Pipeline, log *zap.Logger, cfg cfgPlugin.Configurer, queue priorityqueue.Queue) (*consumer, error) {
+func FromPipeline(pipe *pipeline.Pipeline, log *zap.Logger, cfg cfgPlugin.Configurer, queue pq.Queue) (*consumer, error) {
 	const op = errors.Op("new_nats_consumer")
 
 	// if no global section -- error
@@ -240,12 +240,18 @@ func (c *consumer) Run(_ context.Context, p *pipeline.Pipeline) error {
 		return errors.E(op, errors.Errorf("no such pipeline registered: %s", pipe.Name()))
 	}
 
+	l := atomic.LoadUint32(&c.listeners)
+	// listener already active
+	if l == 1 {
+		c.log.Warn("nats listener is already in the active state")
+		return nil
+	}
+
+	atomic.AddUint32(&c.listeners, 1)
 	err := c.listenerInit()
 	if err != nil {
 		return errors.E(op, err)
 	}
-
-	atomic.AddUint32(&c.listeners, 1)
 
 	go c.listenerStart()
 
@@ -292,7 +298,7 @@ func (c *consumer) Resume(_ context.Context, p string) {
 	}
 
 	l := atomic.LoadUint32(&c.listeners)
-	// no active listeners
+	// listener already active
 	if l == 1 {
 		c.log.Warn("nats listener is already in the active state")
 		return

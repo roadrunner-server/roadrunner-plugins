@@ -101,16 +101,19 @@ func (p *Plugin) listener() { //nolint:gocognit
 					err = p.respHandler.Handle(resp, jb.(jobs.Acknowledger))
 					if err != nil {
 						atomic.AddUint64(p.metrics.jobsErr, 1)
-						p.log.Error("response handler error", zap.Error(err), zap.String("ID", jb.ID()), zap.Time("start", start), zap.Duration("elapsed", time.Since(start)))
+						p.log.Error("response handler error", zap.Error(err), zap.String("ID", jb.ID()), zap.ByteString("response", resp.Body), zap.Time("start", start), zap.Duration("elapsed", time.Since(start)))
 						p.putPayload(exec)
-						errNack := jb.(jobs.Acknowledger).Nack()
-						if errNack != nil {
-							p.log.Error("negatively acknowledge failed, job might be lost", zap.String("ID", jb.ID()), zap.Error(err), zap.Error(errNack))
+						/*
+							Job malformed, acknowledge it to prevent endless loop
+						*/
+						errAck := jb.(jobs.Acknowledger).Ack()
+						if errAck != nil {
+							p.log.Error("acknowledge failed, job might be lost", zap.String("ID", jb.ID()), zap.Error(err), zap.Error(errAck))
 							jb = nil
 							continue
 						}
 
-						p.log.Error("job negatively acknowledged", zap.Error(err))
+						p.log.Error("job acknowledged, but contains error", zap.Error(err))
 						jb = nil
 						continue
 					}

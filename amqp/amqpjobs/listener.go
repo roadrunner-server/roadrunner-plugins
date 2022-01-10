@@ -18,11 +18,18 @@ func (c *consumer) listener(deliv <-chan amqp.Delivery) {
 				d, err := c.fromDelivery(msg)
 				if err != nil {
 					c.log.Error("delivery convert", zap.Error(err))
-					err = msg.Nack(true, false)
+					/*
+						Acknowledge failed job to prevent endless loo;
+					*/
+					err = msg.Ack(false)
 					if err != nil {
 						c.log.Error("nack failed", zap.Error(err))
 					}
 
+					if d != nil {
+						d.Headers = nil
+						d.Options = nil
+					}
 					continue
 				}
 
