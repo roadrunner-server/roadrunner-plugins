@@ -31,12 +31,14 @@ jobs:
       queue: test-1-queue
       exchange: default
       exchange_type: direct
+      delete_queue_on_stop: true
       routing_key: test
 
     test-2:
       driver: amqp
       priority: 2
       pipeline_size: 100
+      delete_queue_on_stop: true
       queue: test-2-queue
       exchange: default
       exchange_type: direct

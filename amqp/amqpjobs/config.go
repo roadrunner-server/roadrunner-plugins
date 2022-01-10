@@ -8,6 +8,8 @@ const (
 	routingKey    string = "routing_key"
 	prefetch      string = "prefetch"
 	exclusive     string = "exclusive"
+	durable       string = "durable"
+	deleteOnStop  string = "delete_queue_on_stop"
 	priority      string = "priority"
 	multipleAsk   string = "multiple_ask"
 	requeueOnFail string = "requeue_on_fail"
@@ -26,15 +28,17 @@ type config struct {
 	Addr string `mapstructure:"addr"`
 
 	// local
-	Prefetch      int    `mapstructure:"prefetch"`
-	Queue         string `mapstructure:"queue"`
-	Priority      int64  `mapstructure:"priority"`
-	Exchange      string `mapstructure:"exchange"`
-	ExchangeType  string `mapstructure:"exchange_type"`
-	RoutingKey    string `mapstructure:"routing_key"`
-	Exclusive     bool   `mapstructure:"exclusive"`
-	MultipleAck   bool   `mapstructure:"multiple_ask"`
-	RequeueOnFail bool   `mapstructure:"requeue_on_fail"`
+	Prefetch          int    `mapstructure:"prefetch"`
+	Queue             string `mapstructure:"queue"`
+	Priority          int64  `mapstructure:"priority"`
+	Exchange          string `mapstructure:"exchange"`
+	ExchangeType      string `mapstructure:"exchange_type"`
+	RoutingKey        string `mapstructure:"routing_key"`
+	Exclusive         bool   `mapstructure:"exclusive"`
+	Durable           bool   `mapstructure:"durable"`
+	DeleteQueueOnStop bool   `mapstructure:"delete_queue_on_stop"`
+	MultipleAck       bool   `mapstructure:"multiple_ask"`
+	RequeueOnFail     bool   `mapstructure:"requeue_on_fail"`
 }
 
 func (c *config) InitDefault() {

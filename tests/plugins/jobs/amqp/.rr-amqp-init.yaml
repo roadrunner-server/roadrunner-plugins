@@ -31,6 +31,7 @@ jobs:
       queue: test-1-queue
       priority: 1
       exchange: default
+      delete_queue_on_stop: true
       exchange_type: direct
       routing_key: test-1
       exclusive: false
@@ -42,6 +43,7 @@ jobs:
       prefetch: 100
       queue: test-2-queue
       priority: 2
+      delete_queue_on_stop: true
       exchange: default
       exchange_type: direct
       routing_key: test-2
