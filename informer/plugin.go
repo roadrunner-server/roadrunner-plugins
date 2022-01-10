@@ -3,9 +3,9 @@ package informer
 import (
 	"context"
 
+	"github.com/roadrunner-server/api/v2/plugins/informer"
+	"github.com/roadrunner-server/api/v2/plugins/jobs"
 	endure "github.com/spiral/endure/pkg/container"
-	"github.com/spiral/roadrunner-plugins/v2/api/v2/informer"
-	"github.com/spiral/roadrunner-plugins/v2/api/v2/jobs"
 	"github.com/spiral/roadrunner/v2/state/process"
 )
 

@@ -9,12 +9,12 @@ import (
 	"time"
 
 	"github.com/mholt/acmez"
+	"github.com/roadrunner-server/api/v2/plugins/config"
+	"github.com/roadrunner-server/api/v2/plugins/middleware"
+	"github.com/roadrunner-server/api/v2/plugins/server"
+	"github.com/roadrunner-server/api/v2/plugins/status"
 	endure "github.com/spiral/endure/pkg/container"
 	"github.com/spiral/errors"
-	"github.com/spiral/roadrunner-plugins/v2/api/v2/config"
-	"github.com/spiral/roadrunner-plugins/v2/api/v2/middleware"
-	"github.com/spiral/roadrunner-plugins/v2/api/v2/server"
-	"github.com/spiral/roadrunner-plugins/v2/api/v2/status"
 	"github.com/spiral/roadrunner-plugins/v2/http/attributes"
 	httpConfig "github.com/spiral/roadrunner-plugins/v2/http/config"
 	"github.com/spiral/roadrunner-plugins/v2/http/handler"
@@ -70,7 +70,7 @@ type Plugin struct {
 
 // Init must return configure svc and return true if svc hasStatus enabled. Must return error in case of
 // misconfiguration. Services must not be used without proper configuration pushed first.
-func (p *Plugin) Init(cfg config.Configurer, rrLogger *zap.Logger, server server.Server) error {
+func (p *Plugin) Init(cfg config.Configurer, rrLogger *zap.Logger, srv server.Server) error {
 	const op = errors.Op("http_plugin_init")
 	if !cfg.Has(PluginName) {
 		return errors.E(op, errors.Disabled)
@@ -87,7 +87,9 @@ func (p *Plugin) Init(cfg config.Configurer, rrLogger *zap.Logger, server server
 	}
 
 	// rr logger (via plugin)
-	p.log = rrLogger
+	p.log = new(zap.Logger)
+	*p.log = *rrLogger
+
 	// use time and date in UTC format
 	p.stdLog = log.New(logger.NewStdAdapter(p.log), "http_plugin: ", log.Ldate|log.Ltime|log.LUTC)
 	p.mdwr = make(map[string]middleware.Middleware)
@@ -103,7 +105,7 @@ func (p *Plugin) Init(cfg config.Configurer, rrLogger *zap.Logger, server server
 
 	// initialize statsExporter
 	p.statsExporter = newWorkersExporter(p)
-	p.server = server
+	p.server = srv
 
 	return nil
 }

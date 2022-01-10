@@ -4,8 +4,8 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/roadrunner-server/api/v2/plugins/pubsub"
 	"github.com/spiral/errors"
-	"github.com/spiral/roadrunner-plugins/v2/api/v2/pubsub"
 	"go.uber.org/zap"
 )
 
@@ -20,7 +20,8 @@ type Plugin6 struct {
 }
 
 func (p *Plugin6) Init(log *zap.Logger, b pubsub.Broadcaster) error {
-	p.log = log
+	p.log = new(zap.Logger)
+	*p.log = *log
 	p.b = b
 	p.ctx, p.cancel = context.WithCancel(context.Background())
 	return nil

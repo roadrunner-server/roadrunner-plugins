@@ -5,8 +5,8 @@ import (
 	"strings"
 	"time"
 
+	"github.com/roadrunner-server/api/v2/plugins/config"
 	"github.com/spiral/errors"
-	"github.com/spiral/roadrunner-plugins/v2/api/v2/config"
 	"github.com/spiral/roadrunner-plugins/v2/resetter"
 	"go.uber.org/zap"
 )

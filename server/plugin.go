@@ -12,7 +12,7 @@ import (
 	"github.com/spiral/errors"
 	"go.uber.org/zap"
 
-	"github.com/spiral/roadrunner-plugins/v2/api/v2/config"
+	"github.com/roadrunner-server/api/v2/plugins/config"
 	"github.com/spiral/roadrunner/v2/pool"
 	"github.com/spiral/roadrunner/v2/transport"
 	"github.com/spiral/roadrunner/v2/transport/pipe"
@@ -77,7 +77,8 @@ func (p *Plugin) Init(cfg config.Configurer, log *zap.Logger) error {
 		return errors.E(op, err)
 	}
 
-	p.log = log
+	p.log = new(zap.Logger)
+	*p.log = *log
 	p.preparedCmd = append(p.preparedCmd, strings.Split(p.cfg.Command, " ")...)
 
 	p.preparedEnvs = append(os.Environ(), fmt.Sprintf(RrRelay+"=%s", p.cfg.Relay))

@@ -6,8 +6,8 @@ import (
 	"sync"
 
 	"github.com/newrelic/go-agent/v3/newrelic"
+	"github.com/roadrunner-server/api/v2/plugins/config"
 	"github.com/spiral/errors"
-	"github.com/spiral/roadrunner-plugins/v2/api/v2/config"
 	"github.com/spiral/roadrunner/v2/utils"
 )
 
@@ -56,6 +56,7 @@ func (p *Plugin) Init(cfg config.Configurer) error {
 		New: func() interface{} {
 			wr := new(writer)
 			wr.code = -1
+			wr.data = nil
 			wr.hdrToSend = make(map[string][]string, 10)
 			return wr
 		},
@@ -74,12 +75,15 @@ func (p *Plugin) Middleware(next http.Handler) http.Handler {
 		txn.SetWebRequestHTTP(r)
 
 		// overwrite original rw, because we need to delete sensitive rr_newrelic headers
-		rrWriter := p.getWriter(w)
-		defer p.putWriter(rrWriter)
-
+		rrWriter := p.getWriter()
 		r = newrelic.RequestWithTransactionContext(r, txn)
-
 		next.ServeHTTP(rrWriter, r)
+
+		defer func() {
+			w.WriteHeader(rrWriter.code)
+			_, _ = w.Write(rrWriter.data)
+			p.putWriter(rrWriter)
+		}()
 
 		// handle error
 		if len(rrWriter.hdrToSend[rrNewRelicErr]) > 0 {
@@ -136,8 +140,9 @@ func (p *Plugin) Middleware(next http.Handler) http.Handler {
 		for k := range rrWriter.hdrToSend {
 			for kk := range rrWriter.hdrToSend[k] {
 				w.Header().Add(k, rrWriter.hdrToSend[k][kk])
-				delete(rrWriter.hdrToSend, k)
 			}
+
+			delete(rrWriter.hdrToSend, k)
 		}
 	})
 }
@@ -146,15 +151,14 @@ func (p *Plugin) Name() string {
 	return pluginName
 }
 
-func (p *Plugin) getWriter(w http.ResponseWriter) *writer {
+func (p *Plugin) getWriter() *writer {
 	wr := p.writersPool.Get().(*writer)
-	wr.w = w
 	return wr
 }
 
 func (p *Plugin) putWriter(w *writer) {
 	w.code = -1
-	w.w = nil
+	w.data = nil
 
 	for k := range w.hdrToSend {
 		delete(w.hdrToSend, k)

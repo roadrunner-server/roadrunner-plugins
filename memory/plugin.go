@@ -1,12 +1,14 @@
 package memory
 
 import (
+	"github.com/roadrunner-server/api/v2/plugins/cache"
+	"github.com/roadrunner-server/api/v2/plugins/config"
+	"github.com/roadrunner-server/api/v2/plugins/jobs"
+	"github.com/roadrunner-server/api/v2/plugins/jobs/pipeline"
+	"github.com/roadrunner-server/api/v2/plugins/kv"
+	"github.com/roadrunner-server/api/v2/plugins/pubsub"
 	"github.com/spiral/errors"
-	"github.com/spiral/roadrunner-plugins/v2/api/v2/config"
-	"github.com/spiral/roadrunner-plugins/v2/api/v2/jobs"
-	"github.com/spiral/roadrunner-plugins/v2/api/v2/jobs/pipeline"
-	"github.com/spiral/roadrunner-plugins/v2/api/v2/kv"
-	"github.com/spiral/roadrunner-plugins/v2/api/v2/pubsub"
+	"github.com/spiral/roadrunner-plugins/v2/memory/memoryhttpcache"
 	"github.com/spiral/roadrunner-plugins/v2/memory/memoryjobs"
 	"github.com/spiral/roadrunner-plugins/v2/memory/memorykv"
 	"github.com/spiral/roadrunner-plugins/v2/memory/memorypubsub"
@@ -22,7 +24,8 @@ type Plugin struct {
 }
 
 func (p *Plugin) Init(log *zap.Logger, cfg config.Configurer) error {
-	p.log = log
+	p.log = new(zap.Logger)
+	*p.log = *log
 	p.cfg = cfg
 	return nil
 }
@@ -32,6 +35,10 @@ func (p *Plugin) Name() string {
 }
 
 // Drivers implementation
+
+func (p *Plugin) FromConfig(log *zap.Logger) (cache.Cache, error) {
+	return memoryhttpcache.NewCacheDriver(log)
+}
 
 func (p *Plugin) PubSubFromConfig(key string) (pubsub.PubSub, error) {
 	return memorypubsub.NewPubSubDriver(p.log, key)

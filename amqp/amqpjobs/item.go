@@ -6,10 +6,10 @@ import (
 	"sync/atomic"
 	"time"
 
-	json "github.com/json-iterator/go"
+	"github.com/goccy/go-json"
 	amqp "github.com/rabbitmq/amqp091-go"
+	"github.com/roadrunner-server/api/v2/plugins/jobs"
 	"github.com/spiral/errors"
-	"github.com/spiral/roadrunner-plugins/v2/api/v2/jobs"
 	"github.com/spiral/roadrunner/v2/utils"
 	"go.uber.org/zap"
 )

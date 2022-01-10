@@ -5,9 +5,9 @@ import (
 	"sync"
 	"time"
 
+	"github.com/roadrunner-server/api/v2/plugins/config"
+	kvv1 "github.com/roadrunner-server/api/v2/proto/kv/v1beta"
 	"github.com/spiral/errors"
-	kvv1 "github.com/spiral/roadrunner-plugins/v2/api/proto/kv/v1beta"
-	"github.com/spiral/roadrunner-plugins/v2/api/v2/config"
 	"go.uber.org/zap"
 )
 
@@ -96,7 +96,7 @@ func (d *Driver) MGet(keys ...string) (map[string][]byte, error) {
 
 	m := make(map[string][]byte, len(keys))
 
-	for i := range keys {
+	for i := 0; i < len(keys); i++ {
 		if value, ok := d.heap.Load(keys[i]); ok {
 			m[keys[i]] = value.(*kvv1.Item).Value
 		}
@@ -148,13 +148,12 @@ func (d *Driver) MExpire(items ...*kvv1.Item) error {
 			if err != nil {
 				return errors.E(op, err)
 			}
-			tmp := pItem.(*kvv1.Item)
 			// guess that t is in the future
 			// in memory is just FOR TESTING PURPOSES
 			// LOGIC ISN'T IDEAL
 			d.heap.Store(items[i].Key, &kvv1.Item{
 				Key:     items[i].Key,
-				Value:   tmp.Value,
+				Value:   pItem.(*kvv1.Item).Value,
 				Timeout: items[i].Timeout,
 			})
 		}

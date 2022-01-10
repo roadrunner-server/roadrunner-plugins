@@ -3,10 +3,10 @@ package redis
 import (
 	"sync"
 
+	"github.com/roadrunner-server/api/v2/plugins/config"
+	"github.com/roadrunner-server/api/v2/plugins/kv"
+	"github.com/roadrunner-server/api/v2/plugins/pubsub"
 	"github.com/spiral/errors"
-	"github.com/spiral/roadrunner-plugins/v2/api/v2/config"
-	"github.com/spiral/roadrunner-plugins/v2/api/v2/kv"
-	"github.com/spiral/roadrunner-plugins/v2/api/v2/pubsub"
 	redis_kv "github.com/spiral/roadrunner-plugins/v2/redis/kv"
 	redis_pubsub "github.com/spiral/roadrunner-plugins/v2/redis/pubsub"
 	"go.uber.org/zap"
@@ -23,7 +23,8 @@ type Plugin struct {
 }
 
 func (p *Plugin) Init(cfg config.Configurer, log *zap.Logger) error {
-	p.log = log
+	p.log = new(zap.Logger)
+	*p.log = *log
 	p.cfgPlugin = cfg
 
 	return nil

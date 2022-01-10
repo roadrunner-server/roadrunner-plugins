@@ -2,7 +2,7 @@ package metrics
 
 import (
 	"github.com/prometheus/client_golang/prometheus"
-	"github.com/spiral/roadrunner-plugins/v2/api/v2/config"
+	"github.com/roadrunner-server/api/v2/plugins/config"
 )
 
 // Gauge //////////////

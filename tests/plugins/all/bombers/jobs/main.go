@@ -14,8 +14,8 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+	jobsv1beta "github.com/roadrunner-server/api/v2/proto/jobs/v1beta"
 	goridgeRpc "github.com/spiral/goridge/v3/pkg/rpc"
-	jobsv1beta "github.com/spiral/roadrunner-plugins/v2/api/proto/jobs/v1beta"
 )
 
 const (

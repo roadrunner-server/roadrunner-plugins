@@ -1,9 +1,9 @@
 package sqs
 
 import (
-	"github.com/spiral/roadrunner-plugins/v2/api/v2/config"
-	"github.com/spiral/roadrunner-plugins/v2/api/v2/jobs"
-	"github.com/spiral/roadrunner-plugins/v2/api/v2/jobs/pipeline"
+	"github.com/roadrunner-server/api/v2/plugins/config"
+	"github.com/roadrunner-server/api/v2/plugins/jobs"
+	"github.com/roadrunner-server/api/v2/plugins/jobs/pipeline"
 	"github.com/spiral/roadrunner-plugins/v2/sqs/sqsjobs"
 	priorityqueue "github.com/spiral/roadrunner/v2/priority_queue"
 	"go.uber.org/zap"
@@ -19,7 +19,8 @@ type Plugin struct {
 }
 
 func (p *Plugin) Init(log *zap.Logger, cfg config.Configurer) error {
-	p.log = log
+	p.log = new(zap.Logger)
+	*p.log = *log
 	p.cfg = cfg
 	return nil
 }

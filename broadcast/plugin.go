@@ -4,10 +4,10 @@ import (
 	"fmt"
 	"sync"
 
+	"github.com/roadrunner-server/api/v2/plugins/config"
+	"github.com/roadrunner-server/api/v2/plugins/pubsub"
 	endure "github.com/spiral/endure/pkg/container"
 	"github.com/spiral/errors"
-	"github.com/spiral/roadrunner-plugins/v2/api/v2/config"
-	"github.com/spiral/roadrunner-plugins/v2/api/v2/pubsub"
 	"go.uber.org/zap"
 )
 
@@ -47,7 +47,8 @@ func (p *Plugin) Init(cfg config.Configurer, log *zap.Logger) error {
 	p.publishers = make(map[string]pubsub.PubSub)
 	p.constructors = make(map[string]pubsub.Constructor)
 
-	p.log = log
+	p.log = new(zap.Logger)
+	*p.log = *log
 	p.cfgPlugin = cfg
 	return nil
 }

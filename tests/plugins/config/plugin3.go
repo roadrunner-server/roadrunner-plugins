@@ -3,8 +3,8 @@ package config
 import (
 	"time"
 
+	"github.com/roadrunner-server/api/v2/plugins/config"
 	"github.com/spiral/errors"
-	"github.com/spiral/roadrunner-plugins/v2/api/v2/config"
 )
 
 type Foo3 struct {
@@ -21,7 +21,7 @@ func (f *Foo3) Serve() chan error {
 	const op = errors.Op("foo_plugin_serve")
 	errCh := make(chan error, 1)
 
-	if f.configProvider.GetCommonConfig().GracefulTimeout != time.Second*10 {
+	if f.configProvider.GracefulTimeout() != time.Second*10 {
 		errCh <- errors.E(op, errors.Str("GracefulTimeout should be eq to 10 seconds"))
 		return errCh
 	}

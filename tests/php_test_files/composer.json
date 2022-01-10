@@ -10,7 +10,8 @@
     "spiral/roadrunner-metrics": "^2.0",
     "spiral/roadrunner-grpc": "^2.0",
     "spiral/roadrunner-tcp": "*",
-    "spiral/roadrunner-jobs": "^2.0"
+    "spiral/roadrunner-jobs": "^2.0",
+    "arku31/roadrunner-newrelic": "^0.1.4"
   },
   "autoload": {
     "psr-4": {

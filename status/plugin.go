@@ -6,10 +6,10 @@ import (
 	"time"
 
 	"github.com/gofiber/fiber/v2"
+	"github.com/roadrunner-server/api/v2/plugins/config"
+	"github.com/roadrunner-server/api/v2/plugins/status"
 	endure "github.com/spiral/endure/pkg/container"
 	"github.com/spiral/errors"
-	"github.com/spiral/roadrunner-plugins/v2/api/v2/config"
-	"github.com/spiral/roadrunner-plugins/v2/api/v2/status"
 	"go.uber.org/zap"
 )
 

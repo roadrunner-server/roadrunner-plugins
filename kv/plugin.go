@@ -3,10 +3,10 @@ package kv
 import (
 	"fmt"
 
+	"github.com/roadrunner-server/api/v2/plugins/config"
+	"github.com/roadrunner-server/api/v2/plugins/kv"
 	endure "github.com/spiral/endure/pkg/container"
 	"github.com/spiral/errors"
-	"github.com/spiral/roadrunner-plugins/v2/api/v2/config"
-	"github.com/spiral/roadrunner-plugins/v2/api/v2/kv"
 	"go.uber.org/zap"
 )
 
@@ -43,7 +43,8 @@ func (p *Plugin) Init(cfg config.Configurer, log *zap.Logger) error {
 	}
 	p.constructors = make(map[string]kv.Constructor, 5)
 	p.storages = make(map[string]kv.Storage, 5)
-	p.log = log
+	p.log = new(zap.Logger)
+	*p.log = *log
 	p.cfgPlugin = cfg
 	return nil
 }

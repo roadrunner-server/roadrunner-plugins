@@ -14,10 +14,10 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/sqs"
 	"github.com/aws/aws-sdk-go-v2/service/sqs/types"
 	"github.com/google/uuid"
+	cfgPlugin "github.com/roadrunner-server/api/v2/plugins/config"
+	"github.com/roadrunner-server/api/v2/plugins/jobs"
+	"github.com/roadrunner-server/api/v2/plugins/jobs/pipeline"
 	"github.com/spiral/errors"
-	cfgPlugin "github.com/spiral/roadrunner-plugins/v2/api/v2/config"
-	"github.com/spiral/roadrunner-plugins/v2/api/v2/jobs"
-	"github.com/spiral/roadrunner-plugins/v2/api/v2/jobs/pipeline"
 	priorityqueue "github.com/spiral/roadrunner/v2/priority_queue"
 	"go.uber.org/zap"
 )

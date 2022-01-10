@@ -11,10 +11,10 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+	jobState "github.com/roadrunner-server/api/v2/plugins/jobs"
+	jobsv1beta "github.com/roadrunner-server/api/v2/proto/jobs/v1beta"
 	endure "github.com/spiral/endure/pkg/container"
 	goridgeRpc "github.com/spiral/goridge/v3/pkg/rpc"
-	jobsv1beta "github.com/spiral/roadrunner-plugins/v2/api/proto/jobs/v1beta"
-	jobState "github.com/spiral/roadrunner-plugins/v2/api/v2/jobs"
 	"github.com/spiral/roadrunner-plugins/v2/beanstalk"
 	"github.com/spiral/roadrunner-plugins/v2/config"
 	"github.com/spiral/roadrunner-plugins/v2/informer"
@@ -110,9 +110,9 @@ func TestBeanstalkInitV27(t *testing.T) {
 	assert.NoError(t, err)
 
 	cfg := &config.Plugin{
-		Path:      "beanstalk/.rr-beanstalk-init-v27.yaml",
-		Prefix:    "rr",
-		RRVersion: "2.7.0",
+		Path:    "beanstalk/.rr-beanstalk-init-v27.yaml",
+		Prefix:  "rr",
+		Version: "2.7.0",
 	}
 
 	l, oLogger := mocklogger.ZapTestLogger(zap.DebugLevel)

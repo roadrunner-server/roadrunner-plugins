@@ -6,12 +6,12 @@ import (
 	"sync"
 
 	"github.com/gobwas/ws"
+	json "github.com/goccy/go-json"
 	"github.com/google/uuid"
-	json "github.com/json-iterator/go"
+	"github.com/roadrunner-server/api/v2/plugins/config"
+	"github.com/roadrunner-server/api/v2/plugins/pubsub"
+	"github.com/roadrunner-server/api/v2/plugins/server"
 	"github.com/spiral/errors"
-	"github.com/spiral/roadrunner-plugins/v2/api/v2/config"
-	"github.com/spiral/roadrunner-plugins/v2/api/v2/pubsub"
-	"github.com/spiral/roadrunner-plugins/v2/api/v2/server"
 	"github.com/spiral/roadrunner-plugins/v2/http/attributes"
 	"github.com/spiral/roadrunner-plugins/v2/http/middleware/websockets/connection"
 	"github.com/spiral/roadrunner-plugins/v2/http/middleware/websockets/executor"
@@ -84,7 +84,8 @@ func (p *Plugin) Init(cfg config.Configurer, log *zap.Logger, server server.Serv
 
 	p.serveExit = make(chan struct{})
 	p.server = server
-	p.log = log
+	p.log = new(zap.Logger)
+	*p.log = *log
 	p.broadcaster = b
 
 	ctx, cancel := context.WithCancel(context.Background())

@@ -4,9 +4,9 @@ import (
 	"context"
 	"sync"
 
+	"github.com/roadrunner-server/api/v2/plugins/config"
+	"github.com/roadrunner-server/api/v2/plugins/server"
 	"github.com/spiral/errors"
-	"github.com/spiral/roadrunner-plugins/v2/api/v2/config"
-	"github.com/spiral/roadrunner-plugins/v2/api/v2/server"
 	"github.com/spiral/roadrunner-plugins/v2/grpc/codec"
 	"github.com/spiral/roadrunner-plugins/v2/grpc/proxy"
 	"github.com/spiral/roadrunner/v2/pool"
@@ -67,7 +67,8 @@ func (p *Plugin) Init(cfg config.Configurer, log *zap.Logger, server server.Serv
 	}
 	p.config.Env[RrMode] = pluginName
 
-	p.log = log
+	p.log = new(zap.Logger)
+	*p.log = *log
 	p.mu = &sync.RWMutex{}
 
 	return nil

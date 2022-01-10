@@ -4,8 +4,8 @@ import (
 	"context"
 	"sync"
 
+	"github.com/roadrunner-server/api/v2/plugins/pubsub"
 	"github.com/spiral/errors"
-	"github.com/spiral/roadrunner-plugins/v2/api/v2/pubsub"
 	"github.com/spiral/roadrunner/v2/bst"
 	"go.uber.org/zap"
 )

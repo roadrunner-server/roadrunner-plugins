@@ -8,7 +8,7 @@ import (
 	"net/url"
 	"strings"
 
-	json "github.com/json-iterator/go"
+	json "github.com/goccy/go-json"
 	"github.com/spiral/errors"
 	"github.com/spiral/roadrunner/v2/payload"
 	"go.uber.org/zap"

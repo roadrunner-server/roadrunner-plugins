@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"time"
 
-	json "github.com/json-iterator/go"
+	json "github.com/goccy/go-json"
 	"github.com/nats-io/nats.go"
 	"github.com/spiral/roadrunner/v2/utils"
 )

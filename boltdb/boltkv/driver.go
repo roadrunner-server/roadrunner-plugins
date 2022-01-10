@@ -8,9 +8,9 @@ import (
 	"sync"
 	"time"
 
+	"github.com/roadrunner-server/api/v2/plugins/config"
+	kvv1 "github.com/roadrunner-server/api/v2/proto/kv/v1beta"
 	"github.com/spiral/errors"
-	kvv1 "github.com/spiral/roadrunner-plugins/v2/api/proto/kv/v1beta"
-	"github.com/spiral/roadrunner-plugins/v2/api/v2/config"
 	"github.com/spiral/roadrunner/v2/utils"
 	bolt "go.etcd.io/bbolt"
 	"go.uber.org/zap"

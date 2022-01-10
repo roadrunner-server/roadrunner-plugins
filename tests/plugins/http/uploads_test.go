@@ -15,14 +15,12 @@ import (
 	"testing"
 	"time"
 
-	j "github.com/json-iterator/go"
-	handler "github.com/spiral/roadrunner-plugins/v2/http/handler"
+	"github.com/goccy/go-json"
+	"github.com/spiral/roadrunner-plugins/v2/http/handler"
 	poolImpl "github.com/spiral/roadrunner/v2/pool"
 	"github.com/spiral/roadrunner/v2/transport/pipe"
 	"github.com/stretchr/testify/assert"
 )
-
-var json = j.ConfigCompatibleWithStandardLibrary
 
 const testFile = "uploads_test.go"
 

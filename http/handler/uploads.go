@@ -9,7 +9,7 @@ import (
 	"strings"
 	"sync"
 
-	json "github.com/json-iterator/go"
+	json "github.com/goccy/go-json"
 	"go.uber.org/zap"
 )
 

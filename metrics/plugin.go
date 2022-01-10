@@ -10,9 +10,9 @@ import (
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/collectors"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
+	"github.com/roadrunner-server/api/v2/plugins/config"
+	"github.com/roadrunner-server/api/v2/plugins/metrics"
 	"github.com/spiral/errors"
-	"github.com/spiral/roadrunner-plugins/v2/api/v2/config"
-	"github.com/spiral/roadrunner-plugins/v2/api/v2/metrics"
 	"go.uber.org/zap"
 	"golang.org/x/sys/cpu"
 )
@@ -51,7 +51,8 @@ func (p *Plugin) Init(cfg config.Configurer, log *zap.Logger) error {
 
 	p.cfg.InitDefaults()
 
-	p.log = log
+	p.log = new(zap.Logger)
+	*p.log = *log
 	p.registry = prometheus.NewRegistry()
 
 	// Default

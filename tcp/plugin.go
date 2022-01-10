@@ -7,9 +7,9 @@ import (
 	"sync"
 
 	"github.com/google/uuid"
+	"github.com/roadrunner-server/api/v2/plugins/config"
+	"github.com/roadrunner-server/api/v2/plugins/server"
 	rrErrors "github.com/spiral/errors"
-	"github.com/spiral/roadrunner-plugins/v2/api/v2/config"
-	"github.com/spiral/roadrunner-plugins/v2/api/v2/server"
 	"github.com/spiral/roadrunner-plugins/v2/tcp/handler"
 	"github.com/spiral/roadrunner/v2/payload"
 	"github.com/spiral/roadrunner/v2/pool"
@@ -84,7 +84,8 @@ func (p *Plugin) Init(log *zap.Logger, cfg config.Configurer, server server.Serv
 		},
 	}
 
-	p.log = log
+	p.log = new(zap.Logger)
+	*p.log = *log
 	p.server = server
 	return nil
 }

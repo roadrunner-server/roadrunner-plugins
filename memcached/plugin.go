@@ -1,9 +1,9 @@
 package memcached
 
 import (
+	"github.com/roadrunner-server/api/v2/plugins/config"
+	"github.com/roadrunner-server/api/v2/plugins/kv"
 	"github.com/spiral/errors"
-	"github.com/spiral/roadrunner-plugins/v2/api/v2/config"
-	"github.com/spiral/roadrunner-plugins/v2/api/v2/kv"
 	"github.com/spiral/roadrunner-plugins/v2/memcached/memcachedkv"
 	"go.uber.org/zap"
 )
@@ -26,7 +26,8 @@ func (p *Plugin) Init(log *zap.Logger, cfg config.Configurer) error {
 	}
 
 	p.cfgPlugin = cfg
-	p.log = log
+	p.log = new(zap.Logger)
+	*p.log = *log
 	return nil
 }
 

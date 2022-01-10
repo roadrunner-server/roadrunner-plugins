@@ -7,9 +7,9 @@ import (
 	"time"
 
 	"github.com/beanstalkd/go-beanstalk"
-	json "github.com/json-iterator/go"
+	json "github.com/goccy/go-json"
+	"github.com/roadrunner-server/api/v2/plugins/jobs"
 	"github.com/spiral/errors"
-	"github.com/spiral/roadrunner-plugins/v2/api/v2/jobs"
 	"github.com/spiral/roadrunner/v2/utils"
 )
 

@@ -1,0 +1,26 @@
+rpc:
+  listen: tcp://127.0.0.1:6002
+
+server:
+  command: "php ../../php_test_files/psr-worker-bench.php"
+  relay: "pipes"
+  relay_timeout: "20s"
+
+http:
+  address: 127.0.0.1:53123
+  max_request_size: 1024
+  middleware: ["cache"]
+  cache:
+    driver: memory
+    cache_methods: ["GET", "HEAD", "POST"] # only GET by default
+    config: {}
+
+  pool:
+    num_workers: 2
+    max_jobs: 0
+    allocate_timeout: 60s
+    destroy_timeout: 60s
+
+logs:
+  mode: development
+  level: error

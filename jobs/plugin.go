@@ -7,12 +7,12 @@ import (
 	"sync/atomic"
 	"time"
 
+	"github.com/roadrunner-server/api/v2/plugins/config"
+	"github.com/roadrunner-server/api/v2/plugins/jobs"
+	"github.com/roadrunner-server/api/v2/plugins/jobs/pipeline"
+	"github.com/roadrunner-server/api/v2/plugins/server"
 	endure "github.com/spiral/endure/pkg/container"
 	"github.com/spiral/errors"
-	"github.com/spiral/roadrunner-plugins/v2/api/v2/config"
-	"github.com/spiral/roadrunner-plugins/v2/api/v2/jobs"
-	"github.com/spiral/roadrunner-plugins/v2/api/v2/jobs/pipeline"
-	"github.com/spiral/roadrunner-plugins/v2/api/v2/server"
 	rh "github.com/spiral/roadrunner-plugins/v2/jobs/protocol"
 	"github.com/spiral/roadrunner/v2/payload"
 	"github.com/spiral/roadrunner/v2/pool"
@@ -107,7 +107,8 @@ func (p *Plugin) Init(cfg config.Configurer, log *zap.Logger, server server.Serv
 
 	// initialize priority queue
 	p.queue = pq.NewBinHeap(p.cfg.PipelineSize)
-	p.log = log
+	p.log = new(zap.Logger)
+	*p.log = *log
 	p.metrics = &metrics{
 		jobsOk:  utils.Uint64(0),
 		pushOk:  utils.Uint64(0),

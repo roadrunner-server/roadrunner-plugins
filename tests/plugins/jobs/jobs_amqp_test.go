@@ -10,11 +10,11 @@ import (
 	"testing"
 	"time"
 
+	jobState "github.com/roadrunner-server/api/v2/plugins/jobs"
+	jobsv1beta "github.com/roadrunner-server/api/v2/proto/jobs/v1beta"
 	endure "github.com/spiral/endure/pkg/container"
 	goridgeRpc "github.com/spiral/goridge/v3/pkg/rpc"
 	"github.com/spiral/roadrunner-plugins/v2/amqp"
-	jobsv1beta "github.com/spiral/roadrunner-plugins/v2/api/proto/jobs/v1beta"
-	jobState "github.com/spiral/roadrunner-plugins/v2/api/v2/jobs"
 	"github.com/spiral/roadrunner-plugins/v2/config"
 	"github.com/spiral/roadrunner-plugins/v2/informer"
 	"github.com/spiral/roadrunner-plugins/v2/jobs"
@@ -115,9 +115,9 @@ func TestAMQPInitV27(t *testing.T) {
 	assert.NoError(t, err)
 
 	cfg := &config.Plugin{
-		Path:      "amqp/.rr-amqp-init.yaml",
-		Prefix:    "rr",
-		RRVersion: "2.7.0",
+		Path:    "amqp/.rr-amqp-init.yaml",
+		Prefix:  "rr",
+		Version: "2.7.0",
 	}
 
 	l, oLogger := mocklogger.ZapTestLogger(zap.DebugLevel)

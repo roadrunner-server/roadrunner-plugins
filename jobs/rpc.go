@@ -3,10 +3,10 @@ package jobs
 import (
 	"context"
 
+	"github.com/roadrunner-server/api/v2/plugins/jobs"
+	"github.com/roadrunner-server/api/v2/plugins/jobs/pipeline"
+	jobsv1beta "github.com/roadrunner-server/api/v2/proto/jobs/v1beta"
 	"github.com/spiral/errors"
-	jobsv1beta "github.com/spiral/roadrunner-plugins/v2/api/proto/jobs/v1beta"
-	"github.com/spiral/roadrunner-plugins/v2/api/v2/jobs"
-	"github.com/spiral/roadrunner-plugins/v2/api/v2/jobs/pipeline"
 )
 
 type rpc struct {
