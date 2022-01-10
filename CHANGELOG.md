@@ -171,6 +171,7 @@ http:
 - ✏️ API stabilization. All `v2` api interfaces moved to the `https://github.com/roadrunner-server/api` repository. Except logger (structure), all plugins depends only on the interfaces and don't import each other.
 - ✏️ `protoc` updated to the version `v3.19.2`.
 - ✏️ `GRPC` plugin now is able to work with gzipped payloads. [FR](https://github.com/spiral/roadrunner-plugins/issues/191) (reporter @hetao29)
+- ✏️ `SQS` plugin now detects EC2 env and uses AWS credentials instead of static provider. [FR](https://github.com/spiral/roadrunner-plugins/issues/142) (reporter @paulermo)
 
 ## 🩹 Fix
 
