@@ -170,8 +170,9 @@ http:
 - ✏️ Logger unification. Starting this version we bound our logs to the `uber/zap` log library as one of the most popular and extensible.
 - ✏️ API stabilization. All `v2` api interfaces moved to the `https://github.com/roadrunner-server/api` repository. Except logger (structure), all plugins depends only on the interfaces and don't import each other.
 - ✏️ `protoc` updated to the version `v3.19.2`.
+- ✏️ `GRPC` plugin now is able to work with gzipped payloads. [FR](https://github.com/spiral/roadrunner-plugins/issues/191) (reporter @hetao29)
 
-## 🩹 Fixes:
+## 🩹 Fix
 
 - 🐛 Fix: 200 HTTP status code instead of 400 on readiness/health bad requests. [BUG](https://github.com/spiral/roadrunner-plugins/issues/180)
 - 🐛 Fix: `new_relic` plugin removes/modifies more headers than it should. [BUG](https://github.com/spiral/roadrunner-plugins/issues/185) (reporter: @arku31)

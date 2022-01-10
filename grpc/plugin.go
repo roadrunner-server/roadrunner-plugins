@@ -15,6 +15,9 @@ import (
 	"go.uber.org/zap"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/encoding"
+
+	// Will register via init
+	_ "google.golang.org/grpc/encoding/gzip"
 )
 
 const (
