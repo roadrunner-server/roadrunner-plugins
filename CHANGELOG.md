@@ -9,8 +9,8 @@ But if you use configuration version `2.7` you must update the `jobs` pipelines 
 **At this point we can guarantee, that no breaking changes will be introduced in the configuration w/o auto-convert from the older configuration version**  
   For example, if we introduce a configuration update let's say in version `2.10`, we will support automatic conversion from at least 2 previous versions w/o involving the user into the process. In the example case, versions `2.9` and `2.8` will be automatically converted. From our release cycle, you will have at least 3 months to update the configuration from version `2.8` and 2 months from `2.9`.Version located at the top of the `.rr.yaml`:
 
-Compatibility matrix located here: TODO
-Configuration changelog: TODO
+**Compatibility matrix located here**: TODO  
+**Configuration changelog**: TODO
 
 ```yaml
 version: "2.6"
