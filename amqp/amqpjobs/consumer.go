@@ -44,14 +44,16 @@ type consumer struct {
 	//
 	// pipeline's priority
 	//
-	priority      int64
-	exchangeName  string
-	queue         string
-	exclusive     bool
-	exchangeType  string
-	routingKey    string
-	multipleAck   bool
-	requeueOnFail bool
+	priority          int64
+	exchangeName      string
+	queue             string
+	exclusive         bool
+	exchangeType      string
+	routingKey        string
+	multipleAck       bool
+	requeueOnFail     bool
+	durable           bool
+	deleteQueueOnStop bool
 
 	listeners uint32
 	delayed   *int64
@@ -99,15 +101,17 @@ func NewAMQPConsumer(configKey string, log *zap.Logger, cfg cfgPlugin.Configurer
 		priority:     conf.Priority,
 		delayed:      utils.Int64(0),
 
-		publishChan:   make(chan *amqp.Channel, 1),
-		routingKey:    conf.RoutingKey,
-		queue:         conf.Queue,
-		exchangeType:  conf.ExchangeType,
-		exchangeName:  conf.Exchange,
-		prefetch:      conf.Prefetch,
-		exclusive:     conf.Exclusive,
-		multipleAck:   conf.MultipleAck,
-		requeueOnFail: conf.RequeueOnFail,
+		publishChan:       make(chan *amqp.Channel, 1),
+		routingKey:        conf.RoutingKey,
+		queue:             conf.Queue,
+		durable:           conf.Durable,
+		exchangeType:      conf.ExchangeType,
+		deleteQueueOnStop: conf.DeleteQueueOnStop,
+		exchangeName:      conf.Exchange,
+		prefetch:          conf.Prefetch,
+		exclusive:         conf.Exclusive,
+		multipleAck:       conf.MultipleAck,
+		requeueOnFail:     conf.RequeueOnFail,
 	}
 
 	jb.conn, err = amqp.Dial(conf.Addr)
@@ -164,16 +168,18 @@ func FromPipeline(pipeline *pipeline.Pipeline, log *zap.Logger, cfg cfgPlugin.Co
 		retryTimeout: time.Minute * 5,
 		delayed:      utils.Int64(0),
 
-		publishChan:   make(chan *amqp.Channel, 1),
-		routingKey:    pipeline.String(routingKey, ""),
-		queue:         pipeline.String(queue, "default"),
-		exchangeType:  pipeline.String(exchangeType, "direct"),
-		exchangeName:  pipeline.String(exchangeKey, "amqp.default"),
-		prefetch:      pipeline.Int(prefetch, 10),
-		priority:      int64(pipeline.Int(priority, 10)),
-		exclusive:     pipeline.Bool(exclusive, false),
-		multipleAck:   pipeline.Bool(multipleAsk, false),
-		requeueOnFail: pipeline.Bool(requeueOnFail, false),
+		publishChan:       make(chan *amqp.Channel, 1),
+		routingKey:        pipeline.String(routingKey, ""),
+		queue:             pipeline.String(queue, "default"),
+		exchangeType:      pipeline.String(exchangeType, "direct"),
+		exchangeName:      pipeline.String(exchangeKey, "amqp.default"),
+		prefetch:          pipeline.Int(prefetch, 10),
+		priority:          int64(pipeline.Int(priority, 10)),
+		durable:           pipeline.Bool(durable, false),
+		deleteQueueOnStop: pipeline.Bool(deleteOnStop, false),
+		exclusive:         pipeline.Bool(exclusive, false),
+		multipleAck:       pipeline.Bool(multipleAsk, false),
+		requeueOnFail:     pipeline.Bool(requeueOnFail, false),
 	}
 
 	jb.conn, err = amqp.Dial(conf.Addr)

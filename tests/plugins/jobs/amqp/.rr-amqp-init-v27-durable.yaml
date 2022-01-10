@@ -32,10 +32,11 @@ jobs:
       config:
         prefetch: 100
         queue: test-1-queue
+        durable: true
         priority: 1
-        delete_queue_on_stop: true
         exchange: default
         exchange_type: direct
+        delete_queue_on_stop: true
         routing_key: test-11
         exclusive: false
         multiple_ack: false
@@ -48,8 +49,9 @@ jobs:
         queue: test-2-queue
         priority: 2
         exchange: default
-        delete_queue_on_stop: true
         exchange_type: direct
+        delete_queue_on_stop: true
+        durable: true
         routing_key: test-22
         exclusive: false
         multiple_ack: false

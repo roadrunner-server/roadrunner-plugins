@@ -101,6 +101,15 @@ func (c *consumer) redialer() { //nolint:gocognit
 
 			case <-c.stopCh:
 				pch := <-c.publishChan
+
+				if c.deleteQueueOnStop {
+					msg, err := pch.QueueDelete(c.queue, false, false, false)
+					if err != nil {
+						c.log.Error("queue delete", zap.Error(err))
+					}
+					c.log.Debug("number of purged messages", zap.Int("count", msg))
+				}
+
 				err := pch.Close()
 				if err != nil {
 					c.log.Error("publish channel close", zap.Error(err))

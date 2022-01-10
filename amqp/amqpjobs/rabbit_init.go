@@ -31,7 +31,7 @@ func (c *consumer) initRabbitMQ() error {
 	// verify or declare a queue
 	q, err := channel.QueueDeclare(
 		c.queue,
-		false,
+		c.durable,
 		false,
 		c.exclusive,
 		false,
