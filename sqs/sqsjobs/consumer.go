@@ -2,7 +2,7 @@ package sqsjobs
 
 import (
 	"context"
-	"os"
+	"net/http"
 	"strconv"
 	"sync"
 	"sync/atomic"
@@ -24,7 +24,8 @@ import (
 )
 
 const (
-	pluginName string = "sqs"
+	pluginName     string = "sqs"
+	awsMetaDataURL string = "http://169.254.169.254/latest/dynamic/instance-identity/"
 )
 
 type consumer struct {
@@ -431,12 +432,16 @@ func ready(r uint32) bool {
 	return r > 0
 }
 
-// aws/env_config.go
+// https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/ec2-instance-metadata.html
+// https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/identify_ec2_instances.html
 func isInAWS() bool {
-	if (os.Getenv("AWS_ACCESS_KEY") != "" || os.Getenv("AWS_ACCESS_KEY_ID") != "") &&
-		(os.Getenv("AWS_SECRET_KEY") != "" || os.Getenv("AWS_SECRET_ACCESS_KEY") != "") &&
-		(os.Getenv("AWS_REGION") != "" || os.Getenv("AWS_DEFAULT_REGION") != "") {
-		return true
+	client := &http.Client{
+		Timeout: time.Second * 2,
 	}
-	return false
+	resp, err := client.Get(awsMetaDataURL) //nolint:noctx
+	if err != nil {
+		return false
+	}
+	_ = resp.Body.Close()
+	return resp.StatusCode == http.StatusOK
 }
