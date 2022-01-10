@@ -10,7 +10,7 @@ import (
 	"os"
 	"strings"
 
-	"github.com/roadrunner-server/api/plugins/v2/middleware"
+	"github.com/roadrunner-server/api/v2/plugins/middleware"
 	"github.com/spiral/errors"
 	"github.com/spiral/roadrunner/v2/utils"
 	"go.uber.org/zap"

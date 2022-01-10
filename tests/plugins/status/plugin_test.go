@@ -12,7 +12,7 @@ import (
 	"testing"
 	"time"
 
-	statusImpl "github.com/roadrunner-server/api/plugins/v2/status"
+	statusImpl "github.com/roadrunner-server/api/v2/plugins/status"
 	endure "github.com/spiral/endure/pkg/container"
 	goridgeRpc "github.com/spiral/goridge/v3/pkg/rpc"
 	"github.com/spiral/roadrunner-plugins/v2/config"

@@ -8,7 +8,7 @@ import (
 
 	"github.com/goccy/go-json"
 	amqp "github.com/rabbitmq/amqp091-go"
-	"github.com/roadrunner-server/api/plugins/v2/jobs"
+	"github.com/roadrunner-server/api/v2/plugins/jobs"
 	"github.com/spiral/errors"
 	"github.com/spiral/roadrunner/v2/utils"
 	"go.uber.org/zap"

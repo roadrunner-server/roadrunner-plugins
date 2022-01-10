@@ -4,7 +4,7 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/roadrunner-server/api/plugins/v2/pubsub"
+	"github.com/roadrunner-server/api/v2/plugins/pubsub"
 	"github.com/spiral/errors"
 	"go.uber.org/zap"
 )

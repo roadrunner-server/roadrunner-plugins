@@ -1,7 +1,7 @@
 package resetter
 
 import (
-	"github.com/roadrunner-server/api/plugins/v2/resetter"
+	"github.com/roadrunner-server/api/v2/plugins/resetter"
 	endure "github.com/spiral/endure/pkg/container"
 	"github.com/spiral/errors"
 )

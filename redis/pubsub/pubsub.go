@@ -5,8 +5,8 @@ import (
 	"sync"
 
 	"github.com/go-redis/redis/v8"
-	"github.com/roadrunner-server/api/plugins/v2/config"
-	"github.com/roadrunner-server/api/plugins/v2/pubsub"
+	"github.com/roadrunner-server/api/v2/plugins/config"
+	"github.com/roadrunner-server/api/v2/plugins/pubsub"
 	"github.com/spiral/errors"
 	"go.uber.org/zap"
 )

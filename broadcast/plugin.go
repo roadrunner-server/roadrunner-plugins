@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"sync"
 
-	"github.com/roadrunner-server/api/plugins/v2/config"
-	"github.com/roadrunner-server/api/plugins/v2/pubsub"
+	"github.com/roadrunner-server/api/v2/plugins/config"
+	"github.com/roadrunner-server/api/v2/plugins/pubsub"
 	endure "github.com/spiral/endure/pkg/container"
 	"github.com/spiral/errors"
 	"go.uber.org/zap"

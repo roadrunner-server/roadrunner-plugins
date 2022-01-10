@@ -8,9 +8,9 @@ import (
 
 	json "github.com/goccy/go-json"
 	"github.com/nats-io/nats.go"
-	cfgPlugin "github.com/roadrunner-server/api/plugins/v2/config"
-	"github.com/roadrunner-server/api/plugins/v2/jobs"
-	"github.com/roadrunner-server/api/plugins/v2/jobs/pipeline"
+	cfgPlugin "github.com/roadrunner-server/api/v2/plugins/config"
+	"github.com/roadrunner-server/api/v2/plugins/jobs"
+	"github.com/roadrunner-server/api/v2/plugins/jobs/pipeline"
 	"github.com/spiral/errors"
 	priorityqueue "github.com/spiral/roadrunner/v2/priority_queue"
 	"go.uber.org/zap"

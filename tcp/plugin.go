@@ -7,8 +7,8 @@ import (
 	"sync"
 
 	"github.com/google/uuid"
-	"github.com/roadrunner-server/api/plugins/v2/config"
-	"github.com/roadrunner-server/api/plugins/v2/server"
+	"github.com/roadrunner-server/api/v2/plugins/config"
+	"github.com/roadrunner-server/api/v2/plugins/server"
 	rrErrors "github.com/spiral/errors"
 	"github.com/spiral/roadrunner-plugins/v2/tcp/handler"
 	"github.com/spiral/roadrunner/v2/payload"

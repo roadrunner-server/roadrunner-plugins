@@ -26,6 +26,8 @@ require (
 	github.com/newrelic/go-agent/v3 v3.15.2
 	github.com/prometheus/client_golang v1.11.0
 	github.com/rabbitmq/amqp091-go v1.2.0
+	github.com/roadrunner-server/api/v2 v2.0.0-alpha.1
+	github.com/shirou/gopsutil v3.21.11+incompatible
 	github.com/spf13/viper v1.10.1
 	// spiral
 	github.com/spiral/endure v1.1.0
@@ -83,8 +85,6 @@ require (
 	github.com/prometheus/client_model v0.2.0 // indirect
 	github.com/prometheus/common v0.32.1 // indirect
 	github.com/prometheus/procfs v0.7.3 // indirect
-	github.com/roadrunner-server/api v0.0.0-20220109175659-238f1b160729
-	github.com/shirou/gopsutil v3.21.11+incompatible
 	github.com/spf13/afero v1.8.0 // indirect
 	github.com/spf13/cast v1.4.1 // indirect
 	github.com/spf13/jwalterweatherman v1.1.0 // indirect

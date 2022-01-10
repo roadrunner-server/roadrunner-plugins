@@ -3,7 +3,7 @@ package service
 import (
 	"sync"
 
-	"github.com/roadrunner-server/api/plugins/v2/config"
+	"github.com/roadrunner-server/api/v2/plugins/config"
 	"github.com/spiral/errors"
 	"github.com/spiral/roadrunner/v2/state/process"
 	"go.uber.org/zap"

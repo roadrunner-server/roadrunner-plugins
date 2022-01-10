@@ -6,8 +6,8 @@ import (
 	"time"
 
 	"github.com/go-redis/redis/v8"
-	"github.com/roadrunner-server/api/plugins/v2/config"
-	kvv1 "github.com/roadrunner-server/api/proto/kv/v1beta"
+	"github.com/roadrunner-server/api/v2/plugins/config"
+	kvv1 "github.com/roadrunner-server/api/v2/proto/kv/v1beta"
 	"github.com/spiral/errors"
 	"github.com/spiral/roadrunner/v2/utils"
 	"go.uber.org/zap"

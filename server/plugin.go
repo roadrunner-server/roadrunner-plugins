@@ -12,7 +12,7 @@ import (
 	"github.com/spiral/errors"
 	"go.uber.org/zap"
 
-	"github.com/roadrunner-server/api/plugins/v2/config"
+	"github.com/roadrunner-server/api/v2/plugins/config"
 	"github.com/spiral/roadrunner/v2/pool"
 	"github.com/spiral/roadrunner/v2/transport"
 	"github.com/spiral/roadrunner/v2/transport/pipe"

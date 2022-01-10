@@ -7,9 +7,9 @@ import (
 	"strings"
 	"sync"
 
-	"github.com/roadrunner-server/api/plugins/v2/cache"
-	"github.com/roadrunner-server/api/plugins/v2/config"
-	cacheV1beta "github.com/roadrunner-server/api/proto/cache/v1beta"
+	"github.com/roadrunner-server/api/v2/plugins/cache"
+	"github.com/roadrunner-server/api/v2/plugins/config"
+	cacheV1beta "github.com/roadrunner-server/api/v2/proto/cache/v1beta"
 	endure "github.com/spiral/endure/pkg/container"
 	"github.com/spiral/errors"
 	"github.com/spiral/roadrunner-plugins/v2/http/middleware/cache/directives"

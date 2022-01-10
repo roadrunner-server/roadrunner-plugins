@@ -10,6 +10,9 @@ type Config struct {
 
 	// Only get by default
 	CacheMethods []string `mapstructure:"cache_methods"`
+
+	// Driver specific configuration
+	Config interface{} `mapstructure:"config"`
 }
 
 func (c *Config) InitDefaults() {

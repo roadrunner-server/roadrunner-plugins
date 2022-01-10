@@ -11,8 +11,8 @@ import (
 	"time"
 
 	"github.com/google/uuid"
-	jobState "github.com/roadrunner-server/api/plugins/v2/jobs"
-	jobsv1beta "github.com/roadrunner-server/api/proto/jobs/v1beta"
+	jobState "github.com/roadrunner-server/api/v2/plugins/jobs"
+	jobsv1beta "github.com/roadrunner-server/api/v2/proto/jobs/v1beta"
 	endure "github.com/spiral/endure/pkg/container"
 	goridgeRpc "github.com/spiral/goridge/v3/pkg/rpc"
 	"github.com/spiral/roadrunner-plugins/v2/beanstalk"

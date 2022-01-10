@@ -17,7 +17,7 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/goccy/go-json"
-	websocketsv1 "github.com/roadrunner-server/api/proto/websockets/v1beta"
+	websocketsv1 "github.com/roadrunner-server/api/v2/proto/websockets/v1beta"
 	endure "github.com/spiral/endure/pkg/container"
 	goridgeRpc "github.com/spiral/goridge/v3/pkg/rpc"
 	"github.com/spiral/roadrunner-plugins/v2/broadcast"

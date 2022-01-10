@@ -11,7 +11,9 @@ http:
   max_request_size: 1024
   middleware: ["cache"]
   cache:
-    cache_min_uses: 1
+    driver: memory
+    cache_methods: ["GET", "HEAD", "POST"] # only GET by default
+    config: {}
 
   pool:
     num_workers: 2

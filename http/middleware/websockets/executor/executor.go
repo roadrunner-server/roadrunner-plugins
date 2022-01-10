@@ -7,8 +7,8 @@ import (
 
 	"github.com/gobwas/ws"
 	"github.com/goccy/go-json"
-	"github.com/roadrunner-server/api/plugins/v2/pubsub"
-	websocketsv1 "github.com/roadrunner-server/api/proto/websockets/v1beta"
+	"github.com/roadrunner-server/api/v2/plugins/pubsub"
+	websocketsv1 "github.com/roadrunner-server/api/v2/proto/websockets/v1beta"
 	"github.com/spiral/errors"
 	"github.com/spiral/roadrunner-plugins/v2/http/middleware/websockets/commands"
 	"github.com/spiral/roadrunner-plugins/v2/http/middleware/websockets/connection"

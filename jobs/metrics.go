@@ -4,7 +4,7 @@ import (
 	"sync/atomic"
 
 	"github.com/prometheus/client_golang/prometheus"
-	"github.com/roadrunner-server/api/plugins/v2/informer"
+	"github.com/roadrunner-server/api/v2/plugins/informer"
 )
 
 func (p *Plugin) MetricsCollector() []prometheus.Collector {

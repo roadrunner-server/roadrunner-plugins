@@ -3,7 +3,7 @@ package logger
 import (
 	"strings"
 
-	"github.com/roadrunner-server/api/plugins/v2/config"
+	"github.com/roadrunner-server/api/v2/plugins/config"
 	"github.com/spiral/errors"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"

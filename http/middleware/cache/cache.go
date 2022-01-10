@@ -4,7 +4,7 @@ import (
 	"net/http"
 	"time"
 
-	cacheV1beta "github.com/roadrunner-server/api/proto/cache/v1beta"
+	cacheV1beta "github.com/roadrunner-server/api/v2/proto/cache/v1beta"
 	"google.golang.org/protobuf/proto"
 )
 

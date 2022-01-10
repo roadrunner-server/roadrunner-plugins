@@ -1,10 +1,10 @@
 package boltdb
 
 import (
-	"github.com/roadrunner-server/api/plugins/v2/config"
-	"github.com/roadrunner-server/api/plugins/v2/jobs"
-	"github.com/roadrunner-server/api/plugins/v2/jobs/pipeline"
-	"github.com/roadrunner-server/api/plugins/v2/kv"
+	"github.com/roadrunner-server/api/v2/plugins/config"
+	"github.com/roadrunner-server/api/v2/plugins/jobs"
+	"github.com/roadrunner-server/api/v2/plugins/jobs/pipeline"
+	"github.com/roadrunner-server/api/v2/plugins/kv"
 	"github.com/spiral/errors"
 	"github.com/spiral/roadrunner-plugins/v2/boltdb/boltjobs"
 	"github.com/spiral/roadrunner-plugins/v2/boltdb/boltkv"

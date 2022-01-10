@@ -1,7 +1,7 @@
 package http
 
 import (
-	"github.com/roadrunner-server/api/plugins/v2/config"
+	"github.com/roadrunner-server/api/v2/plugins/config"
 )
 
 type Plugin1 struct {

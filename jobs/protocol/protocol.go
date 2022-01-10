@@ -4,7 +4,7 @@ import (
 	"sync"
 
 	json "github.com/goccy/go-json"
-	"github.com/roadrunner-server/api/plugins/v2/jobs"
+	"github.com/roadrunner-server/api/v2/plugins/jobs"
 	"github.com/spiral/errors"
 	"github.com/spiral/roadrunner/v2/payload"
 	"go.uber.org/zap"

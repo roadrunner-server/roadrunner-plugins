@@ -5,8 +5,8 @@ import (
 	"sync"
 	"time"
 
-	"github.com/roadrunner-server/api/plugins/v2/config"
-	kvv1 "github.com/roadrunner-server/api/proto/kv/v1beta"
+	"github.com/roadrunner-server/api/v2/plugins/config"
+	kvv1 "github.com/roadrunner-server/api/v2/proto/kv/v1beta"
 	"github.com/spiral/errors"
 	"go.uber.org/zap"
 )

@@ -154,7 +154,19 @@ Now, pipelines have only `driver` key with the configuration under the `config` 
         delete_after_ack: false
 ```
 
-- ✏️ **[ALPHA]** New cache http middleware. It is still in alpha, but we started implementing the [rfc-7234](https://httpwg.org/specs/rfc7234.html) to support `Cache-Control` and caching in general. In the first alpha you may see the `max-age`, `Age` and `Authorization` support via the in-memory driver.  
+- ✏️ **[ALPHA]** New cache http middleware. It is still in alpha, but we started implementing the [rfc-7234](https://httpwg.org/specs/rfc7234.html) to support `Cache-Control` and caching in general. In the first alpha you may test the `max-age`, `Age` and `Authorization` support via the in-memory driver.  
+
+**Configuration**:
+```yaml
+http:
+# .....
+    middleware: ["cache"]
+    cache:
+        driver: memory
+        cache_methods: ["GET", "HEAD", "POST"] # only GET in alpha
+        config: {} # empty configuration for the memory
+```
+   
 - ✏️ Logger unification. Starting this version we bound our logs to the `uber/zap` log library as one of the most popular and extensible.
 - ✏️ API stabilization. All `v2` api interfaces moved to the `https://github.com/roadrunner-server/api` repository. Except logger (structure), all plugins depends only on the interfaces and don't import each other.
 - ✏️ `protoc` updated to the version `v3.19.2`.
