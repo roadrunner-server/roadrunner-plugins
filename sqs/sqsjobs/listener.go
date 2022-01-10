@@ -67,17 +67,18 @@ func (c *consumer) listen(ctx context.Context) { //nolint:gocognit
 
 			for i := 0; i < len(message.Messages); i++ {
 				m := message.Messages[i]
-				item, err := c.unpack(&m)
-				if err != nil {
+				item, errUnp := c.unpack(&m)
+				if errUnp != nil {
 					_, errD := c.client.DeleteMessage(context.Background(), &sqs.DeleteMessageInput{
 						QueueUrl:      c.queueURL,
 						ReceiptHandle: m.ReceiptHandle,
 					})
 					if errD != nil {
-						c.log.Error("message unpack, failed to delete the message from the queue", zap.Error(err))
+						c.log.Error("message unpack, failed to delete the message from the queue", zap.Error(errUnp), zap.Error(errD))
+						continue
 					}
 
-					c.log.Error("message unpack", zap.Error(err))
+					c.log.Error("message unpack", zap.Error(errUnp))
 					continue
 				}
 

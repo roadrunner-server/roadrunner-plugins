@@ -36,6 +36,12 @@ func (c *consumer) listenerStart() {
 				continue
 			}
 
+			err = m.InProgress()
+			if err != nil {
+				c.log.Error("failed to send InProgress state", zap.Error(err))
+				continue
+			}
+
 			item := new(Item)
 			err = json.Unmarshal(m.Data, item)
 			if err != nil {
