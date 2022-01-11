@@ -1,4 +1,5 @@
-# Headers and CORS
+# Headers and CORS HTTP middleware
+
 RoadRunner can automatically set up request/response headers and control CORS for your application.
 
 ### CORS
