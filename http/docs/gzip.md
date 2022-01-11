@@ -1,4 +1,4 @@
-- ### GZIP
+- ### GZIP HTTP middleware
 
 ```yaml
 http:

@@ -5,6 +5,7 @@ import (
 	"time"
 
 	cacheV1beta "github.com/roadrunner-server/api/v2/proto/cache/v1beta"
+	"go.uber.org/zap"
 	"google.golang.org/protobuf/proto"
 )
 
@@ -31,7 +32,8 @@ func (p *Plugin) writeCache(wr *writer, id uint64) {
 
 		data, err := proto.Marshal(payload)
 		if err != nil {
-			panic(err)
+			p.log.Error("cache write", zap.Error(err))
+			return
 		}
 
 		_ = p.cache.Set(id, data)
