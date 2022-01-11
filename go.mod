@@ -17,7 +17,7 @@ require (
 	github.com/fatih/color v1.13.0
 	github.com/go-redis/redis/v8 v8.11.4
 	github.com/gobwas/ws v1.1.0
-	github.com/goccy/go-json v0.9.0
+	github.com/goccy/go-json v0.9.1
 	github.com/gofiber/fiber/v2 v2.24.0
 	github.com/google/uuid v1.3.0
 	github.com/klauspost/compress v1.13.6
