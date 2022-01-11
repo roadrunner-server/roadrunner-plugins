@@ -17,8 +17,8 @@ import (
 	"github.com/goccy/go-json"
 	"github.com/spiral/roadrunner-plugins/v2/http/config"
 	"github.com/spiral/roadrunner-plugins/v2/http/handler"
+	"github.com/spiral/roadrunner/v2/ipc/pipe"
 	"github.com/spiral/roadrunner/v2/pool"
-	"github.com/spiral/roadrunner/v2/transport/pipe"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"go.uber.org/zap"
@@ -29,7 +29,7 @@ var mockLog = zap.NewNop()
 func TestHandler_Echo(t *testing.T) {
 	p, err := pool.NewStaticPool(context.Background(),
 		func() *exec.Cmd { return exec.Command("php", "../../php_test_files/http/client.php", "echo", "pipes") },
-		pipe.NewPipeFactory(),
+		pipe.NewPipeFactory(mockLog),
 		&pool.Config{
 			NumWorkers:      1,
 			AllocateTimeout: time.Second * 1000,
@@ -74,7 +74,7 @@ func TestHandler_Headers(t *testing.T) {
 		func() *exec.Cmd {
 			return exec.Command("php", "../../php_test_files/http/client.php", "header", "pipes")
 		},
-		pipe.NewPipeFactory(),
+		pipe.NewPipeFactory(mockLog),
 		&pool.Config{
 			NumWorkers:      1,
 			AllocateTimeout: time.Second * 1000,
@@ -134,7 +134,7 @@ func TestHandler_Empty_User_Agent(t *testing.T) {
 		func() *exec.Cmd {
 			return exec.Command("php", "../../php_test_files/http/client.php", "user-agent", "pipes")
 		},
-		pipe.NewPipeFactory(),
+		pipe.NewPipeFactory(mockLog),
 		&pool.Config{
 			NumWorkers:      1,
 			AllocateTimeout: time.Second * 1000,
@@ -193,7 +193,7 @@ func TestHandler_User_Agent(t *testing.T) {
 		func() *exec.Cmd {
 			return exec.Command("php", "../../php_test_files/http/client.php", "user-agent", "pipes")
 		},
-		pipe.NewPipeFactory(),
+		pipe.NewPipeFactory(mockLog),
 		&pool.Config{
 			NumWorkers:      1,
 			AllocateTimeout: time.Second * 1000,
@@ -252,7 +252,7 @@ func TestHandler_Cookies(t *testing.T) {
 		func() *exec.Cmd {
 			return exec.Command("php", "../../php_test_files/http/client.php", "cookie", "pipes")
 		},
-		pipe.NewPipeFactory(),
+		pipe.NewPipeFactory(mockLog),
 		&pool.Config{
 			NumWorkers:      1,
 			AllocateTimeout: time.Second * 1000,
@@ -316,7 +316,7 @@ func TestHandler_JsonPayload_POST(t *testing.T) {
 		func() *exec.Cmd {
 			return exec.Command("php", "../../php_test_files/http/client.php", "payload", "pipes")
 		},
-		pipe.NewPipeFactory(),
+		pipe.NewPipeFactory(mockLog),
 		&pool.Config{
 			NumWorkers:      1,
 			AllocateTimeout: time.Second * 1000,
@@ -379,7 +379,7 @@ func TestHandler_JsonPayload_PUT(t *testing.T) {
 		func() *exec.Cmd {
 			return exec.Command("php", "../../php_test_files/http/client.php", "payload", "pipes")
 		},
-		pipe.NewPipeFactory(),
+		pipe.NewPipeFactory(mockLog),
 		&pool.Config{
 			NumWorkers:      1,
 			AllocateTimeout: time.Second * 1000,
@@ -438,7 +438,7 @@ func TestHandler_JsonPayload_PATCH(t *testing.T) {
 		func() *exec.Cmd {
 			return exec.Command("php", "../../php_test_files/http/client.php", "payload", "pipes")
 		},
-		pipe.NewPipeFactory(),
+		pipe.NewPipeFactory(mockLog),
 		&pool.Config{
 			NumWorkers:      1,
 			AllocateTimeout: time.Second * 1000,
@@ -495,7 +495,7 @@ func TestHandler_JsonPayload_PATCH(t *testing.T) {
 func TestHandler_FormData_POST(t *testing.T) {
 	p, err := pool.NewStaticPool(context.Background(),
 		func() *exec.Cmd { return exec.Command("php", "../../php_test_files/http/client.php", "data", "pipes") },
-		pipe.NewPipeFactory(),
+		pipe.NewPipeFactory(mockLog),
 		&pool.Config{
 			NumWorkers:      1,
 			AllocateTimeout: time.Second * 1000,
@@ -575,7 +575,7 @@ func TestHandler_FormData_POST(t *testing.T) {
 func TestHandler_FormData_POST_Overwrite(t *testing.T) {
 	p, err := pool.NewStaticPool(context.Background(),
 		func() *exec.Cmd { return exec.Command("php", "../../php_test_files/http/client.php", "data", "pipes") },
-		pipe.NewPipeFactory(),
+		pipe.NewPipeFactory(mockLog),
 		&pool.Config{
 			NumWorkers:      1,
 			AllocateTimeout: time.Second * 1000,
@@ -656,7 +656,7 @@ func TestHandler_FormData_POST_Overwrite(t *testing.T) {
 func TestHandler_FormData_POST_Form_UrlEncoded_Charset(t *testing.T) {
 	p, err := pool.NewStaticPool(context.Background(),
 		func() *exec.Cmd { return exec.Command("php", "../../php_test_files/http/client.php", "data", "pipes") },
-		pipe.NewPipeFactory(),
+		pipe.NewPipeFactory(mockLog),
 		&pool.Config{
 			NumWorkers:      1,
 			AllocateTimeout: time.Second * 1000,
@@ -736,7 +736,7 @@ func TestHandler_FormData_POST_Form_UrlEncoded_Charset(t *testing.T) {
 func TestHandler_FormData_PUT(t *testing.T) {
 	p, err := pool.NewStaticPool(context.Background(),
 		func() *exec.Cmd { return exec.Command("php", "../../php_test_files/http/client.php", "data", "pipes") },
-		pipe.NewPipeFactory(),
+		pipe.NewPipeFactory(mockLog),
 		&pool.Config{
 			NumWorkers:      1,
 			AllocateTimeout: time.Second * 1000,
@@ -817,7 +817,7 @@ func TestHandler_FormData_PUT(t *testing.T) {
 func TestHandler_FormData_PATCH(t *testing.T) {
 	p, err := pool.NewStaticPool(context.Background(),
 		func() *exec.Cmd { return exec.Command("php", "../../php_test_files/http/client.php", "data", "pipes") },
-		pipe.NewPipeFactory(),
+		pipe.NewPipeFactory(mockLog),
 		&pool.Config{
 			NumWorkers:      1,
 			AllocateTimeout: time.Second * 1000,
@@ -897,7 +897,7 @@ func TestHandler_FormData_PATCH(t *testing.T) {
 func TestHandler_Multipart_POST(t *testing.T) {
 	p, err := pool.NewStaticPool(context.Background(),
 		func() *exec.Cmd { return exec.Command("php", "../../php_test_files/http/client.php", "data", "pipes") },
-		pipe.NewPipeFactory(),
+		pipe.NewPipeFactory(mockLog),
 		&pool.Config{
 			NumWorkers:      1,
 			AllocateTimeout: time.Second * 1000,
@@ -1019,7 +1019,7 @@ func TestHandler_Multipart_POST(t *testing.T) {
 func TestHandler_Multipart_PUT(t *testing.T) {
 	p, err := pool.NewStaticPool(context.Background(),
 		func() *exec.Cmd { return exec.Command("php", "../../php_test_files/http/client.php", "data", "pipes") },
-		pipe.NewPipeFactory(),
+		pipe.NewPipeFactory(mockLog),
 		&pool.Config{
 			NumWorkers:      1,
 			AllocateTimeout: time.Second * 1000,
@@ -1141,7 +1141,7 @@ func TestHandler_Multipart_PUT(t *testing.T) {
 func TestHandler_Multipart_PATCH(t *testing.T) {
 	p, err := pool.NewStaticPool(context.Background(),
 		func() *exec.Cmd { return exec.Command("php", "../../php_test_files/http/client.php", "data", "pipes") },
-		pipe.NewPipeFactory(),
+		pipe.NewPipeFactory(mockLog),
 		&pool.Config{
 			NumWorkers:      1,
 			AllocateTimeout: time.Second * 1000,
@@ -1265,7 +1265,7 @@ func TestHandler_Multipart_PATCH(t *testing.T) {
 func TestHandler_Error(t *testing.T) {
 	p, err := pool.NewStaticPool(context.Background(),
 		func() *exec.Cmd { return exec.Command("php", "../../php_test_files/http/client.php", "error", "pipes") },
-		pipe.NewPipeFactory(),
+		pipe.NewPipeFactory(mockLog),
 		&pool.Config{
 			NumWorkers:      1,
 			AllocateTimeout: time.Second * 1000,
@@ -1310,7 +1310,7 @@ func TestHandler_Error2(t *testing.T) {
 		func() *exec.Cmd {
 			return exec.Command("php", "../../php_test_files/http/client.php", "error2", "pipes")
 		},
-		pipe.NewPipeFactory(),
+		pipe.NewPipeFactory(mockLog),
 		&pool.Config{
 			NumWorkers:      1,
 			AllocateTimeout: time.Second * 1000,
@@ -1353,7 +1353,7 @@ func TestHandler_Error2(t *testing.T) {
 func TestHandler_Error3(t *testing.T) {
 	p, err := pool.NewStaticPool(context.Background(),
 		func() *exec.Cmd { return exec.Command("php", "../../php_test_files/http/client.php", "pid", "pipes") },
-		pipe.NewPipeFactory(),
+		pipe.NewPipeFactory(mockLog),
 		&pool.Config{
 			NumWorkers:      1,
 			AllocateTimeout: time.Second * 1000,
@@ -1409,7 +1409,7 @@ func TestHandler_Error3(t *testing.T) {
 func TestHandler_ResponseDuration(t *testing.T) {
 	p, err := pool.NewStaticPool(context.Background(),
 		func() *exec.Cmd { return exec.Command("php", "../../php_test_files/http/client.php", "echo", "pipes") },
-		pipe.NewPipeFactory(),
+		pipe.NewPipeFactory(mockLog),
 		&pool.Config{
 			NumWorkers:      1,
 			AllocateTimeout: time.Second * 1000,
@@ -1456,7 +1456,7 @@ func TestHandler_ResponseDurationDelayed(t *testing.T) {
 		func() *exec.Cmd {
 			return exec.Command("php", "../../php_test_files/http/client.php", "echoDelay", "pipes")
 		},
-		pipe.NewPipeFactory(),
+		pipe.NewPipeFactory(mockLog),
 		&pool.Config{
 			NumWorkers:      1,
 			AllocateTimeout: time.Second * 1000,
@@ -1484,7 +1484,7 @@ func TestHandler_ResponseDurationDelayed(t *testing.T) {
 func TestHandler_ErrorDuration(t *testing.T) {
 	p, err := pool.NewStaticPool(context.Background(),
 		func() *exec.Cmd { return exec.Command("php", "../../php_test_files/http/client.php", "error", "pipes") },
-		pipe.NewPipeFactory(),
+		pipe.NewPipeFactory(mockLog),
 		&pool.Config{
 			NumWorkers:      1,
 			AllocateTimeout: time.Second * 1000,
@@ -1542,7 +1542,7 @@ func TestHandler_IP(t *testing.T) {
 
 	p, err := pool.NewStaticPool(context.Background(),
 		func() *exec.Cmd { return exec.Command("php", "../../php_test_files/http/client.php", "ip", "pipes") },
-		pipe.NewPipeFactory(),
+		pipe.NewPipeFactory(mockLog),
 		&pool.Config{
 			NumWorkers:      1,
 			AllocateTimeout: time.Second * 1000,
@@ -1600,7 +1600,7 @@ func TestHandler_XRealIP(t *testing.T) {
 
 	p, err := pool.NewStaticPool(context.Background(),
 		func() *exec.Cmd { return exec.Command("php", "../../php_test_files/http/client.php", "ip", "pipes") },
-		pipe.NewPipeFactory(),
+		pipe.NewPipeFactory(mockLog),
 		&pool.Config{
 			NumWorkers:      1,
 			AllocateTimeout: time.Second * 1000,
@@ -1663,7 +1663,7 @@ func TestHandler_XForwardedFor(t *testing.T) {
 
 	p, err := pool.NewStaticPool(context.Background(),
 		func() *exec.Cmd { return exec.Command("php", "../../php_test_files/http/client.php", "ip", "pipes") },
-		pipe.NewPipeFactory(),
+		pipe.NewPipeFactory(mockLog),
 		&pool.Config{
 			NumWorkers:      1,
 			AllocateTimeout: time.Second * 1000,
@@ -1725,7 +1725,7 @@ func TestHandler_XForwardedFor_NotTrustedRemoteIp(t *testing.T) {
 
 	p, err := pool.NewStaticPool(context.Background(),
 		func() *exec.Cmd { return exec.Command("php", "../../php_test_files/http/client.php", "ip", "pipes") },
-		pipe.NewPipeFactory(),
+		pipe.NewPipeFactory(mockLog),
 		&pool.Config{
 			NumWorkers:      1,
 			AllocateTimeout: time.Second * 1000,
@@ -1770,7 +1770,7 @@ func TestHandler_XForwardedFor_NotTrustedRemoteIp(t *testing.T) {
 func BenchmarkHandler_Listen_Echo(b *testing.B) {
 	p, err := pool.NewStaticPool(context.Background(),
 		func() *exec.Cmd { return exec.Command("php", "../../php_test_files/http/client.php", "echo", "pipes") },
-		pipe.NewPipeFactory(),
+		pipe.NewPipeFactory(mockLog),
 		&pool.Config{
 			NumWorkers:      uint64(runtime.NumCPU()),
 			AllocateTimeout: time.Second * 1000,

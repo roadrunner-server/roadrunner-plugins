@@ -20,27 +20,27 @@ require (
 	github.com/goccy/go-json v0.9.1
 	github.com/gofiber/fiber/v2 v2.24.0
 	github.com/google/uuid v1.3.0
-	github.com/klauspost/compress v1.13.6
+	github.com/klauspost/compress v1.14.1
 	github.com/mholt/acmez v1.0.1
 	github.com/nats-io/nats.go v1.13.0
 	github.com/newrelic/go-agent/v3 v3.15.2
 	github.com/prometheus/client_golang v1.11.0
 	github.com/rabbitmq/amqp091-go v1.2.0
-	github.com/roadrunner-server/api/v2 v2.0.0-alpha.1
+	github.com/roadrunner-server/api/v2 v2.0.0-rc.1
 	github.com/shirou/gopsutil v3.21.11+incompatible
 	github.com/spf13/viper v1.10.1
 	// spiral
 	github.com/spiral/endure v1.1.0
 	github.com/spiral/errors v1.0.12
 	github.com/spiral/goridge/v3 v3.2.4
-	github.com/spiral/roadrunner/v2 v2.7.0-rc.1
+	github.com/spiral/roadrunner/v2 v2.7.0-rc.2
 	// spiral
 	github.com/stretchr/testify v1.7.0
 	github.com/yookoala/gofast v0.6.0
 	go.etcd.io/bbolt v1.3.6
 	go.uber.org/zap v1.20.0
-	golang.org/x/net v0.0.0-20220107192237-5cfca573fb4d
-	golang.org/x/sys v0.0.0-20211216021012-1d35b9e2eb4e
+	golang.org/x/net v0.0.0-20220111093109-d55c255bac03
+	golang.org/x/sys v0.0.0-20220111092808-5a964db01320
 	google.golang.org/grpc v1.43.0
 	google.golang.org/protobuf v1.27.1
 	gopkg.in/natefinch/lumberjack.v2 v2.0.0
@@ -94,7 +94,7 @@ require (
 	github.com/tklauser/go-sysconf v0.3.9 // indirect
 	github.com/tklauser/numcpus v0.3.0 // indirect
 	github.com/valyala/bytebufferpool v1.0.0 // indirect
-	github.com/valyala/fasthttp v1.31.0 // indirect
+	github.com/valyala/fasthttp v1.32.0 // indirect
 	github.com/valyala/tcplisten v1.0.0 // indirect
 	github.com/vmihailenco/msgpack/v5 v5.3.5 // indirect
 	github.com/vmihailenco/tagparser/v2 v2.0.0 // indirect
@@ -107,7 +107,7 @@ require (
 	golang.org/x/text v0.3.7 // indirect
 	golang.org/x/tools v0.1.8 // indirect
 	golang.org/x/xerrors v0.0.0-20200804184101-5ec99f83aff1 // indirect
-	google.golang.org/genproto v0.0.0-20220107163113-42d7afdf6368 // indirect
+	google.golang.org/genproto v0.0.0-20220111164026-67b88f271998 // indirect
 	gopkg.in/ini.v1 v1.66.2 // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect
 	gopkg.in/yaml.v3 v3.0.0-20210107192922-496545a6307b // indirect

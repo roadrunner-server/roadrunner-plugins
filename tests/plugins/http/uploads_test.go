@@ -17,8 +17,8 @@ import (
 
 	"github.com/goccy/go-json"
 	"github.com/spiral/roadrunner-plugins/v2/http/handler"
+	"github.com/spiral/roadrunner/v2/ipc/pipe"
 	poolImpl "github.com/spiral/roadrunner/v2/pool"
-	"github.com/spiral/roadrunner/v2/transport/pipe"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -29,7 +29,7 @@ func TestHandler_Upload_File(t *testing.T) {
 		func() *exec.Cmd {
 			return exec.Command("php", "../../php_test_files/http/client.php", "upload", "pipes")
 		},
-		pipe.NewPipeFactory(),
+		pipe.NewPipeFactory(mockLog),
 		&poolImpl.Config{
 			NumWorkers:      1,
 			AllocateTimeout: time.Second * 1000,
@@ -111,7 +111,7 @@ func TestHandler_Upload_NestedFile(t *testing.T) {
 		func() *exec.Cmd {
 			return exec.Command("php", "../../php_test_files/http/client.php", "upload", "pipes")
 		},
-		pipe.NewPipeFactory(),
+		pipe.NewPipeFactory(mockLog),
 		&poolImpl.Config{
 			NumWorkers:      1,
 			AllocateTimeout: time.Second * 1000,
@@ -194,7 +194,7 @@ func TestHandler_Upload_File_NoTmpDir(t *testing.T) {
 		func() *exec.Cmd {
 			return exec.Command("php", "../../php_test_files/http/client.php", "upload", "pipes")
 		},
-		pipe.NewPipeFactory(),
+		pipe.NewPipeFactory(mockLog),
 		&poolImpl.Config{
 			NumWorkers:      1,
 			AllocateTimeout: time.Second * 1000,
@@ -276,7 +276,7 @@ func TestHandler_Upload_File_Forbids(t *testing.T) {
 		func() *exec.Cmd {
 			return exec.Command("php", "../../php_test_files/http/client.php", "upload", "pipes")
 		},
-		pipe.NewPipeFactory(),
+		pipe.NewPipeFactory(mockLog),
 		&poolImpl.Config{
 			NumWorkers:      1,
 			AllocateTimeout: time.Second * 1000,
@@ -358,7 +358,7 @@ func TestHandler_Upload_File_NotAllowed(t *testing.T) {
 		func() *exec.Cmd {
 			return exec.Command("php", "../../php_test_files/http/client.php", "upload", "pipes")
 		},
-		pipe.NewPipeFactory(),
+		pipe.NewPipeFactory(mockLog),
 		&poolImpl.Config{
 			NumWorkers:      1,
 			AllocateTimeout: time.Second * 1000,

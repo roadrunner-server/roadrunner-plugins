@@ -10,13 +10,13 @@ import (
 	"time"
 
 	"github.com/spiral/errors"
+	"github.com/spiral/roadrunner/v2/ipc"
 	"go.uber.org/zap"
 
 	"github.com/roadrunner-server/api/v2/plugins/config"
+	"github.com/spiral/roadrunner/v2/ipc/pipe"
+	"github.com/spiral/roadrunner/v2/ipc/socket"
 	"github.com/spiral/roadrunner/v2/pool"
-	"github.com/spiral/roadrunner/v2/transport"
-	"github.com/spiral/roadrunner/v2/transport/pipe"
-	"github.com/spiral/roadrunner/v2/transport/socket"
 	"github.com/spiral/roadrunner/v2/utils"
 	"github.com/spiral/roadrunner/v2/worker"
 )
@@ -45,7 +45,7 @@ type Plugin struct {
 	preparedEnvs []string
 
 	log     *zap.Logger
-	factory transport.Factory
+	factory ipc.Factory
 
 	pools []pool.Pool
 }
@@ -185,7 +185,7 @@ func (p *Plugin) NewWorker(ctx context.Context, env map[string]string) (*worker.
 }
 
 // NewWorkerPool issues new worker pool.
-func (p *Plugin) NewWorkerPool(ctx context.Context, opt *pool.Config, env map[string]string) (pool.Pool, error) {
+func (p *Plugin) NewWorkerPool(ctx context.Context, opt *pool.Config, env map[string]string, _ ...pool.Options) (pool.Pool, error) {
 	p.Lock()
 	defer p.Unlock()
 
@@ -199,10 +199,10 @@ func (p *Plugin) NewWorkerPool(ctx context.Context, opt *pool.Config, env map[st
 }
 
 // creates relay and worker factory.
-func (p *Plugin) initFactory() (transport.Factory, error) {
+func (p *Plugin) initFactory() (ipc.Factory, error) {
 	const op = errors.Op("server_plugin_init_factory")
 	if p.cfg.Relay == "" || p.cfg.Relay == "pipes" {
-		return pipe.NewPipeFactory(), nil
+		return pipe.NewPipeFactory(p.log), nil
 	}
 
 	dsn := strings.Split(p.cfg.Relay, "://")
@@ -218,9 +218,9 @@ func (p *Plugin) initFactory() (transport.Factory, error) {
 	switch dsn[0] {
 	// sockets group
 	case "unix":
-		return socket.NewSocketServer(lsn, p.cfg.RelayTimeout), nil
+		return socket.NewSocketServer(lsn, p.cfg.RelayTimeout, p.log), nil
 	case "tcp":
-		return socket.NewSocketServer(lsn, p.cfg.RelayTimeout), nil
+		return socket.NewSocketServer(lsn, p.cfg.RelayTimeout, p.log), nil
 	default:
 		return nil, errors.E(op, errors.Network, errors.Str("invalid DSN (tcp://:6001, unix://file.sock)"))
 	}
