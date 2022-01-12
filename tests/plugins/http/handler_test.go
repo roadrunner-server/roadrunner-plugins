@@ -14,7 +14,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/goccy/go-json"
+	json "github.com/json-iterator/go"
 	"github.com/spiral/roadrunner-plugins/v2/http/config"
 	"github.com/spiral/roadrunner-plugins/v2/http/handler"
 	"github.com/spiral/roadrunner/v2/ipc/pipe"

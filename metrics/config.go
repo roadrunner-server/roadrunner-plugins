@@ -43,9 +43,9 @@ const (
 // Collector describes single application specific metric.
 type Collector struct {
 	// Namespace of the metric.
-	Namespace string `json:"namespace"`
+	Namespace string `json:"namespace,omitempty"`
 	// Subsystem of the metric.
-	Subsystem string `json:"subsystem"`
+	Subsystem string `json:"subsystem,omitempty"`
 	// Collector type (histogram, gauge, counter, summary).
 	Type CollectorType `json:"type"`
 	// Help of collector.
@@ -55,7 +55,7 @@ type Collector struct {
 	// Buckets for histogram metric.
 	Buckets []float64 `json:"buckets"`
 	// Objectives for the summary opts
-	Objectives map[float64]float64 `json:"objectives"`
+	Objectives map[float64]float64 `json:"objectives,omitempty"`
 }
 
 // register application specific metrics.

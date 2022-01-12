@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/spiral/errors"
+	"github.com/spiral/goridge/v3/pkg/frame"
 	"github.com/spiral/roadrunner-plugins/v2/http/attributes"
 	"github.com/spiral/roadrunner-plugins/v2/http/config"
 	"github.com/spiral/roadrunner/v2/payload"
@@ -332,5 +333,7 @@ func (h *Handler) putPld(pld *payload.Payload) {
 }
 
 func (h *Handler) getPld() *payload.Payload {
-	return h.pldPool.Get().(*payload.Payload)
+	pld := h.pldPool.Get().(*payload.Payload)
+	pld.Codec = frame.CODEC_JSON
+	return pld
 }

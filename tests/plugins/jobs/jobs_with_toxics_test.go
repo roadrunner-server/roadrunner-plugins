@@ -117,6 +117,10 @@ func TestDurabilityAMQP(t *testing.T) {
 
 	stopCh <- struct{}{}
 	wg.Wait()
+
+	t.Cleanup(func() {
+		destroyPipelines("test-1", "test-2")
+	})
 }
 
 func TestDurabilitySQS(t *testing.T) {
@@ -212,6 +216,10 @@ func TestDurabilitySQS(t *testing.T) {
 
 	stopCh <- struct{}{}
 	wg.Wait()
+
+	t.Cleanup(func() {
+		destroyPipelines("test-1", "test-2")
+	})
 }
 
 func TestDurabilityBeanstalk(t *testing.T) {
@@ -306,6 +314,10 @@ func TestDurabilityBeanstalk(t *testing.T) {
 
 	stopCh <- struct{}{}
 	wg.Wait()
+
+	t.Cleanup(func() {
+		destroyPipelines("test-1", "test-2")
+	})
 }
 
 func TestDurabilityNATS(t *testing.T) {
@@ -402,4 +414,8 @@ func TestDurabilityNATS(t *testing.T) {
 
 	stopCh <- struct{}{}
 	wg.Wait()
+
+	t.Cleanup(func() {
+		destroyPipelines("test-1", "test-2")
+	})
 }

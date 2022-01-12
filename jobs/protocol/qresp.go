@@ -1,7 +1,7 @@
 package protocol
 
 import (
-	json "github.com/goccy/go-json"
+	json "github.com/json-iterator/go"
 	"github.com/roadrunner-server/api/v2/plugins/jobs"
 	"github.com/spiral/roadrunner/v2/utils"
 )

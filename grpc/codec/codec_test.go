@@ -3,7 +3,7 @@ package codec
 import (
 	"testing"
 
-	json "github.com/goccy/go-json"
+	json "github.com/json-iterator/go"
 	"github.com/stretchr/testify/assert"
 )
 

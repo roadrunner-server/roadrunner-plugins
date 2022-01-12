@@ -3,7 +3,7 @@ package protocol
 import (
 	"sync"
 
-	json "github.com/goccy/go-json"
+	json "github.com/json-iterator/go"
 	"github.com/roadrunner-server/api/v2/plugins/jobs"
 	"github.com/spiral/errors"
 	"github.com/spiral/roadrunner/v2/payload"
