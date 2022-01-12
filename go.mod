@@ -31,7 +31,7 @@ require (
 	// spiral
 	github.com/spiral/endure v1.1.0
 	github.com/spiral/errors v1.0.12
-	github.com/spiral/goridge/v3 v3.2.6
+	github.com/spiral/goridge/v3 v3.2.7
 	github.com/spiral/roadrunner/v2 v2.7.0
 	// spiral
 	github.com/stretchr/testify v1.7.0
