@@ -4,7 +4,7 @@ import (
 	"bytes"
 	"testing"
 
-	json "github.com/goccy/go-json"
+	json "github.com/json-iterator/go"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/stretchr/testify/assert"
 )

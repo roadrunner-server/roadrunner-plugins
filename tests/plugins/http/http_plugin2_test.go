@@ -12,7 +12,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/goccy/go-json"
+	json "github.com/json-iterator/go"
 	endure "github.com/spiral/endure/pkg/container"
 	"github.com/spiral/roadrunner-plugins/v2/config"
 	"github.com/spiral/roadrunner-plugins/v2/fileserver"

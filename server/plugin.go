@@ -72,11 +72,6 @@ func (p *Plugin) Init(cfg config.Configurer, log *zap.Logger) error {
 		return errors.E(op, errors.Init, err)
 	}
 
-	p.factory, err = p.initFactory()
-	if err != nil {
-		return errors.E(op, err)
-	}
-
 	p.log = new(zap.Logger)
 	*p.log = *log
 	p.preparedCmd = append(p.preparedCmd, strings.Split(p.cfg.Command, " ")...)
@@ -94,6 +89,11 @@ func (p *Plugin) Init(cfg config.Configurer, log *zap.Logger) error {
 	}
 
 	p.pools = make([]pool.Pool, 0, 4)
+
+	p.factory, err = initFactory(p.log, p.cfg.Relay, p.cfg.RelayTimeout)
+	if err != nil {
+		return errors.E(op, err)
+	}
 
 	return nil
 }
@@ -199,18 +199,18 @@ func (p *Plugin) NewWorkerPool(ctx context.Context, opt *pool.Config, env map[st
 }
 
 // creates relay and worker factory.
-func (p *Plugin) initFactory() (ipc.Factory, error) {
+func initFactory(log *zap.Logger, relay string, timeout time.Duration) (ipc.Factory, error) {
 	const op = errors.Op("server_plugin_init_factory")
-	if p.cfg.Relay == "" || p.cfg.Relay == "pipes" {
-		return pipe.NewPipeFactory(p.log), nil
+	if relay == "" || relay == "pipes" {
+		return pipe.NewPipeFactory(log), nil
 	}
 
-	dsn := strings.Split(p.cfg.Relay, "://")
+	dsn := strings.Split(relay, "://")
 	if len(dsn) != 2 {
 		return nil, errors.E(op, errors.Network, errors.Str("invalid DSN (tcp://:6001, unix://file.sock)"))
 	}
 
-	lsn, err := utils.CreateListener(p.cfg.Relay)
+	lsn, err := utils.CreateListener(relay)
 	if err != nil {
 		return nil, errors.E(op, errors.Network, err)
 	}
@@ -218,9 +218,9 @@ func (p *Plugin) initFactory() (ipc.Factory, error) {
 	switch dsn[0] {
 	// sockets group
 	case "unix":
-		return socket.NewSocketServer(lsn, p.cfg.RelayTimeout, p.log), nil
+		return socket.NewSocketServer(lsn, timeout, log), nil
 	case "tcp":
-		return socket.NewSocketServer(lsn, p.cfg.RelayTimeout, p.log), nil
+		return socket.NewSocketServer(lsn, timeout, log), nil
 	default:
 		return nil, errors.E(op, errors.Network, errors.Str("invalid DSN (tcp://:6001, unix://file.sock)"))
 	}

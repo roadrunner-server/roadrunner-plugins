@@ -13,6 +13,7 @@ import (
 	"github.com/roadrunner-server/api/v2/plugins/server"
 	endure "github.com/spiral/endure/pkg/container"
 	"github.com/spiral/errors"
+	"github.com/spiral/goridge/v3/pkg/frame"
 	rh "github.com/spiral/roadrunner-plugins/v2/jobs/protocol"
 	"github.com/spiral/roadrunner/v2/payload"
 	"github.com/spiral/roadrunner/v2/pool"
@@ -549,6 +550,7 @@ func (p *Plugin) getPayload(body, context []byte) *payload.Payload {
 	pld := p.pldPool.Get().(*payload.Payload)
 	pld.Body = body
 	pld.Context = context
+	pld.Codec = frame.CODEC_JSON
 	return pld
 }
 

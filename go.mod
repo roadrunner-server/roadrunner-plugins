@@ -17,7 +17,6 @@ require (
 	github.com/fatih/color v1.13.0
 	github.com/go-redis/redis/v8 v8.11.4
 	github.com/gobwas/ws v1.1.0
-	github.com/goccy/go-json v0.9.1
 	github.com/gofiber/fiber/v2 v2.24.0
 	github.com/google/uuid v1.3.0
 	github.com/klauspost/compress v1.14.1
@@ -32,8 +31,8 @@ require (
 	// spiral
 	github.com/spiral/endure v1.1.0
 	github.com/spiral/errors v1.0.12
-	github.com/spiral/goridge/v3 v3.2.4
-	github.com/spiral/roadrunner/v2 v2.7.0-rc.2
+	github.com/spiral/goridge/v3 v3.2.6
+	github.com/spiral/roadrunner/v2 v2.7.0
 	// spiral
 	github.com/stretchr/testify v1.7.0
 	github.com/yookoala/gofast v0.6.0
@@ -66,7 +65,7 @@ require (
 	github.com/golang/protobuf v1.5.2 // indirect
 	github.com/hashicorp/go-version v1.4.0
 	github.com/hashicorp/hcl v1.0.0 // indirect
-	github.com/json-iterator/go v1.1.12 // indirect
+	github.com/json-iterator/go v1.1.12
 	github.com/klauspost/cpuid/v2 v2.0.9 // indirect
 	github.com/libdns/libdns v0.2.1 // indirect
 	github.com/magiconair/properties v1.8.5 // indirect
@@ -112,3 +111,5 @@ require (
 	gopkg.in/yaml.v2 v2.4.0 // indirect
 	gopkg.in/yaml.v3 v3.0.0-20210107192922-496545a6307b // indirect
 )
+
+require github.com/goccy/go-json v0.9.1 // indirect

@@ -103,6 +103,10 @@ func TestBeanstalkInit(t *testing.T) {
 	require.Equal(t, 2, oLogger.FilterMessageSnippet("pipeline was started").Len())
 	require.Equal(t, 2, oLogger.FilterMessageSnippet("pipeline was stopped").Len())
 	require.Equal(t, 2, oLogger.FilterMessageSnippet("beanstalk listener stopped").Len())
+
+	t.Cleanup(func() {
+		destroyPipelines("test-1", "test-2")
+	})
 }
 
 func TestBeanstalkInitV27(t *testing.T) {
@@ -186,6 +190,10 @@ func TestBeanstalkInitV27(t *testing.T) {
 	require.Equal(t, 2, oLogger.FilterMessageSnippet("pipeline was started").Len())
 	require.Equal(t, 2, oLogger.FilterMessageSnippet("pipeline was stopped").Len())
 	require.Equal(t, 2, oLogger.FilterMessageSnippet("beanstalk listener stopped").Len())
+
+	t.Cleanup(func() {
+		destroyPipelines("test-1", "test-2")
+	})
 }
 
 func TestBeanstalkStats(t *testing.T) {
@@ -301,6 +309,10 @@ func TestBeanstalkStats(t *testing.T) {
 	time.Sleep(time.Second)
 	stopCh <- struct{}{}
 	wg.Wait()
+
+	t.Cleanup(func() {
+		destroyPipelines("test-3")
+	})
 }
 
 func TestBeanstalkDeclare(t *testing.T) {
@@ -381,6 +393,10 @@ func TestBeanstalkDeclare(t *testing.T) {
 	time.Sleep(time.Second * 5)
 	stopCh <- struct{}{}
 	wg.Wait()
+
+	t.Cleanup(func() {
+		destroyPipelines("test-3")
+	})
 }
 
 func TestBeanstalkJobsError(t *testing.T) {
@@ -462,6 +478,10 @@ func TestBeanstalkJobsError(t *testing.T) {
 	time.Sleep(time.Second * 5)
 	stopCh <- struct{}{}
 	wg.Wait()
+
+	t.Cleanup(func() {
+		destroyPipelines("test-3")
+	})
 }
 
 func TestBeanstalkNoGlobalSection(t *testing.T) {
@@ -573,6 +593,10 @@ func TestBeanstalkRespond(t *testing.T) {
 	stopCh <- struct{}{}
 	wg.Wait()
 	time.Sleep(time.Second)
+
+	t.Cleanup(func() {
+		destroyPipelines("test-1", "test-3")
+	})
 }
 
 func TestBeanstalkInitV27BadResp(t *testing.T) {
@@ -657,6 +681,10 @@ func TestBeanstalkInitV27BadResp(t *testing.T) {
 	require.Equal(t, 2, oLogger.FilterMessageSnippet("pipeline was stopped").Len())
 	require.Equal(t, 2, oLogger.FilterMessageSnippet("response handler error").Len())
 	require.Equal(t, 2, oLogger.FilterMessageSnippet("beanstalk listener stopped").Len())
+
+	t.Cleanup(func() {
+		destroyPipelines("test-1", "test-2")
+	})
 }
 
 func declareBeanstalkPipe(t *testing.T) {

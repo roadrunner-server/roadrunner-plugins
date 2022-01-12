@@ -4,7 +4,7 @@ import (
 	"net/http"
 	"strings"
 
-	json "github.com/goccy/go-json"
+	json "github.com/json-iterator/go"
 	"github.com/spiral/errors"
 	"github.com/spiral/roadrunner-plugins/v2/http/attributes"
 	"github.com/spiral/roadrunner-plugins/v2/http/handler"

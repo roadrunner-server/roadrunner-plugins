@@ -1,7 +1,7 @@
 package natsjobs
 
 import (
-	json "github.com/goccy/go-json"
+	json "github.com/json-iterator/go"
 	"github.com/nats-io/nats.go"
 	"go.uber.org/zap"
 )

@@ -1,7 +1,7 @@
 package handler
 
 import (
-	json "github.com/goccy/go-json"
+	json "github.com/json-iterator/go"
 	"go.uber.org/zap"
 )
 

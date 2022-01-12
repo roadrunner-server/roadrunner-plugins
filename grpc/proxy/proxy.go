@@ -8,6 +8,7 @@ import (
 	"strings"
 	"sync"
 
+	"github.com/spiral/goridge/v3/pkg/frame"
 	"github.com/spiral/roadrunner-plugins/v2/grpc/codec"
 	"github.com/spiral/roadrunner/v2/payload"
 	"github.com/spiral/roadrunner/v2/pool"
@@ -65,6 +66,7 @@ func NewProxy(name string, metadata string, grpcPool pool.Pool, mu *sync.RWMutex
 		pldPool: sync.Pool{
 			New: func() interface{} {
 				return &payload.Payload{
+					Codec:   frame.CODEC_JSON,
 					Context: make([]byte, 0, 100),
 					Body:    make([]byte, 0, 100),
 				}
@@ -210,7 +212,9 @@ func (p *Proxy) putPld(pld *payload.Payload) {
 }
 
 func (p *Proxy) getPld() *payload.Payload {
-	return p.pldPool.Get().(*payload.Payload)
+	pld := p.pldPool.Get().(*payload.Payload)
+	pld.Codec = frame.CODEC_JSON
+	return pld
 }
 
 // mounts proper error code for the error

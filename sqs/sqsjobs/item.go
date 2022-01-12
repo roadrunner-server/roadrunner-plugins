@@ -8,7 +8,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/sqs"
 	"github.com/aws/aws-sdk-go-v2/service/sqs/types"
-	json "github.com/goccy/go-json"
+	json "github.com/json-iterator/go"
 	"github.com/roadrunner-server/api/v2/plugins/jobs"
 	"github.com/spiral/errors"
 	"github.com/spiral/roadrunner/v2/utils"

@@ -105,6 +105,10 @@ func TestBoltDBInit(t *testing.T) {
 
 	assert.NoError(t, os.Remove(rr1db))
 	assert.NoError(t, os.Remove(rr2db))
+
+	t.Cleanup(func() {
+		destroyPipelines("test-1", "test-2")
+	})
 }
 
 func TestBoltDBInitV27(t *testing.T) {
@@ -182,6 +186,10 @@ func TestBoltDBInitV27(t *testing.T) {
 
 	assert.NoError(t, os.Remove(rr1db))
 	assert.NoError(t, os.Remove(rr2db))
+
+	t.Cleanup(func() {
+		destroyPipelines("test-1", "test-2")
+	})
 }
 
 func TestBoltDBInitV27BadResp(t *testing.T) {
@@ -263,6 +271,10 @@ func TestBoltDBInitV27BadResp(t *testing.T) {
 
 	assert.NoError(t, os.Remove(rr1db))
 	assert.NoError(t, os.Remove(rr2db))
+
+	t.Cleanup(func() {
+		destroyPipelines("test-1", "test-2")
+	})
 }
 
 func TestBoltDBDeclare(t *testing.T) {
@@ -345,6 +357,10 @@ func TestBoltDBDeclare(t *testing.T) {
 	stopCh <- struct{}{}
 	wg.Wait()
 	assert.NoError(t, os.Remove(rr1db))
+
+	t.Cleanup(func() {
+		destroyPipelines("test-3")
+	})
 }
 
 func TestBoltDBJobsError(t *testing.T) {
@@ -426,6 +442,10 @@ func TestBoltDBJobsError(t *testing.T) {
 	stopCh <- struct{}{}
 	wg.Wait()
 	assert.NoError(t, os.Remove(rr1db))
+
+	t.Cleanup(func() {
+		destroyPipelines("test-3")
+	})
 }
 
 func TestBoltDBNoGlobalSection(t *testing.T) {
@@ -570,6 +590,10 @@ func TestBoltDBStats(t *testing.T) {
 	stopCh <- struct{}{}
 	wg.Wait()
 	assert.NoError(t, os.Remove(rr1db))
+
+	t.Cleanup(func() {
+		destroyPipelines("test-3")
+	})
 }
 
 func declareBoltDBPipe(file string) func(t *testing.T) {
