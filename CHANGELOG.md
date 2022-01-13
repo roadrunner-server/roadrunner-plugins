@@ -1,6 +1,11 @@
 # CHANGELOG
 
-## v2.7.0 (_._.2022?)
+## v2.7.1 (13.01.2022)
+
+## 📦 Packages:
+
+- 📦 Update RR to `v2.7.1`
+- 📦 Update goridge to `v3.2.7`
 
 ## 👀 New:
 
