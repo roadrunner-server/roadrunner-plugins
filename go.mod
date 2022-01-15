@@ -24,7 +24,7 @@ require (
 	github.com/nats-io/nats.go v1.13.0
 	github.com/newrelic/go-agent/v3 v3.15.2
 	github.com/prometheus/client_golang v1.11.0
-	github.com/rabbitmq/amqp091-go v1.2.0
+	github.com/rabbitmq/amqp091-go v1.3.0
 	github.com/roadrunner-server/api/v2 v2.0.0-rc.1
 	github.com/shirou/gopsutil v3.21.11+incompatible
 	github.com/spf13/viper v1.10.1
