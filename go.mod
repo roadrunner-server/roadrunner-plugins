@@ -25,7 +25,7 @@ require (
 	github.com/newrelic/go-agent/v3 v3.15.2
 	github.com/prometheus/client_golang v1.11.0
 	github.com/rabbitmq/amqp091-go v1.3.0
-	github.com/roadrunner-server/api/v2 v2.0.0-rc.1
+	github.com/roadrunner-server/api/v2 v2.0.0-rc.2
 	github.com/shirou/gopsutil v3.21.11+incompatible
 	github.com/spf13/viper v1.10.1
 	// spiral
@@ -39,7 +39,7 @@ require (
 	go.etcd.io/bbolt v1.3.6
 	go.uber.org/zap v1.20.0
 	golang.org/x/net v0.0.0-20220111093109-d55c255bac03
-	golang.org/x/sys v0.0.0-20220111092808-5a964db01320
+	golang.org/x/sys v0.0.0-20220114195835-da31bd327af9
 	google.golang.org/grpc v1.43.0
 	google.golang.org/protobuf v1.27.1
 	gopkg.in/natefinch/lumberjack.v2 v2.0.0
@@ -112,4 +112,10 @@ require (
 	gopkg.in/yaml.v3 v3.0.0-20210107192922-496545a6307b // indirect
 )
 
-require github.com/goccy/go-json v0.9.1 // indirect
+require (
+	github.com/goccy/go-json v0.9.1 // indirect
+	github.com/roadrunner-server/errors v1.1.0 // indirect
+	github.com/roadrunner-server/goridge/v3 v3.3.0 // indirect
+	github.com/roadrunner-server/sdk/v2 v2.0.0-rc.1 // indirect
+	github.com/roadrunner-server/tcplisten v1.1.0 // indirect
+)
