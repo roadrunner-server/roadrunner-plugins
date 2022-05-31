@@ -1,3 +1,5 @@
+# Deprecation note: All plugins are now split under the `roadrunner-server` org instead of monorepo.
+
 # roadrunner-plugins
 
 <p align="center">
